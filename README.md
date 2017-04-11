@@ -15,7 +15,7 @@ Installation
 2. Add "rissc/module-printformer":"~100.1.7" line to composer.json in magento root
 
     "require": {
-        "rissc/module-printformer":"dev-master"
+        "rissc/module-printformer":"~100.1.7"
     }
 
 3. Run ./composer.phar update

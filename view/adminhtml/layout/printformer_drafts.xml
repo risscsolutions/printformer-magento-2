@@ -8,7 +8,7 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceBlock name="printformer_drafts.grid.container">
-            <block class="Rissc\Baan\Block\Adminhtml\History\Grid" name="printformer_drafts.grid" as="grid">
+            <block class="Rissc\Printformer\Block\Adminhtml\Drafts\Grid" name="printformer_drafts.grid" as="grid">
                 <arguments>
                     <argument name="id" xsi:type="string">drafts</argument>
                     <argument name="dataSource" xsi:type="object">Rissc\Printformer\Model\ResourceModel\Draft\Collection</argument>
