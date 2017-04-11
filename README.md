@@ -8,18 +8,17 @@ Installation
     "repositories": [
         {
             "type": "git",
-            "url": "git@github.com:babenkocommerce/Rissc_Printformer.git"
+            "url": "git@bitbucket.org:risscstuttgart/rissc_printformer.git"
         }
     ],
 
-2. Add "rissc/module-printformer":"dev-master" line to composer.json in magento root
+2. Add "rissc/module-printformer":"~100.1.7" line to composer.json in magento root
 
     "require": {
         "rissc/module-printformer":"dev-master"
     }
 
-3. Run composer update
-4. Run ./bin/magento module:enable Rissc_Printformer
-5. Run ./bin/magento setup:upgrade
-6. Run ./bin/magento cache:flush
-7. Run rm -rf var/generation/*
+3. Run ./composer.phar update
+4. Run php bin/magento module:enable Rissc_Printformer
+5. Run php bin/magento setup:upgrade
+6. Run php bin/magento cache:flush
