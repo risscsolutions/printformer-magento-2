@@ -4,7 +4,7 @@ namespace Rissc\Printformer\Block\Catalog\Product\View;
 use \Magento\Catalog\Block\Product\Context;
 use \Magento\Framework\DataObject;
 use \Magento\Framework\Stdlib\ArrayUtils;
-use \Rissc\Core\Helper\General as GenericHelper;
+use \Magento\Framework\UrlInterface;
 use \Magento\Quote\Model\Quote;
 use \Magento\Quote\Model\Quote\ItemFactory;
 use \Magento\Catalog\Model\Product\OptionFactory;
@@ -15,9 +15,6 @@ use \Magento\Customer\Model\Session as CustomerSession;
 class Preselect
     extends \Magento\Catalog\Block\Product\View\AbstractView
 {
-    /** @var GenericHelper */
-    protected $_genericHelper;
-
     /** @var ItemFactory */
     protected $_itemFactory;
 
@@ -27,20 +24,23 @@ class Preselect
     /** @var CustomerSession */
     protected $_session;
 
+    /** @var UrlInterface */
+    protected $_urlInterface;
+
     public function __construct(
         Context $context,
         ArrayUtils $arrayUtils,
-        GenericHelper $_genericHelper,
+        UrlInterface $urlInterface,
         ItemFactory $_itemFactory,
         OptionFactory $_optionFactory,
         CustomerSession $_session,
         array $data = []
     )
     {
-        $this->_genericHelper = $_genericHelper;
         $this->_itemFactory = $_itemFactory;
         $this->_optionFactory = $_optionFactory;
         $this->_session = $_session;
+        $this->_urlInterface = $urlInterface;
 
         parent::__construct($context, $arrayUtils, $data);
     }
@@ -50,9 +50,7 @@ class Preselect
      */
     public function getOptionsSaveUrl()
     {
-        $_urlHelper = $this->_genericHelper->getUrlInterface();
-
-        return $_urlHelper->getUrl('printformer/save/options');
+        return $this->_urlInterface->getUrl('printformer/save/options');
     }
 
     /**
@@ -60,9 +58,7 @@ class Preselect
      */
     public function getOptionsGetUrl()
     {
-        $_urlHelper = $this->_genericHelper->getUrlInterface();
-
-        return $_urlHelper->getUrl('printformer/get/options');
+        return $this->_urlInterface->getUrl('printformer/get/options');
     }
 
     /**
@@ -70,9 +66,7 @@ class Preselect
      */
     public function getDraftsSaveUrl()
     {
-        $_urlHelper = $this->_genericHelper->getUrlInterface();
-
-        return $_urlHelper->getUrl('printformer/save/draft');
+        return $this->_urlInterface->getUrl('printformer/save/draft');
     }
 
     /**
@@ -80,9 +74,7 @@ class Preselect
      */
     public function getDraftsGetUrl()
     {
-        $_urlHelper = $this->_genericHelper->getUrlInterface();
-
-        return $_urlHelper->getUrl('printformer/get/draft');
+        return $this->_urlInterface->getUrl('printformer/get/draft');
     }
 
     /**

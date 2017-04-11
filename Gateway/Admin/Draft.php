@@ -5,7 +5,7 @@ use Magento\Framework\Json\Decoder;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Exception;
-use Rissc\Core\Helper\General;
+use Magento\Framework\UrlInterface;
 use Rissc\Printformer\Helper\Url as UrlHelper;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft as DraftModel;
@@ -26,8 +26,8 @@ class Draft
     /** @var UrlHelper */
     protected $urlHelper;
 
-    /** @var General */
-    protected $_helper;
+    /** @var UrlInterface */
+    protected $_urlInterface;
 
     /** @var DraftFactory */
     protected $_draftFactory;
@@ -39,14 +39,14 @@ class Draft
         LoggerInterface $logger,
         Decoder $jsonDecoder,
         UrlHelper $urlHelper,
-        General $helper,
+        UrlInterface $urlInterface,
         DraftFactory $draftFactory,
         LogHelper $logHelper
     ) {
         $this->logger = $logger;
         $this->jsonDecoder = $jsonDecoder;
         $this->urlHelper = $urlHelper;
-        $this->_helper = $helper;
+        $this->_urlInterface = $urlInterface;
         $this->_draftFactory = $draftFactory;
         $this->_logHelper = $logHelper;
     }
@@ -199,7 +199,7 @@ class Draft
 
             $postFields = [
                 'draftIds' => $draftIds,
-                'stateChangedNotifyUrl' => $this->_helper->getUrlInterface()->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS
+                'stateChangedNotifyUrl' => $this->_urlInterface->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS
             ];
 
             $_historyData['request_data'] = json_encode($postFields);

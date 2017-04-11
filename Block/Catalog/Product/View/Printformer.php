@@ -12,7 +12,6 @@ use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Helper\Url;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
-use Rissc\Core\Helper\General as GenericHelper;
 use Magento\Catalog\Model\Session as CatalogSession;
 
 class Printformer
@@ -39,9 +38,6 @@ class Printformer
     /** @var \Magento\Wishlist\Model\Item */
     protected $wishlistItem;
 
-    /** @var GenericHelper  */
-    protected $_genericHelper;
-
     /** @var CatalogSession */
     protected $_catalogSession;
 
@@ -58,7 +54,6 @@ class Printformer
      * @param \Magento\Catalog\Block\Product\Context         $context
      * @param \Magento\Framework\Stdlib\ArrayUtils           $arrayUtils
      * @param \Magento\Wishlist\Model\Item                   $wishlistItem
-     * @param \Rissc\Core\Helper\General                     $_genericHelper
      * @param \Magento\Catalog\Model\Session                 $_catalogSession
      * @param array                                          $data
      */
@@ -71,7 +66,6 @@ class Printformer
         Context $context,
         ArrayUtils $arrayUtils,
         Item $wishlistItem,
-        GenericHelper $_genericHelper,
         CatalogSession $_catalogSession,
         array $data = []
     ) {
@@ -83,7 +77,6 @@ class Printformer
         $this->cart = $cart;
         $this->_isScopePrivate = true; //@todo remove?
         $this->wishlistItem = $wishlistItem;
-        $this->_genericHelper = $_genericHelper;
         $this->_catalogSession = $_catalogSession;
 
         parent::__construct($context, $arrayUtils, $data);
