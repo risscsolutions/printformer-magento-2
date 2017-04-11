@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer">
+        <plugin name="set-adminhtml-order-view-item-renderer" type="Rissc\Printformer\Block\Adminhtml\Sales\Order\View\Items\Renderer\DefaultRendererPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Catalog\Block\Product\View\Gallery">
+        <plugin name="set-catalog-product-view-preview-image" type="Rissc\Printformer\Block\Catalog\Product\View\GalleryPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Checkout\Block\Cart\Item\Renderer">
+        <plugin name="set-checkout-cart-item-preview-image" type="Rissc\Printformer\Block\Checkout\Cart\Item\RendererPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit">
+        <plugin name="set-checkout-cart-item-edit-text" type="Rissc\Printformer\Block\Checkout\Cart\Item\Renderer\Actions\EditPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Checkout\CustomerData\DefaultItem">
+        <plugin name="set-mini-cart-item-preview-image" type="Rissc\Printformer\Checkout\CustomerData\DefaultItemPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Checkout\Controller\Cart\Add">
+        <plugin name="printformer-checkout-cart-add" type="Rissc\Printformer\Controller\Checkout\Cart\AddPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Wishlist\Controller\Index\Add">
+        <plugin name="set-guest-message-wishlist-add" type="Rissc\Printformer\Controller\Wishlist\Index\AddPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Wishlist\Model\Wishlist">
+        <plugin name="set-wishlist-item-printformer-data" type="Rissc\Printformer\Model\Wishlist\WishlistPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Wishlist\Block\Customer\Wishlist\Item\Column">
+        <plugin name="set-wishlist-item-preview-image" type="Rissc\Printformer\Block\Wishlist\Customer\Wishlist\Item\ColumnPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Wishlist\Controller\Index\UpdateItemOptions">
+        <plugin name="printformer-wishlist-update-item-options" type="Rissc\Printformer\Controller\Wishlist\Index\UpdateItemOptionsPlugin" sortOrder="100"/>
+    </type>
+    <type name="\Magento\Sales\Api\Data\OrderInterface">
+        <plugin name="printformer-sales-order" type="Rissc\Printformer\Model\Sales\OrderPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Quote\Api\Data\CartItemInterface">
+        <plugin name="check-item-represents-product" type="Rissc\Printformer\Model\Quote\Quote\ItemPlugin" sortOrder="100"/>
+    </type>
+    <type name="Magento\Quote\Api\Data\CartInterface">
+        <plugin name="printformer-quote-quote" type="Rissc\Printformer\Model\Quote\QuotePlugin" sortOrder="100"/>
+    </type>
+
+    <type name="\Itoris\DynamicProductOptions\Block\Options\Config">
+        <plugin name="Rissc_Printformer_Block_Options_Config_Plugin" type="Rissc\Printformer\Plugin\DynamicProductOptions\Config\Plugin" sortOrder="1000"/>
+    </type>
+
+    <type name="Magento\Framework\View\Element\Template">
+        <plugin name="Rissc_Printformer_Addtocart_ToHtml_Core" type="Rissc\Printformer\Block\Catalog\Product\View\Plugin" sortOrder="1000" />
+    </type>
+
+    <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
+</config>

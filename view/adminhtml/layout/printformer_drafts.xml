@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2015 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="printformer_drafts.grid.container">
+            <block class="Rissc\Baan\Block\Adminhtml\History\Grid" name="printformer_drafts.grid" as="grid">
+                <arguments>
+                    <argument name="id" xsi:type="string">drafts</argument>
+                    <argument name="dataSource" xsi:type="object">Rissc\Printformer\Model\ResourceModel\Draft\Collection</argument>
+                    <argument name="default_sort" xsi:type="string">created_at</argument>
+                    <argument name="default_dir" xsi:type="string">DESC</argument>
+                    <argument name="save_parameters_in_session" xsi:type="string">1</argument>
+                </arguments>
+                <block class="Magento\Backend\Block\Widget\Grid\Massaction"
+                       name="printformer_drafts.grid.massaction" as="grid.massaction">
+                    <arguments>
+                        <argument name="massaction_id_field" xsi:type="string">id</argument>
+                        <argument name="form_field_name" xsi:type="string">drafts</argument>
+                        <argument name="options" xsi:type="array">
+                            <item name="resend" xsi:type="array">
+                                <item name="label" xsi:type="string" translate="true">Resend</item>
+                                <item name="url" xsi:type="string">*/*/massResend</item>
+                                <item name="confirm" xsi:type="string"
+                                      translate="true">Are you sure you want to resend drafts to printformer?
+                                </item>
+                            </item>
+                        </argument>
+                    </arguments>
+                </block>
+                <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="printformer_drafts.grid.columnSet" as="grid.columnSet">
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="created_at">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Date</argument>
+                            <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="type" xsi:type="string">datetime</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="draft_id">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Draft-ID</argument>
+                            <argument name="index" xsi:type="string" translate="true">draft_id</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftEditor</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="order_item_id">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Order-Item-ID</argument>
+                            <argument name="index" xsi:type="string" translate="true">order_item_id</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\Order</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="store_id">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Store</argument>
+                            <argument name="index" xsi:type="string" translate="true">store_id</argument>
+                            <argument name="type" xsi:type="string">store</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="processing_status">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Processing Status</argument>
+                            <argument name="index" xsi:type="string" translate="true">processing_status</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftStatus</argument>
+                        </arguments>
+                    </block>
+                </block>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

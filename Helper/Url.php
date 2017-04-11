@@ -1,0 +1,387 @@
+<?php
+namespace Rissc\Printformer\Helper;
+
+use \Rissc\Printformer\Model\Config\Source\Redirect;
+use \Magento\Catalog\Api\Data\ProductInterface;
+
+class Url extends \Magento\Framework\App\Helper\AbstractHelper
+{
+    const ROLE_USER  = '0';
+    const ROLE_ADMIN = '1';
+
+    const URI_ADMIN_PRODUCTS            = 'api/admin/products';
+    const URI_ADMIN_GETPDF              = 'api/admin/getpdf';
+    const URI_USER_EDITOR               = 'user/editor/editor';
+    const URI_CUSTOMER_ORDERED          = 'api/customer/setdraftordered';
+    const URI_CUSTOMER_DRAFTIMG         = 'api/customer/draftimage';
+    const URI_CUSTOMER_DELETE           = 'api/customer/delete';
+    const URI_CUSTOMER_DRAFT            = 'api-ext/draft';
+    const URI_ADMIN_GETDRAFT            = 'api/admin/getdraft';
+    const URI_CUSTOMER_PDF_PROCESSING   = 'api-ext/pdf-processing';
+
+    /**
+     * @var \Magento\Framework\UrlInterface
+     */
+    protected $url;
+
+    /**
+     * @var \Rissc\Printformer\Helper\Config
+     */
+    protected $config;
+
+    /**
+     * @param \Magento\Framework\App\Helper\Context $context
+     * @param Config $config
+     */
+    public function __construct(
+        \Magento\Framework\App\Helper\Context $context,
+        \Rissc\Printformer\Helper\Config $config
+    ) {
+        parent::__construct($context);
+        $this->url = $context->getUrlBuilder();
+        $this->config = $config;
+    }
+
+    /**
+     * @param integer $storeId
+     * @return \Rissc\Printformer\Helper\Url
+     */
+    public function setStoreId($storeId)
+    {
+        $this->config->setStoreId($storeId);
+        return $this;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getStoreId()
+    {
+        return $this->config->getStoreId();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminProductsUrl()
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_ADMIN_PRODUCTS,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(self::ROLE_ADMIN)
+        );
+        return implode('/', $urlParts);
+    }
+
+    /**
+     * @param integer $draftId
+     * @param integer $quoteId
+     * @return string
+     */
+    public function getAdminPdfUrl($draftId, $quoteId)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_ADMIN_GETPDF,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(self::ROLE_ADMIN),
+            'risscw2pdraft',
+            md5($quoteId).$draftId
+        );
+        return implode('/', $urlParts);
+    }
+
+    /**
+     * @param            $draftId
+     * @param array|null $params
+     * @param string       $referrer
+     *
+     * @return string
+     */
+    public function getAdminEditorUrl($draftId, array $params = null, $referrer = null)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_USER_EDITOR,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(self::ROLE_ADMIN),
+            'locale',
+            $this->getLocale(),
+            'risscw2pdraft',
+            $draftId
+        );
+
+        if (is_array($params)) {
+            foreach ($params as $key => $value) {
+                $urlParts[] = $key;
+                $urlParts[] = $value;
+            }
+        }
+
+        if(!$referrer)
+        {
+            $referrer = $this->url->getUrl('*/*/*', ['_current' => true, '_use_rewrite' => true]);
+        }
+
+        return implode('/', $urlParts) . '?risscw2preferer=' . urlencode($referrer);
+    }
+
+    /**
+     * @param $productId
+     * @param null $draftId
+     * @param null $masterId
+     * @param array $params
+     * @return string
+     */
+    public function getEditorUrl($productId, $draftId = null, $masterId = null, array $params = null)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_USER_EDITOR,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(),
+            'locale',
+            $this->getLocale()
+        );
+
+        if (!is_null($draftId)) {
+            $urlParts[] = 'risscw2pdraft';
+            $urlParts[] = $draftId;
+        } else {
+            $urlParts[] = 'risscw2pmaster';
+            $urlParts[] = $masterId;
+        }
+
+        if (is_array($params)) {
+            foreach ($params as $key => $value) {
+                $urlParts[] = $key;
+                $urlParts[] = $value;
+            }
+        }
+
+        $params = [
+            'product' => $productId,
+            'store_id' => $this->getStoreId()
+        ];
+
+        if($this->_getRequest()->getParam('project_id'))
+        {
+            $params['project_id'] = $this->_getRequest()->getParam('project_id');
+        }
+
+        return implode('/', $urlParts) . '?risscw2preferer=' . urlencode(
+            $this->url->getUrl('printformer/editor/save', $params)
+        );
+    }
+
+    /**
+     * @param array $draftIds
+     * @param $quoteId
+     * @return string
+     */
+    public function getDraftOrderedUrl(array $draftIds, $quoteId)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_CUSTOMER_ORDERED,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(self::ROLE_ADMIN)
+        );
+
+        $data = [
+            $draftIds,
+            md5($quoteId)
+        ];
+
+        return implode('/', $urlParts) . '?cartdata=' . urlencode(json_encode($data));
+    }
+
+    /**
+     * @param $draftId
+     * @return string
+     */
+    public function getThumbImgUrl($draftId)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_CUSTOMER_DRAFTIMG,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(),
+            'risscw2pdraftid',
+            $draftId
+        );
+        return implode('/', $urlParts);
+    }
+
+    /**
+     * @param $draftId
+     * @return string
+     */
+    public function getDraftUrl($draftId)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_CUSTOMER_DRAFT,
+            $draftId
+        );
+
+        $authParams = [
+            $this->getApikeyParamName() . '=' . $this->getApikey(),
+            $this->getAuthkeyParamName() . '=' . $this->getAuthkey(self::ROLE_ADMIN),
+        ];
+
+        return implode('/', $urlParts) . (!empty($authParams) ? '?' . implode('&', $authParams) : '');
+    }
+
+    /**
+     * @param string $draftId
+     * @return string
+     */
+    public function getPdfProcessingUrl($draftId)
+    {
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_CUSTOMER_PDF_PROCESSING
+        );
+
+        $authParams = [
+            $this->getApikeyParamName() . '=' . $this->getApikey(),
+            $this->getAuthkeyParamName() . '=' . $this->getAuthkey(self::ROLE_ADMIN),
+        ];
+
+        return implode('/', $urlParts) . (!empty($authParams) ? '?' . implode('&', $authParams) : '');
+    }
+
+    /**
+     * @param $draftId
+     * @return string
+     */
+    public function getDraftDeleteUrl($draftId)
+    {
+        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_CUSTOMER_DELETE,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(self::ROLE_ADMIN),
+            'risscw2pdraftid',
+            $draftId
+        );
+        return implode('/', $urlParts);
+    }
+
+
+    /**
+     * @return string
+     */
+    protected function getHost()
+    {
+        return $this->config->getHost();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getLocale()
+    {
+        return $this->config->getLocale();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getApikeyParamName()
+    {
+        return md5(substr($this->config->getSecret(), 0, 1));
+    }
+
+    /**
+     * @return string
+     */
+    protected function getApikey()
+    {
+        return md5($this->config->getSecret() . $this->config->getLicense());
+    }
+
+    /**
+     * @return string
+     */
+    protected function getAuthkeyParamName()
+    {
+        return md5(substr($this->config->getSecret(), 1, 1));
+    }
+
+    /**
+     * @param string $roleId
+     * @return string
+     */
+    protected function getAuthkey($roleId = self::ROLE_USER)
+    {
+        return md5($this->config->getSecret() . $roleId);
+    }
+
+    /**
+     * @param \Magento\Catalog\Api\Data\ProductInterface $product
+     * @param array $redirectParams
+     * @return string
+     */
+    public function getRedirectUrl(ProductInterface $product = null, array $redirectParams = null)
+    {
+        if (!$redirectParams){
+            switch ($this->config->getConfigRedirect()) {
+                case Redirect::CONFIG_REDIRECT_URL_ALT:
+                    return $this->config->getRedirectAlt();
+                case Redirect::CONFIG_REDIRECT_URL_CART:
+                    return $this->url->getUrl('checkout/cart', ['_use_rewrite' => true]);
+                case Redirect::CONFIG_REDIRECT_URL_PRODUCT:
+                default:
+                    return $product->getUrlModel()->getUrl($product);
+            }
+        }
+
+        return $this->url->getUrl($redirectParams['controller'], $redirectParams['params']);
+    }
+
+    /**
+     * @param $draftId
+     * @param $quoteId
+     *
+     * @return string
+     */
+    public function getAdminDraftUrl($draftId, $quoteId)
+    {
+        $urlParts = array(
+            $this->getHost(),
+            self::URI_ADMIN_GETDRAFT,
+            $this->getApikeyParamName(),
+            $this->getApikey(),
+            $this->getAuthkeyParamName(),
+            $this->getAuthkey(self::ROLE_ADMIN),
+            'risscw2pdraft',
+            md5($quoteId).$draftId
+        );
+        return implode('/', $urlParts);
+    }
+}

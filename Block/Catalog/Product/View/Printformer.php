@@ -1,0 +1,647 @@
+<?php
+namespace Rissc\Printformer\Block\Catalog\Product\View;
+
+use Magento\Catalog\Block\Product\Context;
+use Magento\Catalog\Block\Product\View\AbstractView;
+use Magento\Checkout\Model\Cart;
+use Magento\Framework\Stdlib\ArrayUtils;
+use Magento\Wishlist\Model\Item;
+use Rissc\Printformer\Controller\Editor\Save;
+use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Model\DraftFactory;
+use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Core\Helper\General as GenericHelper;
+use Magento\Catalog\Model\Session as CatalogSession;
+
+class Printformer
+    extends AbstractView
+{
+    /** @var \Rissc\Printformer\Helper\Config */
+    protected $configHelper;
+
+    /** @var \Rissc\Printformer\Helper\Url */
+    protected $urlHelper;
+
+    /** @var \Rissc\Printformer\Helper\Session */
+    protected $sessionHelper;
+
+    /** @var \Rissc\Printformer\Model\DraftFactory */
+    protected $draftFactory;
+
+    /** @var \Magento\Store\Model\StoreManagerInterface */
+    protected $storeManager;
+
+    /** @var \Magento\Checkout\Model\Cart */
+    protected $cart;
+
+    /** @var \Magento\Wishlist\Model\Item */
+    protected $wishlistItem;
+
+    /** @var GenericHelper  */
+    protected $_genericHelper;
+
+    /** @var CatalogSession */
+    protected $_catalogSession;
+
+    protected $draftMasterId;
+
+    /**
+     * Printformer constructor.
+     *
+     * @param \Rissc\Printformer\Helper\Config      $configHelper
+     * @param \Rissc\Printformer\Helper\Url         $urlHelper
+     * @param \Rissc\Printformer\Helper\Session     $sessionHelper
+     * @param \Rissc\Printformer\Model\DraftFactory $draftFactory
+     * @param \Magento\Checkout\Model\Cart                   $cart
+     * @param \Magento\Catalog\Block\Product\Context         $context
+     * @param \Magento\Framework\Stdlib\ArrayUtils           $arrayUtils
+     * @param \Magento\Wishlist\Model\Item                   $wishlistItem
+     * @param \Rissc\Core\Helper\General                     $_genericHelper
+     * @param \Magento\Catalog\Model\Session                 $_catalogSession
+     * @param array                                          $data
+     */
+    public function __construct(
+        Config $configHelper,
+        Url $urlHelper,
+        Session $sessionHelper,
+        DraftFactory $draftFactory,
+        Cart $cart,
+        Context $context,
+        ArrayUtils $arrayUtils,
+        Item $wishlistItem,
+        GenericHelper $_genericHelper,
+        CatalogSession $_catalogSession,
+        array $data = []
+    ) {
+        $this->configHelper = $configHelper;
+        $this->urlHelper = $urlHelper;
+        $this->sessionHelper = $sessionHelper;
+        $this->draftFactory = $draftFactory;
+        $this->storeManager = $context->getStoreManager();
+        $this->cart = $cart;
+        $this->_isScopePrivate = true; //@todo remove?
+        $this->wishlistItem = $wishlistItem;
+        $this->_genericHelper = $_genericHelper;
+        $this->_catalogSession = $_catalogSession;
+
+        parent::__construct($context, $arrayUtils, $data);
+
+        $this->draftMasterId = $this->_catalogSession->getData('printformer_masterid');
+    }
+
+    /* (non-PHPdoc)
+     * @see \Magento\Framework\View\Element\Template::_toHtml()
+     */
+    protected function _toHtml()
+    {
+        if ($this->isPrintformerEnabed() && $this->getProduct()->isSaleable()) {
+            return parent::_toHtml();
+        }
+        return '';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPrintformerEnabed()
+    {
+        return $this->getProduct()->getPrintformerEnabled();
+    }
+
+    public function getPersonalisations()
+    {
+        $catalogSession = $this->sessionHelper->getCatalogSession();
+        $personalisations = $catalogSession->getData(Save::PERSONALISATIONS_QUERY_PARAM);
+        if(isset($personalisations[$this->getProduct()->getStoreId()][$this->getProduct()->getId()]))
+        {
+            return $personalisations[$this->getProduct()->getStoreId()][$this->getProduct()->getId()];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDraftId()
+    {
+        $draftId = null;
+        // Get draft ID on cart product edit page
+        if ($this->getRequest()->getActionName() == 'configure'
+            && $this->getRequest()->getParam('id')
+            && $this->getRequest()->getParam('product_id')
+        ) {
+            $quoteItem = null;
+            $wishlistItem = null;
+            $id        = (int)$this->getRequest()->getParam('id');
+            $productId = (int)$this->getRequest()->getParam('product_id');
+            if ($id) {
+                switch ($this->getRequest()->getModuleName()) {
+                    case 'checkout':
+                        $quoteItem = $this->cart->getQuote()->getItemById($id);
+                        if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
+                            $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                        }
+                        break;
+                    case 'wishlist':
+                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
+                            $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else {
+            $draftId = $this->sessionHelper->getDraftId(
+                $this->getProduct()->getId(),
+                $this->storeManager->getStore()->getId());
+        }
+        return $draftId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMasterId()
+    {
+        return $this->getProduct()->getPrintformerProduct();
+    }
+
+    /**
+     * @return string
+     */
+    public function getEditorUrl()
+    {
+        return $this->urlHelper
+            ->getEditorUrl($this->getProduct()->getId(), $this->getDraftId(), $this->getMasterId());
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isAllowSkipConfig()
+    {
+        return $this->configHelper
+            ->isAllowSkipConfig();
+    }
+
+    /**
+     * @return string
+     */
+    public function getButtonText()
+    {
+        return $this->configHelper
+            ->getButtonText();
+    }
+
+    /**
+     * @return string
+     */
+    public function getButtonCss()
+    {
+        return $this->configHelper
+            ->getButtonCss();
+    }
+
+    /**
+     * @boolean
+     */
+    public function isFormatChangeNotice()
+    {
+        return $this->configHelper->isFormatChangeNotice();
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormatNoticeText()
+    {
+        return $this->configHelper->getFormatNoticeText();
+    }
+
+    public function getCloseNoticeText()
+    {
+        return $this->configHelper->getCloseNoticeText();
+    }
+
+    /**
+     * @return string
+     */
+    public function getRedirectType()
+    {
+        return $this->configHelper->getConfigRedirect();
+    }
+
+    /**
+     * @return string
+     */
+    public function getVariationsConfig()
+    {
+        $config = [];
+        if ($this->getFormatAttributeId()) {
+            $id = 'attribute' . $this->getFormatAttributeId();
+            $config[$id] = [
+                'param'  => $this->getFormatQueryParameter(),
+                'map'    => $this->getFormatAttributeConfig(),
+                'notice' => $this->isFormatChangeNotice()
+            ];
+        }
+        if ($this->getFormatOptionId()) {
+            $id = 'select_' . $this->getFormatOptionId();
+            $config[$id] = [
+                'param'  => $this->getFormatQueryParameter(),
+                'map'    => $this->getFormatOptionConfig(),
+                'notice' => $this->isFormatChangeNotice()
+            ];
+        }
+        if ($this->getColorAttributeId()) {
+            $id = 'attribute' . $this->getColorAttributeId();
+            $config[$id] = [
+                'param'  => $this->getColorQueryParameter(),
+                'map'    => $this->getColorAttributeConfig(),
+                'notice' => false
+            ];
+        }
+        if ($this->getColorOptionId()) {
+            $id = 'select_' . $this->getColorOptionId();
+            $config[$id] = [
+                'param'  => $this->getColorQueryParameter(),
+                'map'       => $this->getColorOptionConfig(),
+                'notice' => false
+            ];
+        }
+        return $config;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormatQueryParameter()
+    {
+        return $this->configHelper->getFormatQueryParameter();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFormatAttributeEnabled()
+    {
+        return $this->configHelper->isFormatAttributeEnabled();
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormatAttributeId()
+    {
+        if (!$this->isFormatAttributeEnabled()) {
+            return null;
+        }
+        $attributeCode = $this->configHelper->getFormatAttributeName();
+        foreach ($this->getProduct()->getAttributes() as $attribute) {
+            if ($attribute->getAttributeCode() == $attributeCode) {
+                return $attribute->getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormatAttributeName()
+    {
+        return $this->configHelper->getFormatAttributeName();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getFormatAttributeConfig()
+    {
+        if (!$this->isFormatAttributeEnabled()) {
+            return null;
+        }
+        $config = [];
+        $configValues = $this->configHelper->getFormatAttributeValues();
+        foreach ($configValues as $configValue) {
+            $config[$configValue['attr_id']] = $configValue['value'];
+        }
+        return $config;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFormatOptionEnabled()
+    {
+        return $this->configHelper->isFormatOptionEnabled();
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormatOptionId()
+    {
+        if (!$this->isFormatOptionEnabled()) {
+            return null;
+        }
+        $optionName = $this->configHelper->getFormatOptionName();
+        foreach ($this->getProduct()->getOptions() as $option) {
+            if (strcasecmp($option->getDefaultTitle(), $optionName) === 0) {
+                return $option->getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormatOptionName()
+    {
+        return $this->configHelper->getFormatOptionName();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getFormatOptionConfig()
+    {
+        if (!$this->isFormatOptionEnabled()) {
+            return null;
+        }
+        $config = [];
+        $optionName = $this->configHelper->getFormatOptionName();
+        foreach ($this->getProduct()->getOptions() as $option) {
+            if ($option->getDefaultTitle() != $optionName) {
+                continue;
+            }
+            $configValues = $this->configHelper->getFormatOptionValues();
+            foreach ($option->getValues() as $valueId => $value) {
+                foreach ($configValues as $configValue) {
+                    if ($value->getDefaultTitle() != $configValue['option']) {
+                        continue;
+                    }
+                    $config[$valueId] = $configValue['value'];
+                }
+            }
+        }
+        return $config;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorQueryParameter()
+    {
+        return $this->configHelper->getColorQueryParameter();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isColorAttributeEnabled()
+    {
+        return $this->configHelper->isColorAttributeEnabled();
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorAttributeId()
+    {
+        if (!$this->isColorAttributeEnabled()) {
+            return null;
+        }
+        $attributeCode = $this->configHelper->getColorAttributeName();
+        foreach ($this->getProduct()->getAttributes() as $attribute) {
+            if ($attribute->getAttributeCode() == $attributeCode) {
+                return $attribute->getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorAttributeName()
+    {
+        return $this->configHelper->getColorAttributeName();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getColorAttributeConfig()
+    {
+        if (!$this->isColorAttributeEnabled()) {
+            return null;
+        }
+        $config = [];
+        $configValues = $this->configHelper->getColorAttributeValues();
+        foreach ($configValues as $configValue) {
+            $config[$configValue['attr_id']] = $configValue['value'];
+        }
+        return $config;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isColorOptionEnabled()
+    {
+        return $this->configHelper->isColorOptionEnabled();
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorOptionId()
+    {
+        if (!$this->isColorOptionEnabled()) {
+            return null;
+        }
+        $optionName = $this->configHelper->getColorOptionName();
+        foreach ($this->getProduct()->getOptions() as $option) {
+            if (strcasecmp($option->getDefaultTitle(), $optionName) === 0) {
+                return $option->getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColorOptionName()
+    {
+        return $this->configHelper->getColorOptionName();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getColorOptionConfig()
+    {
+        if (!$this->isColorOptionEnabled()) {
+            return null;
+        }
+        $config = [];
+        $optionName = $this->configHelper->getColorOptionName();
+        foreach ($this->getProduct()->getOptions() as $option) {
+            if ($option->getDefaultTitle() != $optionName) {
+                continue;
+            }
+            $configValues = $this->configHelper->getColorOptionValues();
+            foreach ($option->getValues() as $valueId => $value) {
+                foreach ($configValues as $configValue) {
+                    if ($value->getDefaultTitle() != $configValue['option']) {
+                        continue;
+                    }
+                    $config[$valueId] = $configValue['value'];
+                }
+            }
+        }
+        return $config;
+    }
+
+    /**
+     * @param integer $draftId
+     * @return array
+     */
+    public function getProductVariations($draftId = null)
+    {
+        $variations = [];
+        if ($draftId) {
+            $draft = $this->draftFactory->create()
+                ->load($draftId, 'draft_id');
+            if ($draft->getFormatVariation()) {
+                $variations[$this->configHelper->getFormatQueryParameter()] = $draft->getFormatVariation();
+            }
+            if ($draft->getColorVariation()) {
+                $variations[$this->configHelper->getColorQueryParameter()] = $draft->getColorVariation();
+            }
+        }
+        return $variations;
+    }
+
+    /**
+     * @param integer $draftId
+     * @return array
+     */
+    public function getProductQty($draftId = null)
+    {
+        $qty = 1; //@todo min qty from sysconf?
+        if ($draftId) {
+            $draft = $this->draftFactory->create() //@todo add getDraft()
+                ->load($draftId, 'draft_id');
+            if ($draft->getQty()) {
+                $qty = $draft->getQty();
+            }
+        }
+        return $qty;
+    }
+
+    /**
+     * @return string
+     */
+    public function getJsonConfig()
+    {
+        $config = [
+            'draftId'          => $this->getDraftId(),
+            'productTitle'     => $this->getProduct()->getName(),
+            'allowAddCart'     => $this->isAllowSkipConfig() || $this->getDraftId(),
+            'urlTemplate'      => $this->getEditorUrl(),
+            'variationsConfig' => $this->getVariationsConfig(),
+            'variations'       => $this->getProductVariations($this->getDraftId()),
+            'qty'              => $this->getProductQty($this->getDraftId())
+        ];
+
+        $extendConfig = [
+            'IsUploadProduct' => $this->isUploadProduct(),
+            'DraftsSaveUrl' => $this->getPreselectBlock()->getDraftsSaveUrl(),
+            'DraftsGetUrl' => $this->getPreselectBlock()->getDraftsGetUrl(),
+            'ProductId' => $this->getProduct()->getId(),
+            'isConfigure' => $this->getPreselectBlock()->isOnConfigurePDS(),
+            'draftMasterId' => $this->getDraftMasterId(),
+        ];
+
+        if($this->isUploadProduct())
+        {
+            $extendConfig['UploadMasterId'] = $this->getUploadMasterId();
+            $extendConfig['UploadEditorUrl'] = $this->getUploadEditorUrl();
+        }
+
+        if($this->getPersonalisations())
+        {
+            $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();
+        }
+
+        return json_encode(array_merge($config, $extendConfig));
+    }
+
+    /**
+     * @return string
+     */
+    public function getDraftMasterId()
+    {
+        if (!$this->draftMasterId
+            && $this->getRequest()->getActionName() == 'configure'
+            && $this->getRequest()->getParam('id')
+            && $this->getRequest()->getParam('product_id')
+        ) {
+            $quoteItem = null;
+            $id        = (int)$this->getRequest()->getParam('id');
+            $productId = (int)$this->getRequest()->getParam('product_id');
+            if ($id) {
+                $quoteItem = $this->cart->getQuote()->getItemById($id);
+            }
+            if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
+                $this->draftMasterId = $quoteItem->getBuyRequest()->getData('printformer_masterid');
+            }
+        }
+        return $this->draftMasterId;
+    }
+
+    /**
+     * @return \Rissc\Printformer\Block\Catalog\Product\View\Preselect
+     */
+    public function getPreselectBlock()
+    {
+        /** @var \Rissc\Printformer\Block\Catalog\Product\View\Preselect $block */
+        $block = $this->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Preselect');
+
+        return $block;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUploadMasterId()
+    {
+        return $this->getProduct()->getPrintformerUploadProduct();
+    }
+
+    /**
+     * @return string
+     */
+    public function getUploadEditorUrl()
+    {
+        return $this->urlHelper->setStoreId($this->_storeManager->getStore()->getId())
+            ->getEditorUrl($this->getProduct()->getId(), null, $this->getUploadMasterId());
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUploadProduct()
+    {
+        return !empty($this->getProduct()->getPrintformerUploadEnabled());
+    }
+}

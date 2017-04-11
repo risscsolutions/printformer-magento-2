@@ -1,0 +1,44 @@
+<?php
+// @codingStandardsIgnoreFile
+?>
+<?php
+/**
+ * @see \Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync
+ */
+?>
+<script>
+require(['prototype'], function(){
+//<![CDATA[
+    function printformerSync() {
+        var messageDiv = $('printformer_sync_result');
+        new Ajax.Request('<?php /* @escapeNotVerified */ echo $block->getAjaxUrl() ?>', {
+            onSuccess: function(response) {
+                var result = '<?php /* @escapeNotVerified */ echo __('Error') ?>';
+                try {
+                    if (response.responseText.isJSON()) {
+                        response = response.responseText.evalJSON();
+                        result = response.message;
+                    }
+                    if (response.success == 'true') {
+                        messageDiv.removeClassName('hidden').addClassName('success')
+                    } else {
+                        messageDiv.removeClassName('hidden').addClassName('error')
+                    }
+                } catch (e) {
+                    messageDiv.removeClassName('hidden').addClassName('error')
+                }
+                messageDiv.update(result);
+            }
+        });
+    }
+    window.printformerSync = printformerSync;
+//]]>
+});
+</script>
+<div class="actions">
+    <span><?php echo __('Match Products') ?></span>
+    <button onclick="printformerSync(); return false;" class="action-printformer-sync" type="button" id="<?php echo $block->getHtmlId() ?>">
+        <span><?php echo $block->escapeHtml($block->getButtonLabel()) ?></span>
+    </button>
+    <div id="printformer_sync_result" class="message-validation hidden"></div>
+</div>

@@ -1,0 +1,24 @@
+<script type="text/javascript">
+    require(['jquery', 'Magento_Ui/js/modal/modal', 'domReady!'], function($, $modal){
+        $.each($('tr'), function(i, el){
+            if($(el).data('role') == 'row') {
+                $(el).click(function (e) {
+                    e.preventDefault();
+                    var apiData = $(el).find('.api_data').clone();
+                    $(apiData).show();
+                    var options = {
+                        type: 'popup',
+                        responsive: true,
+                        innerScroll: true,
+                        clickableOverlay: true,
+                        title: '',
+                        buttons: []
+                    };
+                    var popup = $modal(options, $(apiData));
+                    $(apiData).modal('openModal');
+                    return false;
+                });
+            }
+        });
+    });
+</script>

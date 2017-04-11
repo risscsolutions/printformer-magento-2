@@ -1,0 +1,30 @@
+<?php if($block->getProduct()->isSalable()): ?>
+    <?php $buttonTitle = $block->getButtonText() ?>
+    <button style="display:none;" id="printformer-edit-button" type="button" data-pf-masterid="<?php echo $block->getMasterId(); ?>" data-pf-type="editor" class="printformer-preselect action primary tocart <?php /* @escapeNotVerified */ echo $block->getButtonCss() ?>">
+        <span><?php /* @escapeNotVerified */ echo __($buttonTitle) ?></span>
+    </button>
+
+    <?php if($block->isUploadProduct()) : ?>
+        <?php $buttonTitle = 'Upload + Print' ?>
+        <button style="display:none;" id="printformer-upload-button" type="button" data-pf-masterid="<?php echo $block->getUploadMasterId(); ?>" data-pf-type="upload" class="printformer-preselect action primary tocart <?php /* @escapeNotVerified */ echo $block->getButtonCss() ?>">
+            <span><?php /* @escapeNotVerified */ echo __($buttonTitle) ?></span>
+        </button>
+    <?php endif; ?>
+    <div id="printformer-editor-main" title="<?php /* @escapeNotVerified */ echo $block->getProduct()->getName() ?>">
+    </div>
+    <div id="printformer-editor-close">
+        <p><?php echo /* @escapeNotVerified */ __($block->getCloseNoticeText()) ?></p>
+    </div>
+    <?php if ($block->isFormatChangeNotice()): ?>
+        <div id="printformer-editor-notice">
+            <p><?php echo /* @escapeNotVerified */ __($block->getFormatNoticeText()) ?></p>
+        </div>
+    <?php endif; ?>
+    <script type="text/x-magento-init">
+        {
+            "#product_addtocart_form": {
+                "printformer": <?php /* @escapeNotVerified */ echo $block->getJsonConfig() ?>
+            }
+        }
+    </script>
+<?php endif;?>

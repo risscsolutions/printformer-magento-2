@@ -1,0 +1,21 @@
+{
+    "name": "rissc/module-printformer",
+    "description": "Magento 2 and Rissc Printformer",
+    "type": "magento2-module",
+    "version": "100.1.7",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "require": {
+        "php": "~5.6.0|7.0.2|~7.0.6",
+        "magento/module-catalog": "*",
+        "rissc/module-core": "1.2.1"
+    },
+    "autoload": {
+        "files": [ "registration.php" ],
+        "psr-4": {
+            "Rissc\\Printformer\\": ""
+        }
+    }
+}
