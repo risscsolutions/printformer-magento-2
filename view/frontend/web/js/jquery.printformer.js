@@ -1,31 +1,32 @@
-require(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/modal', 'mage/translate'], function ($) {
-    $.fn.extend({
-        /**
-         * @param options
-         *
-         * @returns {printformerTools}
-         */
-        printformerTools: function (options) {
-            return new printformerTools(this, options);
-        }
-    });
-
+(function (factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/modal', 'mage/translate'], factory);
+    } else {
+        factory(jQuery);
+    }
+}(function ($) {
     /**
      * @param element
      * @param options
      *
      * @returns {printformerTools}
      */
-    var printformerTools = function (element, options) {
+    var printformerTools = function (element, tool, options) {
         this.element = (element instanceof $) ? element : $(element);
         this.options = options;
 
-        return this.init();
+        return this.init(tool);
     };
 
     printformerTools.prototype = {
-        init: function() {
-            return this;
+        init: function(tool) {
+            if(tool == 'session') {
+                return this.sessionData();
+            } else if (tool == 'preselect') {
+                return this.preselect();
+            } else {
+                return this;
+            }
         },
 
         isDefined: function(value) {
@@ -192,8 +193,8 @@ require(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/modal', 'mage/translate'], 
                 }
             }
             /*var priceCalculate = $(qtySelector).pricecalculate({
-                priceContainer: '.price-box .price-container .price-wrapper'
-            });*/
+             priceContainer: '.price-box .price-container .price-wrapper'
+             });*/
 
             return this;
         },
@@ -430,4 +431,6 @@ require(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/modal', 'mage/translate'], 
             });
         }
     };
-});
+
+    return printformerTools;
+}));

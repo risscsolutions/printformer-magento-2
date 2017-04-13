@@ -5,7 +5,7 @@ define([
     'Magento_Ui/js/modal/modal',
     'mage/translate',
     'printformerTools'
-], function ($, $ui, $pq, $modal, $t) {
+], function ($, $ui, $pq, $modal, $t, pfTools) {
     'use strict';
 
     $.widget('mage.printformer', {
@@ -294,14 +294,8 @@ define([
                         elementToSave = elem;
                     }
                 });
-                $(draftIdInput).printformerTools(
-                    {
-                        saveUrl: options.DraftsSaveUrl,
-                        currentProduct: options.ProductId
-                    }
-                )
-                    .sessionData()
-                    .addDraftIdToSession($(elementToSave), options.draftId);
+                var sessionTools = new pfTools($(draftIdInput), 'session', {saveUrl: options.DraftsSaveUrl, currentProduct: options.ProductId});
+                sessionTools.addDraftIdToSession($(elementToSave), options.draftId);
             }
 
             this.addBtnDisable();

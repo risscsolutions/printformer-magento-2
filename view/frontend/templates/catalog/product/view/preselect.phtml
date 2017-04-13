@@ -4,44 +4,40 @@
  */
 ?>
 <script type="text/javascript">
-    require(['jquery', 'printformerTools', 'domReady!'], function($) {
-        $(window).on('load', function() {
+    require(['domReady!', 'jquery', 'printformerTools'], function(domReady, $, pfTools){
+        <?php
+        $jsonOptions = json_encode([
+            'currentProduct' => $block->getProduct()->getId()
+        ]);
+        ?>
+        var sessionTools = new pfTools($('#product-addtocart-button, #product-updatecart-button'), 'session', <?php echo $jsonOptions; ?>);
+        sessionTools.getSavedEditorCalls('<?php echo $block->getDraftsGetUrl(); ?>');
+
+        var preselectButtons = $('.printformer-preselect');
+        $.each(preselectButtons, function (i, elem) {
             <?php
             $jsonOptions = json_encode([
+                'saveUrl' => $block->getOptionsSaveUrl(),
                 'currentProduct' => $block->getProduct()->getId()
             ]);
             ?>
 
-            $('#product-addtocart-button, #product-updatecart-button').printformerTools(<?php echo $jsonOptions; ?>)
-                .sessionData()
-                .getSavedEditorCalls('<?php echo $block->getDraftsGetUrl(); ?>');
-
-            var preselectButtons = $('.printformer-preselect');
-            $.each(preselectButtons, function (i, elem) {
-                <?php
-                $jsonOptions = json_encode([
-                    'saveUrl' => $block->getOptionsSaveUrl(),
-                    'currentProduct' => $block->getProduct()->getId()
-                ]);
-                ?>
-
-                $(preselectButtons[i]).printformerTools(<?php echo $jsonOptions; ?>)
-                    .preselect()
-                    .initButton();
-            });
+            var preselectTools = new pfTools($(preselectButtons[i]), 'preselect', <?php echo $jsonOptions; ?>);
+            preselectTools.initButton();
         });
-        $(document).on('pricemodelListLoaded', function(){
-            <?php
-                $opt = [
-                    'optionsUrl' => $block->getOptionsGetUrl(),
-                    'preselected' => ($block->isOnConfigurePDS() ? $block->getPreselection() : []),
-                    'currentProduct' => $block->getProduct()->getId()
-                ];
-            ?>
-
-            $(this).printformerTools(<?php echo json_encode($opt); ?>)
-                .preselect()
-                .getPreselectedOptions();
+        <?php
+        $opt = [
+            'optionsUrl' => $block->getOptionsGetUrl(),
+            'preselected' => ($block->isOnConfigurePDS() ? $block->getPreselection() : []),
+            'currentProduct' => $block->getProduct()->getId()
+        ];
+        ?>
+        $(document).on('pricemodelListLoaded', function () {
+            var preselectTools = new pfTools($(this), 'preselect', <?php echo json_encode($opt); ?>);
+            preselectTools.getPreselectedOptions();
         });
+
+        var preselectTools = new pfTools($(document), 'preselect', <?php echo json_encode($opt); ?>);
+        preselectTools.getPreselectedOptions();
     });
 </script>
