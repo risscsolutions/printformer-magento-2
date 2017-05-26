@@ -105,12 +105,10 @@ class Open extends Action
 
         $editorUrl = $this->_urlHelper->getDraftEditorUrl($draftID);
 
-        $queryParams = [
-            'master_id' => $this->getRequest()->getParam('master_id'),
-            'product_id' => $this->getRequest()->getParam('product_id'),
+        $queryParams = array_merge($this->_request->getParams(), [
             'store_id' => $this->_storeManager->getStore()->getId(),
             'draft_process' => $draftProcess->getId()
-        ];
+        ]);
 
         $referrer = $this->_url->getUrl('printformer/editor/save', $queryParams);
         $encodedUrl = urlencode(base64_encode($referrer));
