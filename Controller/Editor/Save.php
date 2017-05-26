@@ -80,14 +80,14 @@ class Save
      */
     public function execute()
     {
-        $masterId  = $this->getRequest()->getParam('risscw2pmaster');
+        $masterId  = $this->getRequest()->getParam('master_id');
         $this->_catalogSession->setPrintformerMasterid($masterId);
 
         $result = null;
 
         try {
-            $productId       = $this->getRequest()->getParam('product');
-            $draftId         = $this->getRequest()->getParam('risscw2pdraftid');
+            $productId       = $this->getRequest()->getParam('product_id');
+            $draftId         = $this->getRequest()->getParam('draft_process');
             $storeId         = $this->getRequest()->getParam('store_id');
 
             $product = $this->productRepository->getById($productId, false, $storeId);
@@ -145,27 +145,20 @@ class Save
 
     /**
      * @param \Magento\Catalog\Api\Data\ProductInterface $product
-     * @param                                            $draftId
+     * @param                                            $draftProcessId
      * @param                                            $storeId
      * @param array                                      $extra
      *
      * @return array
      */
-    protected function initDraft(ProductInterface $product, $draftId, $storeId, $extra = [])
+    protected function initDraft(ProductInterface $product, $draftProcessId, $storeId, $extra = [])
     {
-        if ($this->getRequest()->getParam('updateWishlistItemOptions') != 'wishlist/index/updateItemOptions') {
-            $this->sessionHelper->setDraftId($product->getId(), $draftId, $storeId);
-        }
+        $draftProcess = $this->draftFactory->create();
+        $draftProcess->getResource()->load($draftProcess, $draftProcessId);
 
-        $this->draftFactory->create()
-            ->load($draftId, 'draft_id')
-            ->setStoreId($storeId)
-            ->setProductId($product->getId())
-            ->setQty($this->getRequest()->getParam('qty'))
-            ->setDraftId($draftId)
-            ->setFormatVariation($this->_getFormatVariation())
-            ->setColorVariation($this->_getColorVariation())
-            ->save();
+        if ($this->getRequest()->getParam('updateWishlistItemOptions') != 'wishlist/index/updateItemOptions') {
+            $this->sessionHelper->setDraftId($product->getId(), $draftProcess->getDraftId(), $storeId);
+        }
 
         /** @var Session $session */
         $session = $this->sessionHelper->getCatalogSession();
@@ -174,7 +167,7 @@ class Save
         }
 
         $params = array(
-            InstallSchema::COLUMN_NAME_DRAFTID => $draftId
+            InstallSchema::COLUMN_NAME_DRAFTID => $draftProcess->getDraftId()
         );
 
         if ($this->getRequest()->getParam('super_attribute')) {

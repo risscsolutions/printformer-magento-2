@@ -4,15 +4,19 @@ namespace Rissc\Printformer\Block\Catalog\Product\View;
 use Magento\Catalog\Block\Product\Context;
 use Magento\Catalog\Block\Product\View\AbstractView;
 use Magento\Checkout\Model\Cart;
+use Magento\Framework\DataObject;
 use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Wishlist\Model\Item;
+use Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Data;
 use Rissc\Printformer\Controller\Editor\Save;
+use Rissc\Printformer\Gateway\Admin\Product;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Helper\Url;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
 use Magento\Catalog\Model\Session as CatalogSession;
+use Magento\Catalog\Model\Product as CatalogProduct;
 
 class Printformer
     extends AbstractView
@@ -42,6 +46,9 @@ class Printformer
     protected $_catalogSession;
 
     protected $draftMasterId;
+
+    /** @var DataObject */
+    protected $_capabilities = null;
 
     /**
      * Printformer constructor.
@@ -165,12 +172,14 @@ class Printformer
     }
 
     /**
+     * @param string $intent
+     *
      * @return string
      */
-    public function getEditorUrl()
+    public function getEditorUrl($intent = 'customize')
     {
         return $this->urlHelper
-            ->getEditorUrl($this->getProduct()->getId(), $this->getDraftId(), $this->getMasterId());
+            ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent);
     }
 
     /**
@@ -626,8 +635,50 @@ class Printformer
      */
     public function getUploadEditorUrl()
     {
-        return $this->urlHelper->setStoreId($this->_storeManager->getStore()->getId())
-            ->getEditorUrl($this->getProduct()->getId(), null, $this->getUploadMasterId());
+        return $this->getEditorUrl('upload');
+    }
+
+    /**
+     * @param \Magento\Catalog\Model\Product $product
+     *
+     * @return \Magento\Framework\DataObject
+     */
+    public function getCapabilities(CatalogProduct $product)
+    {
+        if(!$this->_capabilities)
+        {
+            $obj = new DataObject();
+            $attribute = $product->getResource()->getAttribute('printformer_capabilities');
+            $capabilities = explode(', ', $attribute->getFrontend()->getValue($product));
+
+            foreach ($capabilities as $value)
+            {
+                $obj->setData(strtolower($value), true);
+            }
+            $this->_capabilities = $obj;
+        }
+
+        return $this->_capabilities;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEditorProduct()
+    {
+        $capabilities = $this->getCapabilities($this->getProduct());
+
+        return $capabilities->getEditor();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPersonalizationProduct()
+    {
+        $capabilities = $this->getCapabilities($this->getProduct());
+
+        return $capabilities->getPersonalizations();
     }
 
     /**
@@ -635,6 +686,8 @@ class Printformer
      */
     public function isUploadProduct()
     {
-        return !empty($this->getProduct()->getPrintformerUploadEnabled());
+        $capabilities = $this->getCapabilities($this->getProduct());
+
+        return $capabilities->getUpload();
     }
 }

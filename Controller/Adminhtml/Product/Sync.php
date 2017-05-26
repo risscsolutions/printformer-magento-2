@@ -46,6 +46,7 @@ class Sync extends \Magento\Backend\App\Action
             if (!$this->config->setStoreId($storeId)->isEnabled()) {
                 throw new \Exception(__('Module disabled.'));
             }
+
             $this->gateway->syncProducts($storeId);
             $response = ['success' => 'true', 'message' => __('Products sync successful.')];
         } catch (\Exception $e) {

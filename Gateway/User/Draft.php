@@ -2,45 +2,53 @@
 namespace Rissc\Printformer\Gateway\User;
 
 use Rissc\Printformer\Gateway\Exception;
+use Psr\Log\LoggerInterface;
+use Magento\Framework\HTTP\ZendClientFactory;
+use Magento\Framework\Json\Decoder;
+use Rissc\Printformer\Helper\Url as UrlHelper;
+use Magento\Store\Model\StoreManagerInterface;
+use Rissc\Printformer\Helper\Log as LogHelper;
+use Magento\Catalog\Model\Product;
+use Magento\Framework\UrlInterface;
 
 class Draft
 {
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
+    /** @var LoggerInterface */
     protected $logger;
 
-    /**
-     * @var \Magento\Framework\HTTP\ZendClientFactor
-     */
+    /** @var ZendClientFactor */
     protected $httpClientFactory;
 
-    /**
-     * @var \Magento\Framework\Json\Decoder
-     */
+    /** @var Decoder */
     protected $jsonDecoder;
 
-    /**
-     * @var \Rissc\Printformer\Helper\Url
-     */
+    /** @var UrlHelper */
     protected $urlHelper;
 
-    /**
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory
-     * @param \Magento\Framework\Json\Decoder $jsonDecoder
-     * @param \Rissc\Printformer\Helper\Url $urlHelper
-     */
+    /** @var StoreManagerInterface */
+    protected $_storeManager;
+
+    /** @var LogHelper */
+    protected $_logHelper;
+
+    protected $_url;
+
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory,
-        \Magento\Framework\Json\Decoder $jsonDecoder,
-        \Rissc\Printformer\Helper\Url $urlHelper
+        LoggerInterface $logger,
+        ZendClientFactory $httpClientFactory,
+        Decoder $jsonDecoder,
+        UrlHelper $urlHelper,
+        StoreManagerInterface $storeManager,
+        LogHelper $logHelper,
+        UrlInterface $url
     ) {
         $this->logger = $logger;
         $this->httpClientFactory = $httpClientFactory;
         $this->jsonDecoder = $jsonDecoder;
         $this->urlHelper = $urlHelper;
+        $this->_storeManager = $storeManager;
+        $this->_logHelper = $logHelper;
+        $this->_url = $url;
     }
 
     /**
@@ -83,6 +91,69 @@ class Draft
     }
 
     /**
+     * @param \Rissc\Printformer\Gateway\User\Product $product
+     * @param                                         $masterId
+     *
+     * @return null|string
+     */
+    public function createDraft($masterId, $intent)
+    {
+        $url      = null;
+        $response = null;
+
+        $_historyData = [
+            'direction' => 'outgoing'
+        ];
+
+        $url = $this->urlHelper
+            ->setStoreId($this->_storeManager->getStore()->getId())
+            ->getDraftUrl();
+
+        $_historyData['api_url'] = $url;
+
+        $headers = [
+            "X-Magento-Tags-Pattern: .*",
+            "Content-Type: application/json"
+        ];
+
+        $postFields = [
+            'masterId' => $masterId,
+            'intent' => $this->getIntent($intent)
+        ];
+
+        $_historyData['request_data'] = json_encode($postFields);
+        $_historyData['draft_id'] = $masterId;
+
+        $curlOptions = [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($postFields),
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => false
+        ];
+
+        $curlResponse = json_decode($this->_curlRequest($url, $curlOptions), true);
+        $_historyData['response_data'] = json_encode($curlResponse);
+        if(isset($curlResponse['success']) && !$curlResponse['success'])
+        {
+            $_historyData['status'] = 'failed';
+            $this->_logHelper->addEntry($_historyData);
+            return null;
+        }
+
+        if(isset($curlResponse['data']['draftHash']))
+        {
+            $_historyData['status'] = 'send';
+            $this->_logHelper->addEntry($_historyData);
+            return (string)$curlResponse['data']['draftHash'];
+        }
+
+        $_historyData['status'] = 'failed';
+        $this->_logHelper->addEntry($_historyData);
+        return null;
+    }
+
+    /**
      * @param integer $draftId
      * @param integer $storeId
      * @throws Exception
@@ -118,5 +189,48 @@ class Draft
         }
 
         return $this;
+    }
+
+    protected function _curlRequest($url, $options)
+    {
+        $ch = curl_init($url);
+        if (is_array($options))
+        {
+            foreach ($options as $key => $option)
+            {
+                curl_setopt($ch, $key, $option);
+            }
+        }
+        $connectionTimeout = 5;
+        $requestTimeout = 30;
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connectionTimeout);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $requestTimeout);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+
+        $body = curl_exec($ch);
+        curl_close($ch);
+
+        return $body;
+    }
+
+    public function getIntent($intent)
+    {
+        switch(strtolower($intent))
+        {
+            case 'editor':
+                return 'customize';
+                break;
+            case 'personalizations':
+                return 'personalize';
+                break;
+            case 'upload':
+                return 'upload';
+                break;
+        }
+
+        return $intent;
     }
 }

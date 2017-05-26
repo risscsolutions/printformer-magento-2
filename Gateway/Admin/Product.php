@@ -256,23 +256,7 @@ class Product
                 ->addAttributeToFilter('printformer_enabled', ['eq' => 1]);
 
             $catalogProductToEdit = $catalogProductToEdit->getFirstItem();
-            if(!$catalogProductToEdit->getId())
-            {
-                $catalogProductToEdit = $catalogProduct->getCollection()
-                    ->setStoreId($storeId)
-                    ->addAttributeToFilter('printformer_upload_product', ['eq' => $pfProductToDelete->getMasterId()])
-                    ->addAttributeToFilter('printformer_upload_enabled', ['eq' => 1]);
-
-                $catalogProductToEdit = $catalogProductToEdit->getFirstItem();
-                if($catalogProductToEdit->getId())
-                {
-                    $query = "UPDATE `" . $this->_connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->_attributePfUploadEnabled . " AND `value` = 1 AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
-                    $this->_connection->query($query);
-                    $query = "UPDATE `" . $this->_connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->_attributePfUploadProduct . " AND `value` = " . $pfProductToDelete->getMasterId() . " AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
-                    $this->_connection->query($query);
-                }
-            }
-            else
+            if($catalogProductToEdit->getId())
             {
                 $query = "UPDATE `" . $this->_connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->_attributePfEnabled . " AND `value` = 1 AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
                 $this->_connection->query($query);

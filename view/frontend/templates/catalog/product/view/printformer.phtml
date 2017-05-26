@@ -1,4 +1,9 @@
-<?php if($block->getProduct()->isSalable()): ?>
+<?php
+/** @var $block \Rissc\Printformer\Block\Catalog\Product\View\Printformer */
+$hasAnyPrintformerCapability = $block->isUploadProduct() || $block->isEditorProduct() || $block->isPersonalizationProduct();
+?>
+
+<?php if($block->getProduct()->isSalable() && $hasAnyPrintformerCapability): ?>
     <?php $buttonTitle = $block->getButtonText() ?>
     <button style="display:none;" id="printformer-edit-button" type="button" data-pf-masterid="<?php echo $block->getMasterId(); ?>" data-pf-type="editor" class="printformer-preselect action primary tocart <?php /* @escapeNotVerified */ echo $block->getButtonCss() ?>">
         <span><?php /* @escapeNotVerified */ echo __($buttonTitle) ?></span>

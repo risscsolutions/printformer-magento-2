@@ -68,7 +68,7 @@ class MassResend
                 {
                     /** @var Order $order */
                     $order = $orderItem->getOrder();
-                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_ASYNC)
+                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC)
                     {
                         $this->_printformerDraft->setDraftOrdered($order);
                     }

@@ -7,6 +7,8 @@ use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
+use Magento\Catalog\Model\ProductFactory;
+use Magento\Catalog\Model\Product as CatalogProduct;
 
 /**
  * Class UpgradeData
@@ -18,14 +20,21 @@ class UpgradeData
     /** @var EavSetupFactory */
     private $eavSetupFactory;
 
+    /** @var ProductFactory */
+    protected $_productFactory;
+
     /**
      * UpgradeData constructor.
      *
      * @param EavSetupFactory $eavSetupFactory
      */
-    public function __construct(EavSetupFactory $eavSetupFactory)
+    public function __construct(
+        EavSetupFactory $eavSetupFactory,
+        ProductFactory $productFactory
+    )
     {
         $this->eavSetupFactory = $eavSetupFactory;
+        $this->_productFactory = $productFactory;
     }
 
     /**
@@ -136,6 +145,45 @@ class UpgradeData
                     ");
                 }
             }
+        }
+
+        if(version_compare($context->getVersion(), '100.1.11', '<'))
+        {
+            /** @var EavSetup $eavSetup */
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_upload_enabled');
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_upload_product');
+
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'printformer_capabilities',
+                [
+                    'group' => 'Printformer',
+                    'type' => 'text',
+                    'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
+                    'label' => 'Printformer Capabilities',
+                    'input' => 'multiselect',
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'visible' => true,
+                    'required' => false,
+                    'user_defined' => false,
+                    'default' => 0,
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'used_in_product_listing' => true,
+                    'unique' => false,
+                    'apply_to' => '',
+                    'option' => [
+                        'values' => [
+                            'Editor',
+                            'Personalizations',
+                            'Upload'
+                        ]
+                    ]
+                ]
+            );
         }
 
         $setup->endSetup();

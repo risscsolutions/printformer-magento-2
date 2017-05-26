@@ -116,20 +116,22 @@ class Draft
 
             $response = $this->_curlRequest($url, $options);
             $this->logger->debug($response);
+        } else {
+            $this->logger->debug(__('Error setting draft ordered. Item is null or already ordered.'));
         }
         $_historyData['response_data'] = $response;
         if (empty($response))
         {
             $_historyData['status'] = 'failed';
             $this->_logHelper->addEntry($_historyData);
-            throw new Exception(__('Error setting draft ordered.'));
+            throw new Exception(__('Error setting draft ordered. Empty Response: '. $response . ', Url: ' . $url));
         }
         $responseArray = $this->jsonDecoder->decode($response);
 
         if(!$responseArray['success']) {
             $_historyData['status'] = 'failed';
             $this->_logHelper->addEntry($_historyData);
-            throw new Exception(__('Error setting draft ordered.'));
+            throw new Exception(__('Error setting draft ordered. Response success: false'));
         }
 
         if (!is_array($responseArray)) {

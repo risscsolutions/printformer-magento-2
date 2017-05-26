@@ -12,12 +12,14 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
     const URI_ADMIN_PRODUCTS            = 'api/admin/products';
     const URI_ADMIN_GETPDF              = 'api/admin/getpdf';
     const URI_USER_EDITOR               = 'user/editor/editor';
+    const URI_USER_DRAFTEDITOR          = 'editor';
     const URI_CUSTOMER_ORDERED          = 'api/customer/setdraftordered';
     const URI_CUSTOMER_DRAFTIMG         = 'api/customer/draftimage';
     const URI_CUSTOMER_DELETE           = 'api/customer/delete';
     const URI_CUSTOMER_DRAFT            = 'api-ext/draft';
     const URI_ADMIN_GETDRAFT            = 'api/admin/getdraft';
     const URI_CUSTOMER_PDF_PROCESSING   = 'api-ext/pdf-processing';
+    const URI_CUSTOMER_CREATE_DRAFT     = 'some/path/on/server';
 
     /**
      * @var \Magento\Framework\UrlInterface
@@ -143,48 +145,25 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
      * @param array $params
      * @return string
      */
-    public function getEditorUrl($productId, $draftId = null, $masterId = null, array $params = null)
+    public function getEditorUrl($productId, $masterId, $intent = 'customize')
     {
-        //@todo use ZF URL builder? Implement generic method for building printformer URLs?
+        return $this->_getUrl('printformer/editor/open', ['master_id' => $masterId, 'product_id' => $productId, 'intent' => $intent]);
+    }
+
+    public function getDraftEditorUrl($draftId)
+    {
         $urlParts = array(
             $this->getHost(),
-            self::URI_USER_EDITOR,
-            $this->getApikeyParamName(),
-            $this->getApikey(),
-            $this->getAuthkeyParamName(),
-            $this->getAuthkey(),
-            'locale',
-            $this->getLocale()
+            self::URI_USER_DRAFTEDITOR,
+            $draftId
         );
 
-        if (!is_null($draftId)) {
-            $urlParts[] = 'risscw2pdraft';
-            $urlParts[] = $draftId;
-        } else {
-            $urlParts[] = 'risscw2pmaster';
-            $urlParts[] = $masterId;
-        }
-
-        if (is_array($params)) {
-            foreach ($params as $key => $value) {
-                $urlParts[] = $key;
-                $urlParts[] = $value;
-            }
-        }
-
-        $params = [
-            'product' => $productId,
-            'store_id' => $this->getStoreId()
+        $authParams = [
+            $this->getApikeyParamName() . '=' . $this->getApikey(),
+            $this->getAuthkeyParamName() . '=' . $this->getAuthkey(self::ROLE_ADMIN),
         ];
 
-        if($this->_getRequest()->getParam('project_id'))
-        {
-            $params['project_id'] = $this->_getRequest()->getParam('project_id');
-        }
-
-        return implode('/', $urlParts) . '?risscw2preferer=' . urlencode(
-            $this->url->getUrl('printformer/editor/save', $params)
-        );
+        return implode('/', $urlParts) . (!empty($authParams) ? '?' . implode('&', $authParams) : '');
     }
 
     /**
@@ -236,13 +215,13 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $draftId
      * @return string
      */
-    public function getDraftUrl($draftId)
+    public function getDraftUrl($draftId = null)
     {
         //@todo use ZF URL builder? Implement generic method for building printformer URLs?
         $urlParts = array(
             $this->getHost(),
             self::URI_CUSTOMER_DRAFT,
-            $draftId
+            !$draftId ? '' : $draftId
         );
 
         $authParams = [
