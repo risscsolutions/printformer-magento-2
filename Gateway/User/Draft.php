@@ -229,6 +229,9 @@ class Draft
             case 'upload':
                 return 'upload';
                 break;
+            case 'upload and editor':
+                return 'upload-and-editor';
+                break;
         }
 
         return $intent;

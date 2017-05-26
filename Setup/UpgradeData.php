@@ -186,6 +186,45 @@ class UpgradeData
             );
         }
 
+        if(version_compare($context->getVersion(), '100.1.13', '<'))
+        {
+            /** @var EavSetup $eavSetup */
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
+
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'printformer_capabilities',
+                [
+                    'group' => 'Printformer',
+                    'type' => 'text',
+                    'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
+                    'label' => 'Printformer Capabilities',
+                    'input' => 'multiselect',
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'visible' => true,
+                    'required' => false,
+                    'user_defined' => false,
+                    'default' => 0,
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'used_in_product_listing' => true,
+                    'unique' => false,
+                    'apply_to' => '',
+                    'option' => [
+                        'values' => [
+                            'Editor',
+                            'Personalizations',
+                            'Upload',
+                            'Upload and Editor'
+                        ]
+                    ]
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }

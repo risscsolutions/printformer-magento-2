@@ -653,7 +653,7 @@ class Printformer
 
             foreach ($capabilities as $value)
             {
-                $obj->setData(strtolower($value), true);
+                $obj->setData(strtolower(str_replace(' ', '_', $value)), true);
             }
             $this->_capabilities = $obj;
         }
@@ -689,5 +689,12 @@ class Printformer
         $capabilities = $this->getCapabilities($this->getProduct());
 
         return $capabilities->getUpload();
+    }
+
+    public function isUploadAndEditorProduct()
+    {
+        $capabilities = $this->getCapabilities($this->getProduct());
+
+        return $capabilities->getUploadAndEditor();
     }
 }
