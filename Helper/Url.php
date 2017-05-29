@@ -146,7 +146,7 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function getEditorUrl($productId, $masterId, $intent = 'customize', $user = null)
+    public function getEditorUrl($productId, $masterId, $intent = null, $user = null)
     {
         return $this->_getUrl('printformer/editor/open', ['master_id' => $masterId, 'product_id' => $productId, 'intent' => $intent, 'user' => $user]);
     }

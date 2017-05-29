@@ -176,7 +176,7 @@ class Printformer
      *
      * @return string
      */
-    public function getEditorUrl($intent = 'customize')
+    public function getEditorUrl($intent = null)
     {
         return $this->urlHelper
             ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent);

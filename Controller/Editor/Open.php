@@ -66,14 +66,12 @@ class Open extends Action
         $product->getResource()->load($product, $this->getRequest()->getParam('product_id'));
 
         $draftID = null;
-        if($product->getId())
-        {
+        if($product->getId()) {
             $intent = $this->getRequest()->getParam('intent');
-            $draftID = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent ? $intent : 'customize');
+            $draftID = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
         }
 
-        if(!$draftID)
-        {
+        if(!$draftID) {
             $this->messageManager->addNoticeMessage(__('We could not determine the right Parameters. Please try again.'));
             echo '
                 <script type="text/javascript">
@@ -92,8 +90,7 @@ class Open extends Action
         ]);
         $draftProcess->getResource()->save($draftProcess);
 
-        if(!$draftProcess->getId())
-        {
+        if(!$draftProcess->getId()) {
             $this->messageManager->addNoticeMessage(__('We could not save your Draft. Please try again.'));
             echo '
                 <script type="text/javascript">
