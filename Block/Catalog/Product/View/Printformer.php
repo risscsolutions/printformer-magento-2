@@ -574,7 +574,7 @@ class Printformer
             'draftMasterId' => $this->getDraftMasterId(),
         ];
 
-        if($this->isUploadProduct())
+        if($this->isUploadAndEditorProduct())
         {
             $extendConfig['UploadMasterId'] = $this->getUploadMasterId();
             $extendConfig['UploadEditorUrl'] = $this->getUploadEditorUrl();
@@ -635,7 +635,7 @@ class Printformer
      */
     public function getUploadEditorUrl()
     {
-        return $this->getEditorUrl('upload');
+        return $this->getEditorUrl('upload-and-editor');
     }
 
     /**
