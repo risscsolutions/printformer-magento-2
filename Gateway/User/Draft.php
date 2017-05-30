@@ -96,7 +96,7 @@ class Draft
      *
      * @return null|string
      */
-    public function createDraft($masterId, $intent)
+    public function createDraft($masterId, $intent = null)
     {
         $url      = null;
         $response = null;
@@ -117,9 +117,12 @@ class Draft
         ];
 
         $postFields = [
-            'masterId' => $masterId,
-            'intent' => $this->getIntent($intent)
+            'masterId' => $masterId
         ];
+
+        if($intent !== null) {
+            $postFields['intent'] = $this->getIntent($intent);
+        }
 
         $_historyData['request_data'] = json_encode($postFields);
         $_historyData['draft_id'] = $masterId;
