@@ -1,46 +1,53 @@
 <?php
 namespace Rissc\Printformer\Block\Catalog\Product\View;
 
-use \Magento\Catalog\Block\Product\Context;
-use \Magento\Framework\DataObject;
-use \Magento\Framework\Stdlib\ArrayUtils;
-use \Magento\Framework\UrlInterface;
-use \Magento\Quote\Model\Quote;
-use \Magento\Quote\Model\Quote\ItemFactory;
-use \Magento\Catalog\Model\Product\OptionFactory;
-use \Magento\Catalog\Model\Product\Option;
-use \Rissc\PriceModels\Model\Pricemodel;
-use \Magento\Customer\Model\Session as CustomerSession;
+use Magento\Catalog\Block\Product\View\AbstractView;
+use Magento\Catalog\Block\Product\Context;
+use Magento\Framework\DataObject;
+use Magento\Framework\Stdlib\ArrayUtils;
+use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\ItemFactory;
+use Magento\Catalog\Model\Product\OptionFactory;
+use Rissc\PriceModels\Model\Pricemodel;
+use Magento\Customer\Model\Session as CustomerSession;
 
-class Preselect
-    extends \Magento\Catalog\Block\Product\View\AbstractView
+class Preselect extends AbstractView
 {
-    /** @var ItemFactory */
+    /**
+     * @var ItemFactory
+     */
     protected $_itemFactory;
 
-    /** @var OptionFactory */
+    /**
+     * @var OptionFactory
+     */
     protected $_optionFactory;
 
-    /** @var CustomerSession */
+    /**
+     * @var CustomerSession
+     */
     protected $_session;
 
-    /** @var UrlInterface */
-    protected $_urlInterface;
-
+    /**
+     * Preselect constructor.
+     * @param Context $context
+     * @param ArrayUtils $arrayUtils
+     * @param ItemFactory $_itemFactory
+     * @param OptionFactory $_optionFactory
+     * @param CustomerSession $_session
+     * @param array $data
+     */
     public function __construct(
         Context $context,
         ArrayUtils $arrayUtils,
-        UrlInterface $urlInterface,
         ItemFactory $_itemFactory,
         OptionFactory $_optionFactory,
         CustomerSession $_session,
         array $data = []
-    )
-    {
+    ) {
         $this->_itemFactory = $_itemFactory;
         $this->_optionFactory = $_optionFactory;
         $this->_session = $_session;
-        $this->_urlInterface = $urlInterface;
 
         parent::__construct($context, $arrayUtils, $data);
     }
@@ -50,7 +57,7 @@ class Preselect
      */
     public function getOptionsSaveUrl()
     {
-        return $this->_urlInterface->getUrl('printformer/save/options');
+        return $this->_urlBuilder->getUrl('printformer/save/options');
     }
 
     /**
@@ -58,7 +65,7 @@ class Preselect
      */
     public function getOptionsGetUrl()
     {
-        return $this->_urlInterface->getUrl('printformer/get/options');
+        return $this->_urlBuilder->getUrl('printformer/get/options');
     }
 
     /**
@@ -66,7 +73,7 @@ class Preselect
      */
     public function getDraftsSaveUrl()
     {
-        return $this->_urlInterface->getUrl('printformer/save/draft');
+        return $this->_urlBuilder->getUrl('printformer/save/draft');
     }
 
     /**
@@ -74,7 +81,7 @@ class Preselect
      */
     public function getDraftsGetUrl()
     {
-        return $this->_urlInterface->getUrl('printformer/get/draft');
+        return $this->_urlBuilder->getUrl('printformer/get/draft');
     }
 
     /**
