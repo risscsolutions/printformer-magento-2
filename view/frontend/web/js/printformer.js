@@ -34,8 +34,11 @@ define([
                 inputQty = $(options.qtySelector),
                 params = $('[data-action="add-to-wishlist"]').data('post'),
                 formKey = $('[name="form_key"]'),
-                action = params.action.split('/'),
                 updateWishlistItemOptions = '';
+            var action = undefined;
+            if(params) {
+                action = params.action.split('/');
+            }
             /**
              * todo: Check why it's not working?
              * for (var k in this.options.variations) {
@@ -58,20 +61,24 @@ define([
                 url += encodeURIComponent('/form_key/' + formKey.val());
             }
 
-            $.each(action, function(index, val) {
-                if (val == 'wishlist' || val == 'index') {
-                    updateWishlistItemOptions += val + '/';
-                } else if (val == 'updateItemOptions') {
-                    updateWishlistItemOptions += val;
-                }
-            });
+            if(action != undefined) {
+                $.each(action, function (index, val) {
+                    if (val == 'wishlist' || val == 'index') {
+                        updateWishlistItemOptions += val + '/';
+                    } else if (val == 'updateItemOptions') {
+                        updateWishlistItemOptions += val;
+                    }
+                });
+            }
 
             url += encodeURIComponent('?');
-            $.each(params.data, function(index, val) {
-                if (index !== 'product' && index !== 'qty' && index !== 'uenc' ) {
-                    url += encodeURIComponent('&' + index + '=' + val);
-                }
-            });
+            if(params) {
+                $.each(params.data, function (index, val) {
+                    if (index !== 'product' && index !== 'qty' && index !== 'uenc') {
+                        url += encodeURIComponent('&' + index + '=' + val);
+                    }
+                });
+            }
 
             if (updateWishlistItemOptions.length) {
                 url += encodeURIComponent('&updateWishlistItemOptions=' + updateWishlistItemOptions);
@@ -186,11 +193,11 @@ define([
                     'class': 'ok-btn',
                     'click': this.editorCloseOk.bind(this)
                 },
-                {
-                    'text': $t('No'),
-                    'class': 'cancel-btn',
-                    'click': this.editorCloseCancel.bind(this)
-                }]
+                    {
+                        'text': $t('No'),
+                        'class': 'cancel-btn',
+                        'click': this.editorCloseCancel.bind(this)
+                    }]
             });
         },
 
@@ -227,11 +234,11 @@ define([
                     'class': 'ok-btn',
                     'click': this.editorNoticeOk.bind(this)
                 },
-                {
-                    'text': 'Cancel',
-                    'class': 'cancel-btn',
-                    'click': this.editorNoticeCancel.bind(this)
-                }]
+                    {
+                        'text': 'Cancel',
+                        'class': 'cancel-btn',
+                        'click': this.editorNoticeCancel.bind(this)
+                    }]
             });
         },
 
@@ -351,9 +358,9 @@ define([
              */
                 .show();
 
-             if(options.draftId && this.isUploadProduct()) {
-                 this.setButtonText($(this.uploaBtn), $t('View upload'));
-             }
+            if(options.draftId && this.isUploadProduct()) {
+                this.setButtonText($(this.uploaBtn), $t('View upload'));
+            }
         },
 
         uploadBtnEnable: function () {
