@@ -40,7 +40,7 @@
         <plugin name="printformer-quote-quote" type="Rissc\Printformer\Model\Quote\QuotePlugin" sortOrder="100"/>
     </type>
 
-    <type name="\Itoris\DynamicProductOptions\Block\Options\Config">
+    <type name="Itoris\DynamicProductOptions\Block\Options\Config">
         <plugin name="Rissc_Printformer_Block_Options_Config_Plugin" type="Rissc\Printformer\Plugin\DynamicProductOptions\Config\Plugin" sortOrder="1000"/>
     </type>
 

@@ -220,6 +220,7 @@ class Product
                     ->setStatus($responseRealigned[$masterID]['status'])
                     ->setMasterId($responseRealigned[$masterID]['rissc_w2p_master_id'])
                     ->setMd5($responseRealigned[$masterID]['rissc_w2p_md5'])
+                    // ->setIntents(implode(''$responseRealigned[$masterID][])
                     ->setCreatedAt(time())
                     ->setUpdatedAt(time());
                 $pfProduct->getResource()->save($pfProduct);

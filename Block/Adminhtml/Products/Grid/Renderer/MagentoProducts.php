@@ -30,8 +30,7 @@ class MagentoProducts
         $productCollection = $product->getCollection()
             ->addAttributeToFilter(
                 [
-                    ['attribute' => 'printformer_product', 'eq' => $row->getMasterId()],
-                    ['attribute' => 'printformer_upload_product', 'eq' => $row->getMasterId()]
+                    ['attribute' => 'printformer_product', 'eq' => $row->getMasterId()]
                 ]
             )
             ->addStoreFilter($row->getStoreId())
