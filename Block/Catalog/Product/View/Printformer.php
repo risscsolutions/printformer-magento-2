@@ -580,6 +580,12 @@ class Printformer
             $extendConfig['UploadEditorUrl'] = $this->getUploadEditorUrl();
         }
 
+        if($this->isUploadProduct())
+        {
+            $extendConfig['UploadMasterId'] = $this->getMasterId();
+            $extendConfig['UploadEditorUrl'] = $this->getEditorUrl('upload');
+        }
+
         if($this->getPersonalisations())
         {
             $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();
