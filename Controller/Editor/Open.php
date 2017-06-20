@@ -10,6 +10,7 @@ use Magento\Catalog\Model\Product;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 
 class Open extends Action
 {
@@ -25,8 +26,11 @@ class Open extends Action
     /** @var StoreManagerInterface */
     protected $_storeManager;
 
-
+    /** @var DraftFactory */
     protected $_draftFactory;
+
+    /** @var SessionHelper */
+    protected $_sessionHelper;
 
     public function __construct(
         Context $context,
@@ -34,7 +38,8 @@ class Open extends Action
         UrlHelper $urlHelper,
         ProductFactory $productFactory,
         StoreManagerInterface $storeManager,
-        DraftFactory $draftFactory
+        DraftFactory $draftFactory,
+        SessionHelper $sessionHelper
     )
     {
         $this->_draftGateway = $draftGateway;
@@ -42,6 +47,7 @@ class Open extends Action
         $this->_productFactory = $productFactory;
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
+        $this->_sessionHelper = $sessionHelper;
 
         parent::__construct($context);
     }
@@ -65,10 +71,12 @@ class Open extends Action
         $product = $this->_productFactory->create();
         $product->getResource()->load($product, $this->getRequest()->getParam('product_id'));
 
-        $draftID = null;
-        if($product->getId()) {
+        $draftID = $this->_sessionHelper->getDraftId($product->getId(), $product->getStoreId());
+        $isEdit = true;
+        if($product->getId() && !$draftID) {
             $intent = $this->getRequest()->getParam('intent');
             $draftID = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
+            $isEdit = false;
         }
 
         if(!$draftID) {
@@ -122,7 +130,7 @@ class Open extends Action
             $queryArray[] = $key . '=' . $value;
         }
 
-        $redirectUrl = $urlParts[0] . '?' . implode('&', $queryArray);
+        $redirectUrl = $urlParts[0] . ($isEdit ? '/edit' : '') . '?' . implode('&', $queryArray);
 
         $redirect->setUrl($redirectUrl);
 
