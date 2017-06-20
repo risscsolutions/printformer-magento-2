@@ -50,4 +50,7 @@
 
     <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
                 type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
+
+    <preference for="Magento\Ui\Component\Form\Element\MultiSelect"
+                type="Rissc\Printformer\Block\Adminhtml\System\Catalog\Product\Form\Renderer\MultiSelect" />
 </config>

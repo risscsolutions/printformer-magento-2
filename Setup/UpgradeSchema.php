@@ -200,6 +200,19 @@ class UpgradeSchema
             $setup->getConnection()->createTable($table);
         }
 
+        if(version_compare($context->getVersion(), '100.1.21', '<'))
+        {
+            $connection->addColumn(
+                $connection->getTableName('printformer_product'),
+                'intents',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Product Intents'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }
