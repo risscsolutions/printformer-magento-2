@@ -21,15 +21,24 @@ define([
             variations: []
         },
         formatChange: false,
+        currentDrafts: null,
 
-        getUploadEditorUrl: function() {
-            return this.options.UploadEditorUrl;
+        getUploadUrl: function() {
+            return this.options.urls.upload;
+        },
+
+        getUploadAndEditorUrl: function() {
+            return this.options.urls.uploadAndEditor;
+        },
+
+        getPersonalizeUrl: function() {
+            return this.options.urls.personalize;
         },
 
         getEditorUrl: function() {
             // prepare URL
             var options = this.options,
-                urlParts = options.urlTemplate.split('?'),
+                urlParts = options.urls.customize.split('?'),
                 url = urlParts[0],
                 inputQty = $(options.qtySelector),
                 params = $('[data-action="add-to-wishlist"]').data('post'),
@@ -111,25 +120,32 @@ define([
         },
 
         _create: function () {
-            this._initEditorMain();
-            this._initAddBtn();
-            this._initEditBtn();
-            this._initUploadBtn();
-            this._initVariations();
-            if(this.options.isConfigure) {
-                this.hideSecondButton();
-                this.setPrimaryButton($t('Edit draft'));
-            }
-
             var that = this;
-            if(this.options.personalizations > 0) {
-                this.initPersonalisationQty();
-                $(document).on('printformer_preselect_options_after', function() {
-                    that.initPersonalisationQty();
-                });
-            }
+            $.ajax({
+                url: that.options.DraftsGetUrl,
+                method: 'get',
+                dataType: 'json'
+            }).done(function(data){
+                that.currentDrafts = data;
+                that._initEditorMain();
+                that._initAddBtn();
+                that._initEditBtn();
+                that._initUploadBtn();
+                that._initVariations();
+                if(that.options.isConfigure) {
+                    that.hideSecondButton();
+                    that.setPrimaryButton($t('Edit draft'));
+                }
 
-            $(document).trigger('printformer:loaded');
+                if(that.options.personalizations > 0) {
+                    that.initPersonalisationQty();
+                    $(document).on('printformer_preselect_options_after', function() {
+                        that.initPersonalisationQty();
+                    });
+                }
+
+                $(document).trigger('printformer:loaded');
+            });
         },
 
         hideSecondButton: function(){
@@ -139,15 +155,25 @@ define([
         },
 
         setPrimaryButton: function(text) {
-            var editDraftMasterId = this.options.draftMasterId;
-            var UploadMasterId = this.options.UploadMasterId;
+            var that = this;
+
+            var editDraftIntent = this.options.currentSessionIntent;
             var draftType = 'editor';
-            if(editDraftMasterId == UploadMasterId) {
+            if(editDraftIntent == 'upload' || editDraftIntent == 'upload-and-editor') {
                 draftType = 'upload';
             }
-
-            $(this.editBtn).attr('data-pf-masterid', editDraftMasterId);
+            
+            $(this.editBtn).attr('data-pf-masterid', this.options.masterId);
             $(this.editBtn).attr('data-pf-type', draftType);
+            $(this.editBtn).attr('data-pf-intent', editDraftIntent);
+
+            if(draftType == 'upload') {
+                $(this.editBtn).unbind('click');
+                $(this.editBtn).click({printformer: this}, function(event) {
+                    var url = editDraftIntent == 'upload-and-editor' ? that.getUploadAndEditorUrl() : that.getUploadUrl();
+                    event.data.printformer.editorMainOpen(url);
+                });
+            }
 
             if($(this.editBtn).length) {
                 var span = $(this.editBtn).children('span');
@@ -272,7 +298,7 @@ define([
         },
 
         isUploadProduct: function() {
-            return this.options.draftMasterId == this.options.UploadMasterId;
+            return (this.options.currentSessionIntent == 'upload-and-editor' || this.options.currentSessionIntent == 'upload');
         },
 
         _initAddBtn: function () {
@@ -284,25 +310,15 @@ define([
                 draftIdInput = $('<input value="' + options.draftId + '" type="hidden" id="printformer_draftid" name="printformer_draftid"/>');
                 $(options.qtySelector).after(draftIdInput);
             }
-            var draftMasterIdInput = null;
-            if (options.draftMasterId) {
-                var afterElem = options.qtySelector;
-                if(draftIdInput !== null) {
-                    afterElem = draftIdInput;
-                }
-                var draftMasterIdInput = $('<input value="' + options.draftMasterId + '" type="hidden" id="printformer_masterid" name="printformer_masterid"/>');
-                $(afterElem).after(draftMasterIdInput);
+            var intentInput = null;
+            if (draftIdInput && options.intent) {
+                intentInput = $('<input value="' + options.intent + '" type="hidden" id="printformer_intent" name="printformer_intent"/>');
+                $(draftIdInput).after(intentInput);
             }
-            if(draftIdInput !== null && draftMasterIdInput !== null && options.draftId) {
-                var elementToSave = null;
-                var preselectButtons = $('.printformer-preselect');
-                $.each(preselectButtons, function (i, elem) {
-                    if($(elem).data('pf-masterid') == $(draftMasterIdInput).val()) {
-                        elementToSave = elem;
-                    }
-                });
-                var sessionTools = new pfTools($(draftIdInput), 'session', {saveUrl: options.DraftsSaveUrl, currentProduct: options.ProductId});
-                sessionTools.addDraftIdToSession($(elementToSave), options.draftId);
+            var uniqueIdInput = null;
+            if (draftIdInput && intentInput && options.unique_id) {
+                uniqueIdInput = $('<input value="' + options.unique_id + '" type="hidden" id="printformer_unique_session_id" name="printformer_unique_session_id"/>');
+                $(intentInput).after(uniqueIdInput);
             }
 
             this.addBtnDisable();
@@ -332,7 +348,15 @@ define([
              */
                 .show();
 
-            if (options.draftId && !this.isUploadProduct()) {
+            var hasDraft = false;
+            if(this.currentDrafts) {
+                if (typeof this.currentDrafts['customize'] != typeof undefined) {
+                    hasDraft = true;
+                } else if (typeof this.currentDrafts['personalize'] != typeof undefined) {
+                    hasDraft = true;
+                }
+            }
+            if (hasDraft) {
                 this.setButtonText($(this.editBtn), $t('View draft'));
             }
         },
@@ -349,16 +373,26 @@ define([
             var that = this;
             var options = this.options;
             this.uploaBtn = $(this.options.uploadBtnSelector);
+            var isWithEditor = false;
+            var url = that.getUploadUrl();
+            if($(that.uploaBtn).data('pf-intent') == 'upload-and-editor') {
+                var url = that.getUploadAndEditorUrl();
+                isWithEditor = true;
+            }
             this.uploaBtn.click({printformer: this}, function(event) {
-                event.data.printformer.editorMainOpen(that.getUploadEditorUrl());
+                event.data.printformer.editorMainOpen(url);
             })
             /**
              * Removed moving button because we need it in another Container.
              * .insertBefore(this.addBtn)
              */
                 .show();
-
-            if(options.draftId && this.isUploadProduct()) {
+            var buttonIntent = (isWithEditor ? 'upload-and-editor' : 'upload');
+            var hasDraft = false;
+            if(this.currentDrafts && typeof this.currentDrafts[buttonIntent] != typeof undefined) {
+                hasDraft = true;
+            }
+            if(hasDraft) {
                 this.setButtonText($(this.uploaBtn), $t('View upload'));
             }
         },

@@ -213,6 +213,44 @@ class UpgradeSchema
             );
         }
 
+        if(version_compare($context->getVersion(), '100.1.22', '<'))
+        {
+            $connection->addColumn(
+                $connection->getTableName('printformer_draft'),
+                'intent',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Draft Intent'
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.1.23', '<'))
+        {
+            $connection->addColumn(
+                $connection->getTableName('printformer_draft'),
+                'session_unique_id',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 100,
+                    'comment' => 'Draft Session Unique ID'
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.1.24', '<'))
+        {
+            $connection->addColumn(
+                $connection->getTableName('printformer_draft'),
+                'product_id',
+                [
+                    'type' => Table::TYPE_INTEGER,
+                    'comment' => 'Draft Product ID'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }

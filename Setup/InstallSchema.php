@@ -12,6 +12,7 @@ class InstallSchema implements InstallSchemaInterface
 
     const TABLE_NAME_PRODUCT  = 'printformer_product';
     const COLUMN_NAME_DRAFTID = 'printformer_draftid';
+    const COLUMN_NAME_INTENT  = 'printformer_intent';
     const COLUMN_NAME_STOREID = 'printformer_storeid';
     const COLUMN_NAME_ORDERED = 'printformer_ordered';
 

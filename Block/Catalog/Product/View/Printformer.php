@@ -13,10 +13,12 @@ use Rissc\Printformer\Gateway\Admin\Product;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Catalog\Model\Product as CatalogProduct;
+use Magento\Framework\Data\Collection\AbstractDb;
 
 class Printformer
     extends AbstractView
@@ -156,11 +158,69 @@ class Printformer
                 }
             }
         } else {
-            $draftId = $this->sessionHelper->getDraftId(
-                $this->getProduct()->getId(),
-                $this->storeManager->getStore()->getId());
+            $sessionUniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
+            if($sessionUniqueId)
+            {
+                /** @var Draft $draft */
+                $draft = $this->draftFactory->create();
+                $draftCollection = $draft->getCollection()
+                    ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
+                    ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
+
+                if($draftCollection->count() > 0)
+                {
+                    $draft = $draftCollection->getFirstItem();
+                    if($draft->getId() && $draft->getDraftId())
+                    {
+                        $draftId = $draft->getDraftId();
+                    }
+                }
+            }
         }
+
         return $draftId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIntent()
+    {
+        $intent = null;
+        // Get draft ID on cart product edit page
+        if ($this->getRequest()->getActionName() == 'configure'
+            && $this->getRequest()->getParam('id')
+            && $this->getRequest()->getParam('product_id')
+        ) {
+            $quoteItem = null;
+            $wishlistItem = null;
+            $id        = (int)$this->getRequest()->getParam('id');
+            $productId = (int)$this->getRequest()->getParam('product_id');
+            if ($id) {
+                switch ($this->getRequest()->getModuleName()) {
+                    case 'checkout':
+                        $quoteItem = $this->cart->getQuote()->getItemById($id);
+                        if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
+                            $buyRequest = $quoteItem->getBuyRequest();
+                            $intent = $buyRequest->getData(InstallSchema::COLUMN_NAME_INTENT);
+                        }
+                        break;
+                    case 'wishlist':
+                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
+                            $buyRequest = $wishlistItem->getBuyRequest();
+                            $intent = $buyRequest->getData(InstallSchema::COLUMN_NAME_INTENT);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else {
+            $intent = $this->sessionHelper->getCurrentIntent();
+        }
+
+        return $intent;
     }
 
     /**
@@ -321,7 +381,7 @@ class Printformer
     }
 
     /**
-     * @return bool
+     * @return array|null
      */
     public function getFormatAttributeConfig()
     {
@@ -550,6 +610,49 @@ class Printformer
         return $qty;
     }
 
+    public function getUniqueSessionId()
+    {
+        $uniqueId = null;
+
+        if ($this->getRequest()->getActionName() == 'configure'
+            && $this->getRequest()->getParam('id')
+            && $this->getRequest()->getParam('product_id')
+        ) {
+            $quoteItem = null;
+            $wishlistItem = null;
+            $id        = (int)$this->getRequest()->getParam('id');
+            $productId = (int)$this->getRequest()->getParam('product_id');
+            if ($id) {
+                switch ($this->getRequest()->getModuleName()) {
+                    case 'checkout':
+                        $quoteItem = $this->cart->getQuote()->getItemById($id);
+                        if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
+                            $buyRequest = $quoteItem->getBuyRequest();
+                            $uniqueId = $buyRequest->getData('printformer_unique_session_id');
+                            $this->sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueId);
+                        }
+                        break;
+                    case 'wishlist':
+                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
+                            $buyRequest = $wishlistItem->getBuyRequest();
+                            $uniqueId = $buyRequest->getData('printformer_unique_session_id');
+                            $this->sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueId);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        else
+        {
+            $uniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
+        }
+
+        return $uniqueId;
+    }
+
     /**
      * @return string
      */
@@ -557,9 +660,16 @@ class Printformer
     {
         $config = [
             'draftId'          => $this->getDraftId(),
+            'intent'           => $this->getIntent(),
+            'unique_id'        => $this->getUniqueSessionId(),
             'productTitle'     => $this->getProduct()->getName(),
             'allowAddCart'     => $this->isAllowSkipConfig() || $this->getDraftId(),
-            'urlTemplate'      => $this->getEditorUrl(),
+            'urls' => [
+                'customize' => $this->getEditorUrl('customize'),
+                'personalize' => $this->getEditorUrl('personalize'),
+                'upload' => $this->getEditorUrl('upload'),
+                'uploadAndEditor' => $this->getEditorUrl('upload-and-editor')
+            ],
             'variationsConfig' => $this->getVariationsConfig(),
             'variations'       => $this->getProductVariations($this->getDraftId()),
             'qty'              => $this->getProductQty($this->getDraftId())
@@ -567,24 +677,13 @@ class Printformer
 
         $extendConfig = [
             'IsUploadProduct' => $this->isUploadProduct(),
-            'DraftsSaveUrl' => $this->getPreselectBlock()->getDraftsSaveUrl(),
             'DraftsGetUrl' => $this->getPreselectBlock()->getDraftsGetUrl(),
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->getPreselectBlock()->isOnConfigurePDS(),
             'draftMasterId' => $this->getDraftMasterId(),
         ];
 
-        if($this->isUploadAndEditorProduct())
-        {
-            $extendConfig['UploadMasterId'] = $this->getUploadMasterId();
-            $extendConfig['UploadEditorUrl'] = $this->getUploadEditorUrl();
-        }
-
-        if($this->isUploadProduct())
-        {
-            $extendConfig['UploadMasterId'] = $this->getMasterId();
-            $extendConfig['UploadEditorUrl'] = $this->getEditorUrl('upload');
-        }
+        $extendConfig['currentSessionIntent'] = $this->sessionHelper->getCurrentIntent();
 
         if($this->getPersonalisations())
         {
@@ -626,14 +725,6 @@ class Printformer
         $block = $this->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Preselect');
 
         return $block;
-    }
-
-    /**
-     * @return int
-     */
-    public function getUploadMasterId()
-    {
-        return $this->getProduct()->getPrintformerUploadProduct();
     }
 
     /**

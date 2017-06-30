@@ -6,6 +6,7 @@ use \Magento\Framework\Event\Observer as EventObserver;
 use \Magento\Customer\Model\Session as CustomerSession;
 use \Magento\Catalog\Model\Session as CatalogSession;
 use \Rissc\Printformer\Controller\Editor\Save;
+use Rissc\Printformer\Helper\Session;
 
 class Observer
     implements ObserverInterface
@@ -29,5 +30,7 @@ class Observer
     {
         $this->_customerSession->setSavedPrintformerOptions(null);
         $this->_catalogSession->setData(Save::PERSONALISATIONS_QUERY_PARAM, null);
+        $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
+        $this->_customerSession->setSessionUniqueID(null);
     }
 }

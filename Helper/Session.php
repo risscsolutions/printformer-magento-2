@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Helper;
 class Session extends \Magento\Framework\App\Helper\AbstractHelper
 {
     const SESSION_KEY_PRINTFORMER_DRAFTID = 'printformer_draftid';
+    const SESSION_KEY_PRINTFORMER_CURRENT_INTENT = 'printformer_current_intent';
 
     /**
      * Catalog session
@@ -70,15 +71,24 @@ class Session extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param integer $productId
-     * @param integer $storeId
-     * @param boolean $clear
-     * @return string
+     * @param      $productId
+     * @param      $storeId
+     * @param      $intent
+     * @param bool $clear
+     *
+     * @return null
      */
-    public function getDraftId($productId, $storeId, $clear = false)
+    public function getDraftId($productId, $storeId, $intent = null, $clear = false)
     {
-        $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $clear);
-        return isset($data[$storeId][$productId]) ? $data[$storeId][$productId] : null;
+        if($intent == $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT) || $intent == null)
+        {
+            $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $clear);
+            return isset($data[$storeId][$productId]) ? $data[$storeId][$productId] : null;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     /**
@@ -99,5 +109,39 @@ class Session extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getCatalogSession() {
         return $this->catalogSession;
+    }
+
+    /**
+     * @return \Magento\Customer\Model\Session
+     */
+    public function getCustomerSession() {
+        return $this->customerSession;
+    }
+
+
+    public function setCurrentIntent($intent)
+    {
+        if($intent != $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT))
+        {
+            $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, $intent);
+        }
+    }
+
+    public function unsetCurrentIntent()
+    {
+        if($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT))
+        {
+            $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
+        }
+    }
+
+    public function getCurrentIntent()
+    {
+        if($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT))
+        {
+            return $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT);
+        }
+
+        return null;
     }
 }

@@ -302,6 +302,8 @@
             this.parentObject = parent;
             this.options = options;
 
+            this.initButton();
+
             return this;
         },
         /**
@@ -310,31 +312,9 @@
         initButton: function() {
             var that = this;
 
-            $(this.parentObject.element).click(function(){
-                that.saveDataToSession(this);
-            });
-
             return this;
         },
-        /**
-         * @returns {printformerTools.prototype.sessionDataAction}
-         */
-        saveDataToSession: function(element) {
-            this.masterId = $(element).data('pf-masterid');
-            this.draftType = $(element).data('pf-type');
 
-            var postData = {
-                'master_id': this.masterId,
-                'draft_type': this.draftType
-            };
-            $.ajax({
-                url: this.options.saveUrl,
-                method: 'post',
-                data: postData
-            });
-
-            return this;
-        },
         /**
          * @returns {printformerTools.prototype.sessionDataAction}
          */
@@ -354,15 +334,16 @@
                                 .html('<h2>' + $.mage.__('You\'ve made two Drafts. Please select the one you want to add to cart.') + '</h2>');
                             var innerSelect = $('<select/>');
 
-                            var allMasterValues = [];
+                            var allIntentValues = [];
                             var draftCounter = 0;
                             $.each(data, function(i, draft){
                                 var draftID = draft.draft_id;
-                                var masterID = draft.master_id;
+                                var intent = draft.intent;
                                 var opt = $('<option/>')
                                     .val(draftID)
-                                    .text($.mage.__('draft-' + i));
-                                allMasterValues[draftID] = masterID;
+                                    .text($.mage.__('draft-' + i))
+                                    .data('pf-intent', intent);
+                                allIntentValues[draftID] = intent;
                                 $(innerSelect).append($(opt));
                                 draftCounter++;
                             });
@@ -381,13 +362,13 @@
                                         'class': 'action-primary',
                                         click: function () {
                                             var draftInput = $('#printformer_draftid');
-                                            var masterInput = $('#printformer_masterid');
-                                            if ($(draftInput).length && $(masterInput).length) {
+                                            var intentInput = $('#printformer_intent');
+                                            if ($(draftInput).length && $(intentInput).length) {
                                                 $(draftInput).val($(innerSelect).val());
-                                                $(masterInput).val(allMasterValues[$(innerSelect).val()]);
+                                                $(intentInput).val(allIntentValues[$(innerSelect).val()]);
                                             }
                                             this.closeModal();
-                                            that.deleteDraftSessionAndSubmit(url);
+                                            that.deleteDraftSessionAndSubmit(url, $(innerSelect).val());
                                         }
                                     }]
                                 });
@@ -404,31 +385,20 @@
             return this;
         },
 
-        deleteDraftSessionAndSubmit: function(url) {
+        deleteDraftSessionAndSubmit: function(url, excludeDraft) {
+
+            var deleteUrl = url + '?delete=true';
+            if(typeof excludeDraft != typeof undefined && excludeDraft != null) {
+                deleteUrl += '&excludeDraft=' + excludeDraft;
+            }
             $.ajax({
-                url: url + '?delete=true',
+                url: deleteUrl,
                 method: 'get',
                 dataType: 'json'
             })
                 .done(function(){
                     $('#product_addtocart_form').trigger('submit');
                 });
-        },
-
-        addDraftIdToSession: function(element, draftId) {
-            this.masterId = $(element).data('pf-masterid');
-            this.draftType = $(element).data('pf-type');
-
-            var postData = {
-                'master_id': this.masterId,
-                'draft_type': this.draftType,
-                'draft_id': draftId
-            };
-            $.ajax({
-                url: this.options.saveUrl + '?setDraftID=true',
-                method: 'post',
-                data: postData
-            });
         }
     };
 
