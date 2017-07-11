@@ -93,9 +93,36 @@ class Save
             $product = $this->productRepository->getById($productId, false, $storeId);
             $extraParams = [];
 
+            $sessionUniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
+            $uniqueID = null;
+            if($sessionUniqueId)
+            {
+                $uniqueExplode = explode(':', $sessionUniqueId);
+                if(isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1])
+                {
+                    $uniqueID = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
+                }
+                else
+                {
+                    $uniqueID = md5(time() . '_' . $this->sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
+                    $this->sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
+                }
+            }
+            else
+            {
+                $uniqueID = md5(time() . '_' . $this->sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
+                $this->sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
+            }
+
+            $draft = $this->draftFactory->create();
+            $draft->getResource()->load($draft, $draftId);
+
+            $draft->setSessionUniqueId($uniqueID);
+            $draft->getResource()->save($draft);
+
             $url = $this->urlHelper
                 ->setStoreId($storeId)
-                ->getDraftUrl($draftId);
+                ->getDraftUrl($draft->getDraftId());
 
             if($personalisations = $this->getPersonalisations($url))
             {

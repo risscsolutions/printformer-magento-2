@@ -115,12 +115,13 @@ class Preselect extends AbstractView
             if($_quoteItem->getId())
             {
                 $result = $connection->fetchRow('
-                        SELECT *
-                          FROM ' . $connection->getTableName('quote_item_option') . '
-                          WHERE
-                            `item_id` = ' . $_quoteItem->getId() . ' AND
-                            `code` = \'info_buyRequest\'
-                    ');
+                    SELECT *
+                    FROM
+                        ' . $connection->getTableName('quote_item_option') . '
+                    WHERE
+                        `item_id` = ' . $_quoteItem->getId() . ' AND
+                        `code` = \'info_buyRequest\'
+                ');
                 $buyRequest = new DataObject(unserialize($result['value']));
 
                 $_fees = $buyRequest->getProductFees();
@@ -132,30 +133,12 @@ class Preselect extends AbstractView
                     'product_options' => []
                 ];
 
-                $_priceModel = null;
-                if(is_array($_options))
+                if (is_array($_options))
                 {
                     foreach ($_options as $key => $_option)
                     {
-                        $result = $connection->fetchRow('
-                        SELECT *
-                          FROM ' . $connection->getTableName('catalog_product_option_title') . '
-                          WHERE
-                            `option_id` = ' . $key . '
-                        ');
-                        if ($result['title'] != Pricemodel::DEFAULT_TITLE)
-                        {
-                            $_returnJson['product_options'][$key]['value'] = $_option;
-                        } else if ($result['title'] == Pricemodel::DEFAULT_TITLE)
-                        {
-                            $_priceModel['value'] = $_option;
-                        }
+                        $_returnJson['product_options'][$key]['value'] = $_option;
                     }
-                }
-
-                if($_priceModel != null)
-                {
-                    $_returnJson['product_options']['pricemodel'] = $_priceModel;
                 }
 
                 $_returnJson['product_options']['product'] = $_product;
@@ -168,6 +151,13 @@ class Preselect extends AbstractView
                         $_returnJson['product_options']['product_fees'][$key]['value'] = $_fee;
                     }
                 }
+
+                $jsonDataObject = new DataObject($_returnJson);
+                $this->_eventManager->dispatch(
+                    'printformer_get_preselection_after',
+                    ['connection' => $connection, 'options' => $_options, 'json_data_object' => $jsonDataObject]
+                );
+                $_returnJson = $jsonDataObject->getData();
 
                 return $_returnJson;
             }

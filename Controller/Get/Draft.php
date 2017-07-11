@@ -41,10 +41,19 @@ class Draft
 
     public function execute()
     {
+        $productId = $this->getRequest()->getParam('product');
         $uniqueID = $this->_customerSession->getSessionUniqueID();
         if(!$uniqueID)
         {
             exit();
+        }
+        else if ($uniqueID != null)
+        {
+            $uniqueIdExplode = explode(':', $uniqueID);
+            if(isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $productId)
+            {
+                exit();
+            }
         }
 
         /** @var PfDraft $draft */

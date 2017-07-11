@@ -23,6 +23,7 @@
             ?>
 
             var preselectTools = new pfTools($(preselectButtons[i]), 'preselect', <?php echo $jsonOptions; ?>);
+            preselectTools.initButton();
         });
         <?php
         $opt = [
@@ -32,11 +33,10 @@
         ];
         ?>
         $(document).on('pricemodelListLoaded', function () {
-            var preselectTools = new pfTools($(this), 'preselect', <?php echo json_encode($opt); ?>);
-            preselectTools.getPreselectedOptions();
+            if (!isConfigure) {
+                // var preselectTools = new pfTools($(this), 'preselect', <?php // echo json_encode($opt); ?>);
+                // preselectTools.getPreselectedOptions();
+            }
         });
-
-        var preselectTools = new pfTools($(document), 'preselect', <?php echo json_encode($opt); ?>);
-        preselectTools.getPreselectedOptions();
     });
 </script>

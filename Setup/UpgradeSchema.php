@@ -251,6 +251,18 @@ class UpgradeSchema
             );
         }
 
+        if(version_compare($context->getVersion(), '100.1.25', '<'))
+        {
+            $connection->addColumn(
+                $connection->getTableName('printformer_draft'),
+                'customer_id',
+                [
+                    'type' => Table::TYPE_INTEGER,
+                    'comment' => 'Draft Customer ID'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }

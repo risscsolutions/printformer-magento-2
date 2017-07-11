@@ -122,7 +122,7 @@ define([
         _create: function () {
             var that = this;
             $.ajax({
-                url: that.options.DraftsGetUrl,
+                url: that.options.DraftsGetUrl + 'product/' + that.options.ProductId + '/',
                 method: 'get',
                 dataType: 'json'
             }).done(function(data){

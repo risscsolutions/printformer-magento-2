@@ -71,45 +71,34 @@ class Open extends Action
         $product = $this->_productFactory->create();
         $product->getResource()->load($product, $this->getRequest()->getParam('product_id'));
 
-        $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
-        if($sessionUniqueId)
-        {
-            $uniqueExplode = explode(':', $sessionUniqueId);
-            if(isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1])
-            {
-                $uniqueID = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
-            }
-            else
-            {
-                $uniqueID = md5(time() . '_' . $this->_sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
-                $this->_sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
-            }
-        }
-        else
-        {
-            $uniqueID = md5(time() . '_' . $this->_sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
-            $this->_sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
-        }
-
         $intent = $this->getRequest()->getParam('intent');
         $draftID = null;
         $this->_sessionHelper->setCurrentIntent($intent);
 
-        /** @var Draft $draftProcess */
-        $draftProcess = $this->_draftFactory->create();
-        $draftCollection = $draftProcess->getCollection()
-            ->addFieldToFilter('session_unique_id', ['eq' => $uniqueID])
-            ->addFieldToFilter('intent', ['eq' => $intent]);
         $draftExists = false;
-        if($draftCollection->count() == 1)
+        $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
+        if($sessionUniqueId)
         {
-            /** @var Draft $draft */
-            $draft = $draftCollection->getFirstItem();
-            if($draft->getId())
+            $uniqueExplode = explode(':', $sessionUniqueId);
+            if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1])
             {
-                $draftExists = true;
-                $draftID = $draft->getDraftId();
-                $this->_sessionHelper->setCurrentIntent($draft->getIntent());
+                $uniqueID = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
+                /** @var Draft $draftProcess */
+                $draftProcess = $this->_draftFactory->create();
+                $draftCollection = $draftProcess->getCollection()
+                    ->addFieldToFilter('session_unique_id', ['eq' => $uniqueID])
+                    ->addFieldToFilter('intent', ['eq' => $intent]);
+                if ($draftCollection->count() == 1)
+                {
+                    /** @var Draft $draft */
+                    $draft = $draftCollection->getFirstItem();
+                    if ($draft->getId())
+                    {
+                        $draftExists = true;
+                        $draftID = $draft->getDraftId();
+                        $this->_sessionHelper->setCurrentIntent($draft->getIntent());
+                    }
+                }
             }
         }
 
@@ -137,8 +126,9 @@ class Open extends Action
                 'draft_id' => $draftID,
                 'store_id' => $this->_storeManager->getStore()->getId(),
                 'intent' => $intent,
-                'session_unique_id' => $uniqueID,
+                'session_unique_id' => null,
                 'product_id' => $product->getId(),
+                'customer_id' => $this->_sessionHelper->getCustomerSession()->getCustomerId(),
                 'created_at' => time()
             ]);
             $draftProcess->getResource()->save($draftProcess);

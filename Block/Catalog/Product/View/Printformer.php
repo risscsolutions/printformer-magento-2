@@ -161,18 +161,22 @@ class Printformer
             $sessionUniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
             if($sessionUniqueId)
             {
-                /** @var Draft $draft */
-                $draft = $this->draftFactory->create();
-                $draftCollection = $draft->getCollection()
-                    ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
-                    ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
-
-                if($draftCollection->count() > 0)
+                $uniqueIdExplode = explode(':', $sessionUniqueId);
+                if(isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $this->getProduct()->getId())
                 {
-                    $draft = $draftCollection->getFirstItem();
-                    if($draft->getId() && $draft->getDraftId())
+                    /** @var Draft $draft */
+                    $draft = $this->draftFactory->create();
+                    $draftCollection = $draft->getCollection()
+                        ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
+                        ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
+
+                    if ($draftCollection->count() > 0)
                     {
-                        $draftId = $draft->getDraftId();
+                        $draft = $draftCollection->getFirstItem();
+                        if ($draft->getId() && $draft->getDraftId())
+                        {
+                            $draftId = $draft->getDraftId();
+                        }
                     }
                 }
             }
@@ -658,10 +662,16 @@ class Printformer
      */
     public function getJsonConfig()
     {
+        $uniqueId = $this->getUniqueSessionId();
+        $uniqueIdExplode = explode(':', $uniqueId);
+        if(isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId())
+        {
+            $uniqueId = null;
+        }
         $config = [
             'draftId'          => $this->getDraftId(),
             'intent'           => $this->getIntent(),
-            'unique_id'        => $this->getUniqueSessionId(),
+            'unique_id'        => $uniqueId,
             'productTitle'     => $this->getProduct()->getName(),
             'allowAddCart'     => $this->isAllowSkipConfig() || $this->getDraftId(),
             'urls' => [
