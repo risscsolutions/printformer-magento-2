@@ -240,6 +240,20 @@
                         saveConfig[elemId] = {'value': elemVal};
                     }
                 }
+                if($(elem).is('textarea')) {
+                    elemId = $(elem).attr('id');
+                    elemVal = $(elem).val();
+                    if(elemVal.length) {
+                        saveConfig[elemId] = {'value': elemVal};
+                    }
+                }
+                if($(elem).attr('type') == 'text') {
+                    elemId = $(elem).attr('id');
+                    elemVal = $(elem).val();
+                    if(elemVal.length) {
+                        saveConfig[elemId] = {'value': elemVal};
+                    }
+                }
                 if($(elem).attr('type') == 'radio') {
                     if($(elem).prop('checked')) {
                         // Get the option ID by the elements data-selector attribute
