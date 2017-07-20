@@ -156,6 +156,24 @@
                         $.each(preselectoptions, function (i, opt) {
                             if (
                                 $(opt).hasClass('product-custom-option') &&
+                                $(opt).is('textarea')
+                            ) {
+                                var inputId = $(opt).attr('id');
+                                if(that.parentObject.isDefined(selectedOptions[inputId])) {
+                                    $(opt).val(selectedOptions[inputId].value);
+                                }
+                            }
+                            if (
+                                $(opt).hasClass('product-custom-option') &&
+                                $(opt).attr('type') == 'text'
+                            ) {
+                                var inputId = $(opt).attr('id');
+                                if(that.parentObject.isDefined(selectedOptions[inputId])) {
+                                    $(opt).prop('value', selectedOptions[inputId].value);
+                                }
+                            }
+                            if (
+                                $(opt).hasClass('product-custom-option') &&
                                 $(opt).attr('type') == 'checkbox'
                             ) {
                                 var checkboxId = $(opt).attr('id');
