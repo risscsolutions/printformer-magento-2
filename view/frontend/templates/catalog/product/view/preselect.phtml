@@ -29,14 +29,17 @@
         $opt = [
             'optionsUrl' => $block->getOptionsGetUrl(),
             'preselected' => ($block->isOnConfigurePDS() ? $block->getPreselection() : []),
-            'currentProduct' => $block->getProduct()->getId()
+            'currentProduct' => $block->getProduct()->getId(),
+            'loaderImage' => $block->getViewFileUrl('/images/loader-1.gif')
         ];
         ?>
-        $(document).on('pricemodelListLoaded', function () {
-            if (!isConfigure) {
-                // var preselectTools = new pfTools($(this), 'preselect', <?php // echo json_encode($opt); ?>);
-                // preselectTools.getPreselectedOptions();
-            }
+        $(document).on('pricemodelListLoadedAfter', function () {
+            var preselectTools = new pfTools($(this), 'preselect', <?php echo json_encode($opt); ?>);
+            preselectTools.addOverlayLoader($('.tandem-product-info-secondbottom'));
+            setTimeout(function(){
+                preselectTools.getPreselectedOptions();
+                preselectTools.removeOverlay();
+            }, 1500);
         });
     });
 </script>

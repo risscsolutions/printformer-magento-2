@@ -97,7 +97,7 @@ define([
         },
 
         initPersonalisationQty: function() {
-            if(this.options.personalizations > 1) {
+            if(typeof this.options.personalizations != typeof undefined && this.options.personalizations > 1) {
                 var oldQtyTrans = $(this.options.qtySelector);
                 $(oldQtyTrans).val(this.options.personalizations);
 
@@ -134,13 +134,12 @@ define([
                 that._initVariations();
                 if(that.options.isConfigure) {
                     that.hideSecondButton();
-                    that.setPrimaryButton($t('Edit draft'));
+                    that.setPrimaryButton();
                 }
 
-                if(that.options.personalizations > 0) {
-                    that.initPersonalisationQty();
-                    $(document).on('printformer_preselect_options_after', function() {
-                        that.initPersonalisationQty();
+                if (typeof that.options.personalizations !== typeof undefined && that.options.personalizations > 1) {
+                    $(document).on('printformer_preselect_options_after', function () {
+                       that.initPersonalisationQty();
                     });
                 }
 
@@ -154,20 +153,22 @@ define([
             }
         },
 
-        setPrimaryButton: function(text) {
+        setPrimaryButton: function() {
             var that = this;
 
             var editDraftIntent = this.options.currentSessionIntent;
             var draftType = 'editor';
-            if(editDraftIntent == 'upload' || editDraftIntent == 'upload-and-editor') {
+            var ButtonText = $t('View draft');
+            if(editDraftIntent === 'upload' || editDraftIntent === 'upload-and-editor') {
                 draftType = 'upload';
+                ButtonText = $t('View upload');
             }
             
             $(this.editBtn).attr('data-pf-masterid', this.options.masterId);
             $(this.editBtn).attr('data-pf-type', draftType);
             $(this.editBtn).attr('data-pf-intent', editDraftIntent);
 
-            if(draftType == 'upload') {
+            if(draftType === 'upload') {
                 $(this.editBtn).unbind('click');
                 $(this.editBtn).click({printformer: this}, function(event) {
                     var url = editDraftIntent == 'upload-and-editor' ? that.getUploadAndEditorUrl() : that.getUploadUrl();
@@ -177,7 +178,7 @@ define([
 
             if($(this.editBtn).length) {
                 var span = $(this.editBtn).children('span');
-                $(span).text(text);
+                $(span).text(ButtonText);
             }
         },
 
@@ -375,7 +376,7 @@ define([
             this.uploaBtn = $(this.options.uploadBtnSelector);
             var isWithEditor = false;
             var url = that.getUploadUrl();
-            if($(that.uploaBtn).data('pf-intent') == 'upload-and-editor') {
+            if($(that.uploaBtn).data('pf-intent') === 'upload-and-editor') {
                 var url = that.getUploadAndEditorUrl();
                 isWithEditor = true;
             }
@@ -389,7 +390,7 @@ define([
                 .show();
             var buttonIntent = (isWithEditor ? 'upload-and-editor' : 'upload');
             var hasDraft = false;
-            if(this.currentDrafts && typeof this.currentDrafts[buttonIntent] != typeof undefined) {
+            if(this.currentDrafts && typeof this.currentDrafts[buttonIntent] !== typeof undefined) {
                 hasDraft = true;
             }
             if(hasDraft) {
@@ -424,9 +425,9 @@ define([
                     event.data.printformer.setVariation($(this).attr('id'), $(this).val());
                 });
                 for (var k in this.options.variations) {
-                    if (varConf[id]['param'] == k) {
+                    if (varConf[id]['param'] === k) {
                         for (var mk in varConf[id]['map']) {
-                            if (varConf[id]['map'][mk] == this.options.variations[k]) {
+                            if (varConf[id]['map'][mk] === this.options.variations[k]) {
                                 input.val(mk);
                             }
                         }
@@ -437,7 +438,7 @@ define([
 
             if (
                 this.options.qty &&
-                $(this.options.qtySelector).prop('tagName') != 'SELECT'
+                $(this.options.qtySelector).prop('tagName') !== 'SELECT'
             ) {
                 $(this.options.qtySelector).val(this.options.qty);
             }
