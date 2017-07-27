@@ -17,6 +17,12 @@ class Observer
     /** @var CatalogSession */
     protected $_catalogSession;
 
+    /**
+     * Observer constructor.
+     *
+     * @param CustomerSession $_customerSession
+     * @param CatalogSession  $_catalogSession
+     */
     public function __construct(
         CustomerSession $_customerSession,
         CatalogSession $_catalogSession
@@ -26,6 +32,9 @@ class Observer
         $this->_catalogSession = $_catalogSession;
     }
 
+    /**
+     * @param EventObserver $observer
+     */
     public function execute(EventObserver $observer)
     {
         $this->_customerSession->setSavedPrintformerOptions(null);

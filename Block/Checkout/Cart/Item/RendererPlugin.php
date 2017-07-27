@@ -1,8 +1,14 @@
 <?php
 namespace Rissc\Printformer\Block\Checkout\Cart\Item;
 
+use Magento\Checkout\Block\Cart\Item\Renderer;
 use \Rissc\Printformer\Helper as Helper;
+use Rissc\Printformer\Block\Checkout\Cart\Renderer as ReplaceRenderer;
 
+/**
+ * Class RendererPlugin
+ * @package Rissc\Printformer\Block\Checkout\Cart\Item
+ */
 class RendererPlugin
 {
     /**
@@ -28,11 +34,11 @@ class RendererPlugin
     }
 
     /**
-     * @param \Magento\Checkout\Block\Cart\Item\Renderer $renderer
+     * @param Renderer $renderer
      * @param unknown $result
      * @return string
      */
-    public function afterGetImage(\Magento\Checkout\Block\Cart\Item\Renderer $renderer, $result)
+    public function afterGetImage(Renderer $renderer, $result)
     {
         $draftId = $renderer->getItem()->getPrintformerDraftid();
         if ($draftId && $this->isUseImagePreview()) {
@@ -47,5 +53,16 @@ class RendererPlugin
     public function isUseImagePreview()
     {
         return $this->configHelper->isUseImagePreview();
+    }
+
+    /**
+     * @param Renderer|ReplaceRenderer $renderer
+     * @param          $result
+     *
+     * @return string
+     */
+    public function afterGetProductUrl($renderer, $result)
+    {
+        return $renderer->getConfigureUrl();
     }
 }

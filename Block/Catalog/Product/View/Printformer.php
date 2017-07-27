@@ -693,8 +693,9 @@ class Printformer
             'draftMasterId' => $this->getDraftMasterId(),
         ];
 
-        $extendConfig['currentSessionIntent'] = $this->sessionHelper->getCurrentIntent();
+        $extendConfig['currentSessionIntent'] = $this->getIntent();
 
+        $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = 0;
         if($this->getPersonalisations())
         {
             $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();

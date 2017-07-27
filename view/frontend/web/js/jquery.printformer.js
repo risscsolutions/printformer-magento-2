@@ -52,6 +52,7 @@
         init: function(parent, options) {
             this.parentObject = parent;
             this.options = options;
+            this.overlayDiv = null;
 
             return this;
         },
@@ -61,14 +62,57 @@
             var saveOptionsUrl = that.options.saveUrl;
             $(this.parentObject.element).click(function(){
                 var saveOptions = that.getAllOptions();
+                var timestamp = new Date().getTime();
                 $.ajax({
-                    url: saveOptionsUrl,
+                    url: saveOptionsUrl + '?_=' + timestamp,
                     method: 'post',
                     data: { product_options : JSON.stringify(saveOptions) }
                 }).done(function(data){
-                    // console.log(data);
+                    alert('that worked!');
                 });
             });
+
+            return this;
+        },
+
+        /**
+         * @param parentElement
+         *
+         * @returns {printformerTools.preselectAction}
+         */
+        addOverlayLoader: function(parentElement) {
+            if($(parentElement).length) {
+                var that = this;
+                this.overlayDiv = $('<div/>');
+                var parentPosition = $(parentElement).position();
+                var parentSizes = { w: $(parentElement).width(), h: $(parentElement).height(), x: parentPosition.left, y: parentPosition.top };
+
+                $(this.overlayDiv).css({
+                    'position': 'absolute',
+                    'z-index': '3',
+                    'width': parentSizes.w + 'px',
+                    'height': parentSizes.h + 'px',
+                    'left': 'auto',
+                    'top': 'auto',
+                    'background-color': '#FFF',
+                    'opacity': '0.75',
+                    'background-image': 'url(\'' + that.options.loaderImage + '\')',
+                    'background-repeat': 'no-repeat',
+                    'background-position': 'center'
+                });
+                $(parentElement).before($(this.overlayDiv));
+            }
+
+            return this;
+        },
+
+        /**
+         * @returns {printformerTools.preselectAction}
+         */
+        removeOverlay: function() {
+            if($(this.overlayDiv).length) {
+                $(this.overlayDiv).remove();
+            }
 
             return this;
         },
@@ -131,7 +175,7 @@
                             var qtySelector = '#qty';
                             if ($(qtySelector).length) {
                                 $(qtySelector).val(selectedOptions.qty.value);
-                                $(qtySelector).trigger('change');
+                                // $(qtySelector).trigger('change');
                             }
                         }
 
