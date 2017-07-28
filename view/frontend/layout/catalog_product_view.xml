@@ -5,7 +5,9 @@
     </head>
     <body>
         <referenceBlock name="head.components">
-            <block class="Magento\Framework\View\Element\Template" name="printformer-js-translation" template="Rissc_Printformer::translate.phtml"/>
+            <block ifconfig="printformer/general/enabled" class="Rissc\Printformer\Block\Catalog\Product\View\GlobalVars" before="-" name="printformer.generic.info" template="Rissc_Printformer::catalog/product/view/globalvars.phtml"/>
+            <block ifconfig="printformer/general/enabled" class="Rissc\Printformer\Block\Catalog\Product\View\Printformer" name="printformer.js.init" after="printformer.generic.info" template="Rissc_Printformer::catalog/product/view/printformer_init.phtml"/>
+            <block ifconfig="printformer/general/enabled" class="Magento\Framework\View\Element\Template" name="printformer-js-translation" template="Rissc_Printformer::translate.phtml"/>
         </referenceBlock>
     </body>
 </page>

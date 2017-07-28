@@ -40,10 +40,6 @@
         <plugin name="printformer-quote-quote" type="Rissc\Printformer\Model\Quote\QuotePlugin" sortOrder="100"/>
     </type>
 
-    <type name="Itoris\DynamicProductOptions\Block\Options\Config">
-        <plugin name="Rissc_Printformer_Block_Options_Config_Plugin" type="Rissc\Printformer\Plugin\DynamicProductOptions\Config\Plugin" sortOrder="1000"/>
-    </type>
-
     <type name="Magento\Framework\View\Element\Template">
         <plugin name="Rissc_Printformer_Addtocart_ToHtml_Core" type="Rissc\Printformer\Block\Catalog\Product\View\Plugin" sortOrder="1000" />
     </type>

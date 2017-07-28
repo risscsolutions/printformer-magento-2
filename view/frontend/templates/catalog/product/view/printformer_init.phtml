@@ -1,0 +1,14 @@
+<?php
+/** @var $block \Rissc\Printformer\Block\Catalog\Product\View\Printformer */
+$hasAnyPrintformerCapability = $block->isUploadProduct() || $block->isEditorProduct() || $block->isPersonalizationProduct() || $block->isUploadAndEditorProduct();
+?>
+
+<?php if($block->getProduct()->isSalable() && $hasAnyPrintformerCapability): ?>
+    <script type="text/x-magento-init">
+        {
+            "#product_addtocart_form": {
+                "printformer": {}
+            }
+        }
+    </script>
+<?php endif; ?>

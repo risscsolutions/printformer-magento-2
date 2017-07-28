@@ -37,7 +37,7 @@ class Observer
      */
     public function execute(EventObserver $observer)
     {
-        $this->_customerSession->setSavedPrintformerOptions(null);
+        $this->_catalogSession->setSavedPrintformerOptions(null);
         $this->_catalogSession->setData(Save::PERSONALISATIONS_QUERY_PARAM, null);
         $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
         $this->_customerSession->setSessionUniqueID(null);

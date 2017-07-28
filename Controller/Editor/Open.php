@@ -11,6 +11,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Helper\Editor\Preselect as PreselectHelper;
 
 class Open extends Action
 {
@@ -32,6 +33,9 @@ class Open extends Action
     /** @var SessionHelper */
     protected $_sessionHelper;
 
+    /** @var PreselectHelper */
+    protected $_preselectHelper;
+
     public function __construct(
         Context $context,
         DraftGateway $draftGateway,
@@ -39,7 +43,8 @@ class Open extends Action
         ProductFactory $productFactory,
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
-        SessionHelper $sessionHelper
+        SessionHelper $sessionHelper,
+        PreselectHelper $preselectHelper
     )
     {
         $this->_draftGateway = $draftGateway;
@@ -48,12 +53,20 @@ class Open extends Action
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
+        $this->_preselectHelper = $preselectHelper;
 
         parent::__construct($context);
     }
 
     public function execute()
     {
+        $preselectData = $this->_preselectHelper->getPreselectArray($this->getRequest()->getParams());
+        if (!empty($preselectData))
+        {
+            $this->_sessionHelper->getCatalogSession()
+                ->setSavedPrintformerOptions($preselectData);
+        }
+
         if(!$this->getRequest()->getParam('product_id'))
         {
             $this->messageManager->addNoticeMessage(__('We could not determine the right Parameters. Please try again.'));

@@ -34,11 +34,4 @@ $hasAnyPrintformerCapability = $block->isUploadProduct() || $block->isEditorProd
             <p><?php echo /* @escapeNotVerified */ __($block->getFormatNoticeText()) ?></p>
         </div>
     <?php endif; ?>
-    <script type="text/x-magento-init">
-        {
-            "#product_addtocart_form": {
-                "printformer": <?php /* @escapeNotVerified */ echo $block->getJsonConfig() ?>
-            }
-        }
-    </script>
 <?php endif;?>

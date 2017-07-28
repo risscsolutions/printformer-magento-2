@@ -38,11 +38,7 @@ class Plugin
             $_printformerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
             $_printformerBlock->setTemplate('Rissc_Printformer::catalog/product/view/printformer.phtml');
 
-            /** @var \Rissc\Printformer\Block\Catalog\Product\View\Preselect $_preselectBlock */
-            $_preselectBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Preselect');
-            $_preselectBlock->setTemplate('Rissc_Printformer::catalog/product/view/preselect.phtml');
-
-            $result = $configureScript . $_printformerBlock->toHtml() . $_preselectBlock->toHtml() . $result;
+            $result = $configureScript . $_printformerBlock->toHtml() . $result;
         }
 
         return $result;

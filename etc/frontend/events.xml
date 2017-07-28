@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="controller_action_postdispatch_checkout_cart_add">
+    <event name="checkout_cart_product_add_after">
         <observer name="rissc_printformer_remove_session_data"
                   instance="Rissc\Printformer\Observer\Checkout\Cart\Add\Observer"/>
     </event>

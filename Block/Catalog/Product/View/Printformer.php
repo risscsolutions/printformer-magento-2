@@ -98,7 +98,7 @@ class Printformer
      */
     protected function _toHtml()
     {
-        if ($this->isPrintformerEnabed() && $this->getProduct()->isSaleable()) {
+        if (!$this->getProduct() || ($this->isPrintformerEnabed() && $this->getProduct()->isSaleable())) {
             return parent::_toHtml();
         }
         return '';
@@ -669,11 +669,18 @@ class Printformer
             $uniqueId = null;
         }
         $config = [
-            'draftId'          => $this->getDraftId(),
-            'intent'           => $this->getIntent(),
-            'unique_id'        => $uniqueId,
-            'productTitle'     => $this->getProduct()->getName(),
-            'allowAddCart'     => $this->isAllowSkipConfig() || $this->getDraftId(),
+            'qtySelector'           => '#qty',
+            'addBtnSelector'        => '#product-addtocart-button, #product-updatecart-button',
+            'editBtnSelector'       => '#printformer-edit-button',
+            'uploadBtnSelector'     => '#printformer-upload-button',
+            'editorMainSelector'    => '#printformer-editor-main',
+            'editorCloseSelector'   => '#printformer-editor-close',
+            'editorNoticeSelector'  => '#printformer-editor-notice',
+            'draftId'               => $this->getDraftId(),
+            'intent'                => $this->getIntent(),
+            'unique_id'             => $uniqueId,
+            'productTitle'          => $this->getProduct()->getName(),
+            'allowAddCart'          => $this->isAllowSkipConfig() || $this->getDraftId(),
             'urls' => [
                 'customize' => $this->getEditorUrl('customize'),
                 'personalize' => $this->getEditorUrl('personalize'),

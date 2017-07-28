@@ -3,41 +3,33 @@ define([
     'jquery/ui',
     'jquery/jquery.parsequery',
     'Magento_Ui/js/modal/modal',
-    'mage/translate',
-    'printformerTools'
-], function ($, $ui, $pq, $modal, $t, pfTools) {
+    'mage/translate'
+], function ($, $ui, $pq, $modal, $t) {
     'use strict';
 
     $.widget('mage.printformer', {
-        options: {
-            qtySelector: '#qty',
-            addBtnSelector: '#product-addtocart-button, #product-updatecart-button',
-            editBtnSelector: '#printformer-edit-button',
-            uploadBtnSelector: '#printformer-upload-button',
-            editorMainSelector: '#printformer-editor-main',
-            editorCloseSelector: '#printformer-editor-close',
-            editorNoticeSelector: '#printformer-editor-notice',
-            variationsFront: [],
-            variations: []
-        },
         formatChange: false,
         currentDrafts: null,
 
+        isDefined: function(value) {
+            return typeof value !== typeof undefined;
+        },
+
         getUploadUrl: function() {
-            return this.options.urls.upload;
+            return this.printformerOptions.urls.upload;
         },
 
         getUploadAndEditorUrl: function() {
-            return this.options.urls.uploadAndEditor;
+            return this.printformerOptions.urls.uploadAndEditor;
         },
 
         getPersonalizeUrl: function() {
-            return this.options.urls.personalize;
+            return this.printformerOptions.urls.personalize;
         },
 
         getEditorUrl: function() {
             // prepare URL
-            var options = this.options,
+            var options = this.printformerOptions,
                 urlParts = options.urls.customize.split('?'),
                 url = urlParts[0],
                 inputQty = $(options.qtySelector),
@@ -50,14 +42,14 @@ define([
             }
             /**
              * todo: Check why it's not working?
-             * for (var k in this.options.variations) {
-                if (!this.options.variations[k].length) {
+             * for (var k in this.printformerOptions.variations) {
+                if (!this.printformerOptions.variations[k].length) {
                     continue;
                 }
                 url += '/';
                 url +=  k;
                 url += '/';
-                url += this.options.variations[k];
+                url += this.printformerOptions.variations[k];
             }*/
             url += '?';
             url += urlParts[1];
@@ -70,11 +62,11 @@ define([
                 url += encodeURIComponent('/form_key/' + formKey.val());
             }
 
-            if(action != undefined) {
+            if(action !== undefined) {
                 $.each(action, function (index, val) {
-                    if (val == 'wishlist' || val == 'index') {
+                    if (val === 'wishlist' || val === 'index') {
                         updateWishlistItemOptions += val + '/';
-                    } else if (val == 'updateItemOptions') {
+                    } else if (val === 'updateItemOptions') {
                         updateWishlistItemOptions += val;
                     }
                 });
@@ -97,32 +89,47 @@ define([
         },
 
         initPersonalisationQty: function() {
-            if(typeof this.options.personalizations != typeof undefined && this.options.personalizations > 1) {
-                var oldQtyTrans = $(this.options.qtySelector);
-                $(oldQtyTrans).val(this.options.personalizations);
+            if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
+                var oldQtyTrans = $(this.printformerOptions.qtySelector);
+                $(oldQtyTrans).val(this.printformerOptions.personalizations);
 
                 if (!$('#personalisation_qty').length) {
                     var newQtyTrans = $('<input/>')
                         .attr('type', 'text')
                         .attr('class', $(oldQtyTrans).attr('class'))
                         .attr('id', 'personalisation_qty')
-                        .val(this.options.personalizations)
+                        .val(this.printformerOptions.personalizations)
                         .prop('disabled', true);
                     $(newQtyTrans).insertAfter($(oldQtyTrans));
                 }
                 $(oldQtyTrans).trigger('change').hide();
 
                 if (!$('#printformer_personalisations').length) {
-                    var personalisationsInput = $('<input value="' + this.options.personalizations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
-                    $(this.options.qtySelector).after(personalisationsInput);
+                    var personalisationsInput = $('<input value="' + this.printformerOptions.personalizations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
+                    $(this.printformerOptions.qtySelector).after(personalisationsInput);
                 }
             }
         },
 
         _create: function () {
             var that = this;
+            this.form = this.element;
+            this.callbacks = {};
+            this.addToCartFormUrl = null;
+
+            this.printformerOptions = null;
+            if (this.isDefined(globalPrintformerOptions)) {
+                this.printformerOptions = JSON.parse(globalPrintformerOptions);
+            }
+
+            if(this.isDefined(printformerInstance)) {
+                printformerInstance = this;
+            }
+            $(document).trigger('printformer:loaded:before');
+
+            this.runCallbacks('printformer:loaded:before');
             $.ajax({
-                url: that.options.DraftsGetUrl + 'product/' + that.options.ProductId + '/',
+                url: that.printformerOptions.DraftsGetUrl + 'product/' + that.printformerOptions.ProductId + '/',
                 method: 'get',
                 dataType: 'json'
             }).done(function(data){
@@ -132,18 +139,22 @@ define([
                 that._initEditBtn();
                 that._initUploadBtn();
                 that._initVariations();
-                if(that.options.isConfigure) {
+                if(that.printformerOptions.isConfigure) {
                     that.hideSecondButton();
                     that.setPrimaryButton();
                 }
 
-                if (typeof that.options.personalizations !== typeof undefined && that.options.personalizations > 1) {
+                if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
                     $(document).on('printformer_preselect_options_after', function () {
-                       that.initPersonalisationQty();
+                       // that.initPersonalisationQty();
                     });
                 }
 
+                if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
+                    that.preselectOptions(that.printformerOptions.preselection);
+                }
                 $(document).trigger('printformer:loaded');
+                that.runCallbacks('printformer:loaded:after');
             });
         },
 
@@ -156,7 +167,7 @@ define([
         setPrimaryButton: function() {
             var that = this;
 
-            var editDraftIntent = this.options.currentSessionIntent;
+            var editDraftIntent = this.printformerOptions.currentSessionIntent;
             var draftType = 'editor';
             var ButtonText = $t('View draft');
             if(editDraftIntent === 'upload' || editDraftIntent === 'upload-and-editor') {
@@ -164,14 +175,14 @@ define([
                 ButtonText = $t('View upload');
             }
             
-            $(this.editBtn).attr('data-pf-masterid', this.options.masterId);
+            $(this.editBtn).attr('data-pf-masterid', this.printformerOptions.masterId);
             $(this.editBtn).attr('data-pf-type', draftType);
             $(this.editBtn).attr('data-pf-intent', editDraftIntent);
 
             if(draftType === 'upload') {
                 $(this.editBtn).unbind('click');
                 $(this.editBtn).click({printformer: this}, function(event) {
-                    var url = editDraftIntent == 'upload-and-editor' ? that.getUploadAndEditorUrl() : that.getUploadUrl();
+                    var url = editDraftIntent === 'upload-and-editor' ? that.getUploadAndEditorUrl() : that.getUploadUrl();
                     event.data.printformer.editorMainOpen(url);
                 });
             }
@@ -183,7 +194,7 @@ define([
         },
 
         _initEditorMain: function () {
-            var options = this.options;
+            var options = this.printformerOptions;
             this.editorMain = $(options.editorMainSelector);
             this.editorMain.modal({
                 modalClass: 'printformer-editor-main-modal',
@@ -196,6 +207,10 @@ define([
         },
 
         editorMainOpen: function(editorUrl) {
+            this.addToCartFormUrl = $(this.form).attr('action');
+            $(this.form).attr('action', editorUrl);
+            $(this.form).attr('target', 'printformer-main-frame');
+
             $('html, body').css({
                 'overflow': 'hidden',
                 'height': '100%',
@@ -203,14 +218,18 @@ define([
             });
             this.editorMain.modal('openModal');
             this.editorMain
-                .html($('<iframe width="100%" height="100%"/>'))
-                .find('iframe').first()
-                .attr('src', editorUrl)
-            ;
+                .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
+
+            $(this.form).off().submit();
+        },
+
+        resetForm: function() {
+            $(this.form).attr('action', this.addToCartFormUrl);
+            $(this.form).removeAttr('target');
         },
 
         _initEditorClose: function () {
-            var options = this.options;
+            var options = this.printformerOptions;
             this.editorClose = $(options.editorCloseSelector);
             this.editorClose.modal({
                 modalClass: "printformer-editor-close-modal",
@@ -241,14 +260,17 @@ define([
                 'width': 'auto'
             });
             this.editorMain.html('');
+
+            this.resetForm();
         },
 
         editorCloseCancel: function () {
             this.editorClose.modal('closeModal');
+            this.resetForm();
         },
 
         _initEditorNotice: function () {
-            var options = this.options;
+            var options = this.printformerOptions;
             this.editorNotice = $(options.editorNoticeSelector);
             if (!this.editorNotice) {
                 return;
@@ -276,16 +298,18 @@ define([
         editorNoticeOk: function () {
             this.formatChange = true;
             this.editorNotice.modal('closeModal');
+            this.resetForm();
         },
 
         editorNoticeCancel: function () {
             this.formatChange = false;
             this.editorNotice.modal('closeModal');
             if(!this.formatChange) {
-                for (var id in this.options.variationsFront) {
-                    $("#" + id).val(this.options.variationsFront[id]).trigger('change', {skip: true});
+                for (var id in this.printformerOptions.variationsFront) {
+                    $("#" + id).val(this.printformerOptions.variationsFront[id]).trigger('change', {skip: true});
                 }
             }
+            this.resetForm();
         },
 
         setButtonText: function(button, text) {
@@ -299,11 +323,14 @@ define([
         },
 
         isUploadProduct: function() {
-            return (this.options.currentSessionIntent == 'upload-and-editor' || this.options.currentSessionIntent == 'upload');
+            return (
+                this.printformerOptions.currentSessionIntent === 'upload-and-editor' ||
+                this.printformerOptions.currentSessionIntent === 'upload'
+            );
         },
 
         _initAddBtn: function () {
-            var options = this.options;
+            var options = this.printformerOptions;
 
             this.addBtn = $(options.addBtnSelector);
             var draftIdInput = null;
@@ -330,7 +357,7 @@ define([
         },
 
         addBtnDisable: function () {
-            var options = this.options;
+            var options = this.printformerOptions;
             if (!options.allowAddCart) {
                 this.addBtn.prop('disabled', true);
             }
@@ -338,8 +365,9 @@ define([
 
         _initEditBtn: function () {
             var that = this;
-            var options = this.options;
-            this.editBtn = $(this.options.editBtnSelector);
+            var options = this.printformerOptions;
+            this.editBtn = $(this.printformerOptions.editBtnSelector);
+
             this.editBtn.click({printformer: this}, function(event) {
                 event.data.printformer.editorMainOpen(that.getEditorUrl());
             })
@@ -351,9 +379,9 @@ define([
 
             var hasDraft = false;
             if(this.currentDrafts) {
-                if (typeof this.currentDrafts['customize'] != typeof undefined) {
+                if (this.isDefined(this.currentDrafts['customize'])) {
                     hasDraft = true;
-                } else if (typeof this.currentDrafts['personalize'] != typeof undefined) {
+                } else if (this.isDefined(this.currentDrafts['personalize'])) {
                     hasDraft = true;
                 }
             }
@@ -372,12 +400,12 @@ define([
 
         _initUploadBtn: function () {
             var that = this;
-            var options = this.options;
-            this.uploaBtn = $(this.options.uploadBtnSelector);
+            var options = this.printformerOptions;
+            this.uploaBtn = $(this.printformerOptions.uploadBtnSelector);
             var isWithEditor = false;
             var url = that.getUploadUrl();
             if($(that.uploaBtn).data('pf-intent') === 'upload-and-editor') {
-                var url = that.getUploadAndEditorUrl();
+                url = that.getUploadAndEditorUrl();
                 isWithEditor = true;
             }
             this.uploaBtn.click({printformer: this}, function(event) {
@@ -390,7 +418,7 @@ define([
                 .show();
             var buttonIntent = (isWithEditor ? 'upload-and-editor' : 'upload');
             var hasDraft = false;
-            if(this.currentDrafts && typeof this.currentDrafts[buttonIntent] !== typeof undefined) {
+            if(this.currentDrafts && this.isDefined(this.currentDrafts[buttonIntent])) {
                 hasDraft = true;
             }
             if(hasDraft) {
@@ -407,7 +435,7 @@ define([
         },
 
         _initVariations: function () {
-            var varConf = this.options.variationsConfig;
+            var varConf = this.printformerOptions.variationsConfig;
             if (typeof varConf !== 'object') {
                 return;
             }
@@ -424,10 +452,10 @@ define([
                     }
                     event.data.printformer.setVariation($(this).attr('id'), $(this).val());
                 });
-                for (var k in this.options.variations) {
+                for (var k in this.printformerOptions.variations) {
                     if (varConf[id]['param'] === k) {
                         for (var mk in varConf[id]['map']) {
-                            if (varConf[id]['map'][mk] === this.options.variations[k]) {
+                            if (varConf[id]['map'][mk] === this.printformerOptions.variations[k]) {
                                 input.val(mk);
                             }
                         }
@@ -436,16 +464,22 @@ define([
                 input.change();
             }
 
+            if(this.isDefined(this.printformerOptions.preselection) && this.printformerOptions.preselection !== null) {
+                if(parseInt(this.printformerOptions.preselection.qty.value) !==  parseInt(this.printformerOptions.qty)) {
+                    this.printformerOptions.qty = this.printformerOptions.preselection.qty.value
+                }
+            }
+
             if (
-                this.options.qty &&
-                $(this.options.qtySelector).prop('tagName') !== 'SELECT'
+                this.printformerOptions.qty &&
+                $(this.printformerOptions.qtySelector).prop('tagName') !== 'SELECT'
             ) {
-                $(this.options.qtySelector).val(this.options.qty);
+                $(this.printformerOptions.qtySelector).val(this.printformerOptions.qty);
             }
         },
 
         setVariation: function (id, value) {
-            var varConf = this.options.variationsConfig;
+            var varConf = this.printformerOptions.variationsConfig;
             if (!id
                 || !varConf[id]
                 || !varConf[id]['param'].length) {
@@ -453,20 +487,123 @@ define([
             }
             if (!this.formatChange
                 && varConf[id]['notice']
-                && this.options.variationsFront[id] !== undefined
-                && this.options.variationsFront[id].length) {
+                && this.printformerOptions.variationsFront[id] !== undefined
+                && this.printformerOptions.variationsFront[id].length) {
                 this.editorNotice.modal('openModal');
                 return;
             }
             this.editBtnEnable();
             this.uploadBtnEnable();
-            this.options.variationsFront[id] = value;
-            this.options.variations[varConf[id]['param']] = varConf[id]['map'][value];
-            for (var k in this.options.variations) {
-                if (this.options.variations[k] === undefined || !this.options.variations[k].length) {
+            this.printformerOptions.variationsFront[id] = value;
+            this.printformerOptions.variations[varConf[id]['param']] = varConf[id]['map'][value];
+            for (var k in this.printformerOptions.variations) {
+                if (this.printformerOptions.variations[k] === undefined || !this.printformerOptions.variations[k].length) {
                     this.editBtnDisable();
                     this.uploadBtnDisable();
                 }
+            }
+        },
+
+        preselectOptions: function(selectedOptions) {
+            this.runCallbacks('printformer:preselection:before');
+            var that = this;
+            if (!this.isDefined(selectedOptions)) {
+                return;
+            }
+
+            if(this.isDefined(selectedOptions['options']) && selectedOptions['options'] !== null) {
+                if (this.isDefined(selectedOptions['options'])) {
+                    if (selectedOptions.product === that.printformerOptions.ProductId) {
+                        if (this.isDefined(selectedOptions.qty) && this.isDefined(selectedOptions.qty.value)) {
+                            var qtySelector = '#qty';
+                            if ($(qtySelector).length) {
+                                $(qtySelector).val(selectedOptions.qty.value);
+                                // $(qtySelector).trigger('change');
+                            }
+                        }
+
+                        var preselectoptions = $('.product-options-wrapper :input');
+                        var inputId = null;
+                        $.each(preselectoptions, function (i, opt) {
+                            if (
+                                $(opt).hasClass('product-custom-option') &&
+                                $(opt).is('textarea')
+                            ) {
+                                inputId = $(opt).attr('id');
+                                if(that.isDefined(selectedOptions['options'][inputId])) {
+                                    $(opt).val(selectedOptions['options'][inputId].value);
+                                }
+                            }
+                            if (
+                                $(opt).hasClass('product-custom-option') &&
+                                $(opt).attr('type') === 'text'
+                            ) {
+                                inputId = $(opt).attr('id');
+                                if(that.parentObject.isDefined(selectedOptions['options'][inputId])) {
+                                    $(opt).prop('value', selectedOptions['options'][inputId].value);
+                                }
+                            }
+                            if (
+                                $(opt).hasClass('product-custom-option') &&
+                                $(opt).attr('type') === 'checkbox'
+                            ) {
+                                var checkboxId = $(opt).attr('id');
+                                if (that.isDefined(selectedOptions['options'][checkboxId]) && selectedOptions['options'][checkboxId].value === $(opt).val()) {
+                                    $(opt).prop('checked', true);
+                                }
+                            }
+                            if (
+                                $(opt).prop('tagName').toLowerCase() === 'select' &&
+                                $(opt).hasClass('product-custom-option')
+                            ) {
+                                $.each(selectedOptions['options'], function (i, optionValue) {
+                                    if ($(opt).data('selector') === 'options[' + i + ']') {
+                                        $(opt).val(optionValue.value);
+                                    }
+                                });
+                            }
+                            if (
+                                $(opt).hasClass('product-custom-option') &&
+                                $(opt).attr('type') === 'radio'
+                            ) {
+                                $.each(selectedOptions['options'], function (i, optionValue) {
+                                    if (
+                                        $(opt).data('selector') === 'options[' + i + ']' &&
+                                        $(opt).val() === optionValue.value
+                                    ) {
+                                        $(opt).prop('checked', true);
+                                    }
+                                });
+                            }
+
+                            // $(opt).trigger('change');
+                        });
+                    }
+                }
+            }
+            this.runCallbacks('printformer:preselection:after');
+            return this;
+        },
+
+        registerCallback: function(event, name, method) {
+            if(!this.isDefined(this.callbacks[event])) {
+                this.callbacks[event] = {};
+            }
+            this.callbacks[event][name] = method;
+            $(document).trigger('printformer_callback_registered', event, name, method);
+        },
+
+        runCallbacks: function(event) {
+            if(!this.isDefined(event)) {
+                $.each(this.callbacks, function(i, eventCallbacks){
+                    $.each(eventCallbacks, function(i, methodCallback){
+                        methodCallback();
+                    });
+                });
+            } else {
+                $.each(this.callbacks[event], function(i, methodCallback){
+                    methodCallback();
+                });
             }
         }
     });
