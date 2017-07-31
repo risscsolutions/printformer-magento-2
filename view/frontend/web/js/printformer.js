@@ -128,13 +128,13 @@ define([
             $(document).trigger('printformer:loaded:before');
 
             this.runCallbacks('printformer:loaded:before');
+            this._initEditorMain();
             $.ajax({
                 url: that.printformerOptions.DraftsGetUrl + 'product/' + that.printformerOptions.ProductId + '/',
                 method: 'get',
                 dataType: 'json'
             }).done(function(data){
                 that.currentDrafts = data;
-                that._initEditorMain();
                 that._initAddBtn();
                 that._initEditBtn();
                 that._initUploadBtn();
@@ -146,7 +146,7 @@ define([
 
                 if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
                     $(document).on('printformer_preselect_options_after', function () {
-                       // that.initPersonalisationQty();
+                       that.initPersonalisationQty();
                     });
                 }
 
@@ -518,7 +518,7 @@ define([
                             var qtySelector = '#qty';
                             if ($(qtySelector).length) {
                                 $(qtySelector).val(selectedOptions.qty.value);
-                                // $(qtySelector).trigger('change');
+                                $(qtySelector).trigger('change');
                             }
                         }
 
@@ -529,7 +529,7 @@ define([
                                 $(opt).hasClass('product-custom-option') &&
                                 $(opt).is('textarea')
                             ) {
-                                inputId = $(opt).attr('id');
+                                inputId = $(opt).attr('id').replace('options_', '').replace('_text', '');
                                 if(that.isDefined(selectedOptions['options'][inputId])) {
                                     $(opt).val(selectedOptions['options'][inputId].value);
                                 }
@@ -538,8 +538,8 @@ define([
                                 $(opt).hasClass('product-custom-option') &&
                                 $(opt).attr('type') === 'text'
                             ) {
-                                inputId = $(opt).attr('id');
-                                if(that.parentObject.isDefined(selectedOptions['options'][inputId])) {
+                                inputId = $(opt).attr('id').replace('options_', '').replace('_text', '');
+                                if(that.isDefined(selectedOptions['options'][inputId])) {
                                     $(opt).prop('value', selectedOptions['options'][inputId].value);
                                 }
                             }
@@ -547,20 +547,34 @@ define([
                                 $(opt).hasClass('product-custom-option') &&
                                 $(opt).attr('type') === 'checkbox'
                             ) {
-                                var checkboxId = $(opt).attr('id');
-                                if (that.isDefined(selectedOptions['options'][checkboxId]) && selectedOptions['options'][checkboxId].value === $(opt).val()) {
-                                    $(opt).prop('checked', true);
+                                var checkboxId = $(opt).attr('id').replace(/options_([0-9]+)_[0-9]+/i, '$1');
+                                if (that.isDefined(selectedOptions['options'][checkboxId])) {
+                                    $.each(selectedOptions['options'][checkboxId].value, function(o, option){
+                                        if($(opt).val() === option) {
+                                            $(opt).prop('checked', true);
+                                        }
+                                    });
                                 }
                             }
                             if (
                                 $(opt).prop('tagName').toLowerCase() === 'select' &&
                                 $(opt).hasClass('product-custom-option')
                             ) {
-                                $.each(selectedOptions['options'], function (i, optionValue) {
-                                    if ($(opt).data('selector') === 'options[' + i + ']') {
-                                        $(opt).val(optionValue.value);
-                                    }
-                                });
+                                if($(opt).hasClass('datetime-picker')) {
+                                    $.each(selectedOptions['options'], function (i, optionValue) {
+                                        if($(opt).data('selector') === 'options[' + i + '][' + $(opt).data('calendar-role') + ']') {
+                                            if(that.isDefined(optionValue.value[$(opt).data('calendar-role')])) {
+                                                $(opt).val(optionValue.value[$(opt).data('calendar-role')]);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    $.each(selectedOptions['options'], function (i, optionValue) {
+                                        if ($(opt).data('selector') === 'options[' + i + ']') {
+                                            $(opt).val(optionValue.value);
+                                        }
+                                    });
+                                }
                             }
                             if (
                                 $(opt).hasClass('product-custom-option') &&
@@ -576,7 +590,7 @@ define([
                                 });
                             }
 
-                            // $(opt).trigger('change');
+                            $(opt).trigger('change');
                         });
                     }
                 }

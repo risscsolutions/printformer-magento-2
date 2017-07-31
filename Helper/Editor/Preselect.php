@@ -2,7 +2,6 @@
 namespace Rissc\Printformer\Helper\Editor;
 
 use Magento\Framework\App\Helper\AbstractHelper;
-use Zend\Stdlib\Parameters;
 
 class Preselect
     extends AbstractHelper

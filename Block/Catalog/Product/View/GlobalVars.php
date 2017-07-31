@@ -23,6 +23,10 @@ class GlobalVars
         $printformerData = json_decode($this->getJsonConfig(), true);
         $catalogSession = $this->sessionHelper->getCatalogSession();
         $preselectData = $catalogSession->getSavedPrintformerOptions();
+        if($product->getId() != $preselectData['product'])
+        {
+            $preselectData = [];
+        }
         if(!empty($preselectData) || $this->isOnConfigurePDS())
         {
             if ($this->isOnConfigurePDS())

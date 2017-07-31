@@ -7,9 +7,7 @@ use Magento\Checkout\Model\Cart;
 use Magento\Framework\DataObject;
 use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Wishlist\Model\Item;
-use Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Data;
 use Rissc\Printformer\Controller\Editor\Save;
-use Rissc\Printformer\Gateway\Admin\Product;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Helper\Url;
@@ -694,9 +692,9 @@ class Printformer
 
         $extendConfig = [
             'IsUploadProduct' => $this->isUploadProduct(),
-            'DraftsGetUrl' => $this->getPreselectBlock()->getDraftsGetUrl(),
+            'DraftsGetUrl' => $this->getDraftsGetUrl(),
             'ProductId' => $this->getProduct()->getId(),
-            'isConfigure' => $this->getPreselectBlock()->isOnConfigurePDS(),
+            'isConfigure' => $this->isOnConfigurePDS(),
             'draftMasterId' => $this->getDraftMasterId(),
         ];
 
@@ -732,17 +730,6 @@ class Printformer
             }
         }
         return $this->draftMasterId;
-    }
-
-    /**
-     * @return \Rissc\Printformer\Block\Catalog\Product\View\Preselect
-     */
-    public function getPreselectBlock()
-    {
-        /** @var \Rissc\Printformer\Block\Catalog\Product\View\Preselect $block */
-        $block = $this->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Preselect');
-
-        return $block;
     }
 
     /**
@@ -811,5 +798,31 @@ class Printformer
         $capabilities = $this->getCapabilities($this->getProduct());
 
         return $capabilities->getUploadAndEditor();
+    }
+
+    /**
+     * @return string
+     */
+    public function getDraftsGetUrl()
+    {
+        return $this->_urlBuilder->getUrl('printformer/get/draft');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOnConfigurePDS()
+    {
+        $_request = $this->getRequest();
+        $isConfigure = false;
+        if(
+            $_request->getModuleName() == 'checkout' &&
+            $_request->getActionName() == 'configure'
+        )
+        {
+            $isConfigure = true;
+        }
+
+        return $isConfigure;
     }
 }
