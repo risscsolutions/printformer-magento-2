@@ -88,6 +88,7 @@ class Open extends Action
         $draftID = null;
         $this->_sessionHelper->setCurrentIntent($intent);
 
+        $draftProcess = null;
         $draftExists = false;
         $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
         if($sessionUniqueId)
@@ -130,7 +131,6 @@ class Open extends Action
             die();
         }
 
-        $draftProcess = null;
         if(!$draftExists)
         {
             /** @var Draft $draftProcess */
