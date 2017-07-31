@@ -95,17 +95,16 @@ class Open extends Action
             $uniqueExplode = explode(':', $sessionUniqueId);
             if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1])
             {
-                $uniqueID = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
                 /** @var Draft $draftProcess */
                 $draftProcess = $this->_draftFactory->create();
                 $draftCollection = $draftProcess->getCollection()
-                    ->addFieldToFilter('session_unique_id', ['eq' => $uniqueID])
+                    ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
                     ->addFieldToFilter('intent', ['eq' => $intent]);
                 if ($draftCollection->count() == 1)
                 {
                     /** @var Draft $draft */
                     $draft = $draftCollection->getFirstItem();
-                    if ($draft->getId())
+                    if ($draft->getId() && $draft->getDraftId())
                     {
                         $draftExists = true;
                         $draftID = $draft->getDraftId();
@@ -131,6 +130,7 @@ class Open extends Action
             die();
         }
 
+        $draftProcess = null;
         if(!$draftExists)
         {
             /** @var Draft $draftProcess */

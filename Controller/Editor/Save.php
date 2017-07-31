@@ -100,7 +100,7 @@ class Save
                 $uniqueExplode = explode(':', $sessionUniqueId);
                 if(isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1])
                 {
-                    $uniqueID = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
+                    $uniqueID = $sessionUniqueId;
                 }
                 else
                 {
