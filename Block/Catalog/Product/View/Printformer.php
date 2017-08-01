@@ -500,7 +500,7 @@ class Printformer
     }
 
     /**
-     * @return bool
+     * @return array|null
      */
     public function getColorAttributeConfig()
     {
@@ -549,7 +549,7 @@ class Printformer
     }
 
     /**
-     * @return bool
+     * @return array|null
      */
     public function getColorOptionConfig()
     {

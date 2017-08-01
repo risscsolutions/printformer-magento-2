@@ -4,18 +4,12 @@ namespace Rissc\Printformer\Block\Catalog\Product\View;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject;
 use Magento\Quote\Model\Quote\Item;
-use Rissc\Printformer\Model\Product;
 
-/**
- * Class GlobalVars
- * @package Rissc\Printformer\Block\Catalog\Product\View
- */
 class GlobalVars
     extends Printformer
 {
     public function getPreselection()
     {
-        /** @var Product $product */
         $product = $this->getProduct();
         if (!$product) {
             return '{}';
@@ -23,18 +17,13 @@ class GlobalVars
         $printformerData = json_decode($this->getJsonConfig(), true);
         $catalogSession = $this->sessionHelper->getCatalogSession();
         $preselectData = $catalogSession->getSavedPrintformerOptions();
-        if($product->getId() != $preselectData['product'])
-        {
+        if($product->getId() != $preselectData['product']) {
             $preselectData = [];
         }
-        if(!empty($preselectData) || $this->isOnConfigurePDS())
-        {
-            if ($this->isOnConfigurePDS())
-            {
+        if(!empty($preselectData) || $this->isOnConfigurePDS()) {
+            if ($this->isOnConfigurePDS()) {
                 $printformerData['preselection'] = $this->getConfigurePreselection();
-            }
-            else
-            {
+            } else {
                 $printformerData['preselection'] = $preselectData;
             }
         }
@@ -44,47 +33,28 @@ class GlobalVars
     }
 
     /**
-     * @return bool
+     * @return array
      */
-    public function isOnConfigurePDS()
-    {
-        $_request = $this->getRequest();
-        $isConfigure = false;
-        if(
-            $_request->getModuleName() == 'checkout' &&
-            $_request->getActionName() == 'configure'
-        )
-        {
-            $isConfigure = true;
-        }
-
-        return $isConfigure;
-    }
-
     public function getConfigurePreselection()
     {
-        $_request = $this->getRequest();
-        if($_request->getParam('id'))
-        {
+        $request = $this->getRequest();
+        if($request->getParam('id')) {
             /** @var Item $quoteItem */
             $quoteItem = ObjectManager::getInstance()->create('Magento\Quote\Model\Quote\Item');
-            $quoteItem->getResource()->load($quoteItem, (int)$_request->getParam('id'));
+            $quoteItem->getResource()->load($quoteItem, (int)$request->getParam('id'));
             $connection = $quoteItem->getResource()->getConnection();
 
-            if($quoteItem->getId())
-            {
+            if($quoteItem->getId()) {
                 $buyRequest = $quoteItem->getBuyRequest();
 
                 $product = $buyRequest->getProduct();
                 $options = $buyRequest->getOptions();
-                $qty = (int)$quoteItem->getQty();
+                $qty = $quoteItem->getQty();
 
                 $_returnJson = [];
 
-                if (is_array($options))
-                {
-                    foreach ($options as $key => $_option)
-                    {
+                if (is_array($options)) {
+                    foreach ($options as $key => $_option) {
                         $_returnJson['options'][$key]['value'] = $_option;
                     }
                 }
@@ -102,6 +72,7 @@ class GlobalVars
                 return $_returnJson;
             }
         }
+
         return [];
     }
 }
