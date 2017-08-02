@@ -1,0 +1,112 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: fabian
+ * Date: 25.07.17
+ * Time: 12:21
+ */
+
+namespace Rissc\Printformer\Block\Adminhtml\System\Catalog\Product;
+
+use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
+use Psr\Log\LoggerInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Eav\Api\AttributeRepositoryInterface;
+
+
+class Capabilities  extends \Magento\Framework\View\Element\Template {
+
+    /** @var PrintformerProductFactory  */
+    protected $_printformerProductFactory;
+
+    /** @var StoreManagerInterface  */
+    protected $_storeManager;
+
+    protected $_eavConfig;
+
+    /** @var LoggerInterface  */
+    protected $_logger;
+
+    /**
+     * Capabilities constructor.
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param PrintformerProductFactory $printformerProductFactory
+     * @param StoreManagerInterface $storeManager
+     * @param AttributeRepositoryInterface $eavConfig
+     * @param LoggerInterface $logger
+     * @param array $data
+     */
+    public function __construct(\Magento\Framework\View\Element\Template\Context $context,
+                                PrintformerProductFactory $printformerProductFactory,
+                                StoreManagerInterface $storeManager,
+                                AttributeRepositoryInterface $eavConfig,
+                                LoggerInterface $logger,
+                                array $data = []) {
+        $this->_printformerProductFactory = $printformerProductFactory;
+        $this->_storeManager = $storeManager;
+        $this->_eavConfig = $eavConfig;
+        $this->_logger = $logger;
+
+        parent::__construct($context, $data);
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getIntentsArray() {
+        //get current store id
+        $storeID = $this->_storeManager->getStore()->getId();
+        //get all printformer products for the current store from the database
+        $printformerProductCollection = $this->_printformerProductFactory->create()->getCollection()->addFieldToFilter('store_id', ['eq' => $storeID])->load();
+
+        //save all product master ids and the intents in an array
+        foreach($printformerProductCollection as $product) {
+            $newIntentsArray = array();
+            $intentsArray[$product->getMasterId()] = explode(",", $product->getIntents());
+            foreach ($intentsArray[$product->getMasterId()] as $intent) {
+                array_push($newIntentsArray, $this->replaceIntentName($intent));
+            }
+            $intentsArray[$product->getMasterId()] = $newIntentsArray;
+        }
+        //return the json encoded array
+        return json_encode($intentsArray);
+    }
+
+    /**
+     * @return string
+     */
+    public function getIntentsValue() {
+        $attribute = $this->_eavConfig->get(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
+        $options = $attribute->getOptions();
+        foreach ($options as $option) {
+            if (!empty($option->getLabel()) && !empty($option->getValue())) {
+                $intentsValueArray[$option->getLabel()] = $option->getValue();
+            }
+        }
+        return json_encode($intentsValueArray);
+    }
+
+
+    /**
+     * @param $intent
+     * @return string
+     */
+    private function replaceIntentName($intent) {
+        switch ($intent) {
+            case "customize":
+                return "Editor";
+                break;
+            case "personalize":
+                return "Personalizations";
+                break;
+            case "upload-and-editor":
+                return "Upload and Editor";
+                break;
+            case "upload":
+                return "Upload";
+                break;
+        }
+    }
+
+}

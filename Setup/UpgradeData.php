@@ -225,6 +225,13 @@ class UpgradeData
             );
         }
 
+        if(version_compare($context->getVersion(), '100.1.13', '>'))
+        {
+            /** @var EavSetup $eavSetup */
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->updateAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities', 'frontend_label', 'Printformer Properties');
+        }
+
         $setup->endSetup();
     }
 }
