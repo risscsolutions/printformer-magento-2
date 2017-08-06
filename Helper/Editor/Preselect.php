@@ -1,10 +1,10 @@
 <?php
+
 namespace Rissc\Printformer\Helper\Editor;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 
-class Preselect
-    extends AbstractHelper
+class Preselect extends AbstractHelper
 {
     public function getPreselectArray($formData)
     {

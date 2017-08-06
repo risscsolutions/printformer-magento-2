@@ -1,28 +1,33 @@
 <?php
+
 namespace Rissc\Printformer\Block\Checkout\Cart\Item\Renderer\Actions;
+
+use Rissc\Printformer\Helper\Config;
+use Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit;
 
 class EditPlugin
 {
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $configHelper;
 
     /**
-     * @param \Rissc\Printformer\Helper\Config $configHelper
+     * EditPlugin constructor.
+     * @param Config $configHelper
      */
     public function __construct(
-        \Rissc\Printformer\Helper\Config $configHelper
+        Config $configHelper
     ) {
         $this->configHelper = $configHelper;
     }
 
     /**
-     * @param \Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit $edit
+     * @param Edit $edit
      * @param string $result
      * @return string
      */
-    public function afterGetTemplate(\Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit $edit, $result)
+    public function afterGetTemplate(Edit $edit, $result)
     {
         $edit->setEditItemText($this->configHelper->getEditText());
         return 'Rissc_Printformer::checkout/cart/item/renderer/actions/edit.phtml';

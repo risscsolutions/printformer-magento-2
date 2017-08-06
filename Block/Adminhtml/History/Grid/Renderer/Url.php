@@ -5,16 +5,10 @@ namespace Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer;
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
 
-/**
- * Class Url
- * @package Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer
- */
-class Url
-    extends AbstractRenderer
+class Url extends AbstractRenderer
 {
     /**
-     * @param \Magento\Framework\DataObject $row
-     *
+     * @param DataObject $row
      * @return string
      */
     public function render(DataObject $row)
@@ -24,8 +18,7 @@ class Url
         $url = $row->getApiUrl();
         $parsedUrl = parse_url($url);
 
-        if(!empty($parsedUrl['query']))
-        {
+        if(!empty($parsedUrl['query'])) {
             unset($parsedUrl['query']);
         }
 
@@ -49,7 +42,6 @@ class Url
 
     /**
      * @param array $parsed_url
-     *
      * @return string
      */
     protected function unparseUrl(array $parsed_url)

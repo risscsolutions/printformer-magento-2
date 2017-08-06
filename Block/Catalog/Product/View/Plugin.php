@@ -1,25 +1,22 @@
 <?php
+
 namespace Rissc\Printformer\Block\Catalog\Product\View;
 
-use \Magento\Framework\View\Element\Template as TemplateBlock;
+use Magento\Framework\View\Element\Template;
 
 class Plugin
 {
     /**
-     * @param TemplateBlock $block
+     * @param Template $block
      * @param string $result
      *
-     * @return mixed
+     * @return string
      */
     public function afterToHtml($block, $result)
     {
-        $_request = $block->getRequest();
+        $request = $block->getRequest();
         $isConfigure = 'false';
-        if(
-            $_request->getModuleName() == 'checkout' &&
-            $_request->getActionName() == 'configure'
-        )
-        {
+        if($request->getModuleName() == 'checkout' && $request->getActionName() == 'configure') {
             $isConfigure = 'true';
         }
 
@@ -29,16 +26,12 @@ class Plugin
             </script>
         ';
 
-        if(
-            $block->getNameInLayout() == 'product.info.addtocart' ||
-            $block->getNameInLayout() == 'product.info.addtocart.additional'
-        )
-        {
+        if($block->getNameInLayout() == 'product.info.addtocart' || $block->getNameInLayout() == 'product.info.addtocart.additional') {
             /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $_printformerBlock */
-            $_printformerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
-            $_printformerBlock->setTemplate('Rissc_Printformer::catalog/product/view/printformer.phtml');
+            $printformerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
+            $printformerBlock->setTemplate('Rissc_Printformer::catalog/product/view/printformer.phtml');
 
-            $result = $configureScript . $_printformerBlock->toHtml() . $result;
+            $result = $configureScript . $printformerBlock->toHtml() . $result;
         }
 
         return $result;

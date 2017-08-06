@@ -1,14 +1,17 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Wishlist\Index;
+
+use Magento\Wishlist\Controller\Index\UpdateItemOptions;
 
 class UpdateItemOptionsPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
 {
     /**
-     * @param \Magento\Wishlist\Controller\Index\UpdateItemOptions $subject
+     * @param UpdateItemOptions $subject
      * @param $result
      * @return mixed
      */
-    public function afterExecute(\Magento\Wishlist\Controller\Index\UpdateItemOptions $subject, $result)
+    public function afterExecute(UpdateItemOptions $subject, $result)
     {
         $redirectUrl = $subject->getRequest()->getParam('redirect_url');
         $newItemId = $this->coreRegistry

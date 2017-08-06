@@ -4,19 +4,12 @@ namespace Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer;
 
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
-use Magento\Backend\Block\Context;
 
-/**
- * Class Status
- * @package Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer
- */
-class Status
-    extends AbstractRenderer
+class Status extends AbstractRenderer
 {
     /**
-     * @param \Magento\Framework\DataObject $row
-     *
-     * @return string
+     * @param DataObject $row
+     * @return \Magento\Framework\Phrase
      */
     public function render(DataObject $row)
     {

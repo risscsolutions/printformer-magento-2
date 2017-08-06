@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Helper;
 
 use \Rissc\Printformer\Model\Config\Source\Redirect;

@@ -1,14 +1,17 @@
 <?php
+
 namespace Rissc\Printformer\Block\Catalog\Product\View;
+
+use Magento\Catalog\Block\Product\View\Gallery;
 
 class GalleryPlugin extends Printformer
 {
     /**
-     * @param \Magento\Catalog\Block\Product\View\Gallery $gallery
-     * @param unknown $result
-     * @return string
+     * @param Gallery $gallery
+     * @param $result
+     * @return mixed
      */
-    public function afterGetGalleryImages(\Magento\Catalog\Block\Product\View\Gallery $gallery, $result)
+    public function afterGetGalleryImages(Gallery $gallery, $result)
     {
         if ($this->getImagePreviewUrl()) {
             $result->addItem(new \Magento\Framework\DataObject([

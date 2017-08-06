@@ -1,33 +1,32 @@
 <?php
+
 namespace Rissc\Printformer\Block\Checkout\Cart\Item;
 
 use Magento\Checkout\Block\Cart\Item\Renderer;
-use \Rissc\Printformer\Helper as Helper;
+use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Block\Checkout\Cart\Renderer as ReplaceRenderer;
 
-/**
- * Class RendererPlugin
- * @package Rissc\Printformer\Block\Checkout\Cart\Item
- */
 class RendererPlugin
 {
     /**
-     * @var \Rissc\Printformer\Helper\Url
+     * @var Url
      */
     protected $urlHelper;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $configHelper;
 
     /**
-     * @param \Rissc\Printformer\Helper\Url $urlHelper
-     * @param \Rissc\Printformer\Helper\Config $configHelper
+     * RendererPlugin constructor.
+     * @param Url $urlHelper
+     * @param Config $configHelper
      */
     public function __construct(
-        Helper\Url $urlHelper,
-        Helper\Config $configHelper
+        Url $urlHelper,
+        Config $configHelper
     ) {
         $this->urlHelper = $urlHelper;
         $this->configHelper = $configHelper;
@@ -35,7 +34,7 @@ class RendererPlugin
 
     /**
      * @param Renderer $renderer
-     * @param unknown $result
+     * @param          $result
      * @return string
      */
     public function afterGetImage(Renderer $renderer, $result)
@@ -57,8 +56,7 @@ class RendererPlugin
 
     /**
      * @param Renderer|ReplaceRenderer $renderer
-     * @param          $result
-     *
+     * @param                          $result
      * @return string
      */
     public function afterGetProductUrl($renderer, $result)

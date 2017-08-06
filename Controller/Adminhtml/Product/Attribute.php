@@ -1,37 +1,43 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Adminhtml\Product;
 
-use \Magento\Store\Model\Store;
-use \Magento\Eav\Model\Entity\Attribute as EntityAttribute;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Store\Model\Store;
+use Magento\Eav\Model\Config;
+use Magento\Eav\Model\Entity\Attribute as EntityAttribute;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
 
-class Attribute extends \Magento\Backend\App\Action
+class Attribute extends Action
 {
     /**
-     * @var \Magento\Framework\Controller\Result\JsonFactory
+     * @var JsonFactory
      */
     protected $resultJsonFactory;
 
     /**
-     * @var \Magento\Eav\Model\Config
+     * @var Config
      */
     protected $eavConfig;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var ConfigHelper
      */
     protected $config;
 
     /**
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
-     * @param \Magento\Eav\Model\Config $eavConfig
-     * @param \Rissc\Printformer\Helper\Config $config
+     * Attribute constructor.
+     * @param Context $context
+     * @param JsonFactory $resultJsonFactory
+     * @param Config $eavConfig
+     * @param ConfigHelper $config
      */
     public function __construct(
-        \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
-        \Magento\Eav\Model\Config $eavConfig,
-        \Rissc\Printformer\Helper\Config $config
+        Context $context,
+        JsonFactory $resultJsonFactory,
+        Config $eavConfig,
+        ConfigHelper $config
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
         $this->eavConfig = $eavConfig;
@@ -39,9 +45,6 @@ class Attribute extends \Magento\Backend\App\Action
         parent::__construct($context);
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\App\ActionInterface::execute()
-     */
     public function execute()
     {
         $storeId = $this->getRequest()->getParam('store_id', Store::DEFAULT_STORE_ID);
@@ -78,8 +81,8 @@ class Attribute extends \Magento\Backend\App\Action
         return $resultJson->setData($response);
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Backend\App\AbstractAction::_isAllowed()
+    /**
+     * {@inheritdoc}
      */
     protected function _isAllowed()
     {

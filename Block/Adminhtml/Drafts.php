@@ -1,12 +1,11 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml;
 
-use \Magento\Backend\Block\Widget\Grid\Container as GridContainer;
-use \Magento\Framework\View\Element\BlockInterface;
+use Magento\Backend\Block\Widget\Grid\Container;
+use Magento\Framework\View\Element\BlockInterface;
 
-class Drafts
-    extends GridContainer
-    implements BlockInterface
+class Drafts extends Container implements BlockInterface
 {
     protected function _construct()
     {

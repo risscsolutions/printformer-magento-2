@@ -1,34 +1,37 @@
 <?php
+
 namespace Rissc\Printformer\Helper;
 
-class Session extends \Magento\Framework\App\Helper\AbstractHelper
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Catalog\Model\Session as CatalogSession;
+use Magento\Customer\Model\Session as CustomerSession;
+
+class Session extends AbstractHelper
 {
     const SESSION_KEY_PRINTFORMER_DRAFTID = 'printformer_draftid';
     const SESSION_KEY_PRINTFORMER_CURRENT_INTENT = 'printformer_current_intent';
 
     /**
-     * Catalog session
-     *
-     * @var \Magento\Catalog\Model\Session
+     * @var CatalogSession
      */
     protected $catalogSession;
 
     /**
-     * Customer session
-     *
-     * @var \Magento\Customer\Model\Session
+     * @var CustomerSession
      */
     protected $customerSession;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Catalog\Model\Session $catalogSession
-     * @param \Magento\Customer\Model\Session $customerSession
+     * Session constructor.
+     * @param Context $context
+     * @param CatalogSession $catalogSession
+     * @param CustomerSession $customerSession
      */
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
-        \Magento\Catalog\Model\Session $catalogSession,
-        \Magento\Customer\Model\Session $customerSession
+        Context $context,
+        CatalogSession $catalogSession,
+        CustomerSession $customerSession
     ) {
         $this->catalogSession = $catalogSession;
         $this->customerSession = $customerSession;
@@ -36,10 +39,10 @@ class Session extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param integer $productId
-     * @param integer $storeId
-     * @param string $draftId
-     * @return \Rissc\Printformer\Helper\Session
+     * @param int $productId
+     * @param int $draftId
+     * @param string $storeId
+     * @return $this
      */
     public function setDraftId($productId, $draftId, $storeId)
     {
@@ -54,9 +57,9 @@ class Session extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param integer $productId
-     * @param integer $storeId
-     * @return \Rissc\Printformer\Helper\Session
+     * @param int $productId
+     * @param int $storeId
+     * @return $this
      */
     public function unsDraftId($productId, $storeId)
     {
@@ -71,22 +74,18 @@ class Session extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param      $productId
-     * @param      $storeId
-     * @param      $intent
+     * @param int $productId
+     * @param int $storeId
+     * @param string $intent
      * @param bool $clear
-     *
-     * @return null
+     * @return string|null
      */
     public function getDraftId($productId, $storeId, $intent = null, $clear = false)
     {
-        if($intent == $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT) || $intent == null)
-        {
+        if($intent == $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT) || $intent == null) {
             $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $clear);
             return isset($data[$storeId][$productId]) ? $data[$storeId][$productId] : null;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
@@ -99,46 +98,49 @@ class Session extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->customerSession->getCustomerId();
     }
 
+    /**
+     * @param $loginUrl
+     * @return bool
+     */
     public function authenticateCustomer($loginUrl = null)
     {
         return $this->customerSession->authenticate($loginUrl);
     }
 
     /**
-     * @return \Magento\Catalog\Model\Session
+     * @return CatalogSession
      */
-    public function getCatalogSession() {
+    public function getCatalogSession()
+    {
         return $this->catalogSession;
     }
 
     /**
-     * @return \Magento\Customer\Model\Session
+     * @return CustomerSession
      */
-    public function getCustomerSession() {
+    public function getCustomerSession()
+    {
         return $this->customerSession;
     }
 
 
     public function setCurrentIntent($intent)
     {
-        if($intent != $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT))
-        {
+        if($intent != $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
             $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, $intent);
         }
     }
 
     public function unsetCurrentIntent()
     {
-        if($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT))
-        {
+        if($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
             $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
         }
     }
 
     public function getCurrentIntent()
     {
-        if($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT))
-        {
+        if($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
             return $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT);
         }
 

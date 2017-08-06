@@ -1,12 +1,10 @@
 <?php
+
 namespace Rissc\Printformer\Block\Checkout\Cart;
 
-/**
- * Class Renderer
- * @package Rissc\Printformer\Block\Checkout\Cart
- */
-class Renderer
-    extends \Magento\Checkout\Block\Cart\Item\Renderer
+use Magento\Checkout\Block\Cart\Item\Renderer as ItemRenderer;
+
+class Renderer extends ItemRenderer
 {
     /**
      * @return string

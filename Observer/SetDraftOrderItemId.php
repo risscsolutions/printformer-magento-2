@@ -36,8 +36,8 @@ class SetDraftOrderItemId implements ObserverInterface
         $this->draftFactory = $draftFactory;
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\Event\ObserverInterface::execute()
+    /**
+     * {@inheritdoc}
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {

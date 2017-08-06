@@ -1,37 +1,30 @@
 <?php
-/**
- * Copyright © 2016 Magento. All rights reserved.
- * See COPYING.txt for license details.
- */
-
-// @codingStandardsIgnoreFile
-
-/* @var $block \Magento\Wishlist\Block\Customer\Wishlist\Item\Column\Cart */
-/* @var \Magento\Wishlist\Model\Item $item */
-$item = $block->getItem();
-$product = $item->getProduct();
+/* @var \Magento\Wishlist\Block\Customer\Wishlist\Item\Column\Cart $block */
+/* @var \Magento\Wishlist\Model\Item $_item */
+$_item = $block->getItem();
+$_product = $_item->getProduct();
 ?>
-<?php foreach ($block->getChildNames() as $childName): ?>
-    <?php /* @escapeNotVerified */ echo $block->getLayout()->renderElement($childName, false); ?>
+<?php foreach ($block->getChildNames() as $_childName): ?>
+    <?php echo $block->getLayout()->renderElement($_childName, false); ?>
 <?php endforeach;?>
 <div class="box-tocart">
     <fieldset class="fieldset">
-        <?php if ($product->isSaleable()): ?>
+        <?php if ($_product->isSaleable()): ?>
             <div class="product-item-actions">
                 <div class="actions-primary">
-                    <a type="button" class="action tocart primary" href="<?php /* @escapeNotVerified */ echo $block->getItemConfigureUrl($item) ?>">
-                        <span><?php /* @escapeNotVerified */ echo __('Edit and Add to Cart') ?></span>
+                    <a type="button" class="action tocart primary" href="<?php echo $block->getItemConfigureUrl($_item) ?>">
+                        <span><?php echo __('Edit and Add to Cart') ?></span>
                     </a>
                 </div>
             </div>
         <?php else: ?>
-            <?php if ($product->getIsSalable()): ?>
-                <p class="available stock" title="<?php /* @escapeNotVerified */ echo __('Availability') ?>">
-                    <span><?php /* @escapeNotVerified */ echo __('In stock') ?></span>
+            <?php if ($_product->getIsSalable()): ?>
+                <p class="available stock" title="<?php echo __('Availability') ?>">
+                    <span><?php echo __('In stock') ?></span>
                 </p>
             <?php else: ?>
-                <p class="unavailable stock" title="<?php /* @escapeNotVerified */ echo __('Availability') ?>">
-                    <span><?php /* @escapeNotVerified */ echo __('Out of stock') ?></span>
+                <p class="unavailable stock" title="<?php echo __('Availability') ?>">
+                    <span><?php echo __('Out of stock') ?></span>
                 </p>
             <?php endif; ?>
         <?php endif; ?>

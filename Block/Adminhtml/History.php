@@ -2,16 +2,10 @@
 
 namespace Rissc\Printformer\Block\Adminhtml;
 
-use \Magento\Backend\Block\Widget\Grid\Container as GridContainer;
-use \Magento\Framework\View\Element\BlockInterface;
+use Magento\Backend\Block\Widget\Grid\Container;
+use Magento\Framework\View\Element\BlockInterface;
 
-/**
- * Class History
- * @package Rissc\Printformer\Block\Adminhtml
- */
-class History
-    extends GridContainer
-    implements BlockInterface
+class History extends Container implements BlockInterface
 {
     protected function _construct()
     {

@@ -28,8 +28,8 @@ class InstallData implements InstallDataInterface
         $this->eavSetup = $eavSetup;
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\Setup\InstallDataInterface::install()
+    /**
+     * {@inheritdoc}
      */
     public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {

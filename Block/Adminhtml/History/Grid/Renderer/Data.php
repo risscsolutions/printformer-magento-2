@@ -2,21 +2,14 @@
 
 namespace Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer;
 
-use \Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
-use \Magento\Framework\DataObject;
-use \DOMDocument;
+use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
+use Magento\Framework\DataObject;
 
-/**
- * Class Data
- * @package Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer
- */
-class Data
-    extends AbstractRenderer
+class Data extends AbstractRenderer
 {
     /**
      * @param DataObject $row
-     *
-     * @return mixed|string
+     * @return string
      */
     public function render(DataObject $row)
     {
@@ -60,16 +53,13 @@ class Data
 
     /**
      * @param string $data
-     *
-     * @return mixed
+     * @return string
      */
     protected function _niceXml($data)
     {
-        if(preg_match('/xml/i', $data))
-        {
-            if ($xml = simplexml_load_string($data))
-            {
-                $domxml = new DOMDocument('1.0');
+        if(preg_match('/xml/i', $data)) {
+            if ($xml = simplexml_load_string($data)) {
+                $domxml = new \DOMDocument('1.0');
                 $domxml->preserveWhiteSpace = false;
                 $domxml->formatOutput = true;
                 $domxml->loadXML($xml->asXML());
