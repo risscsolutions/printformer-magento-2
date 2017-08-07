@@ -7,6 +7,8 @@ use Magento\Framework\Event\ManagerInterface as EventManager;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\Product as CatalogProduct;
+use Magento\Eav\Api\AttributeRepositoryInterface;
+use Rissc\Printformer\Gateway\User\Draft as PfIntentNameHelper;
 
 class Product
 {
@@ -51,6 +53,9 @@ class Product
     /** @var \Magento\Framework\DB\Adapter\AdapterInterface */
     protected $_connection;
 
+    /** @var AttributeRepositoryInterface  */
+    protected $_eavConfig;
+
     protected $_attributePfEnabled;
     protected $_attributePfProduct;
     protected $_attributePfUploadEnabled;
@@ -59,6 +64,9 @@ class Product
     protected $_updatedRows = ['sku', 'name', 'description', 'short_description', 'status'];
 
     protected $_productFactory;
+
+
+    protected $_pfIntentNameHelper;
 
     /**
      * Product constructor.
@@ -74,6 +82,8 @@ class Product
      */
     public function __construct(
         \Psr\Log\LoggerInterface $logger,
+        PfIntentNameHelper $pfIntentNameHelper,
+        AttributeRepositoryInterface $eavConfig,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory,
         \Magento\Framework\Json\Decoder $jsonDecoder,
@@ -90,6 +100,8 @@ class Product
         $this->printformerProductFactory = $printformerProductFactory;
         $this->_eventManager = $_eventManager;
         $this->_productFactory = $productFactory;
+        $this->_eavConfig = $eavConfig;
+        $this->_pfIntentNameHelper = $pfIntentNameHelper;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->_connection = $printformerProduct->getResource()->getConnection();
@@ -209,8 +221,7 @@ class Product
 
         foreach($masterIDs as $masterID)
         {
-            if(!in_array($masterID, $existingPrintformerProductMasterIDs))
-            {
+            if (!in_array($masterID, $existingPrintformerProductMasterIDs)) {
                 $pfProduct = $this->printformerProductFactory->create();
                 $pfProduct->setStoreId($storeId)
                     ->setSku($responseRealigned[$masterID]['sku'])
@@ -225,9 +236,7 @@ class Product
                     ->setUpdatedAt(time());
                 $pfProduct->getResource()->save($pfProduct);
                 continue;
-            }
-            else
-            {
+            } else {
                 $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
                 $pfProduct->setSku($responseRealigned[$masterID]['sku'])
                     ->setName($responseRealigned[$masterID]['name'])
@@ -241,6 +250,60 @@ class Product
                 continue;
             }
         }
+
+
+        //get ID of attribute printformer_capabilities
+        $attributeCapabilities = $this->_eavConfig->get(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
+        $attributeCapabilitiesID = $attributeCapabilities->getAttributeId();
+
+        //get array with intent name and the intent numbers
+        $options = $attributeCapabilities->getOptions();
+        foreach ($options as $option) {
+            if (!empty($option->getLabel()) && !empty($option->getValue())) {
+                $intentsValueArray[$option->getValue()] = $this->_pfIntentNameHelper->getIntent($option->getLabel());
+            }
+        }
+
+        //fetch all products which have a printformer product assigned to
+        $query = "SELECT `entity_id`, `value` FROM `" . $this->_connection->getTableName('catalog_product_entity_text') . "` WHERE `attribute_id` = $attributeCapabilitiesID";
+        $results = $this->_connection->query($query);
+        foreach($results as $result) {
+            //product which has a printformer product assigned to
+            $productID = $result['entity_id'];
+
+            //get the master id of the printformer product that ist assigned to the product
+            $product = $this->_productFactory->create();
+            $product->getResource()->load($product, $productID);
+            $pfProductMasterID = $product->getPrintformerProduct();
+
+            $changed = false;
+            $currentProductIntents = explode(",", $result['value']);
+            $newProductIntents = array();
+
+            //check if there are any intents assigned to the product
+            if(!empty($result['value'])) {
+                //check for each intent if it is still applied to the printformer product
+                foreach ($currentProductIntents as $intentID) {
+                    if (in_array($intentsValueArray[$intentID], $responseRealigned[$pfProductMasterID]['intents'])) {
+                        //if intent is valid put it in the array with the new intents
+                        array_push($newProductIntents, $intentID);
+                    } else {
+                        $changed = true;
+                    }
+                }
+            } else {
+                $changed = true;
+            }
+
+            //update database with new capabilities if there was a change
+            if($changed) {
+                $value = implode(",",$newProductIntents);
+                $query = "UPDATE `" . $this->_connection->getTableName('catalog_product_entity_text') . "` SET `value` = '$value' WHERE `attribute_id` = $attributeCapabilitiesID AND `entity_id` = $productID".";";
+                $this->_connection->query($query);
+            }
+
+        }
+
 
         $pfProduct = $this->printformerProductFactory->create();
         $pfProductToDeleteCollection = $pfProduct->getCollection()
