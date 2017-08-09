@@ -225,7 +225,7 @@ class UpgradeData
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.13', '>'))
+        if(version_compare($context->getVersion(), '100.1.29', '>'))
         {
             /** @var EavSetup $eavSetup */
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
