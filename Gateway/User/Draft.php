@@ -119,7 +119,7 @@ class Draft
             'direction' => 'outgoing'
         ];
 
-        $url = $this->urlHelper
+        $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraftUrl();
 

@@ -186,6 +186,7 @@ class Printformer extends AbstractView
                         $draft = $draftCollection->getFirstItem();
                         if ($draft->getId() && $draft->getDraftId())
                         {
+
                             $draftId = $draft->getDraftId();
                         }
                     }

@@ -179,14 +179,14 @@ class Save extends Action
      */
     protected function initDraft(ProductInterface $product, $draftProcessId, $storeId, $extra = [])
     {
-        $draftProcess = $this->draftFactory->create()->load($draftProcessId);
+        $draftProcess = $this->_draftFactory->create()->load($draftProcessId);
 
         if ($this->getRequest()->getParam('updateWishlistItemOptions') != 'wishlist/index/updateItemOptions') {
-            $this->sessionHelper->setDraftId($product->getId(), $draftProcess->getDraftId(), $storeId);
+            $this->_sessionHelper->setDraftId($product->getId(), $draftProcess->getDraftId(), $storeId);
         }
 
         /** @var Session $session */
-        $session = $this->sessionHelper->getCatalogSession();
+        $session = $this->_sessionHelper->getCatalogSession();
         foreach($extra as $key => $value) {
             $session->setData($key, $value);
         }
@@ -326,16 +326,16 @@ class Save extends Action
                 $params,
                 $product,
                 $variation,
-                $this->configHelper->getColorAttributeName(),
-                $this->configHelper->getColorAttributeValues()
+                $this->_configHelper->getColorAttributeName(),
+                $this->_configHelper->getColorAttributeValues()
             );
         } else {
             return $this->_addSelectedProductOption(
                 $params,
                 $product,
                 $variation,
-                $this->configHelper->getColorOptionName(),
-                $this->configHelper->getColorOptionValues()
+                $this->_configHelper->getColorOptionName(),
+                $this->_configHelper->getColorOptionValues()
             );
         }
     }

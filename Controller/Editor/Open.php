@@ -109,11 +109,11 @@ class Open extends Action
                     ->addFieldToFilter('intent', ['eq' => $intent]);
                 if ($draftCollection->count() == 1) {
                     /** @var Draft $draft */
-                    $draft = $draftCollection->getFirstItem();
-                    if ($draft->getId() && $draft->getDraftId()) {
+                    $draftProcess = $draftCollection->getFirstItem();
+                    if ($draftProcess->getId() && $draftProcess->getDraftId()) {
                         $draftExists = true;
-                        $draftID = $draft->getDraftId();
-                        $this->_sessionHelper->setCurrentIntent($draft->getIntent());
+                        $draftID = $draftProcess->getDraftId();
+                        $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
                     }
                 }
             }

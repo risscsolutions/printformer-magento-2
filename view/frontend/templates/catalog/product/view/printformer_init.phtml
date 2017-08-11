@@ -7,13 +7,8 @@ $_hasCapability = $block->isUploadProduct() || $block->isEditorProduct() || $blo
     <script type="text/x-magento-init">
         {
             "#product_addtocart_form": {
-                "printformer": {}
+                "printformer": <?php echo $block->getPreselection(); ?>
             }
         }
     </script>
 <?php endif; ?>
-
-<script type="text/javascript">
-    var globalPrintformerOptions = '<?php echo $block->getPreselection(); ?>';
-    var printformerInstance = null;
-</script>

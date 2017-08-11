@@ -1,3 +1,6 @@
+var globalPrintformerOptions = null;
+var printformerInstance = null;
+
 define([
     'jquery',
     'jquery/ui',
@@ -117,10 +120,8 @@ define([
             this.callbacks = {};
             this.addToCartFormUrl = null;
 
-            this.printformerOptions = null;
-            if (this.isDefined(globalPrintformerOptions)) {
-                this.printformerOptions = JSON.parse(globalPrintformerOptions);
-            }
+            this.printformerOptions = this.options;
+            globalPrintformerOptions = this.printformerOptions;
 
             if(this.isDefined(printformerInstance)) {
                 printformerInstance = this;
