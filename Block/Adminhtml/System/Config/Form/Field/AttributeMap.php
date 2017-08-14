@@ -1,7 +1,12 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field;
 
-class AttributeMap extends \Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray
+use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
+use Magento\Backend\Block\Template\Context;
+use Magento\Framework\Data\Form\Element\Factory;
+
+class AttributeMap extends AbstractFieldArray
 {
     protected $_template = 'Rissc_Printformer::system/config/form/field/attributemap.phtml';
 
@@ -16,16 +21,16 @@ class AttributeMap extends \Magento\Config\Block\System\Config\Form\Field\FieldA
     protected $_defaultStoreVarName = 'store';
 
     /**
-     * @param \Magento\Backend\Block\Template\Context $context
-     * @param \Magento\Framework\Data\Form\Element\Factory $elementFactory
+     * AttributeMap constructor.
+     * @param Context $context
+     * @param Factory $elementFactory
      * @param array $data
      */
     public function __construct(
-        \Magento\Backend\Block\Template\Context $context,
-        \Magento\Framework\Data\Form\Element\Factory $elementFactory,
+        Context $context,
+        Factory $elementFactory,
         array $data = []
-    )
-    {
+    ) {
         $this->_elementFactory  = $elementFactory;
         parent::__construct($context, $data);
     }
@@ -53,8 +58,8 @@ class AttributeMap extends \Magento\Config\Block\System\Config\Form\Field\FieldA
         }
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray::_construct()
+    /**
+     * {@inheritdoc}
      */
     protected function _construct()
     {

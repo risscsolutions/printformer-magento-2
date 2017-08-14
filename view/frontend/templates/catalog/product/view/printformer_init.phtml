@@ -1,0 +1,14 @@
+<?php
+/** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $block */
+$_hasCapability = $block->isUploadProduct() || $block->isEditorProduct() || $block->isPersonalizationProduct() || $block->isUploadAndEditorProduct();
+?>
+
+<?php if($block->getProduct()->isSalable() && $_hasCapability): ?>
+    <script type="text/x-magento-init">
+        {
+            "#product_addtocart_form": {
+                "printformer": <?php echo $block->getPreselection(); ?>
+            }
+        }
+    </script>
+<?php endif; ?>

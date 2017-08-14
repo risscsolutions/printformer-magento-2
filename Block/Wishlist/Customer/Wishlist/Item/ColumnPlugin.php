@@ -1,28 +1,28 @@
 <?php
+
 namespace Rissc\Printformer\Block\Wishlist\Customer\Wishlist\Item;
 
+use Magento\Wishlist\Block\Customer\Wishlist\Item\Column;
 use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
 
-class ColumnPlugin extends \Rissc\Printformer\Block\Catalog\Product\View\Printformer
+class ColumnPlugin extends Printformer
 {
     /**
      * Set image url for printformer item
      *
-     * @param \Magento\Wishlist\Block\Customer\Wishlist\Item\Column $subject
+     * @param Column $subject
      * @param $result
      * @return mixed
      */
-    public function afterGetImage(\Magento\Wishlist\Block\Customer\Wishlist\Item\Column $subject, $result)
+    public function afterGetImage(Column $subject, $result)
     {
         $item = $subject->getItem();
-        if($item)
-        {
+        if($item) {
             $option = $item->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID);
-            if($option)
-            {
+            if($option) {
                 $draftId = $option->getValue();
-                if ($draftId)
-                {
+                if ($draftId) {
                     $imageUrl = $this->urlHelper->getThumbImgUrl($draftId);
                     $result->setData('image_url', $imageUrl);
                 }

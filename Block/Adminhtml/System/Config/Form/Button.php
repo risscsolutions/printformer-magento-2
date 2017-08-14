@@ -1,11 +1,15 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form;
 
-class Button extends \Magento\Config\Block\System\Config\Form\Field
+use Magento\Config\Block\System\Config\Form\Field;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+
+class Button extends Field
 {
     /**
-     * @param string $buttonLabel
-     * @return \Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button
+     * @param $buttonLabel
+     * @return $this
      */
     public function setbuttonLabel($buttonLabel)
     {
@@ -13,10 +17,10 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
         return $this;
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Button\Block\System\Button\Form\Field::render()
+    /**
+     * {@inheritdoc}
      */
-    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    public function render(AbstractElement $element)
     {
         $element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
         return parent::render($element);

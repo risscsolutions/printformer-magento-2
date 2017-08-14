@@ -1,6 +1,7 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\ScopeInterface;
 
@@ -49,7 +50,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID = 'printformer_new_wishlist_item_id';
 
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $storeManager;
 
@@ -59,11 +60,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     protected $storeId;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     * @param Context $context
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
+        Context $context,
         StoreManagerInterface $storeManager
     ) {
         parent::__construct($context);
@@ -367,6 +368,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_CRON_CLEANUP_DAYS, ScopeInterface::SCOPE_STORE, $this->getStoreId());
     }
 
+    /**
+     * @return string
+     */
     public function getProcessingType()
     {
         return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE, ScopeInterface::SCOPE_STORE, $this->getStoreId());

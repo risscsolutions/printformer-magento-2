@@ -1,22 +1,19 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Wishlist\Index;
 
 use Magento\Framework\App\RequestInterface;
+use Magento\Wishlist\Controller\Index\Add;
+use Rissc\Printformer\Model\PrintformerPlugin;
 
-/**
- * Class AddPlugin
- * @package Rissc\Printformer\Controller\Wishlist\Index
- */
-class AddPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
+class AddPlugin extends PrintformerPlugin
 {
     /**
      * Add wishlist hint text for guest users
-     *
-     * @param \Magento\Wishlist\Controller\Index\Add $subject
+     * @param Add $subject
      * @param RequestInterface $request
-     * @return void
      */
-    public function beforeDispatch(\Magento\Wishlist\Controller\Index\Add $subject, RequestInterface $request)
+    public function beforeDispatch(Add $subject, RequestInterface $request)
     {
         if ($subject->getActionFlag()->get('', 'no-dispatch')) {
             $this->messageManager->addNoticeMessage($this->config->getGuestWishlistHint());
@@ -24,11 +21,11 @@ class AddPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
     }
 
     /**
-     * @param \Magento\Wishlist\Controller\Index\Add $subject
+     * @param Add $subject
      * @param $result
      * @return mixed
      */
-    public function afterExecute(\Magento\Wishlist\Controller\Index\Add $subject, $result)
+    public function afterExecute(Add $subject, $result)
     {
         $rerirectUrl = $subject->getRequest()->getParam('redirect_url');
         if ($rerirectUrl) {

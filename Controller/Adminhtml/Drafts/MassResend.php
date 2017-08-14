@@ -1,32 +1,49 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Adminhtml\Drafts;
 
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\ItemFactory as OrderItemFactory;
+use Magento\Sales\Model\Order\Item as OrderItem;
 use Rissc\Printformer\Controller\Adminhtml\AbstractController;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Gateway\Admin\Draft as GatewayDraft;
-use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\ItemFactory as OrderItemFactory;
-use Magento\Sales\Model\Order\Item as OrderItem;
 use Rissc\Printformer\Helper\Config;
 
-class MassResend
-    extends AbstractController
+class MassResend extends AbstractController
 {
-    /** @var DraftFactory */
+    /**
+     * @var DraftFactory
+     */
     protected $_draftFactory;
 
-    /** @var OrderItemFactory */
+    /**
+     * @var OrderItemFactory
+     */
     protected $_orderItemFactory;
 
-    /** @var Config */
+    /**
+     * @var Config
+     */
     protected $_config;
 
-    /** @var GatewayDraft */
+    /**
+     * @var GatewayDraft
+     */
     protected $_printformerDraft;
 
+    /**
+     * MassResend constructor.
+     * @param Context $context
+     * @param PageFactory $_resultPageFactory
+     * @param DraftFactory $draftFactory
+     * @param OrderItemFactory $orderItemFactory
+     * @param Config $config
+     * @param GatewayDraft $printformerDraft
+     */
     public function __construct(
         Context $context,
         PageFactory $_resultPageFactory,
@@ -34,8 +51,7 @@ class MassResend
         OrderItemFactory $orderItemFactory,
         Config $config,
         GatewayDraft $printformerDraft
-    )
-    {
+    ) {
         $this->_draftFactory = $draftFactory;
         $this->_orderItemFactory = $orderItemFactory;
         $this->_config = $config;
@@ -47,15 +63,12 @@ class MassResend
     public function execute()
     {
         $drafts = $this->getRequest()->getParam('drafts');
-        if(!empty($drafts))
-        {
+        if(!empty($drafts)) {
             /** @var Draft $draft */
             $draft = $this->_draftFactory->create();
-            $draftCollection = $draft->getCollection()
-                ->addFieldToFilter('id', ['in' => $drafts]);
+            $draftCollection = $draft->getCollection()->addFieldToFilter('id', ['in' => $drafts]);
 
-            foreach($draftCollection as $draft)
-            {
+            foreach($draftCollection as $draft) {
                 /** @var OrderItem $orderItem */
                 $orderItem = $this->_orderItemFactory->create();
                 $orderItem = $orderItem->getCollection()
@@ -64,16 +77,12 @@ class MassResend
                     ->load()
                     ->getFirstItem();
 
-                if($orderItem->getId())
-                {
+                if($orderItem->getId()) {
                     /** @var Order $order */
                     $order = $orderItem->getOrder();
-                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC)
-                    {
+                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC) {
                         $this->_printformerDraft->setDraftOrdered($order);
-                    }
-                    else
-                    {
+                    } else {
                         $this->_printformerDraft->asyncDraftProcessor($order);
                     }
                     $orderItem->setPrintformerOrdered(1);

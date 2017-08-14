@@ -1,11 +1,12 @@
 <?php
+
 namespace Rissc\Printformer\Gateway\Admin;
 
 use Magento\Framework\Json\Decoder;
+use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Exception;
-use Magento\Framework\UrlInterface;
 use Rissc\Printformer\Helper\Url as UrlHelper;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft as DraftModel;
@@ -17,24 +18,46 @@ class Draft
 
     const DRAFT_PROCESSING_TYPE_SYNC    = 'sync';
     const DRAFT_PROCESSING_TYPE_ASYNC   = 'async';
-    /** @var LoggerInterface */
+
+    /**
+     * @var LoggerInterface
+     */
     protected $logger;
 
-    /** @var Decoder */
+    /**
+     * @var Decoder
+     */
     protected $jsonDecoder;
 
-    /** @var UrlHelper */
+    /**
+     * @var UrlHelper
+     */
     protected $urlHelper;
 
-    /** @var UrlInterface */
+    /**
+     * @var UrlInterface
+     */
     protected $_urlInterface;
 
-    /** @var DraftFactory */
+    /**
+     * @var DraftFactory
+     */
     protected $_draftFactory;
 
-    /** @var LogHelper */
+    /**
+     * @var LogHelper
+     */
     protected $_logHelper;
 
+    /**
+     * Draft constructor.
+     * @param LoggerInterface $logger
+     * @param Decoder $jsonDecoder
+     * @param UrlHelper $urlHelper
+     * @param UrlInterface $urlInterface
+     * @param DraftFactory $draftFactory
+     * @param LogHelper $logHelper
+     */
     public function __construct(
         LoggerInterface $logger,
         Decoder $jsonDecoder,
@@ -79,7 +102,7 @@ class Draft
         $url      = null;
         $response = null;
 
-        $_historyData = [
+        $historyData = [
             'request_data' => null,
             'direction' => 'outgoing'
         ];
@@ -97,12 +120,12 @@ class Draft
                 ->setStoreId($lastItem->getPrintformerStoreid())
                 ->getDraftOrderedUrl($draftIds, $order->getQuoteId());
 
-            $_historyData['request_data'] = json_encode([
+            $historyData['request_data'] = json_encode([
                 $draftIds,
                 md5($order->getQuoteId())
             ]);
-            $_historyData['api_url'] = $url;
-            $_historyData['draft_id'] = implode(', ', $draftIds);
+            $historyData['api_url'] = $url;
+            $historyData['draft_id'] = implode(', ', $draftIds);
 
             $this->logger->debug($url);
 
@@ -119,24 +142,24 @@ class Draft
         } else {
             $this->logger->debug(__('Error setting draft ordered. Item is null or already ordered.'));
         }
-        $_historyData['response_data'] = $response;
+        $historyData['response_data'] = $response;
         if (empty($response))
         {
-            $_historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($_historyData);
+            $historyData['status'] = 'failed';
+            $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Empty Response: '. $response . ', Url: ' . $url));
         }
         $responseArray = $this->jsonDecoder->decode($response);
 
         if(!$responseArray['success']) {
-            $_historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($_historyData);
+            $historyData['status'] = 'failed';
+            $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Response success: false'));
         }
 
         if (!is_array($responseArray)) {
-            $_historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($_historyData);
+            $historyData['status'] = 'failed';
+            $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error decoding response.'));
         }
         if (isset($responseArray['success']) && false == $responseArray['success']) {
@@ -144,8 +167,8 @@ class Draft
             if (isset($responseArray['error'])) {
                 $errorMsg = $responseArray['error'];
             }
-            $_historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($_historyData);
+            $historyData['status'] = 'failed';
+            $this->_logHelper->addEntry($historyData);
             throw new Exception(__($errorMsg));
         }
 
@@ -156,8 +179,8 @@ class Draft
             $item->setPrintformerOrdered(1);
         }
 
-        $_historyData['status'] = 'send';
-        $this->_logHelper->addEntry($_historyData);
+        $historyData['status'] = 'send';
+        $this->_logHelper->addEntry($historyData);
 
         return $this;
     }
@@ -174,7 +197,7 @@ class Draft
         $url      = null;
         $response = null;
 
-        $_historyData = [
+        $historyData = [
             'direction' => 'outgoing'
         ];
 
@@ -192,7 +215,7 @@ class Draft
                 ->setStoreId($lastItem->getPrintformerStoreid())
                 ->getPdfProcessingUrl($draftIds);
 
-            $_historyData['api_url'] = $url;
+            $historyData['api_url'] = $url;
 
             $headers = [
                 "X-Magento-Tags-Pattern: .*",
@@ -204,8 +227,8 @@ class Draft
                 'stateChangedNotifyUrl' => $this->_urlInterface->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS
             ];
 
-            $_historyData['request_data'] = json_encode($postFields);
-            $_historyData['draft_id'] = implode(', ', $draftIds);
+            $historyData['request_data'] = json_encode($postFields);
+            $historyData['draft_id'] = implode(', ', $draftIds);
 
             $curlOptions = [
                 CURLOPT_POST => true,
@@ -216,11 +239,11 @@ class Draft
             ];
 
             $curlResponse = json_decode($this->_curlRequest($url, $curlOptions), true);
-            $_historyData['response_data'] = json_encode($curlResponse);
+            $historyData['response_data'] = json_encode($curlResponse);
             if(isset($curlResponse['success']) && !$curlResponse['success'])
             {
-                $_historyData['status'] = 'failed';
-                $this->_logHelper->addEntry($_historyData);
+                $historyData['status'] = 'failed';
+                $this->_logHelper->addEntry($historyData);
                 return false;
             }
 
@@ -248,24 +271,22 @@ class Draft
                     $item->setPrintformerOrdered(1);
                 }
 
-                $_historyData['status'] = 'send';
-                $this->_logHelper->addEntry($_historyData);
+                $historyData['status'] = 'send';
+                $this->_logHelper->addEntry($historyData);
                 return true;
             }
         }
 
-        $_historyData['status'] = 'failed';
-        $this->_logHelper->addEntry($_historyData);
+        $historyData['status'] = 'failed';
+        $this->_logHelper->addEntry($historyData);
         return false;
     }
 
     protected function _curlRequest($url, $options)
     {
         $ch = curl_init($url);
-        if (is_array($options))
-        {
-            foreach ($options as $key => $option)
-            {
+        if (is_array($options)) {
+            foreach ($options as $key => $option) {
                 curl_setopt($ch, $key, $option);
             }
         }

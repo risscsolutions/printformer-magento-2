@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
 
 use Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
@@ -27,7 +28,7 @@ class Sync extends Button
     }
 
     /**
-     * @return mixed|string
+     * @return string
      */
     public function getStoreVarName()
     {
@@ -38,8 +39,8 @@ class Sync extends Button
         }
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\View\Element\AbstractBlock::_prepareLayout()
+    /**
+     * {@inheritdoc}
      */
     protected function _prepareLayout()
     {
@@ -50,8 +51,8 @@ class Sync extends Button
         return $this;
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Config\Block\System\Config\Form\Field::_getElementHtml()
+    /**
+     * {@inheritdoc}
      */
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {

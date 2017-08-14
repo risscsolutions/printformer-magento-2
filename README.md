@@ -12,11 +12,9 @@ Installation
         }
     ],
 
-2. Add "rissc/module-printformer":"~100.1.7" line to composer.json in magento root
-
-    "require": {
-        "rissc/module-printformer":"~100.1.7"
-    }
+2. Execute in Terminal:
+   
+       `./composer.phar require rissc/module-printformer:100.* -o`
 
 3. Run ./composer.phar update
 4. Run php bin/magento module:enable Rissc_Printformer

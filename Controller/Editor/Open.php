@@ -1,36 +1,54 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Editor;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Catalog\Model\ProductFactory;
+use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Gateway\User\Draft as DraftGateway;
 use Rissc\Printformer\Helper\Url as UrlHelper;
-use Magento\Catalog\Model\ProductFactory;
-use Magento\Catalog\Model\Product;
-use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Helper\Editor\Preselect as PreselectHelper;
 
 class Open extends Action
 {
-    /** @var DraftGateway */
+    /**
+     * @var DraftGateway
+     */
     protected $_draftGateway;
 
-    /** @var UrlHelper */
+    /**
+     * @var UrlHelper
+     */
     protected $_urlHelper;
 
-    /** @var ProductFactory */
+    /**
+     * @var ProductFactory
+     */
     protected $_productFactory;
 
-    /** @var StoreManagerInterface */
+    /**
+     * @var StoreManagerInterface
+     */
     protected $_storeManager;
 
-    /** @var DraftFactory */
+    /**
+     * @var DraftFactory
+     */
     protected $_draftFactory;
 
-    /** @var SessionHelper */
+    /**
+     * @var SessionHelper
+     */
     protected $_sessionHelper;
+
+    /**
+     * @var PreselectHelper
+     */
+    protected $_preselectHelper;
 
     public function __construct(
         Context $context,
@@ -39,23 +57,26 @@ class Open extends Action
         ProductFactory $productFactory,
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
-        SessionHelper $sessionHelper
-    )
-    {
+        SessionHelper $sessionHelper,
+        PreselectHelper $preselectHelper
+    ) {
         $this->_draftGateway = $draftGateway;
         $this->_urlHelper = $urlHelper;
         $this->_productFactory = $productFactory;
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
+        $this->_preselectHelper = $preselectHelper;
 
         parent::__construct($context);
     }
 
     public function execute()
     {
-        if(!$this->getRequest()->getParam('product_id'))
-        {
+        $productId = $this->getRequest()->getParam('product_id');
+        $intent = $this->getRequest()->getParam('intent');
+
+        if(!$productId) {
             $this->messageManager->addNoticeMessage(__('We could not determine the right Parameters. Please try again.'));
             echo '
                 <script type="text/javascript">
@@ -65,38 +86,34 @@ class Open extends Action
             die();
         }
 
+        $this->_savePreselectedData();
+
         $redirect = $this->resultRedirectFactory->create();
 
-        /** @var Product $product */
-        $product = $this->_productFactory->create();
-        $product->getResource()->load($product, $this->getRequest()->getParam('product_id'));
+        /** @var |Magento\Catalog\Model\Product $product */
+        $product = $this->_productFactory->create()->load($productId);
 
-        $intent = $this->getRequest()->getParam('intent');
         $draftID = null;
         $this->_sessionHelper->setCurrentIntent($intent);
 
+        $draftProcess = null;
         $draftExists = false;
         $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
-        if($sessionUniqueId)
-        {
+        if($sessionUniqueId) {
             $uniqueExplode = explode(':', $sessionUniqueId);
-            if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1])
-            {
-                $uniqueID = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
+            if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                 /** @var Draft $draftProcess */
                 $draftProcess = $this->_draftFactory->create();
                 $draftCollection = $draftProcess->getCollection()
-                    ->addFieldToFilter('session_unique_id', ['eq' => $uniqueID])
+                    ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
                     ->addFieldToFilter('intent', ['eq' => $intent]);
-                if ($draftCollection->count() == 1)
-                {
+                if ($draftCollection->count() == 1) {
                     /** @var Draft $draft */
-                    $draft = $draftCollection->getFirstItem();
-                    if ($draft->getId())
-                    {
+                    $draftProcess = $draftCollection->getFirstItem();
+                    if ($draftProcess->getId() && $draftProcess->getDraftId()) {
                         $draftExists = true;
-                        $draftID = $draft->getDraftId();
-                        $this->_sessionHelper->setCurrentIntent($draft->getIntent());
+                        $draftID = $draftProcess->getDraftId();
+                        $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
                     }
                 }
             }
@@ -118,8 +135,7 @@ class Open extends Action
             die();
         }
 
-        if(!$draftExists)
-        {
+        if(!$draftExists) {
             /** @var Draft $draftProcess */
             $draftProcess = $this->_draftFactory->create();
             $draftProcess->addData([
@@ -162,8 +178,7 @@ class Open extends Action
 
         $parsedQuery['callback'] = $encodedUrl;
         $queryArray = [];
-        foreach($parsedQuery as $key => $value)
-        {
+        foreach($parsedQuery as $key => $value) {
             $queryArray[] = $key . '=' . $value;
         }
 
@@ -175,5 +190,14 @@ class Open extends Action
         $redirect->setUrl($redirectUrl);
 
         return $redirect;
+    }
+
+    protected function _savePreselectedData()
+    {
+        $preselectData = $this->_preselectHelper->getPreselectArray($this->getRequest()->getParams());
+
+        if (!empty($preselectData)) {
+            $this->_sessionHelper->getCatalogSession()->setSavedPrintformerOptions($preselectData);
+        }
     }
 }

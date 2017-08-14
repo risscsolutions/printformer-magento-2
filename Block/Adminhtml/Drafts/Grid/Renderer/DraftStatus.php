@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer;
 
 use Magento\Backend\Block\Context;
@@ -13,26 +14,38 @@ use Magento\Backend\Model\UrlInterface;
 use \DateTime;
 use Rissc\Printformer\Setup\InstallData;
 
-class DraftStatus
-    extends AbstractRenderer
+class DraftStatus extends AbstractRenderer
 {
-    /** @var UrlHelper */
+    /**
+     * @var UrlHelper
+     */
     protected $_urlHelper;
 
-    /** @var ItemFactory */
+    /**
+     * @var ItemFactory
+     */
     protected $_itemFactory;
 
-    /** @var UrlInterface */
+    /**
+     * @var UrlInterface
+     */
     protected $_url;
 
+    /**
+     * DraftStatus constructor.
+     * @param Context $context
+     * @param UrlHelper $urlHelper
+     * @param ItemFactory $itemFactory
+     * @param UrlInterface $url
+     * @param array $data
+     */
     public function __construct(
         Context $context,
         UrlHelper $urlHelper,
         ItemFactory $itemFactory,
         UrlInterface $url,
         array $data = []
-    )
-    {
+    ) {
         $this->_urlHelper = $urlHelper;
         $this->_itemFactory = $itemFactory;
         $this->_url = $url;
@@ -44,26 +57,22 @@ class DraftStatus
     {
         /** @var Draft $row */
         $itemOrdered = false;
-        if($orderItemId = $row->getOrderItemId())
-        {
+        if($orderItemId = $row->getOrderItemId()) {
             $item = $this->_itemFactory->create();
             $item->getResource()->load($item, $orderItemId);
-            if($item->getId())
-            {
+            if($item->getId()) {
                 $itemOrdered = (bool)$item->getPrintformerOrdered();
             }
         }
 
         $processingIdHtml = '';
-        if($row->getProcessingId())
-        {
+        if($row->getProcessingId()) {
             $processingIdHtml .= '<br /><small style="color: #C0C0C0">' . __('Processing ID') . ': <strong>' . $row->getProcessingId() . '</strong></small>';
         }
 
         $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE . '_' . InstallData::MODULE_NAME . '/images/proccessing_status_red.svg');
         $draftStatus = __('Not processed yet!');
-        if($itemOrdered)
-        {
+        if($itemOrdered) {
             $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE . '_' . InstallData::MODULE_NAME . '/images/proccessing_status_green.svg');
             $draftStatus = __('Processed successfully!');
         }

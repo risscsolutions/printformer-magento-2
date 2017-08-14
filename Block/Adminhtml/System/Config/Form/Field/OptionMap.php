@@ -1,30 +1,35 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field;
 
-class OptionMap extends \Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray
+use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
+use Magento\Backend\Block\Template\Context;
+use Magento\Framework\Data\Form\Element\Factory;
+
+class OptionMap extends AbstractFieldArray
 {
     /**
-     * @var \Magento\Framework\Data\Form\Element\Factory
+     * @var Factory
      */
     protected $_elementFactory;
 
     /**
-     * @param \Magento\Backend\Block\Template\Context $context
-     * @param \Magento\Framework\Data\Form\Element\Factory $elementFactory
+     * OptionMap constructor.
+     * @param Context $context
+     * @param Factory $elementFactory
      * @param array $data
      */
     public function __construct(
-        \Magento\Backend\Block\Template\Context $context,
-        \Magento\Framework\Data\Form\Element\Factory $elementFactory,
+        Context $context,
+        Factory $elementFactory,
         array $data = []
-    )
-    {
+    ) {
         $this->_elementFactory  = $elementFactory;
         parent::__construct($context, $data);
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray::_construct()
+    /**
+     * {@inheritdoc}
      */
     protected function _construct()
     {

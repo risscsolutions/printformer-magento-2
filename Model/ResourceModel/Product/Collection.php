@@ -1,12 +1,11 @@
 <?php
-namespace Rissc\Printformer\Model\ResourceModel\Product;
 
-use Rissc\Printformer\Setup\InstallSchema;
+namespace Rissc\Printformer\Model\ResourceModel\Product;
 
 class Collection extends \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection
 {
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection::_construct()
+    /**
+     * {@inheritdoc}
      */
     protected function _construct()
     {

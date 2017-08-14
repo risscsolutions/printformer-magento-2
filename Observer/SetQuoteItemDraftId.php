@@ -44,8 +44,8 @@ class SetQuoteItemDraftId implements ObserverInterface
         $this->sessionHelper = $sessionHelper;
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\Event\ObserverInterface::execute()
+    /**
+     * {@inheritdoc}
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {

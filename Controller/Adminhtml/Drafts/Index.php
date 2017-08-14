@@ -4,16 +4,8 @@ namespace Rissc\Printformer\Controller\Adminhtml\Drafts;
 
 use Rissc\Printformer\Controller\Adminhtml\AbstractController;
 
-/**
- * Class Index
- * @package Rissc\Printformer\Controller\Adminhtml\Drafts
- */
-class Index
-    extends AbstractController
+class Index extends AbstractController
 {
-    /**
-     * @return \Magento\Backend\Model\View\Result\Page
-     */
     public function execute()
     {
         if ($this->getRequest()->getQuery('ajax')) {

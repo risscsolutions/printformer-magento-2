@@ -1,38 +1,43 @@
 <?php
+
 namespace Rissc\Printformer\Block\Checkout\Cart\Item;
 
-use \Rissc\Printformer\Helper as Helper;
+use Magento\Checkout\Block\Cart\Item\Renderer;
+use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Block\Checkout\Cart\Renderer as ReplaceRenderer;
 
 class RendererPlugin
 {
     /**
-     * @var \Rissc\Printformer\Helper\Url
+     * @var Url
      */
     protected $urlHelper;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $configHelper;
 
     /**
-     * @param \Rissc\Printformer\Helper\Url $urlHelper
-     * @param \Rissc\Printformer\Helper\Config $configHelper
+     * RendererPlugin constructor.
+     * @param Url $urlHelper
+     * @param Config $configHelper
      */
     public function __construct(
-        Helper\Url $urlHelper,
-        Helper\Config $configHelper
+        Url $urlHelper,
+        Config $configHelper
     ) {
         $this->urlHelper = $urlHelper;
         $this->configHelper = $configHelper;
     }
 
     /**
-     * @param \Magento\Checkout\Block\Cart\Item\Renderer $renderer
-     * @param unknown $result
+     * @param Renderer $renderer
+     * @param          $result
      * @return string
      */
-    public function afterGetImage(\Magento\Checkout\Block\Cart\Item\Renderer $renderer, $result)
+    public function afterGetImage(Renderer $renderer, $result)
     {
         $draftId = $renderer->getItem()->getPrintformerDraftid();
         if ($draftId && $this->isUseImagePreview()) {
@@ -47,5 +52,15 @@ class RendererPlugin
     public function isUseImagePreview()
     {
         return $this->configHelper->isUseImagePreview();
+    }
+
+    /**
+     * @param Renderer|ReplaceRenderer $renderer
+     * @param                          $result
+     * @return string
+     */
+    public function afterGetProductUrl($renderer, $result)
+    {
+        return $renderer->getConfigureUrl();
     }
 }

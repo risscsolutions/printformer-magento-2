@@ -16,8 +16,8 @@ class InstallSchema implements InstallSchemaInterface
     const COLUMN_NAME_STOREID = 'printformer_storeid';
     const COLUMN_NAME_ORDERED = 'printformer_ordered';
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\Setup\InstallSchemaInterface::install()
+    /**
+     * {@inheritdoc}
      */
     public function install(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {

@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Helper;
 
 use \Rissc\Printformer\Model\Config\Source\Redirect;
@@ -15,7 +16,6 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
     const URI_USER_DRAFTEDITOR          = 'editor';
     const URI_CUSTOMER_ORDERED          = 'api/customer/setdraftordered';
     const URI_CUSTOMER_DRAFTIMG         = 'api/customer/draftimage';
-    const URI_CUSTOMER_DELETE           = 'api/customer/delete';
     const URI_CUSTOMER_DRAFT            = 'api-ext/draft';
     const URI_ADMIN_GETDRAFT            = 'api/admin/getdraft';
     const URI_CUSTOMER_PDF_PROCESSING   = 'api-ext/pdf-processing';
@@ -259,17 +259,18 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
     public function getDraftDeleteUrl($draftId)
     {
         //@todo use ZF URL builder? Implement generic method for building printformer URLs?
-        $urlParts = array(
+        $url = sprintf(
+            "%s/%s/%s?%s=%s&%s=%s",
             $this->getHost(),
-            self::URI_CUSTOMER_DELETE,
+            self::URI_CUSTOMER_DRAFT,
+            $draftId,
             $this->getApikeyParamName(),
             $this->getApikey(),
             $this->getAuthkeyParamName(),
-            $this->getAuthkey(self::ROLE_ADMIN),
-            'risscw2pdraftid',
-            $draftId
+            $this->getAuthkey(self::ROLE_ADMIN)
         );
-        return implode('/', $urlParts);
+
+        return $url;
     }
 
 

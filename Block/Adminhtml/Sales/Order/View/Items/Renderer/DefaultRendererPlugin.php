@@ -1,35 +1,39 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\Sales\Order\View\Items\Renderer;
 
-class DefaultRendererPlugin
-    extends \Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer
+use Magento\Framework\DataObject;
+use Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer;
+use Rissc\Printformer\Helper\Url;
+
+class DefaultRendererPlugin extends DefaultRenderer
 {
     /**
-     * @var \Rissc\Printformer\Helper\Url
+     * @var Url
      */
-    protected $urlHelper;
+    protected $_urlHelper;
 
     /**
-     * @param \Rissc\Printformer\Helper\Url $urlHelper
+     * @param Url $urlHelper
      */
     public function __construct(
-        \Rissc\Printformer\Helper\Url $urlHelper
+        Url $urlHelper
     ) {
-        $this->urlHelper = $urlHelper;
+        $this->_urlHelper = $urlHelper;
     }
 
     /**
-     * @param \Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer $renderer
-     * @param callable $proceed
-     * @param \Magento\Framework\DataObject $item
+     * @param DefaultRenderer $renderer
+     * @param \Closure $proceed
+     * @param DataObject $item
      * @param $column
      * @param null $field
      * @return string
      */
     public function aroundGetColumnHtml(
-        \Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer $renderer,
+        DefaultRenderer $renderer,
         \Closure $proceed,
-        \Magento\Framework\DataObject $item,
+        DataObject $item,
         $column,
         $field = null
     ) {
@@ -54,36 +58,37 @@ class DefaultRendererPlugin
                 $html .= '</div>';
             }
         }
+
         return $html;
     }
 
     /**
-     * @param \Magento\Framework\DataObject $item
+     * @param DataObject $item
      * @return string
      */
     public function getPdfUrl(\Magento\Framework\DataObject $item)
     {
-        return $this->urlHelper->setStoreId($item->getPrintformerStoreid())
+        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
             ->getAdminPdfUrl($item->getPrintformerDraftid(), $item->getOrder()->getQuoteId());
     }
 
     /**
-     * @param \Magento\Framework\DataObject $item
+     * @param DataObject $item
      * @return string
      */
     public function getThumbImgUrl(\Magento\Framework\DataObject $item)
     {
-        return $this->urlHelper->setStoreId($item->getPrintformerStoreid())
+        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
             ->getThumbImgUrl($item->getPrintformerDraftid());
     }
 
     /**
-     * @param \Magento\Framework\DataObject $item
+     * @param DataObject $item
      * @return string
      */
     public function getEditorUrl(\Magento\Framework\DataObject $item)
     {
-        return $this->urlHelper->setStoreId($item->getPrintformerStoreid())
+        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
             ->getAdminEditorUrl($item->getPrintformerDraftid());
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Gateway\User;
 
 use Rissc\Printformer\Gateway\Exception;
@@ -8,74 +9,105 @@ use Magento\Framework\Json\Decoder;
 use Rissc\Printformer\Helper\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
-use Magento\Catalog\Model\Product;
 use Magento\Framework\UrlInterface;
+use \Rissc\Printformer\Model\ProductFactory;
 
 class Draft
 {
-    /** @var LoggerInterface */
-    protected $logger;
+    /**
+     * @var LoggerInterface
+     */
+    protected $_logger;
 
-    /** @var ZendClientFactor */
-    protected $httpClientFactory;
+    /**
+     * @var ZendClientFactory
+     */
+    protected $_httpClientFactory;
 
-    /** @var Decoder */
-    protected $jsonDecoder;
+    /**
+     * @var Decoder
+     */
+    protected $_jsonDecoder;
 
-    /** @var UrlHelper */
-    protected $urlHelper;
+    /**
+     * @var UrlHelper
+     */
+    protected $_urlHelper;
 
-    /** @var StoreManagerInterface */
+    /**
+     * @var StoreManagerInterface
+     */
     protected $_storeManager;
 
-    /** @var LogHelper */
+    /**
+     * @var LogHelper
+     */
     protected $_logHelper;
 
+    /**
+     * @var UrlInterface
+     */
     protected $_url;
+
+    /** @var  database connection */
+    protected $_connection;
 
     public function __construct(
         LoggerInterface $logger,
         ZendClientFactory $httpClientFactory,
+        ProductFactory $printformerProductFactory,
         Decoder $jsonDecoder,
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
         LogHelper $logHelper,
         UrlInterface $url
     ) {
-        $this->logger = $logger;
-        $this->httpClientFactory = $httpClientFactory;
-        $this->jsonDecoder = $jsonDecoder;
-        $this->urlHelper = $urlHelper;
+        $this->_logger = $logger;
+        $this->_httpClientFactory = $httpClientFactory;
+        $this->_jsonDecoder = $jsonDecoder;
+        $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_logHelper = $logHelper;
         $this->_url = $url;
+
+        $printformerProduct = $printformerProductFactory->create();
+        $this->_connection = $printformerProduct->getResource()->getConnection();
     }
 
     /**
-     * @param integer $draftId
-     * @param integer $storeId
+     * @param string $draftId
+     * @param int $storeId
+     * @return $this
      * @throws Exception
-     * @return \Rissc\Printformer\Gateway\User\Draft
      */
     public function deleteDraft($draftId, $storeId)
     {
-        $url = $this->urlHelper
+        $url = $this->_urlHelper
             ->setStoreId($storeId)
             ->getDraftDeleteUrl($draftId);
 
-        $this->logger->debug($url);
+        $this->_logger->debug($url);
 
         /** @var \Zend_Http_Response $response */
-        $response = $this->httpClientFactory
+        $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
-            ->request(\Zend_Http_Client::POST);
+            ->request(\Zend_Http_Client::DELETE);
+
+        //delete draft if it was successfully deleted in printformer or if it was already deleted
+        if($response->isSuccessful() || $response->getStatus() == 404) {
+            $this->_logger->debug("delete Draft: ".$draftId);
+            //sql query to delete the draft from magento's database
+            $query = "DELETE FROM `" . $this->_connection->getTableName('printformer_draft') . "` WHERE `draft_id` = '$draftId' AND `store_id` = $storeId";
+            $this->_connection->query($query);
+            return $this;
+        }
 
         if (!$response->isSuccessful()) {
             throw new Exception(__('Error deleting draft.'));
         }
-        $responseArray = $this->jsonDecoder->decode($response->getBody());
+        $responseArray = $this->_jsonDecoder->decode($response->getBody());
         if (!is_array($responseArray)) {
             throw new Exception(__('Error decoding response.'));
         }
@@ -86,14 +118,11 @@ class Draft
             }
             throw new Exception(__($errorMsg));
         }
-
-        return $this;
     }
 
     /**
-     * @param \Rissc\Printformer\Gateway\User\Product $product
-     * @param                                         $masterId
-     *
+     * @param $masterId
+     * @param string $intent
      * @return null|string
      */
     public function createDraft($masterId, $intent = null)
@@ -101,15 +130,15 @@ class Draft
         $url      = null;
         $response = null;
 
-        $_historyData = [
+        $historyData = [
             'direction' => 'outgoing'
         ];
 
-        $url = $this->urlHelper
+        $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraftUrl();
 
-        $_historyData['api_url'] = $url;
+        $historyData['api_url'] = $url;
 
         $headers = [
             "X-Magento-Tags-Pattern: .*",
@@ -124,8 +153,8 @@ class Draft
             $postFields['intent'] = $this->getIntent($intent);
         }
 
-        $_historyData['request_data'] = json_encode($postFields);
-        $_historyData['draft_id'] = $masterId;
+        $historyData['request_data'] = json_encode($postFields);
+        $historyData['draft_id'] = $masterId;
 
         $curlOptions = [
             CURLOPT_POST => true,
@@ -136,41 +165,38 @@ class Draft
         ];
 
         $curlResponse = json_decode($this->_curlRequest($url, $curlOptions), true);
-        $_historyData['response_data'] = json_encode($curlResponse);
-        if(isset($curlResponse['success']) && !$curlResponse['success'])
-        {
-            $_historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($_historyData);
+        $historyData['response_data'] = json_encode($curlResponse);
+        if(isset($curlResponse['success']) && !$curlResponse['success']) {
+            $historyData['status'] = 'failed';
+            $this->_logHelper->addEntry($historyData);
             return null;
         }
 
-        if(isset($curlResponse['data']['draftHash']))
-        {
-            $_historyData['status'] = 'send';
-            $this->_logHelper->addEntry($_historyData);
+        if(isset($curlResponse['data']['draftHash'])) {
+            $historyData['status'] = 'send';
+            $this->_logHelper->addEntry($historyData);
             return (string)$curlResponse['data']['draftHash'];
         }
 
-        $_historyData['status'] = 'failed';
-        $this->_logHelper->addEntry($_historyData);
+        $historyData['status'] = 'failed';
+        $this->_logHelper->addEntry($historyData);
         return null;
     }
 
     /**
-     * @param integer $draftId
-     * @param integer $storeId
+     * @param int $draftId
+     * @return $this
      * @throws Exception
-     * @return \Rissc\Printformer\Gateway\User\Draft
      */
     public function getDraft($draftId)
     {
-        $url = $this->urlHelper
+        $url = $this->_urlHelper
             ->getDraftDeleteUrl($draftId);
 
-        $this->logger->debug($url);
+        $this->_logger->debug($url);
 
         /** @var \Zend_Http_Response $response */
-        $response = $this->httpClientFactory
+        $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
@@ -179,7 +205,7 @@ class Draft
         if (!$response->isSuccessful()) {
             throw new Exception(__('Error deleting draft.'));
         }
-        $responseArray = $this->jsonDecoder->decode($response->getBody());
+        $responseArray = $this->_jsonDecoder->decode($response->getBody());
         if (!is_array($responseArray)) {
             throw new Exception(__('Error decoding response.'));
         }
@@ -197,13 +223,12 @@ class Draft
     protected function _curlRequest($url, $options)
     {
         $ch = curl_init($url);
-        if (is_array($options))
-        {
-            foreach ($options as $key => $option)
-            {
+        if (is_array($options)) {
+            foreach ($options as $key => $option) {
                 curl_setopt($ch, $key, $option);
             }
         }
+
         $connectionTimeout = 5;
         $requestTimeout = 30;
 
@@ -221,8 +246,7 @@ class Draft
 
     public function getIntent($intent)
     {
-        switch(strtolower($intent))
-        {
+        switch(strtolower($intent)) {
             case 'editor':
                 return 'customize';
                 break;

@@ -5,8 +5,8 @@ use Rissc\Printformer\Setup\InstallSchema;
 
 class Product extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
 {
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\Model\ResourceModel\AbstractResource::_construct()
+    /**
+     * {@inheritdoc}
      */
     protected function _construct()
     {

@@ -1,42 +1,44 @@
 <?php
+
 namespace Rissc\Printformer\Checkout\CustomerData;
 
-use \Rissc\Printformer\Helper as Helper;
+use Magento\Checkout\CustomerData\DefaultItem;
+use Magento\Quote\Api\Data\CartItemInterface;
+use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Config;
 
 class DefaultItemPlugin
 {
     /**
-     * @var \Rissc\Printformer\Helper\Url
+     * @var Url
      */
     protected $urlHelper;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $configHelper;
 
     /**
-     * @param \Rissc\Printformer\Helper\Url $urlHelper
-     * @param \Rissc\Printformer\Helper\Config $configHelper
+     * DefaultItemPlugin constructor.
+     * @param Url $urlHelper
+     * @param Config $configHelper
      */
     public function __construct(
-        Helper\Url $urlHelper,
-        Helper\Config $configHelper
+        Url $urlHelper,
+        Config $configHelper
     ) {
         $this->urlHelper = $urlHelper;
         $this->configHelper = $configHelper;
     }
 
     /**
-     * @param \Magento\Checkout\CustomerData\DefaultItem $defaultItem
-     * @param callable $proceed
-     * @param \Magento\Quote\Api\Data\CartItemInterface $item
+     * @param DefaultItem $defaultItem
+     * @param \Closure $proceed
+     * @param CartItemInterface $item
      * @return mixed
      */
-    public function aroundGetItemData(
-        \Magento\Checkout\CustomerData\DefaultItem $defaultItem,
-        \Closure $proceed,
-        \Magento\Quote\Api\Data\CartItemInterface $item)
+    public function aroundGetItemData(DefaultItem $defaultItem, \Closure $proceed, CartItemInterface $item)
     {
         $result = $proceed($item);
         $draftId = $item->getPrintformerDraftid();

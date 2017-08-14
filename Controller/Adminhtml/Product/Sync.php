@@ -1,34 +1,42 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Adminhtml\Product;
 
-class Sync extends \Magento\Backend\App\Action
+use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Rissc\Printformer\Gateway\Admin\Product;
+use Rissc\Printformer\Helper\Config;
+
+class Sync extends Action
 {
     /**
-     * @var \Magento\Framework\Controller\Result\JsonFactory
+     * @var JsonFactory
      */
     protected $resultJsonFactory;
 
     /**
-     * @var \Rissc\Printformer\Gateway\Admin\Product
+     * @var Product
      */
     protected $gateway;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $config;
 
     /**
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
-     * @param \Rissc\Printformer\Gateway\Admin\Product $gateway
-     * @param \Rissc\Printformer\Helper\Config $config
+     * Sync constructor.
+     * @param Context $context
+     * @param JsonFactory $resultJsonFactory
+     * @param Product $gateway
+     * @param Config $config
      */
     public function __construct(
-        \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
-        \Rissc\Printformer\Gateway\Admin\Product $gateway,
-        \Rissc\Printformer\Helper\Config $config
+        Context $context,
+        JsonFactory $resultJsonFactory,
+        Product $gateway,
+        Config $config
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
         $this->gateway = $gateway;
@@ -36,9 +44,6 @@ class Sync extends \Magento\Backend\App\Action
         parent::__construct($context);
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Framework\App\ActionInterface::execute()
-     */
     public function execute()
     {
         $storeId = $this->getRequest()->getParam('store_id', \Magento\Store\Model\Store::DEFAULT_STORE_ID);
@@ -57,8 +62,8 @@ class Sync extends \Magento\Backend\App\Action
         return $resultJson->setData($response);
     }
 
-    /* (non-PHPdoc)
-     * @see \Magento\Backend\App\AbstractAction::_isAllowed()
+    /**
+     * {@inheritdoc}
      */
     protected function _isAllowed()
     {
