@@ -4,6 +4,10 @@ $_hasCapability = $block->isUploadProduct() || $block->isEditorProduct() || $blo
 ?>
 
 <?php if($block->getProduct()->isSalable() && $_hasCapability): ?>
+    <script type="text/javascript">
+        var globalPrintformerOptions = null;
+        var printformerInstance = null;
+    </script>
     <script type="text/x-magento-init">
         {
             "#product_addtocart_form": {

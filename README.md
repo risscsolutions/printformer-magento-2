@@ -5,7 +5,7 @@ Installation
 
 1. Add module repository to composer.json in magento root
 
-    ```
+    ```PHP
     "repositories": [
         {
             "type": "git",
@@ -15,7 +15,7 @@ Installation
     ```
 
 2. Execute in Terminal:
-    ```
+    ```PHP
     ./composer.phar require rissc/module-printformer -o
     ```
 

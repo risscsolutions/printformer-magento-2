@@ -177,6 +177,12 @@ class Open extends Action
         parse_str($urlParts[1], $parsedQuery);
 
         $parsedQuery['callback'] = $encodedUrl;
+
+        $customerSession = $this->_sessionHelper->getCustomerSession();
+        if($customerSession->isLoggedIn()) {
+            $parsedQuery['user'] = $customerSession->getCustomer()->getId();
+        }
+
         $queryArray = [];
         foreach($parsedQuery as $key => $value) {
             $queryArray[] = $key . '=' . $value;
