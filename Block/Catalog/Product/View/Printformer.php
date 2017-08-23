@@ -7,6 +7,7 @@ use Magento\Catalog\Block\Product\View\AbstractView;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Catalog\Model\Product as CatalogProduct;
 use Magento\Checkout\Model\Cart;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject;
 use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Framework\Data\Collection\AbstractDb;
