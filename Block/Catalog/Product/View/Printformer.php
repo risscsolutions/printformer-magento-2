@@ -876,7 +876,15 @@ class Printformer extends AbstractView
             $connection = $quoteItem->getResource()->getConnection();
 
             if($quoteItem->getId()) {
-                $buyRequest = $quoteItem->getBuyRequest();
+                $result = $connection->fetchRow("
+                    SELECT * FROM `" . $connection->getTableName('quote_item_option') . "`
+                    WHERE
+                        `item_id` = " . $quoteItem->getId() . " AND
+                        `product_id` = " . $request->getParam('product_id') . " AND
+                        `code` = 'info_buyRequest'
+                ");
+                $buyRequest = new DataObject(unserialize($result['value']));
+                // $buyRequest = $quoteItem->getBuyRequest();
 
                 $product = $buyRequest->getProduct();
                 $options = $buyRequest->getOptions();
