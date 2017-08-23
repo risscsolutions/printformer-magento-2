@@ -153,14 +153,19 @@ class Save extends Action
                     ->setController('cart')
                     ->forward('add');
             } else { // redirect to product page
-                $requestParams = [];
-                if($this->getRequest()->getParam('project_id'))
-                {
-                    $requestParams[] = 'project_id=' . $this->getRequest()->getParam('project_id');
+                if($this->getRequest()->getParam('is_edit') == '1') {
+                    $configureUrl = $this->_url->getUrl('checkout/cart/configure', [
+                        'id' => $this->getRequest()->getParam('quote_id'),
+                        'product_id' => $this->getRequest()->getParam('edit_product')
+                    ]);
+                    $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($configureUrl);
+                } else {
+                    $requestParams = [];
+                    if ($this->getRequest()->getParam('project_id')) {
+                        $requestParams[] = 'project_id=' . $this->getRequest()->getParam('project_id');
+                    }
+                    $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($this->_urlHelper->getRedirectUrl($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
                 }
-                $result = $this->resultFactory
-                    ->create(ResultFactory::TYPE_REDIRECT)
-                    ->setUrl($this->_urlHelper->getRedirectUrl($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
             }
         } catch (\Exception $e) {
             $this->_logger->critical($e);

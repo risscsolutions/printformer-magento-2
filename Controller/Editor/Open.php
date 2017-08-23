@@ -168,6 +168,13 @@ class Open extends Action
             'draft_process' => $draftProcess->getId()
         ]);
 
+        $params = $this->getRequest()->getParams();
+        if(isset($params['quote_id']) && isset($params['product_id'])) {
+            $queryParams['quote_id'] = $params['quote_id'];
+            $queryParams['edit_product'] = $params['product_id'];
+            $queryParams['is_edit'] = 1;
+        }
+
         $referrer = $this->_url->getUrl('printformer/editor/save', $queryParams);
         $encodedUrl = urlencode(base64_encode($referrer));
 

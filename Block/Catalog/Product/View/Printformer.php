@@ -255,8 +255,15 @@ class Printformer extends AbstractView
      */
     public function getEditorUrl($intent = null)
     {
+        $editParams = [];
+        if($this->isOnConfigurePDS()) {
+            $editParams = [
+                'quote_id' => $this->getRequest()->getParam('id'),
+                'product_id' => $this->getRequest()->getParam('product_id')
+            ];
+        }
         return $this->urlHelper
-            ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent);
+            ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent, null, $editParams);
     }
 
     /**
