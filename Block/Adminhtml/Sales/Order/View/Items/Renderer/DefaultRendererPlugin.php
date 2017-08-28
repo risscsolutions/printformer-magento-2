@@ -44,12 +44,12 @@ class DefaultRendererPlugin extends DefaultRenderer
             }
 
             $html .= '<div><br /><span>' . __('Draft ID') . ':&nbsp;</span>';
-            $html .= '<a href="' . $this->getEditorUrl($item) . '" target="_blank">';
+            $html .= '<span>';
             $html .= $renderer->escapeHtml($item->getPrintformerDraftid());
-            $html .= '</a></div>';
+            $html .= '</span></div>';
             $html .= '<!-- Trigger the modal with a button -->
-                        <!--<button type="button" class="btn btn-info btn-lg" id="openModal">Open Editor</button>-->';
-            $html .= '  <div id="popup-modal" style="width: 100%; height: 60vh;">                            
+                        <button type="button" class="btn btn-info btn-lg" id="openModal" style="margin-top: 1em;">Open Editor</button>';
+            $html .= '  <div id="popup-modal" style="width: 100%; height: 70vh;">                            
                         </div>
                         <script>
                             require(
@@ -66,20 +66,13 @@ class DefaultRendererPlugin extends DefaultRenderer
                                         responsive: true,
                                         innerScroll: false,
                                         title: \'Draft Editor\',
-                                        buttons: [{
-                                            text: "",
-                                            // disabled: true,                                            
-                                            class: \'btn disabled\',
-                                            click: function () {
-                        
-                                            }
-                                        }]
+                                        buttons: []
                                     };
                                     
                                     var popup = modal(options, $(\'#popup-modal\'));                                                    
                                     $("#openModal").on("click",function() {                                     
                                         var i = document.createElement("iframe");
-                                        i.src = "https://editor.development.aws-cd.printformer.net/editor/vGb08DTv7kfevLVyMACvrXkcpLQwJd5E/edit?risscw2preferer=http%3A%2F%2Fmagento2.dev%2Fsales%2Forder%2Fview%2Forder_id%2F1%2Fkey%2F12eeca77c24a3133417b5f4cb2f575780a1c59c556b5b79f35ee91815a6b42ee%2F%3FSID%3Devog7retbmlm6vn8rl8s7ar6t0";
+                                        i.src = "'.$this->getEditorUrl($item).'";
                                         i.id = "iframe";
                                         i.scrolling = "auto";
                                         i.frameborder = "0";
