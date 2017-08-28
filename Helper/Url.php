@@ -112,15 +112,9 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
         //@todo use ZF URL builder? Implement generic method for building printformer URLs?
         $urlParts = array(
             $this->getHost(),
-            self::URI_USER_EDITOR,
-            $this->getApikeyParamName(),
-            $this->getApikey(),
-            $this->getAuthkeyParamName(),
-            $this->getAuthkey(self::ROLE_ADMIN),
-            'locale',
-            $this->getLocale(),
-            'risscw2pdraft',
-            $draftId
+            self::URI_USER_DRAFTEDITOR ,
+            $draftId,
+            "edit"
         );
 
         if (is_array($params)) {
