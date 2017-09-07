@@ -48,64 +48,8 @@ class DefaultRendererPlugin extends DefaultRenderer
             $html .= $renderer->escapeHtml($item->getPrintformerDraftid());
             $html .= '</span></div>';
             $html .= '<!-- Trigger the modal with a button -->
-                        <button type="button" class="btn btn-info btn-lg" id="openModal" style="margin-top: 1em;">Open Editor</button>';
-            $html .= '  <div id="popup-modal" style="width: 100%; height: 70vh;">                            
-                        </div>
-                        <script>
-                            require(
-                                [
-                                    \'jquery\',
-                                    \'Magento_Ui/js/modal/modal\'
-                                ],
-                                function(
-                                    $,
-                                    modal
-                                ) {
-                                    var options = {
-                                        type: \'popup\',
-                                        responsive: true,
-                                        innerScroll: false,
-                                        title: \'Draft Editor\',
-                                        buttons: []
-                                    };
-                                    
-                                    var popup = modal(options, $(\'#popup-modal\'));                                                    
-                                    $("#openModal").on("click",function() {                                     
-                                        var i = document.createElement("iframe");
-                                        i.src = "'.$this->getEditorUrl($item).'";
-                                        i.id = "iframe";
-                                        i.scrolling = "auto";
-                                        i.frameborder = "0";
-                                        i.width = "100%";
-                                        i.height = "100%";
-                                        document.getElementById("popup-modal").appendChild(i);
-                                        
-                                        $(\'#popup-modal\').modal(\'openModal\');
-                                    });
-                                     
-                                     
-                                    //remove iframe on X click event
-                                    $(\'.action-close\').click(function(){
-                                        //remove iframe on close
-                                        var iframe = document.getElementById("iframe");
-                                        iframe.parentNode.removeChild(iframe);                                        
-                                    });
-                                    
-                                    //remove iframe on esc klick event
-                                    $(document).keyup(function(e) {
-                                         if (e.keyCode == 27) { 
-                                             //remove iframe on close
-                                            var iframe = document.getElementById("iframe");
-                                            iframe.parentNode.removeChild(iframe); 
-                                        }
-                                    });
-                                                                       
-                                }                            
-                            );
-                        </script>                                        
-                        
-                      
-                      ';
+                      <button type="button" class="btn btn-info btn-lg" data-url="'.$this->getEditorUrl($item).'" id="openModal">Open Editor</button>';
+            $html .= '<div id="printformer-editor-main"></div>';
 
             if ($item->getPrintformerOrdered()) {
                 $html .= '<div style="margin-top: 5px;"><a class="action-default scalable action-save action-secondary" href="' . $this->getPdfUrl($item) . '" target="_blank">';
