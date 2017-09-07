@@ -2,7 +2,11 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
     <event name="checkout_cart_product_add_after">
-        <observer name="rissc_printformer_remove_session_data"
+        <observer name="rissc_printformer_remove_session_data_add"
+                  instance="Rissc\Printformer\Observer\Checkout\Cart\Add\Observer"/>
+    </event>
+    <event name="checkout_cart_product_update_after">
+        <observer name="rissc_printformer_remove_session_data_update"
                   instance="Rissc\Printformer\Observer\Checkout\Cart\Add\Observer"/>
     </event>
     <event name="controller_action_postdispatch_catalog_product_save">

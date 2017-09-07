@@ -7,6 +7,7 @@ use Magento\Catalog\Block\Product\View\AbstractView;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Catalog\Model\Product as CatalogProduct;
 use Magento\Checkout\Model\Cart;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject;
 use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Framework\Data\Collection\AbstractDb;
@@ -254,8 +255,15 @@ class Printformer extends AbstractView
      */
     public function getEditorUrl($intent = null)
     {
+        $editParams = [];
+        if($this->isOnConfigurePDS()) {
+            $editParams = [
+                'quote_id' => $this->getRequest()->getParam('id'),
+                'product_id' => $this->getRequest()->getParam('product_id')
+            ];
+        }
         return $this->urlHelper
-            ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent);
+            ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent, null, $editParams);
     }
 
     /**
@@ -875,7 +883,15 @@ class Printformer extends AbstractView
             $connection = $quoteItem->getResource()->getConnection();
 
             if($quoteItem->getId()) {
-                $buyRequest = $quoteItem->getBuyRequest();
+                $result = $connection->fetchRow("
+                    SELECT * FROM `" . $connection->getTableName('quote_item_option') . "`
+                    WHERE
+                        `item_id` = " . $quoteItem->getId() . " AND
+                        `product_id` = " . $request->getParam('product_id') . " AND
+                        `code` = 'info_buyRequest'
+                ");
+                $buyRequest = new DataObject(unserialize($result['value']));
+                // $buyRequest = $quoteItem->getBuyRequest();
 
                 $product = $buyRequest->getProduct();
                 $options = $buyRequest->getOptions();

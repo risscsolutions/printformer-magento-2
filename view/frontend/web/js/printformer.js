@@ -518,7 +518,11 @@ define([
                         if (this.isDefined(selectedOptions.qty) && this.isDefined(selectedOptions.qty.value)) {
                             var qtySelector = '#qty';
                             if ($(qtySelector).length) {
-                                $(qtySelector).val(selectedOptions.qty.value);
+                                if($(qtySelector).prop('tagName').toLowerCase() === 'input') {
+                                    $(qtySelector).val(parseInt(selectedOptions.qty.value));
+                                } else {
+                                    $(qtySelector).val(selectedOptions.qty.value);
+                                }
                                 $(qtySelector).trigger('change');
                             }
                         }
