@@ -75,6 +75,9 @@ class Open extends Action
     {
         $productId = $this->getRequest()->getParam('product_id');
         $intent = $this->getRequest()->getParam('intent');
+        $printformerDraft = $this->getRequest()->getParam('draft_id');
+        $requestSessionId = $this->getRequest()->getParam('session_id');
+        $requestReferrer = $this->getRequest()->getParam('custom_referrer');
 
         if(!$productId) {
             $this->messageManager->addNoticeMessage(__('We could not determine the right Parameters. Please try again.'));
@@ -86,7 +89,15 @@ class Open extends Action
             die();
         }
 
-        $this->_savePreselectedData();
+        if($this->getRequest()->isPost()) {
+            $this->_savePreselectedData();
+        }
+
+        if($requestSessionId != null) {
+            $sessionUniqueId = $requestSessionId;
+        } else {
+            $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
+        }
 
         $redirect = $this->resultRedirectFactory->create();
 
@@ -98,7 +109,6 @@ class Open extends Action
 
         $draftProcess = null;
         $draftExists = false;
-        $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
         if($sessionUniqueId) {
             $uniqueExplode = explode(':', $sessionUniqueId);
             if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
@@ -107,6 +117,9 @@ class Open extends Action
                 $draftCollection = $draftProcess->getCollection()
                     ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
                     ->addFieldToFilter('intent', ['eq' => $intent]);
+                if($printformerDraft != null) {
+                    $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
+                }
                 if ($draftCollection->count() == 1) {
                     /** @var Draft $draft */
                     $draftProcess = $draftCollection->getFirstItem();
@@ -119,10 +132,8 @@ class Open extends Action
             }
         }
 
-        $isEdit = true;
         if($product->getId() && !$draftID) {
             $draftID = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
-            $isEdit = false;
         }
 
         if(!$draftID) {
@@ -175,7 +186,11 @@ class Open extends Action
             $queryParams['is_edit'] = 1;
         }
 
-        $referrer = $this->_url->getUrl('printformer/editor/save', $queryParams);
+        if($requestReferrer != null) {
+            $referrer = urldecode($requestReferrer);
+        } else {
+            $referrer = $this->_url->getUrl('printformer/editor/save', $queryParams);
+        }
         $encodedUrl = urlencode(base64_encode($referrer));
 
         $urlParts = explode('?', $editorUrl);
@@ -195,10 +210,7 @@ class Open extends Action
             $queryArray[] = $key . '=' . $value;
         }
 
-        /**
-         * TODO aka: maybe remove the "edit" thingy
-         */
-        $redirectUrl = $urlParts[0] . ($isEdit ? /*'/edit'*/ '' : '') . '?' . implode('&', $queryArray);
+        $redirectUrl = $urlParts[0] . '?' . implode('&', $queryArray);
 
         $redirect->setUrl($redirectUrl);
 
