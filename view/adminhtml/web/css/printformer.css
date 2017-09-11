@@ -38,3 +38,7 @@
 .printformer-editor-close-modal .cancel-btn {
     min-width: 160px; background-color: #c2c1c1; border: 0; border-radius: 0; box-shadow: 0;
 }
+
+.modal-popup.printformer-editor-main-modal .action-close {
+    padding: 15px;
+}
