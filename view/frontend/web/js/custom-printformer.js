@@ -39,12 +39,14 @@ define([
                 'width': '100%'
             });
             this.editorMain.modal('openModal');
-            this.editorMain
-                .html($('<iframe width="100%" height="100%" src="' + editorUrl + '" name="printformer-main-frame"/>'));
+            this.editorMain.css({
+                'width': '100% !important',
+                'height': '100% !important'
+            }).html($('<iframe width="100%" height="100%" src="' + editorUrl + '" name="printformer-main-frame"/>'));
         },
 
         _initEditorClose: function () {
-            var options = this.printformerOptions;
+            var options = this.options;
             this.editorClose = $(options.editorCloseSelector);
             this.editorClose.modal({
                 modalClass: "printformer-editor-close-modal",
@@ -83,7 +85,7 @@ define([
         },
 
         _initEditorNotice: function () {
-            var options = this.printformerOptions;
+            var options = this.options;
             this.editorNotice = $(options.editorNoticeSelector);
             if (!this.editorNotice) {
                 return;
@@ -119,6 +121,7 @@ define([
 
             this.editBtn.click({printformer: this}, function(event) {
                 event.data.printformer.editorMainOpen($(that.editBtn).attr('href'));
+                return false;
             }).show();
         }
     });
