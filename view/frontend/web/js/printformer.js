@@ -530,20 +530,12 @@ define([
                     $.each(preselectoptions, function (i, opt) {
                         if (
                             $(opt).hasClass('product-custom-option') &&
-                            $(opt).is('textarea')
+                            ($(opt).is('textarea') || $(opt).attr('type') === 'text')
                         ) {
-                            inputId = $(opt).attr('id').replace('options_', '').replace('_text', '');
+                            var regex = new RegExp(/options_([0-9]+)_.*/i);
+                            inputId = $(opt).attr('id').replace(regex, '$1');
                             if(that.isDefined(selectedOptions['options'][inputId])) {
                                 $(opt).val(selectedOptions['options'][inputId].value);
-                            }
-                        }
-                        if (
-                            $(opt).hasClass('product-custom-option') &&
-                            $(opt).attr('type') === 'text'
-                        ) {
-                            inputId = $(opt).attr('id').replace('options_', '').replace('_text', '');
-                            if(that.isDefined(selectedOptions['options'][inputId])) {
-                                $(opt).prop('value', selectedOptions['options'][inputId].value);
                             }
                         }
                         if (
