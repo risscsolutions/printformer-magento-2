@@ -1,7 +1,7 @@
 var config = {
     map: {
         '*': {
-            'printformer': "Rissc_Printformer/js/printformer"
+            'printformer': "Rissc_Printformer/js/printformer.min"
         }
     }
 };

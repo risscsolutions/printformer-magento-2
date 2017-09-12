@@ -1,0 +1,44 @@
+<?php
+/** @var $block \Rissc\Printformer\Block\Custom\Editor\Link */
+
+$quoteItem = $block->getQuoteItem();
+$product = $block->getProduct();
+$editorLink = $block->getEditorOpenLink();
+$printformerBlock = $block->getPrintformerBlock();
+
+$quoteItemId = $quoteItem->getId();
+?>
+<br />
+<div id="printformer_draftid_<?php echo $quoteItemId; ?>">
+    <span><?php echo __('Open Editor'); ?>:&nbsp;</span><br />
+    <a href="<?php echo $editorLink; ?>" class="pf-link">
+        <?php echo $quoteItem->getPrintformerDraftid(); ?>
+    </a>
+</div>
+
+<div class="printformer-editor-main"
+     id="printformer-editor-main_<?php echo $quoteItemId; ?>"
+     title="<?php echo $product->getName(); ?>">
+</div>
+<div id="printformer-editor-close_<?php echo $quoteItemId; ?>">
+    <p><?php echo __($printformerBlock->getCloseNoticeText()); ?></p>
+</div>
+<?php if($printformerBlock->isFormatChangeNotice()): ?>
+    <div id="printformer-editor-notice_<?php echo $quoteItemId; ?>">
+        <p><?php echo __($printformerBlock->getFormatNoticeText()); ?></p>
+    </div>
+<?php endif; ?>
+<script type="text/x-magento-init">
+    <?php echo json_encode([
+            '#printformer_draftid_' . $quoteItemId => [
+                'Rissc_Printformer/js/custom-printformer' => [
+                    'editBtnSelector'       => '#printformer_draftid_' . $quoteItemId . ' .pf-link',
+                    'editorMainSelector'    => '#printformer-editor-main_' . $quoteItemId,
+                    'editorCloseSelector'   => '#printformer-editor-close_' . $quoteItemId,
+                    'editorNoticeSelector'  => '#printformer-editor-notice_' . $quoteItemId,
+                    'productTitle' => $product->getName()
+                ]
+            ]
+        ]);
+    ?>
+</script>

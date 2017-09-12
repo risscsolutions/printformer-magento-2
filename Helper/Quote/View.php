@@ -65,42 +65,20 @@ class View
      */
     public function getEditorView(Item $quoteItem, Product $product, $block, $userId = null)
     {
-        $draftHtml = '<br />' . "\n";
-        $draftHtml .= '<div id="printformer_draftid_' . $quoteItem->getId() . '">' . "\n";
-        $draftHtml .= '    <span>' . __('Open Editor') . ':&nbsp;</span><br />' . "\n";
-        $draftHtml .= '    <a href="' . $this->_getEditorUrl($quoteItem, $product, $userId) . '" class="pf-link">' . "\n";
-        $draftHtml .= '     ' . $quoteItem->getPrintformerDraftid() . "\n";
-        $draftHtml .= '    </a>' . "\n";
-        $draftHtml .= '</div>' . "\n";
-
         /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $printFormerBlock */
         $printFormerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
 
-        $draftScript = '<div class="printformer-editor-main" id="printformer-editor-main_' . $quoteItem->getId() . '" title="' .
-            $product->getName() . '"></div>' . "\n";
-        $draftScript .= '<div id="printformer-editor-close_' . $quoteItem->getId() . '">' . "\n";
-        $draftScript .= '    <p>' . __($printFormerBlock->getCloseNoticeText()) . '</p>' . "\n";
-        $draftScript .= '</div>' . "\n";
-        if ($printFormerBlock->isFormatChangeNotice()) {
-            $draftScript .= '<div id="printformer-editor-notice_' . $quoteItem->getId() . '">' . "\n";
-            $draftScript .= '    <p>' . __($printFormerBlock->getFormatNoticeText()) . '</p>' . "\n";
-            $draftScript .= '</div>' . "\n";
-        }
-        $draftScript .= '<script type="text/x-magento-init">' . "\n";
-        $draftScript .= json_encode([
-            '#printformer_draftid_' . $quoteItem->getId() => [
-                'Rissc_Printformer/js/custom-printformer' => [
-                    'editBtnSelector'       => '#printformer_draftid_' . $quoteItem->getId() . ' .pf-link',
-                    'editorMainSelector'    => '#printformer-editor-main_' . $quoteItem->getId(),
-                    'editorCloseSelector'   => '#printformer-editor-close_' . $quoteItem->getId(),
-                    'editorNoticeSelector'  => '#printformer-editor-notice_' . $quoteItem->getId(),
-                    'productTitle' => $product->getName()
-                ]
-            ]
+        /** @var \Rissc\Printformer\Block\Custom\Editor\Link $viewBlock */
+        $viewBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Custom\Editor\Link');
+        $viewBlock->setTemplate('Rissc_Printformer::custom/editor/view.phtml');
+        $viewBlock->addData([
+            'quote_item' => $quoteItem,
+            'product' => $product,
+            'editor_link' => $this->_getEditorUrl($quoteItem, $product, $userId),
+            'printformer_block' => $printFormerBlock
         ]);
-        $draftScript .= '</script>' . "\n";
 
-        return $draftHtml . $draftScript;
+        return $viewBlock->toHtml();
     }
 
     /**
