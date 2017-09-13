@@ -88,7 +88,7 @@ class View
      *
      * @return string
      */
-    public function _getEditorUrl(Item $quoteItem, Product $product, $userId = null)
+    public function _getEditorUrl($quoteItem, $product, $userId = null)
     {
         $buyRequest = $quoteItem->getBuyRequest();
 
