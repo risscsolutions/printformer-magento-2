@@ -63,7 +63,7 @@ class View
      *
      * @return string
      */
-    public function getEditorView(Item $quoteItem, Product $product, $block, $userId = null)
+    public function getEditorView($quoteItem, $product, $block, $userId = null)
     {
         /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $printFormerBlock */
         $printFormerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
