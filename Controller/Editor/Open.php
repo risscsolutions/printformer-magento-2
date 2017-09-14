@@ -183,7 +183,7 @@ class Open extends Action
         $parsedQuery = [];
         parse_str($urlParts[1], $parsedQuery);
 
-        $parsedQuery['callback'] = $encodedUrl;
+        $parsedQuery['callback'] =  $encodedUrl;
 
         $customerSession = $this->_sessionHelper->getCustomerSession();
         if($customerSession->isLoggedIn()) {

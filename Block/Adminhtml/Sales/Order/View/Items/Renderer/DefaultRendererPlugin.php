@@ -91,7 +91,24 @@ class DefaultRendererPlugin extends DefaultRenderer
      */
     public function getEditorUrl(\Magento\Framework\DataObject $item)
     {
-        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
-            ->getAdminEditorUrl($item->getPrintformerDraftid());
+        return $this->_urlHelper->getAdminEditorUrl($item->getPrintformerDraftid());
+        $editorUrl = $this->_urlHelper->getDraftEditorUrl($item->getPrintformerDraftid());
+
+        $encodedUrl = urlencode(base64_encode("http://magento2.dev/admin"));
+        $urlParts = explode('?', $editorUrl);
+        $parsedQuery = [];
+        parse_str($urlParts[1], $parsedQuery);
+
+        $parsedQuery['callback'] =  $encodedUrl;
+
+
+        $queryArray = [];
+        foreach($parsedQuery as $key => $value) {
+            $queryArray[] = $key . '=' . $value;
+        }
+        $redirectUrl = $urlParts[0] . '?' . implode('&', $queryArray);
+
+        $redirect->setUrl($redirectUrl);
+        return $redirect;
     }
 }
