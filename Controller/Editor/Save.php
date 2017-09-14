@@ -153,7 +153,7 @@ class Save extends Action
                     ->setController('cart')
                     ->forward('add');
             } else { // redirect to product page
-                if ($this->getRequest()->getParam('is_edit') == '1') {
+                if($this->getRequest()->getParam('is_edit') == '1') {
                     $configureUrl = $this->_url->getUrl('checkout/cart/configure', [
                         'id' => $this->getRequest()->getParam('quote_id'),
                         'product_id' => $this->getRequest()->getParam('edit_product')
