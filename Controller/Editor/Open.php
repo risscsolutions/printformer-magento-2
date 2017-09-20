@@ -4,7 +4,9 @@ namespace Rissc\Printformer\Controller\Editor;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Gateway\User\Draft as DraftGateway;
 use Rissc\Printformer\Helper\Url as UrlHelper;
@@ -50,6 +52,17 @@ class Open extends Action
      */
     protected $_preselectHelper;
 
+    /**
+     * Open constructor.
+     * @param Context $context
+     * @param DraftGateway $draftGateway
+     * @param UrlHelper $urlHelper
+     * @param ProductFactory $productFactory
+     * @param StoreManagerInterface $storeManager
+     * @param DraftFactory $draftFactory
+     * @param SessionHelper $sessionHelper
+     * @param PreselectHelper $preselectHelper
+     */
     public function __construct(
         Context $context,
         DraftGateway $draftGateway,
@@ -73,47 +86,157 @@ class Open extends Action
 
     public function execute()
     {
-        $productId = $this->getRequest()->getParam('product_id');
-        $intent = $this->getRequest()->getParam('intent');
+        /**
+         * Get all params and variables needed
+         */
+        $params           = $this->getRequest()->getParams();
+        $productId        = $this->getRequest()->getParam('product_id');
+        $intent           = $this->getRequest()->getParam('intent');
         $printformerDraft = $this->getRequest()->getParam('draft_id');
-        $requestSessionId = $this->getRequest()->getParam('session_id');
-        $requestReferrer = $this->getRequest()->getParam('custom_referrer');
+        $sessionUniqueId  = $this->getRequest()->getParam('session_id');
+        $requestReferrer  = $this->getRequest()->getParam('custom_referrer');
+        $storeId          = $this->_storeManager->getStore()->getId();
+        $customerSession  = $this->_sessionHelper->getCustomerSession();
 
+        /**
+         * Show an error if product id was not set
+         */
         if(!$productId) {
-            $this->messageManager->addNoticeMessage(__('We could not determine the right Parameters. Please try again.'));
-            echo '
+            $this->_die(__('We could not determine the right Parameters. Please try again.'));
+        }
+
+        /**
+         * Save preselected data
+         */
+        if($this->getRequest()->isPost()) {
+            $this->_savePreselectedData($this->getRequest()->getParams());
+        }
+
+        /**
+         * Load product and save intent to session data
+         */
+        /** @var Product $product */
+        $product = $this->_productFactory->create()->load($productId);
+        $this->_sessionHelper->setCurrentIntent($intent);
+
+        /**
+         * Try to load draft from database
+         */
+        $draftProcess = $this->_getDraftProcess($sessionUniqueId, $product, $intent, $printformerDraft, $storeId, $customerSession);
+
+        /**
+         * If draft could not be loaded from database, create it
+         */
+        if(!$draftProcess->getId()) {
+            $draftProcess = $this->_createDraftProcess($product, $storeId, $intent, $customerSession->getCustomerId());
+        }
+
+        /**
+         * If draft could not be created or loaded, show an error
+         */
+        if(!$draftProcess->getId()) {
+            $this->_die(__('We could not determine the right Parameters. Please try again.'));
+        }
+
+        /**
+         * Get printformer editor url by draft id
+         */
+        $editorUrl = $this->_urlHelper->getDraftEditorUrl($draftProcess->getDraftId());
+
+        /**
+         * Build redirect url
+         */
+        $redirectUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession, $storeId, $params);
+
+        $redirect = $this->resultRedirectFactory->create();
+        $redirect->setUrl($redirectUrl);
+
+        return $redirect;
+    }
+
+    /**
+     * Add preselect data to session
+     * @param array $data
+     * @return void
+     */
+    protected function _savePreselectedData($data)
+    {
+        $preselectData = $this->_preselectHelper->getPreselectArray($data);
+
+        if (!empty($preselectData)) {
+            $this->_sessionHelper->getCatalogSession()->setSavedPrintformerOptions($preselectData);
+        }
+    }
+
+    /**
+     * Add notice to message manager and die()
+     * @param \Magento\Framework\Phrase $notice
+     * @return void
+     */
+    protected function _die($notice)
+    {
+        $this->messageManager->addNoticeMessage($notice);
+        echo '
                 <script type="text/javascript">
                     window.top.location.href = \'' . $this->_redirect->getRefererUrl() . '\'
                 </script>
             ';
-            die();
+        die();
+    }
+
+    /**
+     * @param Product $product
+     * @param int $storeId
+     * @param string $intent
+     * @param int $customerId
+     * @param string $sessionUniqueId
+     * @return Draft
+     */
+    protected function _createDraftProcess(Product $product, $storeId, $intent, $customerId, $sessionUniqueId = null)
+    {
+        $draftId = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
+
+        /** @var Draft $draftProcess */
+        $draftProcess = $this->_draftFactory->create();
+        $draftProcess->addData([
+            'draft_id' => $draftId,
+            'store_id' => $storeId,
+            'intent' => $intent,
+            'session_unique_id' => $sessionUniqueId,
+            'product_id' => $product->getId(),
+            'customer_id' => $customerId,
+            'created_at' => time()
+        ]);
+        $draftProcess->getResource()->save($draftProcess);
+
+        if (!$draftProcess->getId()) {
+            $this->_die(__('We could not save your draft. Please try again.'));
         }
 
-        if($this->getRequest()->isPost()) {
-            $this->_savePreselectedData();
+        return $draftProcess;
+    }
+
+    /**
+     * @param string $sessionUniqueId
+     * @param Product $product
+     * @param string $intent
+     * @param string $printformerDraft
+     * @param int $storeId
+     * @param CustomerSession $customerSession
+     * @return Draft
+     */
+    protected function _getDraftProcess($sessionUniqueId, $product, $intent, $printformerDraft, $storeId, $customerSession)
+    {
+        /** @var Draft $draftProcess */
+        $draftProcess = $this->_draftFactory->create();
+
+        if($sessionUniqueId == null) {
+            $sessionUniqueId = $customerSession->getSessionUniqueID();
         }
 
-        if($requestSessionId != null) {
-            $sessionUniqueId = $requestSessionId;
-        } else {
-            $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
-        }
-
-        $redirect = $this->resultRedirectFactory->create();
-
-        /** @var |Magento\Catalog\Model\Product $product */
-        $product = $this->_productFactory->create()->load($productId);
-
-        $draftID = null;
-        $this->_sessionHelper->setCurrentIntent($intent);
-
-        $draftProcess = null;
-        $draftExists = false;
         if($sessionUniqueId) {
             $uniqueExplode = explode(':', $sessionUniqueId);
             if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
-                /** @var Draft $draftProcess */
-                $draftProcess = $this->_draftFactory->create();
                 $draftCollection = $draftProcess->getCollection()
                     ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
                     ->addFieldToFilter('intent', ['eq' => $intent]);
@@ -124,105 +247,100 @@ class Open extends Action
                     /** @var Draft $draft */
                     $draftProcess = $draftCollection->getFirstItem();
                     if ($draftProcess->getId() && $draftProcess->getDraftId()) {
-                        $draftExists = true;
-                        $draftID = $draftProcess->getDraftId();
                         $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
                     }
                 }
             }
         }
 
-        if($product->getId() && !$draftID) {
-            $draftID = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
-        }
+        return $draftProcess;
+    }
 
-        if(!$draftID) {
-            $this->messageManager->addNoticeMessage(__('We could not determine the right Parameters. Please try again.'));
-            echo '
-                <script type="text/javascript">
-                    window.top.location.href = \'' . $this->_redirect->getRefererUrl() . '\'
-                </script>
-            ';
-            die();
-        }
-
-        if(!$draftExists) {
-            /** @var Draft $draftProcess */
-            $draftProcess = $this->_draftFactory->create();
-            $draftProcess->addData([
-                'draft_id' => $draftID,
-                'store_id' => $this->_storeManager->getStore()->getId(),
-                'intent' => $intent,
-                'session_unique_id' => null,
-                'product_id' => $product->getId(),
-                'customer_id' => $this->_sessionHelper->getCustomerSession()->getCustomerId(),
-                'created_at' => time()
-            ]);
-            $draftProcess->getResource()->save($draftProcess);
-
-            if (!$draftProcess->getId())
-            {
-                $this->messageManager->addNoticeMessage(__('We could not save your Draft. Please try again.'));
-                echo '
-                <script type="text/javascript">
-                    window.top.location.href = \'' . $this->_redirect->getRefererUrl() . '\'
-                </script>
-                ';
-                die();
-            }
-        }
-
-        $editorUrl = $this->_urlHelper->getDraftEditorUrl($draftID);
-
-        $queryParams = array_merge($this->_request->getParams(), [
-            'store_id' => $this->_storeManager->getStore()->getId(),
-            'draft_process' => $draftProcess->getId()
-        ]);
-
-        $params = $this->getRequest()->getParams();
-        if(isset($params['quote_id']) && isset($params['product_id'])) {
-            $queryParams['quote_id'] = $params['quote_id'];
-            $queryParams['edit_product'] = $params['product_id'];
-            $queryParams['is_edit'] = 1;
-        }
-
+    /**
+     * @param string $requestReferrer
+     * @param Draft $draftProcess
+     * @param int $storeId
+     * @param array $params
+     * @return string
+     */
+    protected function _getCallbackUrl($requestReferrer, Draft $draftProcess, $storeId = 0, $params = [], $encodeUrl = true)
+    {
         if($requestReferrer != null) {
             $referrer = urldecode($requestReferrer);
         } else {
-            $referrer = $this->_url->getUrl('printformer/editor/save', $queryParams);
+            $referrerParams = array_merge($params, [
+                'store_id'      => $storeId,
+                'draft_process' => $draftProcess->getId()
+            ]);
+
+            if(isset($params['quote_id']) && isset($params['product_id'])) {
+                $referrerParams['quote_id'] = $params['quote_id'];
+                $referrerParams['edit_product'] = $params['product_id'];
+                $referrerParams['is_edit'] = 1;
+            }
+
+            $referrer = $this->_url->getUrl('printformer/editor/save', $referrerParams);
         }
-        $encodedUrl = urlencode(base64_encode($referrer));
 
-        $urlParts = explode('?', $editorUrl);
+        if($encodeUrl) {
+            $referrer = urlencode(base64_encode($referrer));
+        }
 
-        $parsedQuery = [];
-        parse_str($urlParts[1], $parsedQuery);
+        return $referrer;
+    }
 
-        $parsedQuery['callback'] = $encodedUrl;
+    /**
+     * @param string $editorUrl
+     * @param string $requestReferrer
+     * @param Draft $draftProcess
+     * @param CustomerSession $customerSession
+     * @param int $storeId
+     * @param array $params
+     * @return string
+     */
+    protected function _buildRedirectUrl($editorUrl, $requestReferrer, Draft $draftProcess, CustomerSession $customerSession, $storeId = 0, $params = [])
+    {
+        /**
+         * Disassembly editor url into base url and params for following process
+         */
+        $editorUrlparts = explode('?', $editorUrl);
 
-        $customerSession = $this->_sessionHelper->getCustomerSession();
+        $editorUrlBase = $editorUrlparts[0];
+        $editorUrlParams = '';
+        if(isset($editorUrlparts[1])) {
+            $editorUrlParams = $editorUrlparts[1];
+        }
+
+        $editorUrlParamsArray = [];
+        parse_str($editorUrlParams, $editorUrlParamsArray);
+
+        /**
+         * Get callback url and add it to params
+         */
+        $editorUrlParamsArray['callback'] = $this->_getCallbackUrl($requestReferrer, $draftProcess, $storeId, $params);
+
+        /**
+         * Add customer id to params
+         */
         if($customerSession->isLoggedIn()) {
-            $parsedQuery['user'] = $customerSession->getCustomer()->getId();
+            $editorUrlParamsArray['user'] = $customerSession->getCustomerId();
         }
 
+        /**
+         * Override editor params with current action params
+         */
+        foreach($params as $key => $param) {
+            $editorUrlParamsArray[$key] = $param;
+        }
+
+        /**
+         * Assemble url with params and return it
+         */
         $queryArray = [];
-        foreach($parsedQuery as $key => $value) {
+        foreach($editorUrlParamsArray as $key => $value) {
             $queryArray[] = $key . '=' . $value;
         }
 
-        $redirectUrl = $urlParts[0] . '?' . implode('&', $queryArray);
-
-        $redirect->setUrl($redirectUrl);
-
-        return $redirect;
-    }
-
-    protected function _savePreselectedData()
-    {
-        $preselectData = $this->_preselectHelper->getPreselectArray($this->getRequest()->getParams());
-
-        if (!empty($preselectData)) {
-            $this->_sessionHelper->getCatalogSession()->setSavedPrintformerOptions($preselectData);
-        }
+        return $editorUrlBase . '?' . implode('&', $queryArray);
     }
 }
