@@ -7,6 +7,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\DataObject;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Gateway\User\Draft as DraftGateway;
 use Rissc\Printformer\Helper\Url as UrlHelper;
@@ -51,14 +52,6 @@ class Open extends Action
      * @var PreselectHelper
      */
     protected $_preselectHelper;
-
-    protected $_excludedParams = [
-        'master_id',
-        'product_id',
-        'intent',
-        'selected_configurable_option',
-        'related_product'
-    ];
 
     /**
      * Open constructor.
@@ -155,7 +148,7 @@ class Open extends Action
          * Build redirect url
          */
         $redirectUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
-            $storeId, $this->_removePostParams($params));
+            $storeId, $params);
 
         $redirect = $this->resultRedirectFactory->create();
         $redirect->setUrl($redirectUrl);
@@ -335,10 +328,18 @@ class Open extends Action
             $editorUrlParamsArray['user'] = $customerSession->getCustomerId();
         }
 
+        $paramsObject = new DataObject($editorUrlParamsArray);
+        $this->_eventManager->dispatch(
+            'printformer_open_assign_url_params_before',
+            [
+                'request' => $this->_request,
+                'params' => $paramsObject
+            ]
+        );
         /**
          * Override editor params with current action params
          */
-        foreach($params as $key => $param) {
+        foreach($paramsObject->getData() as $key => $param) {
             $editorUrlParamsArray[$key] = $param;
         }
 
@@ -347,25 +348,11 @@ class Open extends Action
          */
         $queryArray = [];
         foreach($editorUrlParamsArray as $key => $value) {
-            if(!in_array($key, $this->_excludedParams) && !preg_match('/undefined/i', $key)) {
-                $queryArray[] = $key . '=' . $value;
-            }
+            $queryArray[] = $key . '=' . $value;
         }
 
         $editorUrl = $editorUrlBase . '?' . implode('&', $queryArray);
 
         return $editorUrl;
-    }
-
-    protected function _removePostParams($params)
-    {
-        $postParams = $this->getRequest()->getPost();
-        foreach($postParams as $key => $val) {
-            if(!empty($params[$key])) {
-                unset($params[$key]);
-            }
-        }
-
-        return $params;
     }
 }
