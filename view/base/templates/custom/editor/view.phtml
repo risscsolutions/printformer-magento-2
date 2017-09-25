@@ -10,10 +10,14 @@ $quoteItemId = $quoteItem->getId();
 ?>
 <br />
 <div id="printformer_draftid_<?php echo $quoteItemId; ?>">
-    <span><?php echo __('Open Editor'); ?>:&nbsp;</span><br />
-    <a href="<?php echo $editorLink; ?>" class="pf-link">
-        <?php echo $quoteItem->getPrintformerDraftid(); ?>
-    </a>
+    <button id="openEditor" href="<?php echo $editorLink; ?>" class="pf-link"><?php echo __('Open Editor');?></button>
+    <div id="info">
+        <br /><span>Draft ID: </span> <a href="<?php echo $block->getDraftURL($quoteItem->getPrintformerDraftid()) ?>"> <?php echo $quoteItem->getPrintformerDraftid(); ?></a>
+        <br /><button id="copy">Copy Draf ID</button>
+        <?php //Textarea for coping the draft id ?>
+        <textarea id="draftID" style="display: none"><?php echo $quoteItem->getPrintformerDraftid(); ?></textarea>
+    </div>
+
 </div>
 
 <div class="printformer-editor-main"
@@ -41,4 +45,25 @@ $quoteItemId = $quoteItem->getId();
             ]
         ]);
     ?>
+</script>
+
+<script>
+    require(['jquery', 'jquery/ui', 'domReady!'], function($){
+        var copyBtn = $('#copy');
+
+        //copy the draft id on button click event
+        copyBtn.click(function (event) {
+            var draftID = $('#draftID');
+            draftID.css('display', 'block');
+            draftID.select();
+
+            try {
+                document.execCommand('copy');
+            } catch(err) {
+                console.log('Copying was unsuccessful');
+            }
+            draftID.css('display', 'none');
+        });
+
+    });
 </script>

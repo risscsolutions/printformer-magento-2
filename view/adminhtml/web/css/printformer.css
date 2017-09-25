@@ -42,3 +42,31 @@
 .modal-popup.printformer-editor-main-modal .action-close {
     padding: 15px;
 }
+
+#info {
+    visibility: collapse;
+    position: absolute;
+}
+
+#openEditor {
+    width: max-content;
+}
+
+#openEditor:hover + #info, #info:hover {
+    visibility: visible;
+    position: absolute;
+}
+
+#copy {
+    margin-top: 10px;
+    background-color: whitesmoke;
+    font-size: 0.9em;
+}
+
+#copy:hover {
+    background-color: gainsboro;
+}
+
+#copy:focus {
+    background-color: grey;
+}
