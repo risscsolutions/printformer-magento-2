@@ -52,6 +52,14 @@ class Open extends Action
      */
     protected $_preselectHelper;
 
+    protected $_excludedParams = [
+        'master_id',
+        'product_id',
+        'intent',
+        'selected_configurable_option',
+        'related_product'
+    ];
+
     /**
      * Open constructor.
      * @param Context $context
@@ -146,7 +154,8 @@ class Open extends Action
         /**
          * Build redirect url
          */
-        $redirectUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession, $storeId, $params);
+        $redirectUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
+            $storeId, $this->_removePostParams($params));
 
         $redirect = $this->resultRedirectFactory->create();
         $redirect->setUrl($redirectUrl);
@@ -338,9 +347,25 @@ class Open extends Action
          */
         $queryArray = [];
         foreach($editorUrlParamsArray as $key => $value) {
-            $queryArray[] = $key . '=' . $value;
+            if(!in_array($key, $this->_excludedParams) && !preg_match('/undefined/i', $key)) {
+                $queryArray[] = $key . '=' . $value;
+            }
         }
 
-        return $editorUrlBase . '?' . implode('&', $queryArray);
+        $editorUrl = $editorUrlBase . '?' . implode('&', $queryArray);
+
+        return $editorUrl;
+    }
+
+    protected function _removePostParams($params)
+    {
+        $postParams = $this->getRequest()->getPost();
+        foreach($postParams as $key => $val) {
+            if(!empty($params[$key])) {
+                unset($params[$key]);
+            }
+        }
+
+        return $params;
     }
 }
