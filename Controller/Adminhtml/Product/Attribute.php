@@ -8,8 +8,10 @@ use Magento\Store\Model\Store;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute as EntityAttribute;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Magento\Backend\App\Action;
 
-class Attribute extends Action
+class Attribute
+    extends Action
 {
     /**
      * @var JsonFactory
