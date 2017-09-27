@@ -39,7 +39,7 @@ define([
                 params = $('[data-action="add-to-wishlist"]').data('post'),
                 formKey = $('[name="form_key"]'),
                 updateWishlistItemOptions = '';
-            var action = undefined;
+            var action = null;
             if(params) {
                 action = params.action.split('/');
             }
@@ -65,7 +65,7 @@ define([
                 url += encodeURIComponent('/form_key/' + formKey.val());
             }
 
-            if(action !== undefined) {
+            if(action !== null) {
                 $.each(action, function (index, val) {
                     if (val === 'wishlist' || val === 'index') {
                         updateWishlistItemOptions += val + '/';
@@ -370,7 +370,11 @@ define([
             this.editBtn = $(this.printformerOptions.editBtnSelector);
 
             this.editBtn.click({printformer: this}, function(event) {
-                event.data.printformer.editorMainOpen(that.getEditorUrl());
+                if($(that.editBtn).data('pf-intent') === 'personalize') {
+                    event.data.printformer.editorMainOpen(that.getPersonalizeUrl());
+                } else {
+                    event.data.printformer.editorMainOpen(that.getEditorUrl());
+                }
             })
             /**
              * Removed moving button because we need it in another Container.
