@@ -44,7 +44,7 @@
 }
 
 #info {
-    visibility: collapse;
+    display: none;
     position: absolute;
 }
 
@@ -53,7 +53,7 @@
 }
 
 #openEditor:hover + #info, #info:hover {
-    visibility: visible;
+    display: block;
     position: absolute;
 }
 

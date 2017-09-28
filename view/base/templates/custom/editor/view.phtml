@@ -11,6 +11,15 @@ $quoteItemId = $quoteItem->getId();
 <br />
 <div id="printformer_draftid_<?php echo $quoteItemId; ?>">
     <button id="openEditor" href="<?php echo $editorLink; ?>" class="pf-link"><?php echo __('Open Editor');?></button>
+
+    <?php // if ($quoteItem->getPrintformerOrdered()): ?>
+        <div style="margin-top: 5px;">
+            <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl(); ?>" target="_blank">
+                <?php echo __('Show print file'); ?>
+            </a>
+        </div>
+    <?php //endif; ?>
+
     <div id="info">
         <br /><span>Draft ID: </span> <a href="<?php echo $block->getDraftURL($quoteItem->getPrintformerDraftid()) ?>"> <?php echo $quoteItem->getPrintformerDraftid(); ?></a>
         <br /><button id="copy">Copy Draf ID</button>

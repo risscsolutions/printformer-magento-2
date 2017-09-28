@@ -68,4 +68,8 @@ class Link
     public function getDraftURL($draftID) {
         return $this->_url->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id='.$draftID)]);
     }
+
+    public function getPdfUrl() {
+        return null;
+    }
 }
