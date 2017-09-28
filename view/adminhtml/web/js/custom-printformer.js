@@ -16,20 +16,31 @@ define([
         },
 
         _create: function () {
-            this._initEditorMain();
-            this._initEditBtn();
+            this.initEditorMain();
+            this.initEditBtn();
+
+            $('.modal-popup.printformer-editor-main-modal .action-close').click(function(){
+                $('html, body').css({
+                    'overflow': 'auto',
+                    'height': 'auto',
+                    'width': 'auto'
+                });
+            });
         },
 
-        _initEditorMain: function () {
+        initEditorMain: function () {
             var options = this.options;
             this.editorMain = $(options.editorMainSelector);
             this.editorMain.modal({
                 modalClass: 'printformer-editor-main-modal',
                 title: options.productTitle,
-                buttons: []
+                buttons: [],
+                close: function()  {
+                    alert('close');
+                }
             });
-            this._initEditorClose();
-            this._initEditorNotice();
+            this.initEditorClose();
+            this.initEditorNotice();
         },
 
         editorMainOpen: function(editorUrl) {
@@ -45,7 +56,7 @@ define([
             }).html($('<iframe width="100%" height="100%" src="' + editorUrl + '" name="printformer-main-frame"/>'));
         },
 
-        _initEditorClose: function () {
+        initEditorClose: function () {
             var options = this.options;
             this.editorClose = $(options.editorCloseSelector);
             this.editorClose.modal({
@@ -55,13 +66,23 @@ define([
                     {
                         'text': $t('Yes'),
                         'class': 'ok-btn',
-                        'click': this.editorCloseOk.bind(this)
+                        'click': function(){
+                            this.editorCloseOk.bind(this);
+                            $('html, body').css({
+                                'overflow': 'auto',
+                                'height': 'auto',
+                                'width': 'auto'
+                            });
+                        }
                     },
                     {
                         'text': $t('No'),
                         'class': 'cancel-btn'
                     }
-                ]
+                ],
+                close: function() {
+                    alert('closed');
+                }
             });
         },
 
@@ -84,7 +105,7 @@ define([
             this.editorClose.modal('closeModal');
         },
 
-        _initEditorNotice: function () {
+        initEditorNotice: function () {
             var options = this.options;
             this.editorNotice = $(options.editorNoticeSelector);
             if (!this.editorNotice) {
@@ -115,7 +136,7 @@ define([
             this.editorNotice.modal('closeModal');
         },
 
-        _initEditBtn: function () {
+        initEditBtn: function () {
             var that = this;
             this.editBtn = $(this.options.editBtnSelector);
 

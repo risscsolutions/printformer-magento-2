@@ -54,11 +54,7 @@ class DefaultRendererPlugin
 
             $html .= $this->_viewHelper->getEditorView($item, $product, $renderer);
 
-            if ($item->getPrintformerOrdered()) {
-                $html .= '<div style="margin-top: 5px;"><a class="action-default scalable action-save action-secondary" href="' . $this->getPdfUrl($item) . '" target="_blank">';
-                $html .= __('Show print file');
-                $html .= '</a></div>';
-            }
+
         }
 
         return $html;

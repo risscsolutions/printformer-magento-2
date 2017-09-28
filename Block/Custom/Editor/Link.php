@@ -6,6 +6,8 @@ use Magento\Framework\View\Element\Template;
 use Magento\Quote\Model\Quote\Item;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
 use Magento\Framework\UrlInterface;
+use Rissc\Printformer\Helper\Url;
+use \Magento\Framework\DataObject;
 
 class Link
     extends Template
@@ -13,6 +15,8 @@ class Link
 
     /** @var UrlInterface  */
     protected $_url;
+
+    protected $_urlHelper;
 
     /**
      * Link constructor.
@@ -22,10 +26,12 @@ class Link
      */
     public function __construct(Template\Context $context,
                                 UrlInterface $url,
+                                Url $urlHelper,
                                 array $data = [])
     {
         parent::__construct($context, $data);
         $this->_url = $url;
+        $this->_urlHelper = $urlHelper;
     }
 
 
@@ -69,7 +75,13 @@ class Link
         return $this->_url->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id='.$draftID)]);
     }
 
-    public function getPdfUrl() {
-        return null;
+    /**
+     * @param \Magento\Framework\DataObject $item
+     * @return string
+     */
+    public function getPdfUrl(\Magento\Framework\DataObject $item)
+    {
+        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
+            ->getAdminPdfUrl($item->getPrintformerDraftid(), $item->getOrder()->getQuoteId());
     }
 }

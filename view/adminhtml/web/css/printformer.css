@@ -46,6 +46,7 @@
 #info {
     display: none;
     position: absolute;
+    background-color: white;
 }
 
 #openEditor {
@@ -55,7 +56,7 @@
 #openEditor:hover + #info, #info:hover {
     display: block;
     position: absolute;
-}
+ }
 
 #copy {
     margin-top: 10px;
