@@ -6,9 +6,9 @@
          title="Printformer"
          translate="title"
          module="Rissc_Printformer"
-         sortOrder="170"
+         sortOrder="40"
          resource="Rissc_Printformer::module"
-         parent="Magento_Backend::system_tools"
+         parent="Magento_Backend::system"
     />
     <add id="Rissc_Printformer::products" title="Products"
          module="Rissc_Printformer" sortOrder="10"
