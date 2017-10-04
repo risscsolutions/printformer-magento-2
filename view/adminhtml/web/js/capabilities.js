@@ -71,8 +71,6 @@ define([
                                                 //append the new option tag
                                                 $(selectCapabilitiesFieldId).append(option);
                                             });
-
-
                                         }
                                     });
                                     //get the id of the capabilities select field
@@ -80,7 +78,6 @@ define([
                                     selectCapabilitiesFieldId = "#" + $(children).attr('for');
                                 }
                             });
-
                         });
                     }
                 }
