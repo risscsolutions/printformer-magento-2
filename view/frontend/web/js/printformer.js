@@ -95,9 +95,9 @@ define([
             if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
                 var oldQtyTrans = $(this.printformerOptions.qtySelector);
                 $(oldQtyTrans).val(this.printformerOptions.personalizations);
-
-                if (!$('#personalisation_qty').length) {
-                    var newQtyTrans = $('<input/>')
+                var newQtyTrans = null;
+                if ($('#personalisation_qty').length < 1) {
+                    newQtyTrans = $('<input/>')
                         .attr('type', 'text')
                         .attr('class', $(oldQtyTrans).attr('class'))
                         .attr('id', 'personalisation_qty')
@@ -105,11 +105,12 @@ define([
                         .prop('disabled', true);
                     $(newQtyTrans).insertAfter($(oldQtyTrans));
                 }
+                $(oldQtyTrans).data('pf_personalized', 'true');
                 $(oldQtyTrans).trigger('change').hide();
 
-                if (!$('#printformer_personalisations').length) {
+                if ($('#printformer_personalisations').length < 1) {
                     var personalisationsInput = $('<input value="' + this.printformerOptions.personalizations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
-                    $(this.printformerOptions.qtySelector).after(personalisationsInput);
+                    $(personalisationsInput).insertAfter($(newQtyTrans));
                 }
             }
         },
