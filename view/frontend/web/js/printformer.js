@@ -145,15 +145,14 @@ define([
                     that.setPrimaryButton();
                 }
 
-                if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
-                    $(document).on('printformer_preselect_options_after', function () {
-                       that.initPersonalisationQty();
-                    });
-                }
-
                 if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
                     that.preselectOptions(that.printformerOptions.preselection);
                 }
+
+                if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
+                    that.initPersonalisationQty();
+                }
+
                 $(document).trigger('printformer:loaded');
                 that.runCallbacks('printformer:loaded:after');
             });
