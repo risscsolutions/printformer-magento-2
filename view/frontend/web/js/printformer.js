@@ -94,7 +94,7 @@ define([
         initPersonalisationQty: function() {
             if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
                 var oldQtyTrans = $(this.printformerOptions.qtySelector);
-                $(oldQtyTrans).val(this.printformerOptions.personalizations);
+                $(oldQtyTrans).data('pf-perso-count', this.printformerOptions.personalizations);
                 var newQtyTrans = null;
                 if ($('#personalisation_qty').length < 1) {
                     newQtyTrans = $('<input/>')
@@ -105,7 +105,7 @@ define([
                         .prop('disabled', true);
                     $(newQtyTrans).insertAfter($(oldQtyTrans));
                 }
-                $(oldQtyTrans).data('pf_personalized', 'true');
+                $(oldQtyTrans).data('pf-personalized', 'true');
                 $(oldQtyTrans).trigger('change').hide();
 
                 if ($('#printformer_personalisations').length < 1) {
