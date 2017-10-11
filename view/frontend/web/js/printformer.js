@@ -94,6 +94,7 @@ define([
         initPersonalisationQty: function() {
             if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
                 var oldQtyTrans = $(this.printformerOptions.qtySelector);
+                $(oldQtyTrans).val(this.printformerOptions.personalizations);
                 $(oldQtyTrans).data('pf-perso-count', this.printformerOptions.personalizations);
                 var newQtyTrans = null;
                 if ($('#personalisation_qty').length < 1) {
