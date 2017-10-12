@@ -127,10 +127,26 @@ class Printformer extends AbstractView
 
     public function getPersonalisations()
     {
-        $catalogSession = $this->sessionHelper->getCatalogSession();
-        $personalisations = $catalogSession->getData(Save::PERSONALISATIONS_QUERY_PARAM);
-        if(isset($personalisations[$this->getProduct()->getStoreId()][$this->getProduct()->getId()])) {
-            return $personalisations[$this->getProduct()->getStoreId()][$this->getProduct()->getId()];
+        if ($this->getRequest()->getActionName() == 'configure'
+            && $this->getRequest()->getParam('id')
+            && $this->getRequest()->getParam('product_id')
+        ) {
+            $quoteItem = null;
+            $id        = (int)$this->getRequest()->getParam('id');
+            $productId = (int)$this->getRequest()->getParam('product_id');
+            if ($id) {
+                $quoteItem = $this->cart->getQuote()->getItemById($id);
+                if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
+                    $buyRequest = $quoteItem->getBuyRequest();
+                    return $buyRequest->getData('printformer_personalisations');
+                }
+            }
+        } else {
+            $catalogSession = $this->sessionHelper->getCatalogSession();
+            $personalisations = $catalogSession->getData(Save::PERSONALISATIONS_QUERY_PARAM);
+            if (isset($personalisations[$this->getProduct()->getStoreId()][$this->getProduct()->getId()])) {
+                return $personalisations[$this->getProduct()->getStoreId()][$this->getProduct()->getId()];
+            }
         }
 
         return null;
@@ -726,6 +742,11 @@ class Printformer extends AbstractView
         if($this->getPersonalisations())
         {
             $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();
+            if ($this->isOnConfigurePDS()) {
+                $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM . '_conf'] = true;
+            } else {
+                $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM . '_conf'] = false;
+            }
         }
 
         return json_encode(array_merge($config, $extendConfig));

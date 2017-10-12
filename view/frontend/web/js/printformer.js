@@ -92,8 +92,27 @@ define([
         },
 
         initPersonalisationQty: function() {
+            var instance = this;
             if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
                 var oldQtyTrans = $(this.printformerOptions.qtySelector);
+                if ($(oldQtyTrans).prop('tagName').toLowerCase() === 'select' && !this.persoOptionAdded) {
+                    var persoOption = $('<option/>');
+                    $(persoOption).val(parseFloat(this.printformerOptions.personalizations));
+                    $(persoOption).text(this.printformerOptions.personalizations);
+                    var selectChilds = $(oldQtyTrans).children();
+                    for(var i = 0; i < selectChilds.length; i++) {
+                        var qty = parseInt($(selectChilds[i]).val());
+                        var nextQty = parseInt($(selectChilds[i + 1]).val());
+                        if(
+                            qty < parseInt(instance.printformerOptions.personalizations) &&
+                            nextQty > parseInt(instance.printformerOptions.personalizations)
+                        ) {
+                            $(selectChilds[i + 1]).after($(persoOption));
+                            this.persoOptionAdded = true;
+                            break;
+                        }
+                    }
+                }
                 $(oldQtyTrans).val(this.printformerOptions.personalizations);
                 $(oldQtyTrans).data('pf-perso-count', this.printformerOptions.personalizations);
                 var newQtyTrans = null;
@@ -121,6 +140,7 @@ define([
             this.form = this.element;
             this.callbacks = {};
             this.addToCartFormUrl = null;
+            this.persoOptionAdded = false;
 
             this.printformerOptions = this.options;
             globalPrintformerOptions = this.printformerOptions;
@@ -145,6 +165,15 @@ define([
                 if(that.printformerOptions.isConfigure) {
                     that.hideSecondButton();
                     that.setPrimaryButton();
+                }
+
+                if (
+                    that.isDefined(that.printformerOptions.personalizations_conf) &&
+                    that.printformerOptions.personalizations_conf &&
+                    that.isDefined(that.printformerOptions.personalizations) &&
+                    that.printformerOptions.personalizations > 1
+                ) {
+                    that.initPersonalisationQty();
                 }
 
                 if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
