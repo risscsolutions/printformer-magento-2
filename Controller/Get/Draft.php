@@ -51,10 +51,12 @@ class Draft extends Action
         $productId = $this->getRequest()->getParam('product');
         $uniqueID = $this->_customerSession->getSessionUniqueID();
         if(!$uniqueID) {
+            echo '{}';
             exit();
         } else if ($uniqueID != null) {
             $uniqueIdExplode = explode(':', $uniqueID);
             if(isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $productId) {
+                echo '{}';
                 exit();
             }
         }
@@ -72,6 +74,7 @@ class Draft extends Action
                 }
             }
             $this->_customerSession->setSessionUniqueID(null);
+            echo '{}';
             exit();
         }
 
@@ -98,6 +101,8 @@ class Draft extends Action
 
         if($savedSessionData !== null) {
             echo json_encode($savedSessionData);
+        } else {
+            echo '{}';
         }
         exit();
     }
