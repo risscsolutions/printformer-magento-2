@@ -15,4 +15,7 @@
     <event name="printformer_product_sync_after">
         <observer name="rissc_printformer_product_sync_after" instance="Rissc\Printformer\Observer\Product\Sync\After\Observer" />
     </event>
+    <event name="catalog_product_save_after">
+        <observer name="rissc_printformer_product_view_buttons" instance="Rissc\Printformer\Observer\Product\View\Buttons\Observer" />
+    </event>
 </config>
