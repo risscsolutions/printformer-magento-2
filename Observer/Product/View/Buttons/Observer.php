@@ -80,18 +80,18 @@ class Observer implements ObserverInterface
                     }
                 }
 
-                $qry = '
-                    UPDATE `' . $table . '`
+                $qry = "
+                    UPDATE `$table`
                         SET
-                            `value` = \'' . implode(',', $allOptionIds) . '\'
+                            `value` = ?
                         WHERE
-                            `attribute_id` = ' . $attribute->getId() . '
+                            `attribute_id` = ?
                         AND
-                            `store_id` = ' . $storeId . '
+                            `store_id` = ?
                         AND
-                            `entity_id` = ' . $product->getId() . ';';
+                            `entity_id` = ?";
 
-                $connection->query($qry);
+                $connection->query($qry,[implode(',', $allOptionIds), $attribute->getId(), $storeId, $product->getId()]);
             }
         }
 
