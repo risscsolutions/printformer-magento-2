@@ -44,8 +44,9 @@
 }
 
 #info {
-    visibility: collapse;
+    display: none;
     position: absolute;
+    background-color: white;
 }
 
 #openEditor {
@@ -53,9 +54,9 @@
 }
 
 #openEditor:hover + #info, #info:hover {
-    visibility: visible;
+    display: block;
     position: absolute;
-}
+ }
 
 #copy {
     margin-top: 10px;
