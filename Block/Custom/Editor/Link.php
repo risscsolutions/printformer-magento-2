@@ -5,30 +5,10 @@ use Magento\Catalog\Model\Product;
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Model\Quote\Item;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
-use Magento\Framework\UrlInterface;
 
 class Link
     extends Template
 {
-
-    /** @var UrlInterface  */
-    protected $_url;
-
-    /**
-     * Link constructor.
-     * @param Template\Context $context
-     * @param UrlInterface $url
-     * @param array $data
-     */
-    public function __construct(Template\Context $context,
-                                UrlInterface $url,
-                                array $data = [])
-    {
-        parent::__construct($context, $data);
-        $this->_url = $url;
-    }
-
-
     /**
      * @return Item
      */
@@ -66,6 +46,6 @@ class Link
      * @return string
      */
     public function getDraftURL($draftID) {
-        return $this->_url->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id='.$draftID)]);
+        return $this->_urlBuilder->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id='.$draftID)]);
     }
 }

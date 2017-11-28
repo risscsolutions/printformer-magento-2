@@ -11,8 +11,6 @@ use Rissc\Printformer\Helper\Url as UrlHelper;
 use Magento\Backend\Model\UrlInterface as BackendUrlInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\App\Area;
-use Magento\Framework\App\RequestInterface;
-use Magento\Framework\UrlInterface;
 
 class View
     extends AbstractHelper
@@ -29,28 +27,18 @@ class View
     /** @var State */
     protected $_appState;
 
-    /** @var RequestInterface */
-    protected $_request;
-
-    /** @var UrlInterface */
-    protected $_url;
-
     public function __construct(
         Context $context,
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
         BackendUrlInterface $backendUrl,
-        State $appState,
-        RequestInterface $request,
-        UrlInterface $url
+        State $appState
     )
     {
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_backendUrl = $backendUrl;
         $this->_appState = $appState;
-        $this->_request = $request;
-        $this->_url = $url;
 
         parent::__construct($context);
     }
@@ -110,7 +98,7 @@ class View
         if($this->_appState->getAreaCode() == Area::AREA_ADMINHTML) {
             $referrerUrl = $this->_backendUrl->getUrl($route, ['quote_id' => $request->getParam('quote_id')]);
         } else {
-            $referrerUrl = $this->_url->getUrl($route, ['quote_id' => $request->getParam('quote_id')]);
+            $referrerUrl = $this->_urlBuilder->getUrl($route, ['quote_id' => $request->getParam('quote_id')]);
         }
         return $editorUrl .
             (strpos($editorUrl, '?') ? '&amp;' : '?') .
