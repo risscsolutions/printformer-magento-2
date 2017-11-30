@@ -10,7 +10,6 @@ namespace Rissc\Printformer\Block\Adminhtml\System\Catalog\Product;
 
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Psr\Log\LoggerInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Eav\Api\AttributeRepositoryInterface;
 
 
@@ -31,19 +30,17 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
      * Capabilities constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param PrintformerProductFactory $printformerProductFactory
-     * @param StoreManagerInterface $storeManager
      * @param AttributeRepositoryInterface $eavConfig
      * @param LoggerInterface $logger
      * @param array $data
      */
     public function __construct(\Magento\Framework\View\Element\Template\Context $context,
                                 PrintformerProductFactory $printformerProductFactory,
-                                StoreManagerInterface $storeManager,
                                 AttributeRepositoryInterface $eavConfig,
                                 LoggerInterface $logger,
                                 array $data = []) {
         $this->_printformerProductFactory = $printformerProductFactory;
-        $this->_storeManager = $storeManager;
+        $this->_storeManager = $context->getStoreManager();
         $this->_eavConfig = $eavConfig;
         $this->_logger = $logger;
 
