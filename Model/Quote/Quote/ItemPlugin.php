@@ -1,10 +1,20 @@
 <?php
 namespace Rissc\Printformer\Model\Quote\Quote;
 
+use Magento\Framework\Serialize\SerializerInterface;
 use Rissc\Printformer\Setup\InstallSchema;
 
 class ItemPlugin
 {
+    protected $_serializer;
+
+    public function __construct(
+        SerializerInterface $serializer
+    )
+    {
+        $this->_serializer = $serializer;
+    }
+
     /**
      * @param \Magento\Quote\Api\Data\CartItemInterface $item
      * @param callable $proceed
@@ -21,7 +31,8 @@ class ItemPlugin
                 && $itemOptions['info_buyRequest'] instanceof \Magento\Quote\Model\Quote\Item\Option
             ) {
                 $infoBuyRequest = $itemOptions['info_buyRequest'];
-                $value = unserialize($infoBuyRequest->getValue());
+                /** @var Serialize $value */
+                $value = $this->_serializer->unserialize($infoBuyRequest->getValue());
                 $itemDraftId = isset($value[InstallSchema::COLUMN_NAME_DRAFTID])
                     ? $value[InstallSchema::COLUMN_NAME_DRAFTID]
                     : null;
