@@ -31,7 +31,6 @@ class ItemPlugin
                 && $itemOptions['info_buyRequest'] instanceof \Magento\Quote\Model\Quote\Item\Option
             ) {
                 $infoBuyRequest = $itemOptions['info_buyRequest'];
-                /** @var Serialize $value */
                 $value = $this->_serializer->unserialize($infoBuyRequest->getValue());
                 $itemDraftId = isset($value[InstallSchema::COLUMN_NAME_DRAFTID])
                     ? $value[InstallSchema::COLUMN_NAME_DRAFTID]
@@ -43,7 +42,7 @@ class ItemPlugin
                 && $productOptions['info_buyRequest'] instanceof \Magento\Catalog\Model\Product\Configuration\Item\Option
             ) {
                 $infoBuyRequest = $productOptions['info_buyRequest'];
-                $value = unserialize($infoBuyRequest->getValue());
+                $value = $this->_serializer->unserialize($infoBuyRequest->getValue());
                 $productDraftId = isset($value[InstallSchema::COLUMN_NAME_DRAFTID])
                     ? $value[InstallSchema::COLUMN_NAME_DRAFTID]
                     : null;
