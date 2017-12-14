@@ -40,10 +40,6 @@
         <plugin name="printformer-quote-quote" type="Rissc\Printformer\Model\Quote\QuotePlugin" sortOrder="100"/>
     </type>
 
-    <type name="Magento\Framework\View\Element\Template">
-        <plugin name="Rissc_Printformer_Addtocart_ToHtml_Core" type="Rissc\Printformer\Block\Catalog\Product\View\Plugin" sortOrder="1000" />
-    </type>
-
     <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
                 type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
 

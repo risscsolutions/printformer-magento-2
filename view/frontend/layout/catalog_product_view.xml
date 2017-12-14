@@ -8,5 +8,14 @@
             <block ifconfig="printformer/general/enabled" class="Rissc\Printformer\Block\Catalog\Product\View\Printformer" name="printformer.js.init" after="printformer.generic.info" cacheable="false" template="Rissc_Printformer::catalog/product/view/printformer_init.phtml"/>
             <block ifconfig="printformer/general/enabled" class="Magento\Framework\View\Element\Template" name="printformer-js-translation" template="Rissc_Printformer::translate.phtml"/>
         </referenceBlock>
+        <referenceContainer name="content">
+            <referenceContainer name="product.info.main">
+                <referenceBlock name="product.info">
+                    <referenceContainer name="product.info.form.content">
+                        <block ifconfig="printformer/general/enabled" class="Rissc\Printformer\Block\Catalog\Product\View\Printformer" before="product.info.addtocart" name="printformer.buttons" template="Rissc_Printformer::catalog/product/view/printformer.phtml" />
+                    </referenceContainer>
+                </referenceBlock>
+            </referenceContainer>
+        </referenceContainer>
     </body>
 </page>
