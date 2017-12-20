@@ -263,6 +263,19 @@ class UpgradeSchema
             );
         }
 
+        if(version_compare($context->getVersion(), '100.1.25', '>'))
+        {
+            $connection->addColumn(
+                $connection->getTableName('printformer_draft'),
+                'user_identifier',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'comment' => 'user identifier'
+                ]
+            );
+        }
+
+
         $setup->endSetup();
     }
 }

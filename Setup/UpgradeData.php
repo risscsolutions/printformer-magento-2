@@ -1,6 +1,7 @@
 <?php
 namespace Rissc\Printformer\Setup;
 
+use \Magento\Customer\Model\ResourceModel\Customer;
 use \Magento\Eav\Setup\EavSetup;
 use \Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\UpgradeDataInterface;
@@ -25,8 +26,8 @@ class UpgradeData
 
     /**
      * UpgradeData constructor.
-     *
      * @param EavSetupFactory $eavSetupFactory
+     * @param ProductFactory $productFactory
      */
     public function __construct(
         EavSetupFactory $eavSetupFactory,
@@ -103,6 +104,7 @@ class UpgradeData
                     'apply_to' => ''
                 ]
             );
+
         }
 
         if(version_compare($context->getVersion(), '100.1.6', '<'))
@@ -221,6 +223,35 @@ class UpgradeData
                             'Upload and Editor'
                         ]
                     ]
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.2.30', '>')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->addAttribute(
+                'customer',
+                'printformer_identification',
+                [
+                    'group' => 'general',
+                    'type' => 'varchar',
+                    'backend' => '',
+                    'frontend' => '',
+                    'label' => 'Printformer Identification',
+                    'input' => 'text',
+                    'class' => '',
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'visible' => true,
+                    'required' => false,
+                    'user_defined' => false,
+                    'default' => 0,
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'used_in_product_listing' => true,
+                    'unique' => true,
+                    'apply_to' => ''
                 ]
             );
         }

@@ -1,6 +1,7 @@
 <?php
 namespace Rissc\Printformer\Setup;
 
+use Magento\Customer\Model\Customer;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Framework\Setup\InstallDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
@@ -88,5 +89,6 @@ class InstallData implements InstallDataInterface
                 'apply_to' => ''
             ]
         );
+
     }
 }

@@ -16,6 +16,7 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Editor\Preselect as PreselectHelper;
 
+
 class Open extends Action
 {
     /**
@@ -142,13 +143,20 @@ class Open extends Action
         /**
          * Get printformer editor url by draft id
          */
-        $editorUrl = $this->_urlHelper->getDraftEditorUrl($draftProcess->getDraftId());
+        $editorUrl = $this->_urlHelper->getDraftEditorUrl($draftProcess->getDraftId(), $this->_draftGateway->isV2Enabled());
 
         /**
          * Build redirect url
          */
         $redirectUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
             $storeId, $params);
+
+        if($this->_draftGateway->isV2Enabled()) {
+            if($customerSession->getCustomerId() == null) {
+                $this->_draftGateway->setUserIdentifier($draftProcess->getUserIdentifier());
+            }
+            $redirectUrl = $this->_draftGateway->getRedirectUrl($redirectUrl);
+        }
 
         $redirect = $this->resultRedirectFactory->create();
         $redirect->setUrl($redirectUrl);
@@ -198,6 +206,11 @@ class Open extends Action
     {
         $draftId = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
 
+        $userIdentifier = NULL;
+        if($this->_draftGateway->isV2Enabled()) {
+            $userIdentifier = $this->_draftGateway->getUserIdentifier();
+        }
+
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
         $draftProcess->addData([
@@ -207,6 +220,7 @@ class Open extends Action
             'session_unique_id' => $sessionUniqueId,
             'product_id' => $product->getId(),
             'customer_id' => $customerId,
+            'user_identifier' => $userIdentifier,
             'created_at' => time()
         ]);
         $draftProcess->getResource()->save($draftProcess);
@@ -242,7 +256,7 @@ class Open extends Action
                 $draftCollection = $draftProcess->getCollection()
                     ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
                     ->addFieldToFilter('intent', ['eq' => $intent]);
-                if($printformerDraft != null) {
+                if ($printformerDraft != null) {
                     $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
                 }
                 if ($draftCollection->count() == 1) {
@@ -252,6 +266,15 @@ class Open extends Action
                         $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
                     }
                 }
+            }
+        }
+        //load old draft if the user edited this product in the past
+        if($this->_sessionHelper->getCustomerId() != null) {
+            if($draftProcess->getUserIdentifier() != $this->_draftGateway->getUserIdentifier() || !$draftProcess->getId()) {
+                $draftCollection = $draftProcess->getCollection()
+                    ->addFieldToFilter('user_identifier', ['eq' => $this->_draftGateway->getUserIdentifier()])
+                    ->addFieldToFilter('intent', ['eq' => $intent]);
+                $draftProcess = $draftCollection->getLastItem();
             }
         }
 

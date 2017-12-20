@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Helper;
 
 use \Rissc\Printformer\Model\Config\Source\Redirect;
 use \Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class Url extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -18,9 +19,11 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
     const URI_CUSTOMER_DRAFTIMG         = 'api/customer/draftimage';
     const URI_CUSTOMER_DELETE           = 'api/customer/delete';
     const URI_CUSTOMER_DRAFT            = 'api-ext/draft';
+    const URI_CUSTOMER_USER             = 'api-ext/user';
     const URI_ADMIN_GETDRAFT            = 'api/admin/getdraft';
     const URI_CUSTOMER_PDF_PROCESSING   = 'api-ext/pdf-processing';
     const URI_CUSTOMER_CREATE_DRAFT     = 'some/path/on/server';
+    const URI_CUSTOMER_AUTH             = 'auth';
 
     /**
      * @var \Magento\Framework\UrlInterface
@@ -32,17 +35,40 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $config;
 
+    protected $_scopeConfig;
+
+    protected $printformerUrl;
+
     /**
      * @param \Magento\Framework\App\Helper\Context $context
      * @param Config $config
      */
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
+        ScopeConfigInterface $scopeConfig,
         \Rissc\Printformer\Helper\Config $config
     ) {
         parent::__construct($context);
         $this->url = $context->getUrlBuilder();
         $this->config = $config;
+        $this->_scopeConfig = $scopeConfig;
+        $this->printformerUrl = $this->_scopeConfig->getValue('printformer/version2group/v2url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+    }
+
+    public function getPrintformerUrl() {
+        return $this->printformerUrl;
+    }
+
+    public function getPrintformerDraftUrl() {
+        return $this->printformerUrl . "/" . self::URI_CUSTOMER_DRAFT;
+    }
+
+    public function getPrintformerUserUrl() {
+        return $this->printformerUrl . "/" . self::URI_CUSTOMER_USER;
+    }
+
+    public function getAuthEndpointUrl() {
+        return $this->printformerUrl . "/" . self::URI_CUSTOMER_AUTH;
     }
 
     /**
@@ -162,19 +188,26 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->_getUrl('printformer/editor/open', $paramsArray);
     }
 
-    public function getDraftEditorUrl($draftId)
+    public function getDraftEditorUrl($draftId, $v2 = false)
     {
-        $urlParts = array(
-            $this->getHost(),
-            self::URI_USER_DRAFTEDITOR,
-            $draftId
-        );
+        if($v2) {
+            $urlParts = array(
+                $this->getPrintformerUrl(),
+                self::URI_USER_DRAFTEDITOR,
+                $draftId
+            );
+        } else {
+            $urlParts = array(
+                $this->getHost(),
+                self::URI_USER_DRAFTEDITOR,
+                $draftId
+            );
 
-        $authParams = [
-            $this->getApikeyParamName() . '=' . $this->getApikey(),
-            $this->getAuthkeyParamName() . '=' . $this->getAuthkey(self::ROLE_ADMIN),
-        ];
-
+            $authParams = [
+                $this->getApikeyParamName() . '=' . $this->getApikey(),
+                $this->getAuthkeyParamName() . '=' . $this->getAuthkey(self::ROLE_ADMIN),
+            ];
+        }
         return implode('/', $urlParts) . (!empty($authParams) ? '?' . implode('&', $authParams) : '');
     }
 
