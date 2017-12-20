@@ -268,6 +268,8 @@ class Open extends Action
                             $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
                         }
                     }
+                } else {
+                    $draftProcess = $draftCollection->getLastItem();
                 }
             }
         }
