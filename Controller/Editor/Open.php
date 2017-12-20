@@ -260,21 +260,15 @@ class Open extends Action
                     $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
                 }
                 if ($draftCollection->count() == 1) {
-                    /** @var Draft $draft */
-                    $draftProcess = $draftCollection->getFirstItem();
-                    if ($draftProcess->getId() && $draftProcess->getDraftId()) {
-                        $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
+                    if($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
+                        || $this->_sessionHelper->getCustomerId() == null) {
+                        /** @var Draft $draft */
+                        $draftProcess = $draftCollection->getFirstItem();
+                        if ($draftProcess->getId() && $draftProcess->getDraftId()) {
+                            $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
+                        }
                     }
                 }
-            }
-        }
-        //load old draft if the user edited this product in the past
-        if($this->_sessionHelper->getCustomerId() != null) {
-            if($draftProcess->getUserIdentifier() != $this->_draftGateway->getUserIdentifier() || !$draftProcess->getId()) {
-                $draftCollection = $draftProcess->getCollection()
-                    ->addFieldToFilter('user_identifier', ['eq' => $this->_draftGateway->getUserIdentifier()])
-                    ->addFieldToFilter('intent', ['eq' => $intent]);
-                $draftProcess = $draftCollection->getLastItem();
             }
         }
 
