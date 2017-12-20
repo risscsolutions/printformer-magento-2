@@ -911,7 +911,14 @@ class Printformer extends AbstractView
                         `product_id` = " . $request->getParam('product_id') . " AND
                         `code` = 'info_buyRequest'
                 ");
-                $buyRequest = new DataObject(unserialize($result['value']));
+                $objm = ObjectManager::getInstance();
+                /** @var \Magento\Framework\App\ProductMetadataInterface $productMeta */
+                $productMeta = $objm->get('Magento\Framework\App\ProductMetadataInterface');
+                if(version_compare($productMeta->getVersion(), '2.2.1', '>=')) {
+                    $buyRequest = new DataObject(json_decode($result['value'], true));
+                } else {
+                    $buyRequest = new DataObject(unserialize($result['value']));
+                }
                 // $buyRequest = $quoteItem->getBuyRequest();
 
                 $product = $buyRequest->getProduct();
