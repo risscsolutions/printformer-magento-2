@@ -96,10 +96,12 @@ define([
             if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
                 var oldQtyTrans = $(this.printformerOptions.qtySelector);
                 var persoAmount = parseInt(instance.printformerOptions.personalizations);
+                var formatedPersoAmount = "" + persoAmount + "";
                 if ($(oldQtyTrans).prop('tagName').toLowerCase() === 'select' && !this.persoOptionAdded) {
                     persoAmount = parseFloat(instance.printformerOptions.personalizations);
+                    formatedPersoAmount = persoAmount.toLocaleString('en-US', { minimumFractionDigits: 4 }).replace(',', '');
                     var persoOption = $('<option/>');
-                    $(persoOption).val(persoAmount);
+                    $(persoOption).val(formatedPersoAmount);
                     $(persoOption).text(this.printformerOptions.personalizations);
                     var selectChilds = $(oldQtyTrans).children();
                     for(var i = 0; i < selectChilds.length; i++) {
@@ -110,12 +112,13 @@ define([
                             nextQty > persoAmount
                         ) {
                             $(selectChilds[i + 1]).after($(persoOption));
-                            this.persoOptionAdded = true;
                             break;
                         }
                     }
+
+                    this.persoOptionAdded = true;
                 }
-                $(oldQtyTrans).val(persoAmount);
+                $(oldQtyTrans).val(formatedPersoAmount);
                 $(oldQtyTrans).data('pf-perso-count', this.printformerOptions.personalizations);
                 var newQtyTrans = null;
                 if ($('#personalisation_qty').length < 1) {
