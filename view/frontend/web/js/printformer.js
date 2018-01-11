@@ -95,17 +95,19 @@ define([
             var instance = this;
             if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
                 var oldQtyTrans = $(this.printformerOptions.qtySelector);
+                var persoAmount = parseInt(instance.printformerOptions.personalizations);
                 if ($(oldQtyTrans).prop('tagName').toLowerCase() === 'select' && !this.persoOptionAdded) {
+                    persoAmount = parseFloat(instance.printformerOptions.personalizations);
                     var persoOption = $('<option/>');
-                    $(persoOption).val(parseFloat(this.printformerOptions.personalizations));
+                    $(persoOption).val(persoAmount);
                     $(persoOption).text(this.printformerOptions.personalizations);
                     var selectChilds = $(oldQtyTrans).children();
                     for(var i = 0; i < selectChilds.length; i++) {
-                        var qty = parseInt($(selectChilds[i]).val());
-                        var nextQty = parseInt($(selectChilds[i + 1]).val());
+                        var qty = parseFloat($(selectChilds[i]).val());
+                        var nextQty = parseFloat($(selectChilds[i + 1]).val());
                         if(
-                            qty < parseInt(instance.printformerOptions.personalizations) &&
-                            nextQty > parseInt(instance.printformerOptions.personalizations)
+                            qty < persoAmount &&
+                            nextQty > persoAmount
                         ) {
                             $(selectChilds[i + 1]).after($(persoOption));
                             this.persoOptionAdded = true;
@@ -113,7 +115,7 @@ define([
                         }
                     }
                 }
-                $(oldQtyTrans).val(this.printformerOptions.personalizations);
+                $(oldQtyTrans).val(persoAmount);
                 $(oldQtyTrans).data('pf-perso-count', this.printformerOptions.personalizations);
                 var newQtyTrans = null;
                 if ($('#personalisation_qty').length < 1) {
