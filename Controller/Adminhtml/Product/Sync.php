@@ -62,15 +62,7 @@ class Sync extends Action
                 throw new \Exception(__('Module disabled.'));
             }
 
-            $v2enabled = ($this->_scopeConfig->getValue('printformer/version2group/version2', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) == 1);
-            $apiKey = $this->_scopeConfig->getValue('printformer/version2group/v2apiKey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-            $printformerUrl = $this->_scopeConfig->getValue('printformer/version2group/v2url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-
-            if($v2enabled) {
-                $this->gateway->syncProductsV2($storeId, $printformerUrl, $apiKey);
-            } else {
-                $this->gateway->syncProducts($storeId);
-            }
+            $this->gateway->syncProducts($storeId);
             $response = ['success' => 'true', 'message' => __('Products sync successful.')];
         } catch (\Exception $e) {
         $response = ['error' => 'true', 'message' => $e->getMessage()];
