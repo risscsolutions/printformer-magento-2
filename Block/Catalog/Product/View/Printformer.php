@@ -111,7 +111,7 @@ class Printformer extends AbstractView
      */
     protected function _toHtml()
     {
-        if (!$this->getProduct() || ($this->isPrintformerEnabled() && $this->getProduct()->isSaleable())) {
+        if (!$this->getProduct() || ($this->isPrintformerEnabled() == '1' && $this->getProduct()->isSaleable())) {
             return parent::_toHtml();
         }
         return '';
