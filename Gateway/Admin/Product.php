@@ -300,7 +300,7 @@ class Product
             else
             {
                 $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
-                $pfProduct->setSku($responseRealigned[$masterID]['sku'])
+                $pfProduct->setSku($this->isV2Enabled() ? null : $responseRealigned[$masterID]['sku'])
                     ->setName($responseRealigned[$masterID]['name'])
                     ->setDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['description'])
                     ->setShortDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['short_description'])
