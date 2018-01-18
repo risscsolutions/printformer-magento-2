@@ -11,6 +11,7 @@ use Magento\Catalog\Model\Product as CatalogProduct;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\HTTP\ZendClient;
+use GuzzleHttp\Client as HttpClient;
 
 class Product
 {
@@ -206,7 +207,7 @@ class Product
     protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
         $apiKey = null;
-        if(!$this->isV2Enabled()) {
+        if (!$this->isV2Enabled()) {
             $url = $this->urlHelper->setStoreId($storeId)->getAdminProductsUrl();
         } else {
             $url = $this->getV2Endpoint() . self::TEMPLATE_ENDPOINT;
@@ -215,21 +216,23 @@ class Product
 
         $this->logger->debug($url);
 
-        /** @var \Zend_Http_Response $response */
-        /** @var ZendClient $request */
-        $request = $this->httpClientFactory
-            ->create()
-            ->setUri((string)$url)
-            ->setConfig(['timeout' => 30]);
-        if($this->isV2Enabled() && !empty($apiKey)) {
-            $request->setHeaders([
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $apiKey
+        if ($this->isV2Enabled() && !empty($apiKey)) {
+            $request = new HttpClient([
+                'base_url' => $url,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->getV2ApiKey()
+                ]
+            ]);
+        } else {
+            $request = new HttpClient([
+                'base_url' => $url,
             ]);
         }
-        $response = $request->request(\Zend_Http_Client::POST);
 
-        if (!$response->isSuccessful()) {
+        $response = $request->get($url);
+
+        if ($response->getStatusCode() !== 200) {
             throw new Exception(__('Error fetching products.'));
         }
 
@@ -252,8 +255,12 @@ class Product
         $responseRealigned = [];
         foreach($responseArray['data'] as $responseData)
         {
-            $masterIDs[] = $responseData['rissc_w2p_master_id'];
-            $responseRealigned[$responseData['rissc_w2p_master_id']] = $responseData;
+            $masterID = ($this->isV2Enabled() && isset($responseData['id']['id']) ? $responseData['id']['id'] :
+                $responseData['rissc_w2p_master_id']);
+            if(!in_array($masterID, $masterIDs)) {
+                $masterIDs[] = $masterID;
+                $responseRealigned[$masterID] = $responseData;
+            }
         }
 
         /** @var PrintformerProduct $pfProduct */
@@ -276,13 +283,14 @@ class Product
             {
                 $pfProduct = $this->printformerProductFactory->create();
                 $pfProduct->setStoreId($storeId)
-                    ->setSku($responseRealigned[$masterID]['sku'])
+                    ->setSku($this->isV2Enabled() ? null : $responseRealigned[$masterID]['sku'])
                     ->setName($responseRealigned[$masterID]['name'])
-                    ->setDescription($responseRealigned[$masterID]['description'])
-                    ->setShortDescription($responseRealigned[$masterID]['short_description'])
-                    ->setStatus($responseRealigned[$masterID]['status'])
-                    ->setMasterId($responseRealigned[$masterID]['rissc_w2p_master_id'])
-                    ->setMd5($responseRealigned[$masterID]['rissc_w2p_md5'])
+                    ->setDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['description'])
+                    ->setShortDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['short_description'])
+                    ->setStatus($this->isV2Enabled() ? 1 : $responseRealigned[$masterID]['status'])
+                    ->setMasterId($this->isV2Enabled() ? $responseRealigned[$masterID]['id']['id'] :
+                        $responseRealigned[$masterID]['rissc_w2p_master_id'])
+                    ->setMd5($this->isV2Enabled() ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
                     ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
                     ->setCreatedAt(time())
                     ->setUpdatedAt(time());
@@ -294,9 +302,9 @@ class Product
                 $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
                 $pfProduct->setSku($responseRealigned[$masterID]['sku'])
                     ->setName($responseRealigned[$masterID]['name'])
-                    ->setDescription($responseRealigned[$masterID]['description'])
-                    ->setShortDescription($responseRealigned[$masterID]['short_description'])
-                    ->setStatus($responseRealigned[$masterID]['status'])
+                    ->setDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['description'])
+                    ->setShortDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['short_description'])
+                    ->setStatus($this->isV2Enabled() ? 1 : $responseRealigned[$masterID]['status'])
                     ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
                     ->setUpdatedAt(time());
 
