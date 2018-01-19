@@ -152,9 +152,6 @@ class Open extends Action
             $storeId, $params);
 
         if($this->_draftGateway->isV2Enabled()) {
-            if($customerSession->getCustomerId() == null) {
-                $this->_draftGateway->setUserIdentifier($draftProcess->getUserIdentifier());
-            }
             $redirectUrl = $this->_draftGateway->getRedirectUrl($redirectUrl);
         }
 

@@ -140,27 +140,37 @@ class Draft
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getUserIdentifier() {
-        if($this->userIdentifier == null) {
-            $customer = $this->_customerSession->getCustomer();
-            if ($customer->getId() == null) {
-                $response = $this->_httpClient->post($this->_urlHelper->getPrintformerUserUrl());
-                $response = json_decode($response->getBody(), true);
-                $this->userIdentifier = $response['data']['identifier'];
-            } else {
-                $this->userIdentifier = $customer->getPrintformerIdentification();
-                if ($this->userIdentifier == null) {
-                    $response = $this->_httpClient->post($this->_urlHelper->getPrintformerUserUrl());
-                    $response = json_decode($response->getBody(), true);
-                    $this->userIdentifier = $response['data']['identifier'];
-                    $customer->setPrintformerIdentification($this->userIdentifier);
-                    $customer->getResource()->save($customer);
-                }
+    public function createUser()
+    {
+        $url = $this->_urlHelper->getPrintformerUserUrl();
+
+        $response = $this->_httpClient->post($url);
+        $response = json_decode($response->getBody(), true);
+
+        return $response['data']['identifier'];
+    }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getUserIdentifier()
+    {
+        $userIdentifier = $this->_customerSession->getPrintformerIdentification();
+        if(!$userIdentifier) {
+            $userIdentifier = $this->createUser();
+            $this->_customerSession->setPrintformerIdentification($userIdentifier);
+
+            if ($this->_customerSession->isLoggedIn()) {
+                $customer = $this->_customerSession->getCustomer();
+                $customer->setData('printformer_user_identifier', $userIdentifier);
+                $customer->getResource()->save($customer);
             }
         }
-        return $this->userIdentifier;
+
+        return $userIdentifier;
     }
 
     public function setUserIdentifier($userIdentifier) {

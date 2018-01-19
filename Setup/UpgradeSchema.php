@@ -263,7 +263,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.25', '>'))
+        if(version_compare($context->getVersion(), '100.1.25', '<'))
         {
             $connection->addColumn(
                 $connection->getTableName('printformer_draft'),
@@ -273,6 +273,22 @@ class UpgradeSchema
                     'comment' => 'user identifier'
                 ]
             );
+        }
+
+        if(version_compare($context->getVersion(), '100.2.40', '<')) {
+            $tableName = $connection->getTableName('printformer_draft');
+            $columnName = 'user_identifier';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_TEXT,
+                        'length' => 55,
+                        'comment' => 'user identifier'
+                    ]
+                );
+            }
         }
 
 
