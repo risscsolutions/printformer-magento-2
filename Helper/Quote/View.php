@@ -11,6 +11,7 @@ use Rissc\Printformer\Helper\Url as UrlHelper;
 use Magento\Backend\Model\UrlInterface as BackendUrlInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\App\Area;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class View
     extends AbstractHelper
@@ -27,29 +28,36 @@ class View
     /** @var State */
     protected $_appState;
 
+    /** @var ApiHelper */
+    protected $_apiHelper;
+
     public function __construct(
         Context $context,
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
         BackendUrlInterface $backendUrl,
-        State $appState
+        State $appState,
+        ApiHelper $apiHelper
     )
     {
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_backendUrl = $backendUrl;
         $this->_appState = $appState;
+        $this->_apiHelper = $apiHelper;
 
         parent::__construct($context);
     }
 
     /**
-     * @param Item          $quoteItem
-     * @param Product       $product
-     * @param AbstractBlock $block
-     * @param int           $userId
+     * @param      $quoteItem
+     * @param      $product
+     * @param      $block
+     * @param null $userId
      *
      * @return string
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function getEditorView($quoteItem, $product, $block, $userId = null)
     {
@@ -62,7 +70,7 @@ class View
         $viewBlock->addData([
             'quote_item' => $quoteItem,
             'product' => $product,
-            'editor_link' => $this->_getEditorUrl($quoteItem, $product, $userId),
+            'editor_link' => $this->_getEditorUrl($quoteItem),
             'printformer_block' => $printFormerBlock
         ]);
 
@@ -70,17 +78,19 @@ class View
     }
 
     /**
-     * @param Item    $quoteItem
-     * @param Product $product
-     * @param null    $userId
+     * @param      $quoteItem
+     * @param      $product
+     * @param string $userId
      *
      * @return string
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function _getEditorUrl($quoteItem, $product, $userId = null)
+    public function _getEditorUrl($quoteItem)
     {
         $buyRequest = $quoteItem->getBuyRequest();
 
-        $editorUrl = $this->_urlHelper
+        /*$editorUrl = $this->_urlHelper
             ->setStoreId($quoteItem->getPrintformerStoreid())
             ->getEditorUrl(
                 $product->getId(),
@@ -91,7 +101,23 @@ class View
                     'draft_id' => $buyRequest->getData('printformer_draftid'),
                     'session_id' => $buyRequest->getData('printformer_unique_session_id')
                 ]
-            );
+            );*/
+        $draftProcess = $this->_apiHelper->draftProcess(null, $buyRequest->getData('printformer_draftid'));
+        $params = [
+            'master_id' => $draftProcess->getMasterId(),
+            'product_id' => $draftProcess->getProductId(),
+            'data' => [
+                'draft_process' => $draftProcess->getId(),
+                'draft_hash' => $draftProcess->getDraftId(),
+                'callback_url' => $this->_urlBuilder->getUrl("sales/order/view", [
+                    'order_id' => $quoteItem->getId()
+                ])
+            ]
+        ];
+
+        $editorUrl = $this->_apiHelper->getEditorWebtokenUrl($draftProcess->getDraftHash(),
+            $draftProcess->getUserIdentifier(), $params);
+
         $request = $this->_request;
         $route = $request->getModuleName() . '/' . $request->getControllerName() . '/' . $request->getActionName();
 
