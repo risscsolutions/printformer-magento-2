@@ -39,6 +39,9 @@
     <type name="Magento\Quote\Api\Data\CartInterface">
         <plugin name="printformer-quote-quote" type="Rissc\Printformer\Model\Quote\QuotePlugin" sortOrder="100"/>
     </type>
+    <type name="Magento\Downloadable\Block\Customer\Products\ListProducts">
+        <plugin name="DownloadableProducts" type="Rissc\Printformer\Plugin\DownloadableProducts\Plugin" sortOrder="100" />
+    </type>
 
     <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
                 type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
