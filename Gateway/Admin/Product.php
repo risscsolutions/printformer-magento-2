@@ -232,7 +232,6 @@ class Product
         }
 
         $responseArray = $this->jsonDecoder->decode($response->getBody());
-        var_dump([$url, $responseArray]);
         if (!is_array($responseArray)) {
             throw new Exception(__('Error decoding products.'));
         }
