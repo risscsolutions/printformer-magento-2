@@ -12,15 +12,16 @@ use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Magento\Eav\Api\AttributeRepositoryInterface;
 
 
-class Capabilities  extends \Magento\Framework\View\Element\Template {
+class Capabilities extends \Magento\Framework\View\Element\Template
+{
 
-    /** @var PrintformerProductFactory  */
+    /** @var PrintformerProductFactory */
     protected $_printformerProductFactory;
 
-    /** @var StoreManagerInterface  */
+    /** @var StoreManagerInterface */
     protected $_storeManager;
 
-    /** @var AttributeRepositoryInterface  */
+    /** @var AttributeRepositoryInterface */
     protected $_eavConfig;
 
     /**
@@ -33,7 +34,8 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
     public function __construct(\Magento\Framework\View\Element\Template\Context $context,
                                 PrintformerProductFactory $printformerProductFactory,
                                 AttributeRepositoryInterface $eavConfig,
-                                array $data = []) {
+                                array $data = [])
+    {
         $this->_printformerProductFactory = $printformerProductFactory;
         $this->_storeManager = $context->getStoreManager();
         $this->_eavConfig = $eavConfig;
@@ -45,14 +47,15 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
     /**
      * @return string
      */
-    public function getIntentsArray() {
+    public function getIntentsArray()
+    {
         //get current store id
         $storeID = $this->_storeManager->getStore()->getId();
         //get all printformer products for the current store from the database
         $printformerProductCollection = $this->_printformerProductFactory->create()->getCollection()->addFieldToFilter('store_id', ['eq' => $storeID])->load();
 
         //save all product master ids and the intents in an array
-        foreach($printformerProductCollection as $product) {
+        foreach ($printformerProductCollection as $product) {
             $newIntentsArray = array();
             $intentsArray[$product->getMasterId()] = explode(",", $product->getIntents());
             foreach ($intentsArray[$product->getMasterId()] as $intent) {
@@ -67,7 +70,8 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
     /**
      * @return string
      */
-    public function getIntentsValue() {
+    public function getIntentsValue()
+    {
         $attribute = $this->_eavConfig->get(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
         $options = $attribute->getOptions();
         foreach ($options as $option) {
@@ -83,7 +87,8 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
      * @param $intent
      * @return string
      */
-    private function replaceIntentName($intent) {
+    private function replaceIntentName($intent)
+    {
         switch ($intent) {
             case "customize":
                 return "Editor";

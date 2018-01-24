@@ -11,7 +11,7 @@ define([
         formatChange: false,
         currentDrafts: null,
 
-        isDefined: function(value) {
+        isDefined: function (value) {
             return typeof value !== typeof undefined;
         },
 
@@ -30,7 +30,7 @@ define([
             //find button "Printformer" to listen on the on click event
             var printformerButton = null;
 
-            init(intentsArray,intentValueArray);
+            init(intentsArray, intentValueArray);
 
             function init(intentsArray, intentValueArray) {
 
@@ -43,8 +43,10 @@ define([
                     }
                 });
 
-                if(loading) {
-                    setTimeout(function() {init(intentsArray, intentValueArray);},500);
+                if (loading) {
+                    setTimeout(function () {
+                        init(intentsArray, intentValueArray);
+                    }, 500);
                 } else {
                     //listen to the on click event on the printformer button
                     var selectProductFieldId = null;
@@ -58,13 +60,13 @@ define([
                                 //check if the data-index is 'printformer_product'
                                 if ($(children).length > 0 && $(element).data('index') == 'printformer_product') {
                                     //get the select id from the labels for attribute
-                                    selectProductFieldId = $(children).attr('for');
+                                    selectProductFieldId = '#' + $(children).attr('for');
                                     //listen to change events of the product select field
-                                    $("#" + selectProductFieldId).change(function () {
+                                    $(selectProductFieldId).change(function () {
                                         //this.value is the master id of the printformer product
                                         if (selectCapabilitiesFieldId !== null) {
-                                            //empty the select fiel
-                                            $(selectCapabilitiesFieldId).empty()
+                                            //empty the select field
+                                            $(selectCapabilitiesFieldId).empty();
                                             intentsArray[this.value].forEach(function (item, index) {
                                                 //create new option tag
                                                 var option = $('<option></option>').attr("value", intentValueArray[item]).attr("data-titel", item).text(item);
@@ -76,6 +78,12 @@ define([
                                     //get the id of the capabilities select field
                                 } else if ($(children).length > 0 && $(element).data('index') == 'printformer_capabilities') {
                                     selectCapabilitiesFieldId = "#" + $(children).attr('for');
+                                    setTimeout(function () {
+                                        if($(selectProductFieldId).val() == '') {
+                                            $(selectCapabilitiesFieldId).empty();
+                                        }
+                                    }, 50);
+
                                 }
                             });
                         });
