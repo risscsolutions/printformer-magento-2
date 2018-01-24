@@ -12,6 +12,7 @@ use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Gateway\Admin\Draft as GatewayDraft;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class MassResend extends AbstractController
 {
@@ -35,6 +36,9 @@ class MassResend extends AbstractController
      */
     protected $_printformerDraft;
 
+    /** @var ApiHelper */
+    protected $_apiHelper;
+
     /**
      * MassResend constructor.
      * @param Context $context
@@ -43,6 +47,7 @@ class MassResend extends AbstractController
      * @param OrderItemFactory $orderItemFactory
      * @param Config $config
      * @param GatewayDraft $printformerDraft
+     * @param ApiHelper $apiHelper
      */
     public function __construct(
         Context $context,
@@ -50,12 +55,14 @@ class MassResend extends AbstractController
         DraftFactory $draftFactory,
         OrderItemFactory $orderItemFactory,
         Config $config,
-        GatewayDraft $printformerDraft
+        GatewayDraft $printformerDraft,
+        ApiHelper $apiHelper
     ) {
         $this->_draftFactory = $draftFactory;
         $this->_orderItemFactory = $orderItemFactory;
         $this->_config = $config;
         $this->_printformerDraft = $printformerDraft;
+        $this->_apiHelper = $apiHelper;
 
         parent::__construct($context, $_resultPageFactory);
     }
@@ -80,10 +87,18 @@ class MassResend extends AbstractController
                 if($orderItem->getId()) {
                     /** @var Order $order */
                     $order = $orderItem->getOrder();
-                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC) {
+                    $draftIds = [];
+                    foreach ($order->getAllItems() as $item) {
+                        if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+                            continue;
+                        }
+                        $draftIds[] = $item->getPrintformerDraftid();
+                    }
+                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC &&
+                        !$this->_config->isV2Enabled()) {
                         $this->_printformerDraft->setDraftOrdered($order);
                     } else {
-                        $this->_printformerDraft->asyncDraftProcessor($order);
+                        $this->_apiHelper->setAsyncOrdered($draftIds);
                     }
                     $orderItem->setPrintformerOrdered(1);
                     $orderItem->getResource()->save($orderItem);

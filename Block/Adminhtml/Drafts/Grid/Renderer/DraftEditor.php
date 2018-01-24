@@ -9,14 +9,14 @@ use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Backend\Model\UrlInterface;
 use Rissc\Printformer\Model\Draft;
-use Rissc\Printformer\Helper\Url as UrlHelper;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class DraftEditor extends AbstractRenderer
 {
     /**
-     * @var UrlHelper
+     * @var ApiHelper
      */
-    protected $_urlHelper;
+    protected $_apiHelper;
 
     /**
      * @var ItemFactory
@@ -31,19 +31,19 @@ class DraftEditor extends AbstractRenderer
     /**
      * DraftEditor constructor.
      * @param Context $context
-     * @param UrlHelper $urlHelper
+     * @param ApiHelper $apiHelper
      * @param ItemFactory $itemFactory
      * @param UrlInterface $url
      * @param array $data
      */
     public function __construct(
         Context $context,
-        UrlHelper $urlHelper,
+        ApiHelper $apiHelper,
         ItemFactory $itemFactory,
         UrlInterface $url,
         array $data = []
     ) {
-        $this->_urlHelper = $urlHelper;
+        $this->_apiHelper = $apiHelper;
         $this->_itemFactory = $itemFactory;
         $this->_url = $url;
 
@@ -86,7 +86,18 @@ class DraftEditor extends AbstractRenderer
             }
         }
 
-        return $this->_urlHelper->setStoreId($row->getStoreid())
-            ->getAdminEditorUrl($row->getDraftId(), null, $referrerUrl);
+        $draftProcess = $this->_apiHelper->draftProcess($row->getDraftId());
+
+        $editorParams = [
+            'product_id' => $draftProcess->getProductId(),
+            'data' => [
+                'draft_process' => $draftProcess->getId(),
+                'callback_url' => $referrerUrl
+            ]
+        ];
+        return $this->_apiHelper->getEditorWebtokenUrl($row->getDraftId(), $draftProcess->getUserIdentifier(),
+            $editorParams);
+        /*apiUrl()->setStoreId($row->getStoreid())
+            ->getAdminEditor($row->getDraftId(), $editorParams, $referrerUrl);*/
     }
 }

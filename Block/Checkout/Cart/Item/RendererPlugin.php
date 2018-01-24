@@ -3,7 +3,7 @@
 namespace Rissc\Printformer\Block\Checkout\Cart\Item;
 
 use Magento\Checkout\Block\Cart\Item\Renderer;
-use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Block\Checkout\Cart\Renderer as ReplaceRenderer;
 
@@ -41,7 +41,7 @@ class RendererPlugin
     {
         $draftId = $renderer->getItem()->getPrintformerDraftid();
         if ($draftId && $this->isUseImagePreview()) {
-            $result->setImageUrl($this->urlHelper->getThumbImgUrl($draftId));
+            $result->setImageUrl($this->urlHelper->getThumbnail($draftId));
         }
         return $result;
     }

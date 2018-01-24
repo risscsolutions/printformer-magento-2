@@ -7,13 +7,13 @@ use Psr\Log\LoggerInterface;
 use Magento\Framework\HTTP\ZendClientFactory;
 use Magento\Framework\Json\Decoder;
 use Magento\Customer\Model\Session as CustomerSession;
-use Rissc\Printformer\Helper\Url as UrlHelper;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Magento\Framework\UrlInterface;
 use GuzzleHttp\Client;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Api\Url;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 
@@ -144,8 +144,10 @@ class Draft
      */
     public function createUser()
     {
-        $url = $this->_urlHelper->getPrintformerUserUrl();
-
+        $url = $this->_urlHelper->getUser();
+        if(!$url) {
+            return '';
+        }
         $response = $this->_httpClient->post($url);
         $response = json_decode($response->getBody(), true);
 
@@ -200,7 +202,12 @@ class Draft
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->getClientApiKey())
             ->getToken();
-        return $this->_urlHelper->getAuthEndpointUrl() . '?' . http_build_query(['jwt' => $JWT]);
+
+        $authUrl = $this->_urlHelper->getAuth();
+        if(!$authUrl) {
+            return '';
+        }
+        return $this->_urlHelper->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
     }
 
 
@@ -227,16 +234,14 @@ class Draft
     protected function getGuzzleClient() {
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
-            ->getDraftUrl();
+            ->getDraft();
 
         $header = [
             'Content-Type:' => 'application/json',
             'Accept' => 'application/json'
         ];
         if($this->isV2Enabled()) {
-            $url = $this->_urlHelper->getPrintformerDraftUrl();
             $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
-
         }
         return new Client([
             'base_uri' => $url,
@@ -254,7 +259,7 @@ class Draft
     {
         $url = $this->_urlHelper
             ->setStoreId($storeId)
-            ->getDraftDeleteUrl($draftId);
+            ->getDraftDelete($draftId);
 
         $this->_logger->debug($url);
 
@@ -322,10 +327,9 @@ class Draft
 
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
-            ->getDraftUrl();
+            ->getDraft();
 
         if($this->isV2Enabled()) {
-            $url = $this->_urlHelper->getPrintformerDraftUrl();
             $header['Authorization'] = 'Bearer' . $this->getClientApiKey();
         }
 
@@ -359,7 +363,7 @@ class Draft
     public function getDraft($draftId)
     {
         $url = $this->_urlHelper
-            ->getDraftDeleteUrl($draftId);
+            ->getDraft($draftId);
 
         $this->_logger->debug($url);
 

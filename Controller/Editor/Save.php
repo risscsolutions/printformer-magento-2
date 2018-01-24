@@ -10,8 +10,9 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Session as SessionHelper;
-use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
@@ -123,14 +124,13 @@ class Save extends Action
 
             $url = $this->_urlHelper
                 ->setStoreId($storeId)
-                ->getDraftUrl($draft->getDraftId());
+                ->getDraft($draft->getDraftId());
 
             if($personalisations = $this->getPersonalisations($url)) {
                 $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()] = $personalisations;
             }
 
             $params = $this->initDraft($product, $draftId, $storeId, $extraParams);
-
             if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
                 // update wishlist item options if true
                 $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
@@ -164,12 +164,13 @@ class Save extends Action
                     if ($this->getRequest()->getParam('project_id')) {
                         $requestParams[] = 'project_id=' . $this->getRequest()->getParam('project_id');
                     }
-                    $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($this->_urlHelper->getRedirectUrl($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
+                    $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($this->_urlHelper->getRedirect($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
                 }
             }
         } catch (\Exception $e) {
             $this->_logger->critical($e);
             //@todo show some message to customer?
+            throw new Exception(__($e->getMessage()));
         }
 
         return $result;
@@ -226,7 +227,7 @@ class Save extends Action
      */
     protected function prepareAddToCartParams(array $params)
     {
-        $redirectUrl = $this->_urlHelper->getRedirectUrl();
+        $redirectUrl = $this->_urlHelper->getRedirect();
         if ($redirectUrl) {
             $params['redirect_url'] = $redirectUrl;
         }
@@ -245,7 +246,7 @@ class Save extends Action
             'params' => array('_use_rewrite' => true)
         );
 
-        $redirectUrl = $this->_urlHelper->getRedirectUrl(null, $redirectParams);
+        $redirectUrl = $this->_urlHelper->getRedirect(null, $redirectParams);
         if ($redirectUrl) {
             $params['redirect_url'] = $redirectUrl;
         }
@@ -267,7 +268,7 @@ class Save extends Action
             )
         );
 
-        $redirectUrl = $this->_urlHelper->getRedirectUrl(null, $redirectParams);
+        $redirectUrl = $this->_urlHelper->getRedirect(null, $redirectParams);
         if ($redirectUrl) {
             $params['redirect_url'] = $redirectUrl;
         }

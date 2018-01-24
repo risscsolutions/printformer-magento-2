@@ -7,10 +7,11 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Url as UrlHelper;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Backend\Model\UrlInterface as BackendUrlInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\App\Area;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class View
     extends AbstractHelper
@@ -27,29 +28,36 @@ class View
     /** @var State */
     protected $_appState;
 
+    /** @var ApiHelper */
+    protected $_apiHelper;
+
     public function __construct(
         Context $context,
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
         BackendUrlInterface $backendUrl,
-        State $appState
+        State $appState,
+        ApiHelper $apiHelper
     )
     {
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_backendUrl = $backendUrl;
         $this->_appState = $appState;
+        $this->_apiHelper = $apiHelper;
 
         parent::__construct($context);
     }
 
     /**
-     * @param Item          $quoteItem
-     * @param Product       $product
-     * @param AbstractBlock $block
-     * @param int           $userId
+     * @param      $quoteItem
+     * @param      $product
+     * @param      $block
+     * @param null $userId
      *
      * @return string
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function getEditorView($quoteItem, $product, $block, $userId = null)
     {
@@ -62,7 +70,7 @@ class View
         $viewBlock->addData([
             'quote_item' => $quoteItem,
             'product' => $product,
-            'editor_link' => $this->_getEditorUrl($quoteItem, $product, $userId),
+            'editor_link' => $this->_getEditorUrl($quoteItem),
             'printformer_block' => $printFormerBlock
         ]);
 
@@ -70,36 +78,36 @@ class View
     }
 
     /**
-     * @param Item    $quoteItem
-     * @param Product $product
-     * @param null    $userId
+     * @param Item $quoteItem
      *
      * @return string
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function _getEditorUrl($quoteItem, $product, $userId = null)
+    public function _getEditorUrl($quoteItem)
     {
         $buyRequest = $quoteItem->getBuyRequest();
+        $product = $quoteItem->getProduct();
+        $product->getResource()->load($product, $product->getId());
 
-        $editorUrl = $this->_urlHelper
-            ->setStoreId($quoteItem->getPrintformerStoreid())
-            ->getEditorUrl(
-                $product->getId(),
-                $product->getPrintformerProduct(),
-                $buyRequest->getPrintformerIntent(),
-                $userId,
-                [
-                    'draft_id' => $buyRequest->getData('printformer_draftid'),
-                    'session_id' => $buyRequest->getData('printformer_unique_session_id')
-                ]
-            );
+        $draftProcess = $this->_apiHelper->draftProcess($buyRequest->getData('printformer_draftid'));
+        $editorUrl = $this->_urlHelper->getEditorEntry(
+            $draftProcess->getProductId(),
+            $product->getPrintformerProduct(),
+            $draftProcess->getDraftId(),
+            null,
+            $draftProcess->getIntent()
+        );
+
         $request = $this->_request;
         $route = $request->getModuleName() . '/' . $request->getControllerName() . '/' . $request->getActionName();
 
         if($this->_appState->getAreaCode() == Area::AREA_ADMINHTML) {
-            $referrerUrl = $this->_backendUrl->getUrl($route, ['quote_id' => $request->getParam('quote_id')]);
+            $referrerUrl = $this->_backendUrl->getUrl($route, ['order_id' => $request->getParam('order_id')]);
         } else {
             $referrerUrl = $this->_urlBuilder->getUrl($route, ['quote_id' => $request->getParam('quote_id')]);
         }
+
         return $editorUrl .
             (strpos($editorUrl, '?') ? '&amp;' : '?') .
             'custom_referrer=' . urlencode($referrerUrl);

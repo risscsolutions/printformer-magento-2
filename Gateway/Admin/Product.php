@@ -43,7 +43,7 @@ class Product
     protected $jsonDecoder;
 
     /**
-     * @var \Rissc\Printformer\Helper\Url
+     * @var \Rissc\Printformer\Helper\Api\Url
      */
     protected $urlHelper;
 
@@ -76,7 +76,7 @@ class Product
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Framework\HTTP\ZendClientFactory  $httpClientFactory
      * @param \Magento\Framework\Json\Decoder            $jsonDecoder
-     * @param \Rissc\Printformer\Helper\Url              $urlHelper
+     * @param \Rissc\Printformer\Helper\Api\Url          $urlHelper
      * @param \Rissc\Printformer\Model\ProductFactory    $printformerProductFactory
      * @param EventManager                               $_eventManager
      * @param ProductFactory                             $productFactory
@@ -89,7 +89,7 @@ class Product
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory,
         \Magento\Framework\Json\Decoder $jsonDecoder,
-        \Rissc\Printformer\Helper\Url $urlHelper,
+        \Rissc\Printformer\Helper\Api\Url $urlHelper,
         \Rissc\Printformer\Model\ProductFactory $printformerProductFactory,
         EventManager $_eventManager,
         ProductFactory $productFactory,
@@ -206,13 +206,8 @@ class Product
      */
     protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
-        $apiKey = null;
-        if (!$this->isV2Enabled()) {
-            $url = $this->urlHelper->setStoreId($storeId)->getAdminProductsUrl();
-        } else {
-            $url = $this->getV2Endpoint() . self::TEMPLATE_ENDPOINT;
-            $apiKey = $this->getV2ApiKey();
-        }
+        $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
+        $apiKey = $this->getV2ApiKey();
 
         $this->logger->debug($url);
 
@@ -237,6 +232,7 @@ class Product
         }
 
         $responseArray = $this->jsonDecoder->decode($response->getBody());
+        var_dump([$url, $responseArray]);
         if (!is_array($responseArray)) {
             throw new Exception(__('Error decoding products.'));
         }

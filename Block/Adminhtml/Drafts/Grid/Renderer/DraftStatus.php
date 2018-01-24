@@ -6,21 +6,12 @@ use Magento\Backend\Block\Context;
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
 use Rissc\Printformer\Model\Draft;
-use Rissc\Printformer\Helper\Url as UrlHelper;
 use Magento\Sales\Model\Order\ItemFactory;
-use Magento\Sales\Model\Order\Item as OrderItem;
-use Magento\Sales\Model\Order as OrderModel;
 use Magento\Backend\Model\UrlInterface;
-use \DateTime;
 use Rissc\Printformer\Setup\InstallData;
 
 class DraftStatus extends AbstractRenderer
 {
-    /**
-     * @var UrlHelper
-     */
-    protected $_urlHelper;
-
     /**
      * @var ItemFactory
      */
@@ -34,19 +25,16 @@ class DraftStatus extends AbstractRenderer
     /**
      * DraftStatus constructor.
      * @param Context $context
-     * @param UrlHelper $urlHelper
      * @param ItemFactory $itemFactory
      * @param UrlInterface $url
      * @param array $data
      */
     public function __construct(
         Context $context,
-        UrlHelper $urlHelper,
         ItemFactory $itemFactory,
         UrlInterface $url,
         array $data = []
     ) {
-        $this->_urlHelper = $urlHelper;
         $this->_itemFactory = $itemFactory;
         $this->_url = $url;
 

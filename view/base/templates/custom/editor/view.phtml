@@ -13,7 +13,7 @@ $quoteItemId = $quoteItem->getId();
     <button id="openEditor" href="<?php echo $editorLink; ?>" class="pf-link"><?php echo __('Open Editor');?></button>
     <div id="info">
         <br /><span>Draft ID: </span> <a href="<?php echo $block->getDraftURL($quoteItem->getPrintformerDraftid()) ?>"> <?php echo $quoteItem->getPrintformerDraftid(); ?></a>
-        <br /><button id="copy">Copy Draf ID</button>
+        <br /><button id="copy"><?php echo __('Copy Draft ID'); ?></button>
         <?php //Textarea for coping the draft id ?>
         <textarea id="draftID" style="display: none"><?php echo $quoteItem->getPrintformerDraftid(); ?></textarea>
     </div>

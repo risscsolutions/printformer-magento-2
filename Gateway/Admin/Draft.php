@@ -7,7 +7,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Exception;
-use Rissc\Printformer\Helper\Url as UrlHelper;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft as DraftModel;
 use Rissc\Printformer\Helper\Log as LogHelper;
@@ -118,7 +118,7 @@ class Draft
         if (!is_null($lastItem) && !empty($draftIds)) {
             $url = $this->urlHelper
                 ->setStoreId($lastItem->getPrintformerStoreid())
-                ->getDraftOrderedUrl($draftIds, $order->getQuoteId());
+                ->getDraftProcessing($draftIds, $order->getQuoteId());
 
             $historyData['request_data'] = json_encode([
                 $draftIds,
@@ -149,6 +149,8 @@ class Draft
             $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Empty Response: '. $response . ', Url: ' . $url));
         }
+        var_dump($response);
+        die();
         $responseArray = $this->jsonDecoder->decode($response);
 
         if(!$responseArray['success']) {
@@ -156,6 +158,9 @@ class Draft
             $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Response success: false'));
         }
+
+        var_dump($responseArray);
+        die();
 
         if (!is_array($responseArray)) {
             $historyData['status'] = 'failed';
@@ -213,7 +218,7 @@ class Draft
         {
             $url = $this->urlHelper
                 ->setStoreId($lastItem->getPrintformerStoreid())
-                ->getPdfProcessingUrl($draftIds);
+                ->getDraftProcessing();
 
             $historyData['api_url'] = $url;
 

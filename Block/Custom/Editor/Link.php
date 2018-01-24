@@ -5,7 +5,7 @@ use Magento\Catalog\Model\Product;
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Model\Quote\Item;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
-use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Api\Url;
 use Magento\Framework\DataObject;
 
 class Link
@@ -80,6 +80,6 @@ class Link
     public function getPdfUrl(DataObject $item)
     {
         return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
-            ->getAdminPdfUrl($item->getPrintformerDraftid(), $item->getOrder()->getQuoteId());
+            ->getAdminPdf($item->getPrintformerDraftid(), $item->getOrder()->getQuoteId());
     }
 }

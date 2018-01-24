@@ -7,6 +7,8 @@ use Magento\Store\Model\ScopeInterface;
 
 class Config extends \Magento\Framework\App\Helper\AbstractHelper
 {
+    const XML_PATH_V2_ENABLED                       = 'printformer/version2group/version2';
+
     const XML_PATH_CONFIG_ENABLED                   = 'printformer/general/enabled';
     const XML_PATH_CONFIG_HOST                      = 'printformer/general/remote_host';
     const XML_PATH_CONFIG_LICENSE                   = 'printformer/general/license_key';
@@ -47,7 +49,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 
     const XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE     = 'printformer/general/processing_type';
 
-    const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID = 'printformer_new_wishlist_item_id';
+    const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
 
     /**
      * @var StoreManagerInterface
@@ -374,5 +376,14 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function getProcessingType()
     {
         return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return bool
+     */
+    public function isV2Enabled()
+    {
+        return $this->scopeConfig->getValue(self::XML_PATH_V2_ENABLED,
+            ScopeInterface::SCOPE_STORES, $this->getStoreId()) == '1';
     }
 }
