@@ -203,6 +203,24 @@ class Draft
         return $this->_urlHelper->getAuthEndpointUrl() . '?' . http_build_query(['jwt' => $JWT]);
     }
 
+
+    public function getPdfDocument($draftId) {
+        /**
+         * Create a valid JWT
+         */
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->getClientIdentifier())
+            ->set('user', $this->getUserIdentifier())
+            ->setId(bin2hex(random_bytes(16)), true)
+            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->getClientApiKey())
+            ->getToken();
+        return $this->_urlHelper->getPdfUrl($draftId) . '?' . http_build_query(['jwt' => $JWT]);
+    }
+
     /**
      * @return Client
      */
