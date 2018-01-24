@@ -1,40 +1,44 @@
 <?php
 namespace Rissc\Printformer\Helper\Api;
 
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ObjectManager;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Api\Url\V1 as V1Helper;
 use Rissc\Printformer\Helper\Api\Url\V2 as V2Helper;
+use Rissc\Printformer\Model\Config\Source\Redirect;
+use Rissc\Printformer\Helper\Config;
 
 class Url
     extends AbstractHelper
+    implements VersionInterface
 {
+    const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
+
     /** @var V1Helper|V2Helper */
     protected $_versionHelper = null;
 
-    /** @var string */
-    protected $_printformerBaseUrl = null;
-
-    /** @var string */
-    protected $_userCreateUrl = null;
-
-    /** @var string */
-    protected $_createDraftUrl = null;
-
-    /** @var string */
-    protected $_editorUrl = null;
-
-    /** @var string */
-    protected $_authUrl = null;
-
-    /** @var string */
-    protected $_draftProcessingUrl = null;
-
     /** @var StoreManagerInterface */
     protected $_storeManager;
+
+    /** @var Config  */
+    protected $config;
+
+    public function __construct(
+        Context $context,
+        StoreManagerInterface $storeManager,
+        Config $config
+    )
+    {
+        $this->_storeManager = $storeManager;
+        $this->config = $config;
+
+        parent::__construct($context);
+
+        $this->initVersionHelper($this->config->isV2Enabled());
+    }
 
     /**
      * @return StoreManagerInterface
@@ -56,6 +60,11 @@ class Url
         return $this;
     }
 
+    /**
+     * @param bool $isV2Api
+     *
+     * @return $this
+     */
     public function initVersionHelper($isV2Api = false)
     {
         $objm = ObjectManager::getInstance();
@@ -64,23 +73,36 @@ class Url
         } else {
             $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V1');
         }
+
+        return $this;
     }
 
     /**
-     * @param int    $productId
-     * @param int    $masterId
-     * @param string $draftId
-     * @param array  $params = []
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function getEditorEntry($productId, $masterId, $draftId, $params = [])
+    public function setStoreId($storeId)
     {
-        return $this->_versionHelper->getEditorEntry($productId, $masterId, $draftId, $params);
+        return $this->_versionHelper->setStoreId($storeId);
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
+     */
+    public function getStoreId()
+    {
+        return $this->_versionHelper->getStoreId();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
+    {
+        return $this->_versionHelper->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function getPrintformerBaseUrl()
     {
@@ -88,7 +110,7 @@ class Url
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function getUser()
     {
@@ -96,28 +118,23 @@ class Url
     }
 
     /**
-     * @param string $draftHash
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function getDraft($draftHash = null)
+    public function getDraft($draftHash = null, $quoteId = null)
     {
-        return $this->_versionHelper->getDraft($draftHash);
+        return $this->_versionHelper->getDraft($draftHash, $quoteId);
     }
 
     /**
-     * @param       $draftHash
-     * @param array $params
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function getEditor($draftHash, $params = [])
+    public function getEditor($draftHash, $user = null, $params = [])
     {
-        return $this->_versionHelper->getEditor($draftHash, $params);
+        return $this->_versionHelper->getEditor($draftHash, $user, $params);
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function getAuth()
     {
@@ -125,61 +142,94 @@ class Url
     }
 
     /**
-     * @param string $requestReferrer
-     * @param int    $storeId
-     * @param array  $params
-     * @param bool   $encodeUrl
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    protected function _getCallbackUrl($requestReferrer, $storeId = 0, $params = [], $encodeUrl = true)
+    public function getDraftProcessing($draftHashes = [], $quoteId = null)
     {
-        if($requestReferrer != null) {
-            $referrer = urldecode($requestReferrer);
-        } else {
-            $referrerParams = array_merge($params, [
-                'store_id'      => $storeId,
-            ]);
+        return $this->_versionHelper->getDraftProcessing($draftHashes, $quoteId);
+    }
 
-            if(isset($params['quote_id']) && isset($params['product_id'])) {
-                $referrerParams['quote_id'] = $params['quote_id'];
-                $referrerParams['edit_product'] = $params['product_id'];
-                $referrerParams['is_edit'] = 1;
+    /**
+     * {@inheritdoc}
+     */
+    public function getThumbnail($draftHash)
+    {
+        return $this->_versionHelper->getThumbnail($draftHash);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPDF($draftHash, $quoteId = null)
+    {
+        return $this->_versionHelper->getPDF($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProducts()
+    {
+        return $this->_versionHelper->getProducts();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminProducts()
+    {
+        return $this->_versionHelper->getAdminProducts();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminPDF($draftHash, $quoteId)
+    {
+        return $this->_versionHelper->getAdminPDF($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminEditor($draftHash, array $params = null, $referrer = null)
+    {
+        return $this->_versionHelper->getAdminEditor($draftHash, $params, $referrer);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminDraft($draftHash, $quoteId)
+    {
+        return $this->_versionHelper->getAdminDraft($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDraftDelete($draftHash)
+    {
+        return $this->_versionHelper->getDraftDelete($draftHash);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
+    {
+        if (!$redirectParams){
+            switch ($this->config->getConfigRedirect()) {
+                case Redirect::CONFIG_REDIRECT_URL_ALT:
+                    return $this->config->getRedirectAlt();
+                case Redirect::CONFIG_REDIRECT_URL_CART:
+                    return $this->_urlBuilder->getUrl('checkout/cart', ['_use_rewrite' => true]);
+                case Redirect::CONFIG_REDIRECT_URL_PRODUCT:
+                default:
+                    return $product->getUrlModel()->getUrl($product);
             }
-
-            $referrer = $this->_urlBuilder->getUrl('printformer/editor/save', $referrerParams);
         }
 
-        if($encodeUrl) {
-            $referrer = base64_encode($referrer);
-        }
-
-        return $referrer;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDraftProcessingUrl()
-    {
-        return $this->_versionHelper->getDraftProcessingUrl();
-    }
-
-    /**
-     * @param string $draftHash
-     *
-     * @return string
-     */
-    public function getThumbnailUrl($draftHash) {
-        return $this->_versionHelper->getThumbnailUrl($draftHash);
-    }
-
-    /**
-     * @param string $draftHash
-     *
-     * @return string
-     */
-    public function getPDFUrl($draftHash) {
-        return $this->_versionHelper->getPDFUrl($draftHash);
+        return $this->_urlBuilder->getUrl($redirectParams['controller'], $redirectParams['params']);
     }
 }

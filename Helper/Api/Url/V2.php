@@ -1,24 +1,71 @@
 <?php
 namespace Rissc\Printformer\Helper\Api\Url;
 
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
-use Rissc\Printformer\Helper\Api\Url;
+use Rissc\Printformer\Gateway\Admin\Draft;
 use Rissc\Printformer\Helper\Api\VersionInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Rissc\Printformer\Helper\Config;
 
 class V2
-    extends Url
+    extends AbstractHelper
     implements VersionInterface
 {
     const API_CREATE_USER               = '/api-ext/user';
     const API_CREATE_DRAFT              = '/api-ext/draft';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
+    const API_GET_PRODUCTS              = '/api-ext/template';
 
     const API_FILES_DRAFT_PNG           = '/api-ext/files/draft/{draftId}/image';
     const API_FILES_DRAFT_PDF           = '/api-ext/files/draft/{draftId}/print';
 
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
+
+    /** @var StoreManagerInterface */
+    protected $_storeManager;
+
+    /** @var Config */
+    protected $_config;
+
+    /**
+     * V2 constructor.
+     *
+     * @param Context               $context
+     * @param StoreManagerInterface $storeManager
+     */
+    public function __construct(
+        Context $context,
+        StoreManagerInterface $storeManager,
+        Config $config
+    )
+    {
+        $this->_storeManager = $storeManager;
+        $this->_config = $config;
+
+        parent::__construct($context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setStoreId($storeId)
+    {
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getStoreId()
+    {
+        return null;
+    }
 
     /**
      * {@inheritdoc}
@@ -27,13 +74,15 @@ class V2
     {
         $baseParams = [
             'master_id' => $masterId,
-            'product_id' => $productId
+            'product_id' => $productId,
+            'intent' => $intent
         ];
         if($draftHash !== null) {
             $baseParams = array_merge($baseParams, [
                 'draft_id' => $draftHash
             ]);
         }
+
         $baseUrl = $this->_urlBuilder->getUrl('printformer/editor/open', $baseParams);
 
         return $baseUrl . (!empty($params) ? '?' . http_build_query($params) : '');
@@ -44,14 +93,9 @@ class V2
      */
     public function getPrintformerBaseUrl()
     {
-        if(!$this->_printformerBaseUrl) {
-            $store = $this->_storeManager->getStore();
-            $this->_printformerBaseUrl = $this->scopeConfig->getValue('printformer/version2group/v2url',
-                ScopeInterface::SCOPE_STORES, $store->getId
-                ());
-        }
-
-        return $this->_printformerBaseUrl;
+        $store = $this->_storeManager->getStore();
+        return $this->scopeConfig->getValue('printformer/version2group/v2url',
+            ScopeInterface::SCOPE_STORES, $store->getId());
     }
 
     /**
@@ -59,53 +103,40 @@ class V2
      */
     public function getUser()
     {
-        if(!$this->_userCreateUrl) {
-            $this->_userCreateUrl = $this->getPrintformerBaseUrl() .
-                self::API_CREATE_USER;
-        }
-
-        return $this->_userCreateUrl;
+        return $this->getPrintformerBaseUrl() .
+            self::API_CREATE_USER;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDraft($draftHash = null)
+    public function getDraft($draftHash = null, $quoteId = null)
     {
-        if(!$this->_createDraftUrl) {
-            $this->_createDraftUrl = $this->getPrintformerBaseUrl() .
-                self::API_CREATE_DRAFT;
-        }
+        $draftUrl = $this->getPrintformerBaseUrl() .
+            self::API_CREATE_DRAFT;
 
         if($draftHash) {
-            return $this->_createDraftUrl . '/' . $draftHash;
+            return $draftUrl . '/' . $draftHash;
         }
 
-        return $this->_createDraftUrl;
+        return $draftUrl;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getEditor($draftHash, $params = [])
+    public function getEditor($draftHash, $user = null, $params = [])
     {
-        if(!$this->_editorUrl) {
-            $this->_editorUrl = $this->getPrintformerBaseUrl() .
-                self::EXT_EDITOR_PATH;
-        }
+        $editorUrl = $this->getPrintformerBaseUrl() .
+            self::EXT_EDITOR_PATH;
 
         $dataParams = [
+            'product_id' => $params['product_id'],
             'draft_process' => $params['data']['draft_process']
         ];
-        /*
-        foreach($dataParams as $key => $value) {
-            $params[$key] = $value;
-        }
-        unset($params['data']);
-        */
 
         $customCallbackUrl = null;
-        if(isset($params['data']['callback_url'])) {
+        if(!empty($params['data']['callback_url'])) {
             $customCallbackUrl = $params['data']['callback_url'];
         }
 
@@ -113,7 +144,7 @@ class V2
         $queryParams['callback'] = $this->_getCallbackUrl($customCallbackUrl, $this->_storeManager->getStore()->getId(),
             $dataParams);
 
-        return $this->_editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams);
+        return $editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams);
     }
 
     /**
@@ -121,12 +152,8 @@ class V2
      */
     public function getAuth()
     {
-        if(!$this->_authUrl) {
-            $this->_authUrl = $this->getPrintformerBaseUrl() .
-                self::EXT_AUTH_PATH;
-        }
-
-        return $this->_authUrl;
+        return $this->getPrintformerBaseUrl() .
+            self::EXT_AUTH_PATH;
     }
 
     /**
@@ -167,12 +194,8 @@ class V2
      */
     public function getDraftProcessing($draftHashes = [], $quoteId = null)
     {
-        if(!$this->_draftProcessingUrl) {
-            $this->_draftProcessingUrl = $this->getPrintformerBaseUrl() .
-                self::API_DRAFT_PROCESSING;
-        }
-
-        return $this->_draftProcessingUrl;
+        return $this->getPrintformerBaseUrl() .
+            self::API_DRAFT_PROCESSING;
     }
 
     /**
@@ -186,7 +209,7 @@ class V2
     /**
      * {@inheritdoc}
      */
-    public function getPDF($draftHash) {
+    public function getPDF($draftHash, $quoteid = null) {
         return $this->getPrintformerBaseUrl() .
             str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PDF);
     }
@@ -196,7 +219,8 @@ class V2
      */
     public function getProducts()
     {
-        // TODO: Implement getAdminProducts() method.
+        return $this->getPrintformerBaseUrl() .
+            self::API_GET_PRODUCTS;
     }
 
     /**
@@ -207,18 +231,40 @@ class V2
         return $this->getProducts();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getAdminEditor($draftHash, array $params = null, $referrer = null)
     {
-        return $this->getEditor($draftHash, $params);
+        return $this->getEditor($draftHash, null, $params);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getAdminDraft($draftHash, $quoteId)
     {
         return $this->getDraft($draftHash);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getAdminPDF($draftHash, $quoteId)
     {
-        // TODO: Implement getAdminPDF() method.
+        return $this->getPDF($draftHash);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDraftDelete($draftHash)
+    {
+        // TODO: Implement getDraftDelete() method.
+    }
+
+    public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
+    {
+        return '';
     }
 }

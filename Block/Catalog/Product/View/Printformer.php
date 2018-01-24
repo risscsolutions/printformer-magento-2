@@ -15,7 +15,7 @@ use Magento\Wishlist\Model\Item;
 use Rissc\Printformer\Controller\Editor\Save;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
-use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
@@ -279,7 +279,7 @@ class Printformer extends AbstractView
             ];
         }
         return $this->urlHelper
-            ->getEditorUrl($this->getProduct()->getId(), $this->getMasterId(), $intent, null, $editParams);
+            ->getEditorEntry($this->getProduct()->getId(), $this->getMasterId(), $this->getDraftId(), $editParams, $intent);
     }
 
     /**
@@ -376,6 +376,7 @@ class Printformer extends AbstractView
                 'notice' => false
             ];
         }
+
         return $config;
     }
 

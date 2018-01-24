@@ -1,6 +1,8 @@
 <?php
 namespace Rissc\Printformer\Helper\Api;
 
+use Magento\Catalog\Api\Data\ProductInterface;
+
 interface VersionInterface
 {
     /**
@@ -39,18 +41,20 @@ interface VersionInterface
 
     /**
      * @param string $draftHash
+     * @param int    $quoteId
      *
      * @return string
      */
-    public function getDraft($draftHash = null);
+    public function getDraft($draftHash = null, $quoteId = null);
 
     /**
-     * @param       $draftHash
-     * @param array $params
+     * @param string $draftHash
+     * @param string $user
+     * @param array  $params
      *
-     * @return string
+     * @return mixed
      */
-    public function getEditor($draftHash, $params = []);
+    public function getEditor($draftHash, $user = null, $params = []);
 
     /**
      * @return string
@@ -74,10 +78,11 @@ interface VersionInterface
 
     /**
      * @param string $draftHash
+     * @param int    $quoteId
      *
      * @return string
      */
-    public function getPDF($draftHash);
+    public function getPDF($draftHash, $quoteId = null);
 
     /**
      * @return string
@@ -120,4 +125,12 @@ interface VersionInterface
      * @return string
      */
     public function getDraftDelete($draftHash);
+
+    /**
+     * @param ProductInterface $product
+     * @param array            $redirectParams
+     *
+     * @return string
+     */
+    public function getRedirect(ProductInterface $product = null, array $redirectParams = null);
 }

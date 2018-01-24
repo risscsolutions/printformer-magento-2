@@ -6,9 +6,31 @@ use Magento\Sales\Model\Order;
 use Rissc\Printformer\Gateway\Admin\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
 use Magento\Sales\Api\Data\OrderInterface;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class OrderPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
 {
+    /** @var ApiHelper */
+    protected $_apiHelper;
+
+    public function __construct(
+        \Psr\Log\LoggerInterface $logger,
+        \Magento\Quote\Api\CartRepositoryInterface $cartRepositoryInterface,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Framework\Message\ManagerInterface $messageManager,
+        \Magento\Framework\Registry $coreRegistry,
+        \Rissc\Printformer\Model\DraftFactory $draftFactory,
+        \Rissc\Printformer\Gateway\Admin\Draft $printformerDraft,
+        \Rissc\Printformer\Helper\Config $config,
+        \Rissc\Printformer\Helper\Session $sessionHelper,
+        ApiHelper $apiHelper
+    )
+    {
+        $this->_apiHelper = $apiHelper;
+
+        parent::__construct($logger, $cartRepositoryInterface, $storeManager, $messageManager, $coreRegistry, $draftFactory, $printformerDraft, $config, $sessionHelper);
+    }
+
     /**
      * Set printformer data to order item
      *
@@ -56,6 +78,7 @@ class OrderPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
     public function afterPlace(OrderInterface $subject)
     {
         try {
+            $draftIds = [];
             foreach ($subject->getAllItems() as $item) {
                 $draftId = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                 if ($draftId) {
@@ -65,20 +88,18 @@ class OrderPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
                         ->setOrderItemId($item->getId())
                         ->save();
                 }
+
+                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+                    continue;
+                }
+                $draftIds[] = $item->getPrintformerDraftid();
             }
 
             if ($subject->getStatus() == $this->config->getOrderStatus()) {
-                if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC)
-                {
+                if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
                     $this->printformerDraft->setDraftOrdered($subject);
-                }
-                else if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_ASYNC)
-                {
-                    $this->printformerDraft->asyncDraftProcessor($subject);
-                }
-                else
-                {
-                    $this->printformerDraft->setDraftOrdered($subject);
+                } else {
+                    $this->_apiHelper->setAsyncOrdered($draftIds);
                 }
             }
         } catch (\Exception $e) {

@@ -4,7 +4,7 @@ namespace Rissc\Printformer\Checkout\CustomerData;
 
 use Magento\Checkout\CustomerData\DefaultItem;
 use Magento\Quote\Api\Data\CartItemInterface;
-use Rissc\Printformer\Helper\Url;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 
 class DefaultItemPlugin
@@ -43,7 +43,7 @@ class DefaultItemPlugin
         $result = $proceed($item);
         $draftId = $item->getPrintformerDraftid();
         if ($draftId && $this->isUseImagePreview()) {
-            $result['product_image']['src'] = $this->urlHelper->getThumbImgUrl($item->getPrintformerDraftid());
+            $result['product_image']['src'] = $this->urlHelper->getThumbnail($item->getPrintformerDraftid());
         }
         return $result;
     }

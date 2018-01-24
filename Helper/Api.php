@@ -14,6 +14,7 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\ResourceModel\Draft\Collection;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 
 use DateTime;
 use DateInterval;
@@ -21,7 +22,7 @@ use DateInterval;
 class Api
     extends AbstractHelper
 {
-    /** @var Url */
+    /** @var UrlHelper */
     protected $_urlHelper;
 
     /** @var Client */
@@ -29,6 +30,9 @@ class Api
 
     /** @var CustomerSession */
     protected $_customerSession;
+
+    /** @var SessionHelper */
+    protected $_sessionHelper;
 
     /** @var StoreManagerInterface */
     protected $_storeManager;
@@ -47,13 +51,15 @@ class Api
         CustomerSession $customerSession,
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
-        DraftFactory $draftFactory
+        DraftFactory $draftFactory,
+        SessionHelper $sessionHelper
     )
     {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
+        $this->_sessionHelper = $sessionHelper;
 
         $this->apiUrl()->setStoreManager($this->_storeManager);
 
@@ -193,7 +199,7 @@ class Api
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
-        $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, $params);
+        $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
@@ -211,26 +217,41 @@ class Api
     }
 
     /**
-     * @param null $userIdentifier
-     * @param null $draftHash
-     * @param null $masterId
-     * @param null $productId
+     * @param string $draftHash
+     * @param int    $productId
+     * @param string $intent
+     * @param string $sessionUniqueId
+     * @param int    $customerId
      *
      * @return Draft
      * @throws \Exception
      */
-    public function draftProcess($userIdentifier = null, $draftHash = null, $masterId = null, $productId = null)
+    public function draftProcess(
+        $draftHash = null,
+        $masterId = null,
+        $productId = null,
+        $intent = null,
+        $sessionUniqueId = null,
+        $customerId = null
+    )
     {
         $store = $this->_storeManager->getStore();
 
-        $process = $this->getDraftProcess($userIdentifier, $draftHash, $masterId, $productId);
+        $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
         if(!$process->getId()) {
+            $dataParams = [
+                'intent' => $intent
+            ];
+            $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+
             $process->addData([
-                'user_identifier' => $userIdentifier,
-                'draft_hash' => $draftHash,
-                'master_id' => $masterId,
-                'product_id' => $productId,
+                'draft_id' => $draftHash,
                 'store_id' => $store->getId(),
+                'intent' => $intent,
+                'session_unique_id' => $sessionUniqueId,
+                'product_id' => $productId,
+                'customer_id' => $customerId,
+                'user_identifier' => $this->getUserIdentifier(),
                 'created_at' => time()
             ]);
             $process->getResource()->save($process);
@@ -240,41 +261,44 @@ class Api
     }
 
     /**
-     * @param string $userIdentifier
      * @param string $draftHash
-     * @param int    $masterId
      * @param int    $productId
+     * @param string $intent
+     * @param string $sessionUniqueId
      *
-     * @return Draft
+     * @return \Magento\Framework\DataObject|Draft
+     * @throws \Exception
      */
-    protected function getDraftProcess($userIdentifier = null, $draftHash = null, $masterId = null, $productId = null)
+    protected function getDraftProcess(
+        $draftHash = null,
+        $productId = null,
+        $intent = null,
+        $sessionUniqueId = null
+    )
     {
         /** @var Draft $process */
         $process = $this->_draftFactory->create();
-        /** @var Collection $processCollection */
-        $processCollection = $process->getCollection();
-        if(!$draftHash) {
-            $processCollection->addFieldToFilter(
-                Draft::KEY_USER_IDENTIFIER,
-                ['eq' => $userIdentifier]
-            );
-            $processCollection->addFieldToFilter(
-                Draft::KEY_MASTER_ID,
-                ['eq' => $masterId]
-            );
-            $processCollection->addFieldToFilter(
-                Draft::KEY_PRODUCT_ID,
-                ['eq' => $productId]
-            );
-        } else if($draftHash !== null) {
-            $processCollection->addFieldToFilter(
-                Draft::KEY_DRAFT_HASH,
-                ['eq' => $draftHash]
-            );
-        }
 
-        if($processCollection->count() > 0) {
-            $process = $processCollection->getFirstItem();
+        $draftCollection = $process->getCollection();
+        if($draftHash !== null) {
+            $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftHash]);
+        } else {
+            if($intent !== null) {
+                $draftCollection->addFieldToFilter('intent', ['eq' => $intent]);
+            }
+            $draftCollection->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId]);
+            $draftCollection->addFieldToFilter('product_id', ['eq' => $productId]);
+        }
+        if ($draftCollection->count() == 1) {
+            if($draftCollection->getFirstItem()->getUserIdentifier() == $this->getUserIdentifier()
+                || $this->_customerSession->getCustomerId() == null) {
+                $process = $draftCollection->getFirstItem();
+                if ($process->getId() && $process->getDraftId()) {
+                    $this->_sessionHelper->setCurrentIntent($process->getIntent());
+                }
+            }
+        } else {
+            $process = $draftCollection->getLastItem();
         }
 
         return $process;
@@ -301,7 +325,7 @@ class Api
      */
     public function setAsyncOrdered($draftIds)
     {
-        $draftProcessingUrl = $this->apiUrl()->getDraftProcessingUrl();
+        $draftProcessingUrl = $this->apiUrl()->getDraftProcessing($draftIds);
         $stateChangedNotifyUrl = $this->_urlBuilder->getUrl(UrlHelper::API_URL_CALLBACKORDEREDSTATUS);
 
         $postFields = [
@@ -319,7 +343,7 @@ class Api
         if($processingHash !== null) {
             foreach ($draftIds as $draftHash) {
                 /** @var Draft $process */
-                $process = $this->getDraftProcess(null, $draftHash);
+                $process = $this->getDraftProcess($draftHash);
                 if ($process->getId()) {
                     $process->setProcessingId($processingHash);
                     $process->getResource()->save($process);

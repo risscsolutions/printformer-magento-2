@@ -10,11 +10,12 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\DataObject;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Gateway\User\Draft as DraftGateway;
-use Rissc\Printformer\Helper\Url as UrlHelper;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Editor\Preselect as PreselectHelper;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 
 class Open extends Action
@@ -28,6 +29,11 @@ class Open extends Action
      * @var UrlHelper
      */
     protected $_urlHelper;
+
+    /**
+     * @var ApiHelper
+     */
+    protected $_apiHelper;
 
     /**
      * @var ProductFactory
@@ -73,7 +79,8 @@ class Open extends Action
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
-        PreselectHelper $preselectHelper
+        PreselectHelper $preselectHelper,
+        ApiHelper $apiHelper
     ) {
         $this->_draftGateway = $draftGateway;
         $this->_urlHelper = $urlHelper;
@@ -82,6 +89,7 @@ class Open extends Action
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
         $this->_preselectHelper = $preselectHelper;
+        $this->_apiHelper = $apiHelper;
 
         parent::__construct($context);
     }
@@ -93,6 +101,7 @@ class Open extends Action
          */
         $params           = $this->getRequest()->getParams();
         $productId        = $this->getRequest()->getParam('product_id');
+        $masterId         = $this->getRequest()->getParam('master_id');
         $intent           = $this->getRequest()->getParam('intent');
         $printformerDraft = $this->getRequest()->getParam('draft_id');
         $sessionUniqueId  = $this->getRequest()->getParam('session_id');
@@ -124,14 +133,13 @@ class Open extends Action
         /**
          * Try to load draft from database
          */
-        $draftProcess = $this->_getDraftProcess($sessionUniqueId, $product, $intent, $printformerDraft, $storeId, $customerSession);
-
-        /**
-         * If draft could not be loaded from database, create it
-         */
-        if(!$draftProcess->getId()) {
-            $draftProcess = $this->_createDraftProcess($product, $storeId, $intent, $customerSession->getCustomerId());
-        }
+         $draftProcess = $this->_apiHelper->draftProcess(
+             $printformerDraft,
+             $masterId,
+             $product->getId(),
+             $intent,
+             $sessionUniqueId
+         );
 
         /**
          * If draft could not be created or loaded, show an error
@@ -143,20 +151,28 @@ class Open extends Action
         /**
          * Get printformer editor url by draft id
          */
-        $editorUrl = $this->_urlHelper->getDraftEditorUrl($draftProcess->getDraftId(), $this->_draftGateway->isV2Enabled());
+        $editorParams = [
+            'master_id' => $masterId,
+            'product_id' => $draftProcess->getProductId(),
+            'data' => [
+                'draft_process' => $draftProcess->getId(),
+                'draft_hash' => $draftProcess->getDraftId(),
+                'callback_url' => $requestReferrer
+            ]
+        ];
+        if($this->_draftGateway->isV2Enabled()) {
+            $editorUrl = $this->_apiHelper->getEditorWebtokenUrl($draftProcess->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
+        } else {
+            $editorUrl = $this->_urlHelper->getEditor($draftProcess->getDraftId());
+            $editorUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
+                $storeId, $params);
+        }
 
         /**
          * Build redirect url
          */
-        $redirectUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
-            $storeId, $params);
-
-        if($this->_draftGateway->isV2Enabled()) {
-            $redirectUrl = $this->_draftGateway->getRedirectUrl($redirectUrl);
-        }
-
         $redirect = $this->resultRedirectFactory->create();
-        $redirect->setUrl($redirectUrl);
+        $redirect->setUrl($editorUrl);
 
         return $redirect;
     }
@@ -193,11 +209,13 @@ class Open extends Action
 
     /**
      * @param Product $product
-     * @param int $storeId
-     * @param string $intent
-     * @param int $customerId
-     * @param string $sessionUniqueId
+     * @param string  $intent
+     * @param int     $customerId
+     * @param int     $storeId
+     * @param string  $sessionUniqueId
+     *
      * @return Draft
+     * @throws \Exception
      */
     protected function _createDraftProcess(Product $product, $storeId, $intent, $customerId, $sessionUniqueId = null)
     {
@@ -230,13 +248,15 @@ class Open extends Action
     }
 
     /**
-     * @param string $sessionUniqueId
-     * @param Product $product
-     * @param string $intent
-     * @param string $printformerDraft
-     * @param int $storeId
+     * @param string          $sessionUniqueId
+     * @param Product         $product
+     * @param string          $intent
+     * @param string          $printformerDraft
+     * @param int             $storeId
      * @param CustomerSession $customerSession
+     *
      * @return Draft
+     * @throws \Exception
      */
     protected function _getDraftProcess($sessionUniqueId, $product, $intent, $printformerDraft, $storeId, $customerSession)
     {
@@ -268,6 +288,10 @@ class Open extends Action
                 } else {
                     $draftProcess = $draftCollection->getLastItem();
                 }
+            }
+        } else {
+            if(!empty($printformerDraft)) {
+
             }
         }
 

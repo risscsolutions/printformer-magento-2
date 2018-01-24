@@ -6,7 +6,7 @@ use \Rissc\Printformer\Model\Config\Source\Redirect;
 use \Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 
-class Url extends \Magento\Framework\App\Helper\AbstractHelper
+class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
 {
     const ROLE_USER  = '0';
     const ROLE_ADMIN = '1';
