@@ -1,23 +1,14 @@
 <?php
 namespace Rissc\Printformer\Model\Quote\Quote;
 
-use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\App\ObjectManager;
 use Rissc\Printformer\Setup\InstallSchema;
 
 class ItemPlugin
 {
-    protected $_serializer;
-
-    public function __construct(
-        SerializerInterface $serializer
-    )
-    {
-        $this->_serializer = $serializer;
-    }
-
     /**
      * @param \Magento\Quote\Api\Data\CartItemInterface $item
-     * @param callable $proceed
+     * @param \Closure $proceed
      * @param $product
      * @return bool
      */
@@ -31,7 +22,7 @@ class ItemPlugin
                 && $itemOptions['info_buyRequest'] instanceof \Magento\Quote\Model\Quote\Item\Option
             ) {
                 $infoBuyRequest = $itemOptions['info_buyRequest'];
-                $value = $this->_serializer->unserialize($infoBuyRequest->getValue());
+                $value = $this->unserialize($infoBuyRequest->getValue());
                 $itemDraftId = isset($value[InstallSchema::COLUMN_NAME_DRAFTID])
                     ? $value[InstallSchema::COLUMN_NAME_DRAFTID]
                     : null;
@@ -42,7 +33,7 @@ class ItemPlugin
                 && $productOptions['info_buyRequest'] instanceof \Magento\Catalog\Model\Product\Configuration\Item\Option
             ) {
                 $infoBuyRequest = $productOptions['info_buyRequest'];
-                $value = $this->_serializer->unserialize($infoBuyRequest->getValue());
+                $value = $this->unserialize($infoBuyRequest->getValue());
                 $productDraftId = isset($value[InstallSchema::COLUMN_NAME_DRAFTID])
                     ? $value[InstallSchema::COLUMN_NAME_DRAFTID]
                     : null;
@@ -52,5 +43,21 @@ class ItemPlugin
             }
         }
         return $result;
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return mixed
+     */
+    protected function unserialize($string)
+    {
+        if(class_exists('Magento\Framework\Serialize\Serializer')) {
+            $objm = ObjectManager::getInstance();
+            $serializer = $objm->get('Magento\Framework\Serialize\Serializer');
+            return $serializer->unserialize($string);
+        } else {
+            return unserialize($string);
+        }
     }
 }

@@ -15,6 +15,7 @@ use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\ResourceModel\Draft\Collection;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Helper\Config;
 
 use DateTime;
 use DateInterval;
@@ -46,13 +47,17 @@ class Api
     /** @var string */
     private $_clientIdentifier = null;
 
+    /** @var Config */
+    protected $_config;
+
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
-        SessionHelper $sessionHelper
+        SessionHelper $sessionHelper,
+        Config $config
     )
     {
         $this->_customerSession = $customerSession;
@@ -60,6 +65,7 @@ class Api
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
+        $this->_config = $config;
 
         $this->apiUrl()->setStoreManager($this->_storeManager);
 
@@ -80,6 +86,10 @@ class Api
      */
     public function getUserIdentifier()
     {
+        if (!$this->_config->isV2Enabled()) {
+            return null;
+        }
+
         $userIdentifier = $this->_customerSession->getPrintformerUserIdentifier();
         if(!$userIdentifier) {
             $userIdentifier = $this->createUser();
@@ -218,6 +228,7 @@ class Api
 
     /**
      * @param string $draftHash
+     * @param int    $masterId
      * @param int    $productId
      * @param string $intent
      * @param string $sessionUniqueId
