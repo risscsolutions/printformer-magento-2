@@ -85,8 +85,12 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
      * @param integer $quoteId
      * @return string
      */
-    public function getAdminPdfUrl($draftId, $quoteId)
+    public function getAdminPdfUrl($draftId, $quoteId, $noMD5 = false)
     {
+        $wkId = $quoteId;
+        if(!$noMD5) {
+            $wkId = md5($wkId);
+        }
         //@todo use ZF URL builder? Implement generic method for building printformer URLs?
         $urlParts = array(
             $this->getHost(),
@@ -96,7 +100,7 @@ class Url extends \Magento\Framework\App\Helper\AbstractHelper
             $this->getAuthkeyParamName(),
             $this->getAuthkey(self::ROLE_ADMIN),
             'risscw2pdraft',
-            md5($quoteId).$draftId
+            $wkId.$draftId
         );
         return implode('/', $urlParts);
     }
