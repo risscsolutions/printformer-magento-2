@@ -4,12 +4,13 @@ namespace Rissc\Printformer\Helper\Api\Url;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\App\Helper\Context;
-use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
-use Rissc\Printformer\Gateway\Admin\Draft;
 use Rissc\Printformer\Helper\Api\VersionInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Config;
+use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Magento\Customer\Model\Session as CustomerSession;
 
 class V2
     extends AbstractHelper
@@ -33,6 +34,8 @@ class V2
     /** @var Config */
     protected $_config;
 
+    /** @var CustomerSession */
+    protected $_customerSession;
     /**
      * V2 constructor.
      *
@@ -42,11 +45,13 @@ class V2
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
-        Config $config
+        Config $config,
+        CustomerSession $customerSession
     )
     {
         $this->_storeManager = $storeManager;
         $this->_config = $config;
+        $this->_customerSession = $customerSession;
 
         parent::__construct($context);
     }
@@ -252,7 +257,22 @@ class V2
      */
     public function getAdminPDF($draftHash, $quoteId)
     {
-        return $this->getPDF($draftHash);
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $pdfUrl = $this->getPDF($draftHash);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $pdfUrl . '?' . http_build_query($postFields);
     }
 
     /**

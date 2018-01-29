@@ -36,8 +36,6 @@ class Url
         $this->config = $config;
 
         parent::__construct($context);
-
-        $this->initVersionHelper($this->config->isV2Enabled());
     }
 
     /**

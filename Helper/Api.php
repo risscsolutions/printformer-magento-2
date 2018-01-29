@@ -67,6 +67,7 @@ class Api
         $this->_sessionHelper = $sessionHelper;
         $this->_config = $config;
 
+        $this->apiUrl()->initVersionHelper($this->_config->isV2Enabled());
         $this->apiUrl()->setStoreManager($this->_storeManager);
 
         parent::__construct($context);
@@ -75,7 +76,7 @@ class Api
             'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
             'headers' => [
                 'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->getClientApiKey(),
+                'Authorization' => 'Bearer ' . $this->_config->getClientApiKey(),
             ]
         ]);
     }
@@ -103,36 +104,6 @@ class Api
         }
 
         return $userIdentifier;
-    }
-
-    /**
-     * @return string
-     */
-    private function getClientApiKey()
-    {
-        if(!$this->_clientApiKey) {
-            $this->_clientApiKey = $this->scopeConfig->getValue(
-                'printformer/version2group/v2apiKey',
-                ScopeInterface::SCOPE_STORES
-            );
-        }
-
-        return $this->_clientApiKey;
-    }
-
-    /**
-     * @return string
-     */
-    private function getClientIdentifier()
-    {
-        if(!$this->_clientIdentifier) {
-            $this->_clientIdentifier = $this->scopeConfig->getValue(
-                'printformer/version2group/v2identifier',
-                ScopeInterface::SCOPE_STORES
-            );
-        }
-
-        return $this->_clientIdentifier;
     }
 
     /**
@@ -213,14 +184,14 @@ class Api
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
+            ->set('client', $this->_config->getClientIdentifier())
             ->set('user', $userIdentifier)
             ->setId(bin2hex(random_bytes(16)), true)
             ->set('redirect', $editorOpenUrl)
             ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
             ->getToken();
 
         return $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
@@ -415,15 +386,15 @@ class Api
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
+            ->set('client', $this->_config->getClientIdentifier())
             ->set('user', $userIdentifier)
             ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
             ->getToken();
 
-        $thumbnailUrl = $this->apiUrl()->getThumbnailUrl($draftHash);
+        $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash);
 
         $postFields = [
             'json' => [
@@ -456,15 +427,14 @@ class Api
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
-            ->set('user', $this->getUserIdentifier())
+            ->set('client', $this->_config->getClientIdentifier())
             ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
             ->getToken();
 
-        $pdfUrl = $this->apiUrl()->getPDFUrl($draftHash);
+        $pdfUrl = $this->apiUrl()->getPDF($draftHash);
 
         $postFields = [
             'jwt' => $JWT
