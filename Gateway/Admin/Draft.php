@@ -149,8 +149,7 @@ class Draft
             $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Empty Response: '. $response . ', Url: ' . $url));
         }
-        var_dump($response);
-        die();
+
         $responseArray = $this->jsonDecoder->decode($response);
 
         if(!$responseArray['success']) {
@@ -158,9 +157,6 @@ class Draft
             $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Response success: false'));
         }
-
-        var_dump($responseArray);
-        die();
 
         if (!is_array($responseArray)) {
             $historyData['status'] = 'failed';

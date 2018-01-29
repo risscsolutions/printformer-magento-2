@@ -163,7 +163,7 @@ class Open extends Action
         if($this->_draftGateway->isV2Enabled()) {
             $editorUrl = $this->_apiHelper->getEditorWebtokenUrl($draftProcess->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
         } else {
-            $editorUrl = $this->_urlHelper->getEditor($draftProcess->getDraftId());
+            $editorUrl = $this->_urlHelper->getEditor($draftProcess->getDraftId(), null, $editorParams);
             $editorUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
                 $storeId, $params);
         }

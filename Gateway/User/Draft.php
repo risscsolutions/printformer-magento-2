@@ -117,6 +117,8 @@ class Draft
         $this->_customerSession = $session;
         $this->_scopeConfig = $scopeConfig;
         $this->_httpClient = $this->getGuzzleClient();
+
+        $this->_urlHelper->initVersionHelper($this->isV2Enabled());
     }
 
     /**

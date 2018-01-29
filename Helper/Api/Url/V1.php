@@ -171,6 +171,7 @@ class V1
      */
     public function getEditor($draftHash, $user = null, $params = [])
     {
+        $params = $params['data'];
         $urlParts = array(
             $this->getPrintformerBaseUrl(),
             self::URI_USER_DRAFTEDITOR,
@@ -184,7 +185,12 @@ class V1
         ];
         $this->authRole = self::ROLE_USER;
 
-        $authParams = array_merge($authParams, $params);
+        $urlParams = [];
+        foreach($params as $key => $value) {
+            $urlParams[] = $key . '=' . $value;
+        }
+
+        $authParams = array_merge($authParams, $urlParams);
 
         return implode('/', $urlParts) . (!empty($authParams) ? '?' . implode('&', $authParams) : '');
     }
@@ -289,10 +295,11 @@ class V1
     public function getAdminEditor($draftHash, array $params = null, $referrer = null)
     {
         $this->authRole = self::ROLE_ADMIN;
-        $url = $this->getEditor($draftHash, $params);
+        $url = $this->getEditor($draftHash, null, $params);
         $this->authRole = self::ROLE_USER;
-
-        return $url;
+        return $url .
+            (strpos($url, '?') ? '&amp;' : '?') .
+            'custom_referrer=' . urlencode($referrer);
     }
 
     /**

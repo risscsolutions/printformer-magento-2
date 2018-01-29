@@ -1,11 +1,14 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Customer\Model\Session as CustomerSession;
 
-class Config extends \Magento\Framework\App\Helper\AbstractHelper
+class Config
+    extends \Magento\Framework\App\Helper\AbstractHelper
 {
     const XML_PATH_V2_ENABLED                       = 'printformer/version2group/version2';
 
@@ -61,26 +64,36 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $storeId;
 
+    /** @var CustomerSession */
+    protected $_customerSession;
+
     /**
-     * @param Context $context
+     * Config constructor.
+     *
+     * @param Context               $context
      * @param StoreManagerInterface $storeManager
+     * @param CustomerSession       $customerSession
      */
     public function __construct(
         Context $context,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        CustomerSession $customerSession
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
         $this->storeId = $this->storeManager->getStore()->getId();
+        $this->_customerSession = $customerSession;
     }
 
     /**
-     * @param integer $storeId
-     * @return \Rissc\Printformer\Helper\Url
+     * @param $storeId
+     *
+     * @return $this
      */
     public function setStoreId($storeId)
     {
         $this->storeId = $storeId;
+
         return $this;
     }
 
@@ -385,5 +398,27 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->scopeConfig->getValue(self::XML_PATH_V2_ENABLED,
             ScopeInterface::SCOPE_STORES, $this->getStoreId()) == '1';
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientApiKey()
+    {
+        return $this->scopeConfig->getValue(
+            'printformer/version2group/v2apiKey',
+            ScopeInterface::SCOPE_STORES
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientIdentifier()
+    {
+        return $this->scopeConfig->getValue(
+            'printformer/version2group/v2identifier',
+            ScopeInterface::SCOPE_STORES
+        );
     }
 }

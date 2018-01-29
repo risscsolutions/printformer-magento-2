@@ -36,8 +36,6 @@ class Url
         $this->config = $config;
 
         parent::__construct($context);
-
-        $this->initVersionHelper($this->config->isV2Enabled());
     }
 
     /**
@@ -77,12 +75,21 @@ class Url
         return $this;
     }
 
+    public function getVersionHelper()
+    {
+        if(!$this->_versionHelper) {
+            $this->initVersionHelper($this->config->isV2Enabled());
+        }
+
+        return $this->_versionHelper;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function setStoreId($storeId)
     {
-        return $this->_versionHelper->setStoreId($storeId);
+        return $this->getVersionHelper()->setStoreId($storeId);
     }
 
     /**
@@ -90,7 +97,7 @@ class Url
      */
     public function getStoreId()
     {
-        return $this->_versionHelper->getStoreId();
+        return $this->getVersionHelper()->getStoreId();
     }
 
     /**
@@ -98,7 +105,7 @@ class Url
      */
     public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
     {
-        return $this->_versionHelper->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
+        return $this->getVersionHelper()->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
     }
 
     /**
@@ -106,7 +113,7 @@ class Url
      */
     public function getPrintformerBaseUrl()
     {
-        return $this->_versionHelper->getPrintformerBaseUrl();
+        return $this->getVersionHelper()->getPrintformerBaseUrl();
     }
 
     /**
@@ -114,7 +121,7 @@ class Url
      */
     public function getUser()
     {
-        return $this->_versionHelper->getUser();
+        return $this->getVersionHelper()->getUser();
     }
 
     /**
@@ -122,7 +129,7 @@ class Url
      */
     public function getDraft($draftHash = null, $quoteId = null)
     {
-        return $this->_versionHelper->getDraft($draftHash, $quoteId);
+        return $this->getVersionHelper()->getDraft($draftHash, $quoteId);
     }
 
     /**
@@ -130,7 +137,7 @@ class Url
      */
     public function getEditor($draftHash, $user = null, $params = [])
     {
-        return $this->_versionHelper->getEditor($draftHash, $user, $params);
+        return $this->getVersionHelper()->getEditor($draftHash, $user, $params);
     }
 
     /**
@@ -138,7 +145,7 @@ class Url
      */
     public function getAuth()
     {
-        return $this->_versionHelper->getAuth();
+        return $this->getVersionHelper()->getAuth();
     }
 
     /**
@@ -146,7 +153,7 @@ class Url
      */
     public function getDraftProcessing($draftHashes = [], $quoteId = null)
     {
-        return $this->_versionHelper->getDraftProcessing($draftHashes, $quoteId);
+        return $this->getVersionHelper()->getDraftProcessing($draftHashes, $quoteId);
     }
 
     /**
@@ -154,7 +161,7 @@ class Url
      */
     public function getThumbnail($draftHash)
     {
-        return $this->_versionHelper->getThumbnail($draftHash);
+        return $this->getVersionHelper()->getThumbnail($draftHash);
     }
 
     /**
@@ -162,7 +169,7 @@ class Url
      */
     public function getPDF($draftHash, $quoteId = null)
     {
-        return $this->_versionHelper->getPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getPDF($draftHash, $quoteId);
     }
 
     /**
@@ -170,7 +177,7 @@ class Url
      */
     public function getProducts()
     {
-        return $this->_versionHelper->getProducts();
+        return $this->getVersionHelper()->getProducts();
     }
 
     /**
@@ -178,7 +185,7 @@ class Url
      */
     public function getAdminProducts()
     {
-        return $this->_versionHelper->getAdminProducts();
+        return $this->getVersionHelper()->getAdminProducts();
     }
 
     /**
@@ -186,7 +193,7 @@ class Url
      */
     public function getAdminPDF($draftHash, $quoteId)
     {
-        return $this->_versionHelper->getAdminPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getAdminPDF($draftHash, $quoteId);
     }
 
     /**
@@ -194,7 +201,7 @@ class Url
      */
     public function getAdminEditor($draftHash, array $params = null, $referrer = null)
     {
-        return $this->_versionHelper->getAdminEditor($draftHash, $params, $referrer);
+        return $this->getVersionHelper()->getAdminEditor($draftHash, $params, $referrer);
     }
 
     /**
@@ -202,7 +209,7 @@ class Url
      */
     public function getAdminDraft($draftHash, $quoteId)
     {
-        return $this->_versionHelper->getAdminDraft($draftHash, $quoteId);
+        return $this->getVersionHelper()->getAdminDraft($draftHash, $quoteId);
     }
 
     /**
@@ -210,7 +217,7 @@ class Url
      */
     public function getDraftDelete($draftHash)
     {
-        return $this->_versionHelper->getDraftDelete($draftHash);
+        return $this->getVersionHelper()->getDraftDelete($draftHash);
     }
 
     /**
