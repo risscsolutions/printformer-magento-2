@@ -52,12 +52,21 @@ class ItemPlugin
      */
     protected function unserialize($string)
     {
-        if(class_exists('Magento\Framework\Serialize\Serializer')) {
-            $objm = ObjectManager::getInstance();
-            $serializer = $objm->get('Magento\Framework\Serialize\Serializer');
-            return $serializer->unserialize($string);
+        if($this->isJson($string)) {
+            return json_decode($string, true);
         } else {
             return unserialize($string);
         }
+    }
+
+    /**
+     * @param $string
+     *
+     * @return bool
+     */
+    protected function isJson($string) {
+        json_decode($string);
+
+        return json_last_error() == JSON_ERROR_NONE;
     }
 }
