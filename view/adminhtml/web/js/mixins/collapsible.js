@@ -1,51 +1,25 @@
-define([
-    'jquery',
-    'jquery/ui',
-    'jquery/jquery.parsequery',
-    'Magento_Ui/js/modal/modal',
-    'mage/translate'
-], function ($) {
+define(['jquery'], function($) {
     'use strict';
+    var loaded = false;
+    return function (Form) {
+        return Form.extend({
+            toggleOpened: function () {
+                if(this.index === 'printformer' && !loaded) {
+                    //encode the json string with the intents
+                    var intentsArray = JSON.parse(intentsArrayString);
 
-    $.widget('mage.customPrintformer', {
-        formatChange: false,
-        currentDrafts: null,
+                    //encode the json string with the intent values
+                    var intentValueArray = JSON.parse(intentsValueString);
 
-        isDefined: function(value) {
-            return typeof value !== typeof undefined;
-        },
+                    //find button "Printformer" to listen on the on click event
+                    var printformerButton = null;
 
-        _create: function () {
-            this._initialize();
-        },
+                    $('.admin__collapsible-block-wrapper').each(function (i, element) {
+                        if ($(element).data('index') === 'printformer') {
+                            printformerButton = element;
+                        }
+                    });
 
-        _initialize: function () {
-
-            //encode the json string with the intents
-            var intentsArray = this.options.intentsArray;
-
-            //encode the json string with the intent values
-            var intentValueArray = this.options.intentsValue;
-
-            //find button "Printformer" to listen on the on click event
-            var printformerButton = null;
-
-            init(intentsArray,intentValueArray);
-
-            function init(intentsArray, intentValueArray) {
-
-                var loading = true;
-
-                $('.admin__collapsible-block-wrapper').each(function (i, element) {
-                    if ($(element).data('index') === 'printformer') {
-                        printformerButton = element;
-                        loading = false;
-                    }
-                });
-
-                if(loading) {
-                    setTimeout(function() {init(intentsArray, intentValueArray);},500);
-                } else {
                     //listen to the on click event on the printformer button
                     var selectProductFieldId = null;
                     var selectCapabilitiesFieldId = null;
@@ -80,10 +54,13 @@ define([
                             });
                         });
                     }
+                    loaded = true
                 }
+                this.opened() ?
+                    this.close() :
+                    this.open();
+                return this;
             }
-        },
-    });
-
-    return $.mage.customPrintformer;
+        });
+    }
 });
