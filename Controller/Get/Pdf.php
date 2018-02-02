@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Get;
 
 use Magento\Framework\App\Action\Action;
@@ -21,7 +22,8 @@ class Pdf extends Action
         DraftCollectionFactory $draftCollectionFactory,
         Draft $draft,
         Url $url
-    ){
+    )
+    {
         $this->_draftHelper = $draft;
         $this->_urlHelper = $url;
         $this->_draftCollectionFactory = $draftCollectionFactory;
@@ -35,16 +37,16 @@ class Pdf extends Action
         $isAsync = false;
         $draftCollection = $this->_draftCollectionFactory->create();
         $draftItem = $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftId]);
-        if($draftItem->count() == 1) {
+        if ($draftItem->count() == 1) {
             $draft = $draftItem->getFirstItem();
-            if($draft->getProcessingId() != null) {
+            if ($draft->getProcessingId() != null) {
                 $isAsync = true;
                 $quoteId = $draft->getProcessingId();
             }
             //API V1 url
             $url = $this->_urlHelper->getAdminPdfUrl($draftId, $quoteId, $isAsync);
             //check if the draft was made with API V2
-            if($draft->getUserIdentifier() != null) {
+            if ($draft->getUserIdentifier() != null) {
                 $url = $this->_draftHelper->getPdfDocument($draftId);
             }
             $this->_redirect($url);

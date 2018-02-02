@@ -73,7 +73,7 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     public function getPdfUrl($draftId) {
-        return $this->printformerUrl . "/" . self::URI_CUSTOMER_PDF . $draftId . "/print"; // print; low-res
+        return $this->printformerUrl . "/" . self::URI_CUSTOMER_PDF . $draftId . "/low-res"; // print; low-res
     }
 
     /**
