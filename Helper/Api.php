@@ -23,6 +23,8 @@ use DateInterval;
 class Api
     extends AbstractHelper
 {
+    const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
+
     /** @var UrlHelper */
     protected $_urlHelper;
 
@@ -308,7 +310,7 @@ class Api
     public function setAsyncOrdered($draftIds)
     {
         $draftProcessingUrl = $this->apiUrl()->getDraftProcessing($draftIds);
-        $stateChangedNotifyUrl = $this->_urlBuilder->getUrl(UrlHelper::API_URL_CALLBACKORDEREDSTATUS);
+        $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
 
         $postFields = [
             'json' => [
