@@ -100,6 +100,7 @@ class Open extends Action
          * Get all params and variables needed
          */
         $params           = $this->getRequest()->getParams();
+
         $productId        = $this->getRequest()->getParam('product_id');
         $masterId         = $this->getRequest()->getParam('master_id');
         $intent           = $this->getRequest()->getParam('intent');
@@ -160,6 +161,10 @@ class Open extends Action
                 'callback_url' => $requestReferrer
             ]
         ];
+        if(!empty($params['quote_id']) && !empty($productId)) {
+            $editorParams['data']['quote_id'] = $params['quote_id'];
+        }
+
         if($this->_draftGateway->isV2Enabled()) {
             $editorUrl = $this->_apiHelper->getEditorWebtokenUrl($draftProcess->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
         } else {
@@ -299,10 +304,12 @@ class Open extends Action
     }
 
     /**
-     * @param string $requestReferrer
+     * @param       $requestReferrer
      * @param Draft $draftProcess
-     * @param int $storeId
+     * @param int   $storeId
      * @param array $params
+     * @param bool  $encodeUrl
+     *
      * @return string
      */
     protected function _getCallbackUrl($requestReferrer, Draft $draftProcess, $storeId = 0, $params = [], $encodeUrl = true)
