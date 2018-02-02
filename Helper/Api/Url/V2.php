@@ -140,6 +140,10 @@ class V2
             'draft_process' => $params['data']['draft_process']
         ];
 
+        if(!empty($params['data']['quote_id'])) {
+            $dataParams['quote_id'] = $params['data']['quote_id'];
+        }
+
         $customCallbackUrl = null;
         if(!empty($params['data']['callback_url'])) {
             $customCallbackUrl = $params['data']['callback_url'];
