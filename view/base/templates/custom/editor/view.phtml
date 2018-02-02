@@ -17,7 +17,7 @@ $quoteItemId = $quoteItem->getId();
         <?php //Textarea for coping the draft id ?>
         <textarea id="draftID" style="display: none"><?php echo $quoteItem->getPrintformerDraftid(); ?></textarea>
     </div>
-    <?php if ($quoteItem->getPrintformerOrdered()): ?>
+    <?php if ($block->isOrdered($quoteItem, $quoteItem->getPrintformerDraftid())): ?>
         <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl($quoteItem); ?>" target="_blank">
             <?php echo __('Show print file'); ?>
         </a>

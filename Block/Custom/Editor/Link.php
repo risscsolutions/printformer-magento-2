@@ -7,12 +7,16 @@ use Magento\Quote\Model\Quote\Item;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
 use Rissc\Printformer\Helper\Api\Url;
 use Magento\Framework\DataObject;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class Link
     extends Template
 {
     /** @var Url */
     protected $_urlHelper;
+
+    /** @var ApiHelper */
+    protected $_apiHelper;
 
     /**
      * Link constructor.
@@ -24,11 +28,13 @@ class Link
     public function __construct(
         Template\Context $context,
         Url $urlHelper,
+        ApiHelper $apiHelper,
         array $data = []
     )
     {
         parent::__construct($context, $data);
         $this->_urlHelper = $urlHelper;
+        $this->_apiHelper = $apiHelper;
     }
 
     /**
@@ -81,5 +87,44 @@ class Link
     {
         return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
             ->getAdminPdf($item->getPrintformerDraftid(), $item->getOrder()->getQuoteId());
+    }
+
+    /**
+     * @param $draftHash
+     *
+     * @return \Rissc\Printformer\Model\Draft
+     * @throws \Exception
+     */
+    public function getDraftProcess($draftHash)
+    {
+        return $this->_apiHelper->draftProcess($draftHash);
+    }
+
+    /**
+     * @param Item   $quoteItem
+     * @param string $draftHash
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function isOrdered(Item $quoteItem, $draftHash)
+    {
+        if($quoteItem->getPrintformerOrdered()) {
+            return true;
+        }
+
+        $draftProcess = $this->getDraftProcess($draftHash);
+        if(!$draftProcess->getId()) {
+            return false;
+        }
+
+        if($draftProcess->getProcessingStatus() == 1) {
+            $quoteItem->setPrintformerOrdered(1);
+            $quoteItem->getResource()->save($quoteItem);
+
+            return true;
+        }
+
+        return false;
     }
 }
