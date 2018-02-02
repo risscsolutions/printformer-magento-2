@@ -4,10 +4,12 @@ namespace Rissc\Printformer\Block\Custom\Editor;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Model\Quote\Item;
+use Magento\Sales\Model\Order\Item as OrderItem;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
 use Rissc\Printformer\Helper\Api\Url;
 use Magento\Framework\DataObject;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Model\Draft;
 
 class Link
     extends Template
@@ -101,26 +103,27 @@ class Link
     }
 
     /**
-     * @param Item   $quoteItem
-     * @param string $draftHash
+     * @param OrderItem $orderItem
+     * @param string    $draftHash
      *
      * @return bool
      * @throws \Exception
      */
-    public function isOrdered(Item $quoteItem, $draftHash)
+    public function isOrdered(OrderItem $orderItem, $draftHash)
     {
-        if($quoteItem->getPrintformerOrdered()) {
+        if($orderItem->getPrintformerOrdered()) {
             return true;
         }
 
+        /** @var Draft $draftProcess */
         $draftProcess = $this->getDraftProcess($draftHash);
         if(!$draftProcess->getId()) {
             return false;
         }
 
         if($draftProcess->getProcessingStatus() == 1) {
-            $quoteItem->setPrintformerOrdered(1);
-            $quoteItem->getResource()->save($quoteItem);
+            $orderItem->setPrintformerOrdered(1);
+            $orderItem->getResource()->save($orderItem);
 
             return true;
         }
