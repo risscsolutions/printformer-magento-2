@@ -1,5 +1,6 @@
 <?php
 /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $block */
+$block->cleanupDraftSession();
 $hasAnyPrintformerCapability = $block->isUploadProduct() || $block->isEditorProduct() || $block->isPersonalizationProduct() || $block->isUploadAndEditorProduct();
 ?>
 

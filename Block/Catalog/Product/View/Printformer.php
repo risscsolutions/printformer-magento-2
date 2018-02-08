@@ -4,18 +4,19 @@ namespace Rissc\Printformer\Block\Catalog\Product\View;
 
 use Magento\Catalog\Block\Product\Context;
 use Magento\Catalog\Block\Product\View\AbstractView;
-use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Catalog\Model\Product as CatalogProduct;
+use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Checkout\Model\Cart;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
 use Magento\Framework\Stdlib\ArrayUtils;
-use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Quote\Model\Quote;
 use Magento\Wishlist\Model\Item;
 use Rissc\Printformer\Controller\Editor\Save;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
-use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
@@ -69,29 +70,20 @@ class Printformer extends AbstractView
 
     /**
      * Printformer constructor.
-     * @param Config $configHelper
-     * @param Url $urlHelper
-     * @param Session $sessionHelper
-     * @param DraftFactory $draftFactory
-     * @param Cart $cart
-     * @param Context $context
-     * @param ArrayUtils $arrayUtils
-     * @param Item $wishlistItem
+     *
+     * @param Config         $configHelper
+     * @param Url            $urlHelper
+     * @param Session        $sessionHelper
+     * @param DraftFactory   $draftFactory
+     * @param Cart           $cart
+     * @param Context        $context
+     * @param ArrayUtils     $arrayUtils
+     * @param Item           $wishlistItem
      * @param CatalogSession $catalogSession
-     * @param array $data
+     * @param array          $data
      */
-    public function __construct(
-        Config $configHelper,
-        Url $urlHelper,
-        Session $sessionHelper,
-        DraftFactory $draftFactory,
-        Cart $cart,
-        Context $context,
-        ArrayUtils $arrayUtils,
-        Item $wishlistItem,
-        CatalogSession $catalogSession,
-        array $data = []
-    ) {
+    public function __construct(Config $configHelper, Url $urlHelper, Session $sessionHelper, DraftFactory $draftFactory, Cart $cart, Context $context, ArrayUtils $arrayUtils, Item $wishlistItem, CatalogSession $catalogSession, array $data = [])
+    {
         $this->configHelper = $configHelper;
         $this->urlHelper = $urlHelper;
         $this->sessionHelper = $sessionHelper;
@@ -114,6 +106,7 @@ class Printformer extends AbstractView
         if (!$this->getProduct() || ($this->isPrintformerEnabled() == '1' && $this->getProduct()->isSaleable())) {
             return parent::_toHtml();
         }
+
         return '';
     }
 
@@ -127,17 +120,15 @@ class Printformer extends AbstractView
 
     public function getPersonalisations()
     {
-        if ($this->getRequest()->getActionName() == 'configure'
-            && $this->getRequest()->getParam('id')
-            && $this->getRequest()->getParam('product_id')
-        ) {
+        if ($this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
             $quoteItem = null;
-            $id        = (int)$this->getRequest()->getParam('id');
+            $id = (int)$this->getRequest()->getParam('id');
             $productId = (int)$this->getRequest()->getParam('product_id');
             if ($id) {
                 $quoteItem = $this->cart->getQuote()->getItemById($id);
                 if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
                     $buyRequest = $quoteItem->getBuyRequest();
+
                     return $buyRequest->getData('printformer_personalisations');
                 }
             }
@@ -159,13 +150,10 @@ class Printformer extends AbstractView
     {
         $draftId = null;
         // Get draft ID on cart product edit page
-        if ($this->getRequest()->getActionName() == 'configure'
-            && $this->getRequest()->getParam('id')
-            && $this->getRequest()->getParam('product_id')
-        ) {
+        if ($this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
             $quoteItem = null;
             $wishlistItem = null;
-            $id        = (int)$this->getRequest()->getParam('id');
+            $id = (int)$this->getRequest()->getParam('id');
             $productId = (int)$this->getRequest()->getParam('product_id');
             if ($id) {
                 switch ($this->getRequest()->getModuleName()) {
@@ -174,36 +162,29 @@ class Printformer extends AbstractView
                         if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
                             $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                         }
-                        break;
+                    break;
                     case 'wishlist':
                         $wishlistItem = $this->wishlistItem->loadWithOptions($id);
                         if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
                             $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
                         }
-                        break;
+                    break;
                     default:
-                        break;
+                    break;
                 }
             }
         } else {
             $sessionUniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
-            if($sessionUniqueId)
-            {
+            if ($sessionUniqueId) {
                 $uniqueIdExplode = explode(':', $sessionUniqueId);
-                if(isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $this->getProduct()->getId())
-                {
+                if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $this->getProduct()->getId()) {
                     /** @var Draft $draft */
                     $draft = $this->draftFactory->create();
-                    $draftCollection = $draft->getCollection()
-                        ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
-                        ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
+                    $draftCollection = $draft->getCollection()->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
 
-                    if ($draftCollection->count() > 0)
-                    {
+                    if ($draftCollection->count() > 0) {
                         $draft = $draftCollection->getFirstItem();
-                        if ($draft->getId() && $draft->getDraftId())
-                        {
-
+                        if ($draft->getId() && $draft->getDraftId()) {
                             $draftId = $draft->getDraftId();
                         }
                     }
@@ -221,13 +202,10 @@ class Printformer extends AbstractView
     {
         $intent = null;
         // Get draft ID on cart product edit page
-        if ($this->getRequest()->getActionName() == 'configure'
-            && $this->getRequest()->getParam('id')
-            && $this->getRequest()->getParam('product_id')
-        ) {
+        if ($this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
             $quoteItem = null;
             $wishlistItem = null;
-            $id        = (int)$this->getRequest()->getParam('id');
+            $id = (int)$this->getRequest()->getParam('id');
             $productId = (int)$this->getRequest()->getParam('product_id');
             if ($id) {
                 switch ($this->getRequest()->getModuleName()) {
@@ -237,16 +215,16 @@ class Printformer extends AbstractView
                             $buyRequest = $quoteItem->getBuyRequest();
                             $intent = $buyRequest->getData(InstallSchema::COLUMN_NAME_INTENT);
                         }
-                        break;
+                    break;
                     case 'wishlist':
                         $wishlistItem = $this->wishlistItem->loadWithOptions($id);
                         if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
                             $buyRequest = $wishlistItem->getBuyRequest();
                             $intent = $buyRequest->getData(InstallSchema::COLUMN_NAME_INTENT);
                         }
-                        break;
+                    break;
                     default:
-                        break;
+                    break;
                 }
             }
         } else {
@@ -272,14 +250,11 @@ class Printformer extends AbstractView
     public function getEditorUrl($intent = null)
     {
         $editParams = [];
-        if($this->isOnConfigurePDS()) {
-            $editParams = [
-                'quote_id' => $this->getRequest()->getParam('id'),
-                'product_id' => $this->getRequest()->getParam('product_id')
-            ];
+        if ($this->isOnConfigurePDS()) {
+            $editParams = ['quote_id' => $this->getRequest()->getParam('id'), 'product_id' => $this->getRequest()->getParam('product_id')];
         }
-        return $this->urlHelper
-            ->getEditorEntry($this->getProduct()->getId(), $this->getMasterId(), $this->getDraftId(), $editParams, $intent);
+
+        return $this->urlHelper->getEditorEntry($this->getProduct()->getId(), $this->getMasterId(), $this->getDraftId(), $editParams, $intent);
     }
 
     /**
@@ -287,8 +262,7 @@ class Printformer extends AbstractView
      */
     public function isAllowSkipConfig()
     {
-        return $this->configHelper
-            ->isAllowSkipConfig();
+        return $this->configHelper->isAllowSkipConfig();
     }
 
     /**
@@ -296,8 +270,7 @@ class Printformer extends AbstractView
      */
     public function getButtonText()
     {
-        return $this->configHelper
-            ->getButtonText();
+        return $this->configHelper->getButtonText();
     }
 
     /**
@@ -305,8 +278,7 @@ class Printformer extends AbstractView
      */
     public function getButtonCss()
     {
-        return $this->configHelper
-            ->getButtonCss();
+        return $this->configHelper->getButtonCss();
     }
 
     /**
@@ -346,35 +318,19 @@ class Printformer extends AbstractView
         $config = [];
         if ($this->getFormatAttributeId()) {
             $id = 'attribute' . $this->getFormatAttributeId();
-            $config[$id] = [
-                'param'  => $this->getFormatQueryParameter(),
-                'map'    => $this->getFormatAttributeConfig(),
-                'notice' => $this->isFormatChangeNotice()
-            ];
+            $config[$id] = ['param' => $this->getFormatQueryParameter(), 'map' => $this->getFormatAttributeConfig(), 'notice' => $this->isFormatChangeNotice()];
         }
         if ($this->getFormatOptionId()) {
             $id = 'select_' . $this->getFormatOptionId();
-            $config[$id] = [
-                'param'  => $this->getFormatQueryParameter(),
-                'map'    => $this->getFormatOptionConfig(),
-                'notice' => $this->isFormatChangeNotice()
-            ];
+            $config[$id] = ['param' => $this->getFormatQueryParameter(), 'map' => $this->getFormatOptionConfig(), 'notice' => $this->isFormatChangeNotice()];
         }
         if ($this->getColorAttributeId()) {
             $id = 'attribute' . $this->getColorAttributeId();
-            $config[$id] = [
-                'param'  => $this->getColorQueryParameter(),
-                'map'    => $this->getColorAttributeConfig(),
-                'notice' => false
-            ];
+            $config[$id] = ['param' => $this->getColorQueryParameter(), 'map' => $this->getColorAttributeConfig(), 'notice' => false];
         }
         if ($this->getColorOptionId()) {
             $id = 'select_' . $this->getColorOptionId();
-            $config[$id] = [
-                'param'  => $this->getColorQueryParameter(),
-                'map'       => $this->getColorOptionConfig(),
-                'notice' => false
-            ];
+            $config[$id] = ['param' => $this->getColorQueryParameter(), 'map' => $this->getColorOptionConfig(), 'notice' => false];
         }
 
         return $config;
@@ -410,6 +366,7 @@ class Printformer extends AbstractView
                 return $attribute->getId();
             }
         }
+
         return null;
     }
 
@@ -434,6 +391,7 @@ class Printformer extends AbstractView
         foreach ($configValues as $configValue) {
             $config[$configValue['attr_id']] = $configValue['value'];
         }
+
         return $config;
     }
 
@@ -459,6 +417,7 @@ class Printformer extends AbstractView
                 return $option->getId();
             }
         }
+
         return null;
     }
 
@@ -494,6 +453,7 @@ class Printformer extends AbstractView
                 }
             }
         }
+
         return $config;
     }
 
@@ -527,6 +487,7 @@ class Printformer extends AbstractView
                 return $attribute->getId();
             }
         }
+
         return null;
     }
 
@@ -551,6 +512,7 @@ class Printformer extends AbstractView
         foreach ($configValues as $configValue) {
             $config[$configValue['attr_id']] = $configValue['value'];
         }
+
         return $config;
     }
 
@@ -576,6 +538,7 @@ class Printformer extends AbstractView
                 return $option->getId();
             }
         }
+
         return null;
     }
 
@@ -611,19 +574,20 @@ class Printformer extends AbstractView
                 }
             }
         }
+
         return $config;
     }
 
     /**
      * @param integer $draftId
+     *
      * @return array
      */
     public function getProductVariations($draftId = null)
     {
         $variations = [];
         if ($draftId) {
-            $draft = $this->draftFactory->create()
-                ->load($draftId, 'draft_id');
+            $draft = $this->draftFactory->create()->load($draftId, 'draft_id');
             if ($draft->getFormatVariation()) {
                 $variations[$this->configHelper->getFormatQueryParameter()] = $draft->getFormatVariation();
             }
@@ -631,23 +595,26 @@ class Printformer extends AbstractView
                 $variations[$this->configHelper->getColorQueryParameter()] = $draft->getColorVariation();
             }
         }
+
         return $variations;
     }
 
     /**
      * @param integer $draftId
+     *
      * @return array
      */
     public function getProductQty($draftId = null)
     {
         $qty = 1; //@todo min qty from sysconf?
         if ($draftId) {
-            $draft = $this->draftFactory->create() //@todo add getDraft()
-                ->load($draftId, 'draft_id');
+            $draft = $this->draftFactory->create()//@todo add getDraft()
+            ->load($draftId, 'draft_id');
             if ($draft->getQty()) {
                 $qty = $draft->getQty();
             }
         }
+
         return $qty;
     }
 
@@ -655,13 +622,10 @@ class Printformer extends AbstractView
     {
         $uniqueId = null;
 
-        if ($this->getRequest()->getActionName() == 'configure'
-            && $this->getRequest()->getParam('id')
-            && $this->getRequest()->getParam('product_id')
-        ) {
+        if ($this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
             $quoteItem = null;
             $wishlistItem = null;
-            $id        = (int)$this->getRequest()->getParam('id');
+            $id = (int)$this->getRequest()->getParam('id');
             $productId = (int)$this->getRequest()->getParam('product_id');
             if ($id) {
                 switch ($this->getRequest()->getModuleName()) {
@@ -672,7 +636,7 @@ class Printformer extends AbstractView
                             $uniqueId = $buyRequest->getData('printformer_unique_session_id');
                             $this->sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueId);
                         }
-                        break;
+                    break;
                     case 'wishlist':
                         $wishlistItem = $this->wishlistItem->loadWithOptions($id);
                         if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
@@ -680,14 +644,12 @@ class Printformer extends AbstractView
                             $uniqueId = $buyRequest->getData('printformer_unique_session_id');
                             $this->sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueId);
                         }
-                        break;
+                    break;
                     default:
-                        break;
+                    break;
                 }
             }
-        }
-        else
-        {
+        } else {
             $uniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
         }
 
@@ -701,23 +663,22 @@ class Printformer extends AbstractView
     {
         $uniqueId = $this->getUniqueSessionId();
         $uniqueIdExplode = explode(':', $uniqueId);
-        if(isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId())
-        {
+        if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId()) {
             $uniqueId = null;
         }
         $config = [
-            'qtySelector'           => '#qty',
-            'addBtnSelector'        => '#product-addtocart-button, #product-updatecart-button',
-            'editBtnSelector'       => '#printformer-edit-button',
-            'uploadBtnSelector'     => '#printformer-upload-button',
-            'editorMainSelector'    => '#printformer-editor-main',
-            'editorCloseSelector'   => '#printformer-editor-close',
-            'editorNoticeSelector'  => '#printformer-editor-notice',
-            'draftId'               => $this->getDraftId(),
-            'intent'                => $this->getIntent(),
-            'unique_id'             => $uniqueId,
-            'productTitle'          => $this->getProduct()->getName(),
-            'allowAddCart'          => $this->isAllowSkipConfig() || $this->getDraftId(),
+            'qtySelector' => '#qty',
+            'addBtnSelector' => '#product-addtocart-button, #product-updatecart-button',
+            'editBtnSelector' => '#printformer-edit-button',
+            'uploadBtnSelector' => '#printformer-upload-button',
+            'editorMainSelector' => '#printformer-editor-main',
+            'editorCloseSelector' => '#printformer-editor-close',
+            'editorNoticeSelector' => '#printformer-editor-notice',
+            'draftId' => $this->getDraftId(),
+            'intent' => $this->getIntent(),
+            'unique_id' => $uniqueId,
+            'productTitle' => $this->getProduct()->getName(),
+            'allowAddCart' => $this->isAllowSkipConfig() || $this->getDraftId(),
             'urls' => [
                 'customize' => $this->getEditorUrl('customize'),
                 'personalize' => $this->getEditorUrl('personalize'),
@@ -725,23 +686,16 @@ class Printformer extends AbstractView
                 'uploadAndEditor' => $this->getEditorUrl('upload-and-editor')
             ],
             'variationsConfig' => $this->getVariationsConfig(),
-            'variations'       => $this->getProductVariations($this->getDraftId()),
-            'qty'              => $this->getProductQty($this->getDraftId())
+            'variations' => $this->getProductVariations($this->getDraftId()),
+            'qty' => $this->getProductQty($this->getDraftId())
         ];
 
-        $extendConfig = [
-            'IsUploadProduct' => $this->isUploadProduct(),
-            'DraftsGetUrl' => $this->getDraftsGetUrl(),
-            'ProductId' => $this->getProduct()->getId(),
-            'isConfigure' => $this->isOnConfigurePDS(),
-            'draftMasterId' => $this->getDraftMasterId(),
-        ];
+        $extendConfig = ['IsUploadProduct' => $this->isUploadProduct(), 'DraftsGetUrl' => $this->getDraftsGetUrl(), 'ProductId' => $this->getProduct()->getId(), 'isConfigure' => $this->isOnConfigurePDS(), 'draftMasterId' => $this->getDraftMasterId(),];
 
         $extendConfig['currentSessionIntent'] = $this->getIntent();
 
         $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = 0;
-        if($this->getPersonalisations())
-        {
+        if ($this->getPersonalisations()) {
             $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();
             if ($this->isOnConfigurePDS()) {
                 $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM . '_conf'] = true;
@@ -758,13 +712,9 @@ class Printformer extends AbstractView
      */
     public function getDraftMasterId()
     {
-        if (!$this->draftMasterId
-            && $this->getRequest()->getActionName() == 'configure'
-            && $this->getRequest()->getParam('id')
-            && $this->getRequest()->getParam('product_id')
-        ) {
+        if (!$this->draftMasterId && $this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
             $quoteItem = null;
-            $id        = (int)$this->getRequest()->getParam('id');
+            $id = (int)$this->getRequest()->getParam('id');
             $productId = (int)$this->getRequest()->getParam('product_id');
             if ($id) {
                 $quoteItem = $this->cart->getQuote()->getItemById($id);
@@ -773,6 +723,7 @@ class Printformer extends AbstractView
                 $this->draftMasterId = $quoteItem->getBuyRequest()->getData('printformer_masterid');
             }
         }
+
         return $this->draftMasterId;
     }
 
@@ -791,7 +742,7 @@ class Printformer extends AbstractView
      */
     public function getCapabilities(CatalogProduct $product)
     {
-        if(!$this->_capabilities) {
+        if (!$this->_capabilities) {
             $obj = new DataObject();
             $attribute = $product->getResource()->getAttribute('printformer_capabilities');
             $capabilities = explode(', ', $attribute->getFrontend()->getValue($product));
@@ -857,11 +808,7 @@ class Printformer extends AbstractView
     {
         $_request = $this->getRequest();
         $isConfigure = false;
-        if(
-            $_request->getModuleName() == 'checkout' &&
-            $_request->getActionName() == 'configure'
-        )
-        {
+        if ($_request->getModuleName() == 'checkout' && $_request->getActionName() == 'configure') {
             $isConfigure = true;
         }
 
@@ -877,10 +824,10 @@ class Printformer extends AbstractView
         $printformerData = json_decode($this->getJsonConfig(), true);
         $catalogSession = $this->sessionHelper->getCatalogSession();
         $preselectData = $catalogSession->getSavedPrintformerOptions();
-        if($product->getId() != $preselectData['product']) {
+        if ($product->getId() != $preselectData['product']) {
             $preselectData = [];
         }
-        if(!empty($preselectData) || $this->isOnConfigurePDS()) {
+        if (!empty($preselectData) || $this->isOnConfigurePDS()) {
             if ($this->isOnConfigurePDS()) {
                 $printformerData['preselection'] = $this->getConfigurePreselection();
             } else {
@@ -898,13 +845,13 @@ class Printformer extends AbstractView
     public function getConfigurePreselection()
     {
         $request = $this->getRequest();
-        if($request->getParam('id')) {
+        if ($request->getParam('id')) {
             /** @var Item $quoteItem */
             $quoteItem = ObjectManager::getInstance()->create('Magento\Quote\Model\Quote\Item');
             $quoteItem->getResource()->load($quoteItem, (int)$request->getParam('id'));
             $connection = $quoteItem->getResource()->getConnection();
 
-            if($quoteItem->getId()) {
+            if ($quoteItem->getId()) {
                 $result = $connection->fetchRow("
                     SELECT * FROM `" . $connection->getTableName('quote_item_option') . "`
                     WHERE
@@ -915,7 +862,7 @@ class Printformer extends AbstractView
                 $objm = ObjectManager::getInstance();
                 /** @var \Magento\Framework\App\ProductMetadataInterface $productMeta */
                 $productMeta = $objm->get('Magento\Framework\App\ProductMetadataInterface');
-                if(version_compare($productMeta->getVersion(), '2.2.1', '>=')) {
+                if (version_compare($productMeta->getVersion(), '2.2.1', '>=')) {
                     $buyRequest = new DataObject(json_decode($result['value'], true));
                 } else {
                     $buyRequest = new DataObject(unserialize($result['value']));
@@ -938,10 +885,7 @@ class Printformer extends AbstractView
                 $_returnJson['qty']['value'] = $qty;
 
                 $jsonDataObject = new DataObject($_returnJson);
-                $this->_eventManager->dispatch(
-                    'printformer_get_preselection_after',
-                    ['connection' => $connection, 'options' => $options, 'json_data_object' => $jsonDataObject]
-                );
+                $this->_eventManager->dispatch('printformer_get_preselection_after', ['connection' => $connection, 'options' => $options, 'json_data_object' => $jsonDataObject]);
                 $_returnJson = $jsonDataObject->getData();
 
                 return $_returnJson;
@@ -949,5 +893,41 @@ class Printformer extends AbstractView
         }
 
         return [];
+    }
+
+    /**
+     * @return void
+     */
+    public function cleanupDraftSession()
+    {
+        if ($this->isOnConfigurePDS()) {
+            return;
+        }
+
+        if ($this->isDraftInCart($this->getDraftId())) {
+            $this->sessionHelper->getCatalogSession()->setSavedPrintformerOptions(null);
+            $this->sessionHelper->getCatalogSession()->setData(Save::PERSONALISATIONS_QUERY_PARAM, null);
+            $this->sessionHelper->getCatalogSession()->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
+            $this->sessionHelper->getCustomerSession()->setSessionUniqueID(null);
+        }
+    }
+
+    /**
+     * @param $draftHash
+     *
+     * @return bool
+     */
+    protected function isDraftInCart($draftHash)
+    {
+        /** @var Quote $quote */
+        $quote = $this->cart->getQuote();
+        /** @var Item $quoteItem */
+        foreach ($quote->getAllItems() as $quoteItem) {
+            if ($quoteItem->getPrintformerDraftid() == $draftHash) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
