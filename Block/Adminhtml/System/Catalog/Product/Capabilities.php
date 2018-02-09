@@ -70,6 +70,7 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
     public function getIntentsValue() {
         $attribute = $this->_eavConfig->get(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
         $options = $attribute->getOptions();
+        $intentsValueArray = array();
         foreach ($options as $option) {
             if (!empty($option->getLabel()) && !empty($option->getValue())) {
                 $intentsValueArray[$option->getLabel()] = $option->getValue();
