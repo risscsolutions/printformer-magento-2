@@ -41,42 +41,51 @@ class Capabilities  extends \Magento\Framework\View\Element\Template {
         parent::__construct($context, $data);
     }
 
+    public function isDefiningNewProduct()
+    {
+        return $this->_request->getFullActionName() == 'catalog_product_new';
+    }
 
     /**
      * @return string
      */
     public function getIntentsArray() {
-        //get current store id
-        $storeID = $this->_storeManager->getStore()->getId();
-        //get all printformer products for the current store from the database
-        $printformerProductCollection = $this->_printformerProductFactory->create()->getCollection()->addFieldToFilter('store_id', ['eq' => $storeID])->load();
+        if (!$this->isDefiningNewProduct()) {
+            //get current store id
+            $storeID = $this->_storeManager->getStore()->getId();
+            //get all printformer products for the current store from the database
+            $printformerProductCollection = $this->_printformerProductFactory->create()->getCollection()->addFieldToFilter('store_id', ['eq' => $storeID])->load();
 
-        //save all product master ids and the intents in an array
-        foreach($printformerProductCollection as $product) {
-            $newIntentsArray = array();
-            $intentsArray[$product->getMasterId()] = explode(",", $product->getIntents());
-            foreach ($intentsArray[$product->getMasterId()] as $intent) {
-                array_push($newIntentsArray, $this->replaceIntentName($intent));
+            //save all product master ids and the intents in an array
+            $intentsArray = array();
+            foreach($printformerProductCollection as $product) {
+                $newIntentsArray = array();
+                $intentsArray[$product->getMasterId()] = explode(",", $product->getIntents());
+                foreach ($intentsArray[$product->getMasterId()] as $intent) {
+                    array_push($newIntentsArray, $this->replaceIntentName($intent));
+                }
+                $intentsArray[$product->getMasterId()] = $newIntentsArray;
             }
-            $intentsArray[$product->getMasterId()] = $newIntentsArray;
+            //return the json encoded array
+            return json_encode($intentsArray);
         }
-        //return the json encoded array
-        return json_encode($intentsArray);
     }
 
     /**
      * @return string
      */
     public function getIntentsValue() {
-        $attribute = $this->_eavConfig->get(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
-        $options = $attribute->getOptions();
-        $intentsValueArray = array();
-        foreach ($options as $option) {
-            if (!empty($option->getLabel()) && !empty($option->getValue())) {
-                $intentsValueArray[$option->getLabel()] = $option->getValue();
+        if (!$this->isDefiningNewProduct()) {
+            $attribute = $this->_eavConfig->get(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
+            $options = $attribute->getOptions();
+            $intentsValueArray = array();
+            foreach ($options as $option) {
+                if (!empty($option->getLabel()) && !empty($option->getValue())) {
+                    $intentsValueArray[$option->getLabel()] = $option->getValue();
+                }
             }
+            return json_encode($intentsValueArray);
         }
-        return json_encode($intentsValueArray);
     }
 
 
