@@ -12,6 +12,8 @@
                 <cart_edit_text>Edit</cart_edit_text>
                 <config_button_text>Configure</config_button_text>
                 <processing_type>sync</processing_type>
+                <product_image_preview_width>1000</product_image_preview_width>
+                <product_image_preview_height>1000</product_image_preview_height>
             </general>
             <format>
                 <notice_text>Format change will reset your cofiguration progress.</notice_text>

@@ -6,6 +6,7 @@ use Magento\Checkout\CustomerData\DefaultItem;
 use Magento\Quote\Api\Data\CartItemInterface;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Media;
 
 class DefaultItemPlugin
 {
@@ -20,16 +21,24 @@ class DefaultItemPlugin
     protected $configHelper;
 
     /**
+     * @var Media
+     */
+    protected $mediaHelper;
+
+    /**
      * DefaultItemPlugin constructor.
      * @param Url $urlHelper
      * @param Config $configHelper
+     * @param Media $mediaHelper
      */
     public function __construct(
         Url $urlHelper,
-        Config $configHelper
+        Config $configHelper,
+        Media $mediaHelper
     ) {
         $this->urlHelper = $urlHelper;
         $this->configHelper = $configHelper;
+        $this->mediaHelper = $mediaHelper;
     }
 
     /**
@@ -42,17 +51,13 @@ class DefaultItemPlugin
     {
         $result = $proceed($item);
         $draftId = $item->getPrintformerDraftid();
-        if ($draftId && $this->isUseImagePreview()) {
-            $result['product_image']['src'] = $this->urlHelper->getThumbnail($item->getPrintformerDraftid());
+        if ($draftId && $this->configHelper->isUseImagePreview()) {
+            if($this->configHelper->isV2Enabled()) {
+                $result['product_image']['src'] = $this->mediaHelper->getImageUrl($item->getPrintformerDraftid());
+            } else {
+                $result['product_image']['src'] = $this->urlHelper->getThumbnail($item->getPrintformerDraftid());
+            }
         }
         return $result;
-    }
-
-    /**
-     * @return string
-     */
-    public function isUseImagePreview()
-    {
-        return $this->configHelper->isUseImagePreview();
     }
 }
