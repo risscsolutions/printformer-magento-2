@@ -16,6 +16,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Rissc\Printformer\Helper\Api\Url;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Rissc\Printformer\Helper\Media;
 
 class Draft
 {
@@ -84,6 +85,8 @@ class Draft
      */
     protected $v2enabled = null;
 
+    protected $mediaHelper;
+
     /**
      * Draft constructor.
      * @param LoggerInterface $logger
@@ -95,6 +98,7 @@ class Draft
      * @param StoreManagerInterface $storeManager
      * @param LogHelper $logHelper
      * @param UrlInterface $url
+     * @param Media $mediaHelper
      */
     public function __construct(
         LoggerInterface $logger,
@@ -105,7 +109,8 @@ class Draft
         UrlHelper $urlHelper,
         StoreManagerInterface $storeManager,
         LogHelper $logHelper,
-        UrlInterface $url
+        UrlInterface $url,
+        Media $mediaHelper
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -117,6 +122,7 @@ class Draft
         $this->_customerSession = $session;
         $this->_scopeConfig = $scopeConfig;
         $this->_httpClient = $this->getGuzzleClient();
+        $this->mediaHelper = $mediaHelper;
 
         $this->_urlHelper->initVersionHelper($this->isV2Enabled());
     }
@@ -286,6 +292,8 @@ class Draft
             }
             throw new Exception(__($errorMsg));
         }
+
+        $this->mediaHelper->deleteImage($draftId);
 
         return $this;
     }

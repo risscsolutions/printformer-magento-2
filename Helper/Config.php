@@ -25,6 +25,8 @@ class Config
     const XML_PATH_CONFIG_WISHLIST_HINT             = 'printformer/general/guest_wishlist_hint';
     const XML_PATH_CONFIG_EDIT_TEXT                 = 'printformer/general/cart_edit_text';
     const XML_PATH_CONFIG_IMAGE_PREVIEW             = 'printformer/general/product_image_preview';
+    const XML_PATH_CONFIG_IMAGE_PREVIEW_WIDTH       = 'printformer/general/product_image_preview_width';
+    const XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT      = 'printformer/general/product_image/preview_height';
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
 
@@ -194,6 +196,22 @@ class Config
     public function isUseImagePreview()
     {
         return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_IMAGE_PREVIEW, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return int
+     */
+    public function getImagePreviewWidth()
+    {
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_CONFIG_IMAGE_PREVIEW_WIDTH, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return int
+     */
+    public function getImagePreviewHeight()
+    {
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT, ScopeInterface::SCOPE_STORE, $this->getStoreId());
     }
 
     /**

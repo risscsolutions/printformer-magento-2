@@ -6,6 +6,8 @@ use Magento\Framework\DataObject;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer;
 use Rissc\Printformer\Helper\Api\Url;
+use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Quote\View as ViewHelper;
 
 class DefaultRendererPlugin
@@ -16,16 +18,27 @@ class DefaultRendererPlugin
     /** @var ViewHelper */
     protected $_viewHelper;
 
+    /** @var Media  */
+    protected $_mediaHelper;
+
+    /** @var Config  */
+    protected $_config;
+
     /**
      * DefaultRendererPlugin constructor.
-     *
-     * @param Url        $urlHelper
+     * @param Config $config
+     * @param Media $mediaHelper
+     * @param Url $urlHelper
      * @param ViewHelper $viewHelper
      */
     public function __construct(
+        Config $config,
+        Media $mediaHelper,
         Url $urlHelper,
         ViewHelper $viewHelper
     ) {
+        $this->_config = $config;
+        $this->_mediaHelper = $mediaHelper;
         $this->_urlHelper = $urlHelper;
         $this->_viewHelper = $viewHelper;
     }
@@ -78,7 +91,12 @@ class DefaultRendererPlugin
      */
     public function getThumbImgUrl(\Magento\Framework\DataObject $item)
     {
-        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
-            ->getThumbnail($item->getPrintformerDraftid());
+        if($this->_config->isV2Enabled()) {
+            $url = $this->_mediaHelper->getImageUrl($item->getPrintformerDraftid());
+        } else {
+            $url = $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
+                ->getThumbnail($item->getPrintformerDraftid());
+        }
+        return $url;
     }
 }
