@@ -132,10 +132,6 @@ class GalleryPlugin
                     $this->logger->error($e->getTraceAsString());
                 }
             }
-
-            foreach($result as $item) {
-                \Klytta\Debug\Logger::debug($item->getData());
-            }
         }
         return $result;
     }
