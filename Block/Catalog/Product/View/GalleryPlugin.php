@@ -35,7 +35,7 @@ class GalleryPlugin
     /**
      * @var bool
      */
-    protected $draftImageCreated = false;
+    protected $draftImageCreated = [];
 
     /**
      * @var Media
@@ -46,6 +46,11 @@ class GalleryPlugin
      * @var UrlHelper
      */
     protected $urlHelper;
+
+    /**
+     * @var array
+     */
+    protected $printformerDraft = null;
 
     /**
      * GalleryPlugin constructor.
@@ -73,19 +78,64 @@ class GalleryPlugin
     }
 
     /**
+     * If printformer images have been loaded, check if one of them is the main image
      * @param Gallery $gallery
-     * @param $result
-     * @return mixed
+     * @param \Closure $proceed
+     * @param \Magento\Framework\DataObject $image
+     * @return bool
+     */
+    public function aroundIsMainImage(Gallery $gallery, \Closure $proceed, $image)
+    {
+        if(count($this->draftImageCreated) > 0) {
+            return $image->getIsMainImage();
+        }
+        return $proceed($image);
+    }
+
+    /**
+     * @param Gallery $gallery
+     * @param \Magento\Framework\Data\Collection $result
+     * @return \Magento\Framework\Data\Collection
      */
     public function afterGetGalleryImages(Gallery $gallery, $result)
     {
         if ($this->getImagePreviewUrl()) {
-            $result->addItem(new \Magento\Framework\DataObject([
-                'id' => 0,
-                'small_image_url' => $this->getImagePreviewUrl(),
-                'medium_image_url' => $this->getImagePreviewUrl(),
-                'large_image_url' => $this->getImagePreviewUrl()
-            ]));
+            if($this->config->isV2Enabled()) {
+                $printformerDraft = $this->getPrintformerDraft();
+                $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
+
+                for($i = 0; $i < $pages; $i++) {
+                    try {
+                        $result->addItem(new \Magento\Framework\DataObject([
+                            'id' => $i,
+                            'small_image_url' => $this->getImagePreviewUrl(($i + 1)),
+                            'medium_image_url' => $this->getImagePreviewUrl(($i + 1)),
+                            'large_image_url' => $this->getImagePreviewUrl(($i + 1)),
+                            'is_main_image' => ($i == 0)
+                        ]));
+                    } catch(\Exception $e) {
+                        $this->logger->error($e->getMessage());
+                        $this->logger->error($e->getTraceAsString());
+                    }
+                }
+            } else {
+                try {
+                    $result->addItem(new \Magento\Framework\DataObject([
+                        'id' => 0,
+                        'small_image_url' => $this->getImagePreviewUrl(),
+                        'medium_image_url' => $this->getImagePreviewUrl(),
+                        'large_image_url' => $this->getImagePreviewUrl(),
+                        'is_main_image' => true
+                    ]));
+                } catch(\Exception $e) {
+                    $this->logger->error($e->getMessage());
+                    $this->logger->error($e->getTraceAsString());
+                }
+            }
+
+            foreach($result as $item) {
+                \Klytta\Debug\Logger::debug($item->getData());
+            }
         }
         return $result;
     }
@@ -99,20 +149,32 @@ class GalleryPlugin
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getImagePreviewUrl()
+    public function getPrintformerDraft()
+    {
+        if($this->printformerDraft === null) {
+            $this->printformerDraft = $this->printformerApi->getPrintformerDraft($this->getDraftId());
+        }
+        return $this->printformerDraft;
+    }
+
+    /**
+     * @param int $page
+     * @return null|string
+     */
+    public function getImagePreviewUrl($page = 1)
     {
         $url = null;
         if ($this->config->isUseImagePreview() && $this->getDraftId()) {
             if($this->config->isV2Enabled()) {
                 try {
-                    if (!$this->draftImageCreated) {
+                    if (!isset($this->draftImageCreated[$page])) {
                         $draft = $this->printformerApi->draftProcess($this->getDraftId());
-                        $jpgImg = $this->printformerApi->getThumbnail($this->getDraftId(), $draft->getUserIdentifier(), $this->config->getImagePreviewWidth(), $this->config->getImagePreviewHeight(), 1);
+                        $jpgImg = $this->printformerApi->getThumbnail($this->getDraftId(), $draft->getUserIdentifier(), $this->config->getImagePreviewWidth(), $this->config->getImagePreviewHeight(), $page);
                         $printformerImage = $jpgImg['content'];
 
-                        $imageFilePath = $this->mediaHelper->getImageFilePath($this->getDraftId());
+                        $imageFilePath = $this->mediaHelper->getImageFilePath($this->getDraftId(), $page);
 
                         $image = imagecreatefromstring($printformerImage);
                         imageAlphaBlending($image, true);
@@ -120,10 +182,10 @@ class GalleryPlugin
                         imagejpeg($image, $imageFilePath, 90);
                         imagedestroy($image);
 
-                        $this->draftImageCreated = true;
+                        $this->draftImageCreated[$page] = true;
                     }
 
-                    $url = $this->mediaHelper->getImageUrl($this->getDraftId());
+                    $url = $this->mediaHelper->getImageUrl($this->getDraftId(), $page);
                 } catch (\Exception $e) {
                     $this->logger->error($e->getMessage());
                     $this->logger->error($e->getTraceAsString());
