@@ -22,12 +22,12 @@ class Media extends AbstractHelper
     /**
      * @var string
      */
-    protected $imagePath = 'printformer/preview/%s.png';
+    protected $imagePath = 'printformer/preview/%s_%d.png';
 
     /**
      * @var string
      */
-    protected $imageUrlPath = 'pub/media/printformer/preview/%s.png';
+    protected $imageUrlPath = 'pub/media/printformer/preview/%s_%d.png';
 
     /**
      * @var string
@@ -51,26 +51,28 @@ class Media extends AbstractHelper
     }
 
     /**
-     * @param $draftId
+     * @param string $draftId
+     * @param int $page
      * @return string
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function getImageFilePath($draftId)
+    public function getImageFilePath($draftId, $page = 1)
     {
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
         $mediaDir->create($this->imageFolder);
-        return $mediaDir->getAbsolutePath(sprintf($this->imagePath, $draftId));
+        return $mediaDir->getAbsolutePath(sprintf($this->imagePath, $draftId, $page));
     }
 
     /**
-     * @param $draftId
+     * @param string $draftId
+     * @param int $page
      * @return bool
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function deleteImage($draftId)
+    public function deleteImage($draftId, $page = 1)
     {
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-        $draftImagePath = sprintf($this->imagePath, $draftId);
+        $draftImagePath = sprintf($this->imagePath, $draftId, $page);
         if($mediaDir->isExist($draftImagePath)) {
             $mediaDir->delete($draftImagePath);
             return true;
@@ -80,11 +82,27 @@ class Media extends AbstractHelper
     }
 
     /**
-     * @param $draftId
+     * Delete all draft images
+     * @param string $draftId
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function deleteAllImages($draftId)
+    {
+        $run = true;
+        $page = 1;
+        while($run) {
+            $run = $this->deleteImage($draftId, $page);
+            $page++;
+        }
+    }
+
+    /**
+     * @param string $draftId
+     * @param int $page
      * @return string
      */
-    public function getImageUrl($draftId)
+    public function getImageUrl($draftId, $page = 1)
     {
-        return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB) . sprintf($this->imageUrlPath, $draftId);
+        return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB) . sprintf($this->imageUrlPath, $draftId, $page);
     }
 }

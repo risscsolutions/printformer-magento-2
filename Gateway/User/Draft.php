@@ -293,7 +293,7 @@ class Draft
             throw new Exception(__($errorMsg));
         }
 
-        $this->mediaHelper->deleteImage($draftId);
+        $this->mediaHelper->deleteAllImages($draftId);
 
         return $this;
     }
