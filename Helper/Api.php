@@ -379,12 +379,14 @@ class Api
     }
 
     /**
-     * @param $draftHash
-     * @param $userIdentifier
-     *
+     * @param string $draftHash
+     * @param string $userIdentifier
+     * @param int $width
+     * @param int $height
+     * @param int $page
      * @return array
      */
-    public function getThumbnail($draftHash, $userIdentifier)
+    public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
@@ -401,8 +403,9 @@ class Api
         $postFields = [
             'json' => [
                 'jwt' => $JWT,
-                'width' => 200,
-                'height' => 200
+                'width' => $width,
+                'height' => $height,
+                'page' => $page
             ]
         ];
 

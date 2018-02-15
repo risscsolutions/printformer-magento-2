@@ -78,6 +78,18 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="product_image_preview_width" translate="label" type="text" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Preview image width</label>
+                    <depends>
+                        <field id="product_image_preview">1</field>
+                    </depends>
+                </field>
+                <field id="product_image_preview_height" translate="label" type="text" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Preview image height</label>
+                    <depends>
+                        <field id="product_image_preview">1</field>
+                    </depends>
+                </field>
                 <field id="config_button_text" translate="label" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>"Configure" Button Text</label>
                     <depends>
