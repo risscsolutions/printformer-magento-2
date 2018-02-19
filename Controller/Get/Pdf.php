@@ -3,14 +3,15 @@ namespace Rissc\Printformer\Controller\Get;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
-use Rissc\Printformer\Gateway\User\Draft;
+use Rissc\Printformer\Gateway\User\Draft as GatewayDraft;
 use Rissc\Printformer\Helper\Url;
 use Rissc\Printformer\Model\ResourceModel\Draft\Collection;
 use Rissc\Printformer\Model\ResourceModel\Draft\CollectionFactory as DraftCollectionFactory;
+use Rissc\Printformer\Model\Draft;
 
 class Pdf extends Action
 {
-    /** @var Draft */
+    /** @var GatewayDraft */
     protected $_draftHelper;
 
     /** @var Url */
@@ -22,7 +23,7 @@ class Pdf extends Action
     public function __construct(
         Context $context,
         DraftCollectionFactory $draftCollectionFactory,
-        Draft $draft,
+        GatewayDraft $draft,
         Url $url
     ){
         $this->_draftHelper = $draft;
@@ -38,6 +39,7 @@ class Pdf extends Action
         $isAsync = false;
         /** @var Collection $draftCollection */
         $draftCollection = $this->_draftCollectionFactory->create();
+        /** @var Draft $draftItem */
         $draftItem = $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftId]);
         if($draftItem->count() == 1) {
             $draft = $draftItem->getFirstItem();
