@@ -2,40 +2,42 @@
 
 namespace Rissc\Printformer\Observer\Product\View\Buttons;
 
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
-
-use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\Product;
 use Rissc\Printformer\Gateway\User\Draft;
 use Rissc\Printformer\Model\ProductFactory as PfProductFactory;
 use Rissc\Printformer\Model\Product as PfProduct;
-use Magento\Store\Api\StoreRepositoryInterface;
-use Magento\Framework\App\Request\Http;
 
 class Observer implements ObserverInterface
 {
-    /** @var ProductFactory */
-    protected $_productFactory;
-
-    /** @var PfProductFactory */
+    /**
+     * @var PfProductFactory
+     */
     protected $_pfProductFactory;
 
-    /** @var Draft */
+    /**
+     * @var Draft
+     */
     protected $_draftGateway;
 
-    /** @var \Magento\Framework\App\Request\Http */
+    /**
+     * @var RequestInterface
+     */
     private $_request;
 
+    /**
+     * Observer constructor.
+     * @param RequestInterface $request
+     * @param PfProductFactory $pfProductFactory
+     * @param Draft $draft
+     */
     public function __construct(
-        Http $request,
-        ProductFactory $productFactory,
+        RequestInterface $request,
         PfProductFactory $pfProductFactory,
-        StoreRepositoryInterface $storeRepository,
         Draft $draft
-    )
-    {
-        $this->_productFactory = $productFactory;
+    ) {
         $this->_pfProductFactory = $pfProductFactory;
         $this->_draftGateway = $draft;
         $this->_request = $request;
@@ -44,41 +46,24 @@ class Observer implements ObserverInterface
     public function execute(EventObserver $observer)
     {
         /** @var Product $product */
-        $product = $this->_productFactory->create();
-        $connection = $product->getResource()->getConnection();
-        $table = $connection->getTableName('catalog_product_entity_text');
-
         $product = $observer->getProduct();
-
-        $product->getResource()->load($product, $product->getId());
 
         $storeId = (int) $this->_request->getParam('store', 0);
 
-        /** @var PfProduct $pfProduct */
         $pfProduct = $this->getPfProductByMasterId($product->getPrintformerProduct(), $storeId);
-        if($pfProduct && $pfProduct->getId())
-        {
-            $intents = explode(',', $pfProduct->getIntents());
+        if($pfProduct->getId()) {
             $attribute = $product->getResource()->getAttribute('printformer_capabilities');
-            if ($attribute->getId())
-            {
+
+            if ($attribute->getId()) {
                 $currentlySelectedValueFromMultiselect = $attribute->getFrontend()->getValue($product);
                 $multiselectAsArray = explode(',', $currentlySelectedValueFromMultiselect);
                 $allOptionIds = [];
                 foreach ($multiselectAsArray as $singleMultiselectItem) {
-                    $optionIdOfSingleItem = $attribute->getSource()->getOptionId(ltrim($singleMultiselectItem));
-                    $allOptionIds[] = $optionIdOfSingleItem;
+                    $allOptionIds[] = $attribute->getSource()->getOptionId(ltrim($singleMultiselectItem));
                 }
 
-                $avaliableIntents = [];
-                $options = $attribute->getOptions();
-                foreach ($options as $option)
-                {
-                    if(in_array($this->_draftGateway->getIntent($option->getLabel()), $intents))
-                    {
-                        $avaliableIntents[] = (int) $option->getValue();
-                    }
-                }
+                $connection = $product->getResource()->getConnection();
+                $table = $connection->getTableName('catalog_product_entity_text');
 
                 $qry = "
                     UPDATE `$table`
@@ -91,12 +76,16 @@ class Observer implements ObserverInterface
                         AND
                             `entity_id` = ?";
 
-                $connection->query($qry,[implode(',', $allOptionIds), $attribute->getId(), $storeId, $product->getId()]);
+                $connection->query($qry, [implode(',', $allOptionIds), $attribute->getId(), $storeId, $product->getId()]);
             }
         }
-
     }
 
+    /**
+     * @param string $masterId
+     * @param int $storeId
+     * @return \Magento\Framework\DataObject|PfProduct
+     */
     protected function getPfProductByMasterId($masterId, $storeId)
     {
         /** @var PfProduct $pfProduct */
@@ -105,11 +94,10 @@ class Observer implements ObserverInterface
             ->addFieldToFilter('master_id', ['eq' => $masterId])
             ->addFieldToFilter('store_id', ['eq' => $storeId]);
 
-        if($pfProductCollection->count() > 0)
-        {
-            return $pfProductCollection->getFirstItem();
+        if($pfProductCollection->count() > 0) {
+            $pfProduct = $pfProductCollection->getFirstItem();
         }
 
-        return null;
+        return $pfProduct;
     }
 }
