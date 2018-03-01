@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-        <referenceBlock name="customer.wishlist.item.cart" ifconfig="printformer/general/enabled" template="Rissc_Printformer::wishlist/item/column/cart.phtml" />
-        <referenceBlock name="customer.wishlist.item.edit" ifconfig="printformer/general/enabled" remove="true" />
+        <referenceBlock name="customer.wishlist.item.cart" template="Rissc_Printformer::wishlist/item/column/cart.phtml" />
+        <referenceBlock name="customer.wishlist.item.edit" remove="true" />
     </body>
 </page>
