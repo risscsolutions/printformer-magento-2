@@ -170,14 +170,19 @@ class Draft
     {
         $userIdentifier = $this->_customerSession->getPrintformerIdentification();
         if(!$userIdentifier) {
-            $userIdentifier = $this->createUser();
-            $this->_customerSession->setPrintformerIdentification($userIdentifier);
-
             if ($this->_customerSession->isLoggedIn()) {
                 $customer = $this->_customerSession->getCustomer();
-                $customer->setData('printformer_user_identifier', $userIdentifier);
-                $customer->getResource()->save($customer);
+                $userIdentifier = $customer->getData('printformer_identification');
+                if (!$userIdentifier) {
+                    $userIdentifier = $this->createUser();
+                    $customer->setData('printformer_identification', $userIdentifier);
+                    $customer->getResource()->save($customer);
+                }
+            } else {
+                $userIdentifier = $this->createUser();
             }
+
+            $this->_customerSession->setPrintformerIdentification($userIdentifier);
         }
 
         return $userIdentifier;
