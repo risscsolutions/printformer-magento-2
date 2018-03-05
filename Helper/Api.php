@@ -452,4 +452,22 @@ class Api
 
         return $pdfUrl . '?' . http_build_query($postFields);
     }
+
+    public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
+    {
+        $postFields = [
+            'json' => [
+                'user_identifier' => $userIdentifier,
+                'drafts' => $drafts,
+                'dry_run' => $dryRun
+            ]
+        ];
+
+        return $this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() . '/api-ext/draft/claim', $postFields);
+    }
+
+    public function getV2PrintformerUrl()
+    {
+        return $this->apiUrl()->getPrintformerBaseUrl();
+    }
 }

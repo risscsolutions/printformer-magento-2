@@ -275,7 +275,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.2.40', '<')) {
+        if(version_compare($context->getVersion(), '100.3.0', '<')) {
             $tableName = $connection->getTableName('printformer_draft');
             $columnName = 'user_identifier';
             if(!$connection->tableColumnExists($tableName, $columnName)) {
