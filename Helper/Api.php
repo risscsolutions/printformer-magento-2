@@ -453,6 +453,13 @@ class Api
         return $pdfUrl . '?' . http_build_query($postFields);
     }
 
+    /**
+     * @param string $userIdentifier
+     * @param array  $drafts
+     * @param bool   $dryRun
+     *
+     * @return string
+     */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
         $postFields = [
@@ -463,11 +470,25 @@ class Api
             ]
         ];
 
-        return $this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() . '/api-ext/draft/claim', $postFields);
+        return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() .
+                '/api-ext/draft/claim', $postFields)->getBody());
     }
 
-    public function getV2PrintformerUrl()
+    /**
+     * @param string $userIdentifierOne
+     * @param string $userIdentifierTwo
+     *
+     * @return string
+     */
+    public function userMerge($userIdentifierOne, $userIdentifierTwo)
     {
-        return $this->apiUrl()->getPrintformerBaseUrl();
+        $postFields = [
+            'json' => [
+                'source_user_identifier' => $userIdentifierTwo
+            ]
+        ];
+
+        return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() . 'api-ext/user/' .
+                $userIdentifierOne . '/merge', $postFields)->getBody());
     }
 }
