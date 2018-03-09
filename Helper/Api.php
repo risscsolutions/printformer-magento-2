@@ -466,7 +466,7 @@ class Api
             'json' => [
                 'user_identifier' => $userIdentifier,
                 'drafts' => $drafts,
-                'dry_run' => $dryRun
+                'dryRun' => $dryRun
             ]
         ];
 
