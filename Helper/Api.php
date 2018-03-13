@@ -279,12 +279,9 @@ class Api
             $draftCollection->addFieldToFilter('product_id', ['eq' => $productId]);
         }
         if ($draftCollection->count() == 1) {
-            if($draftCollection->getFirstItem()->getUserIdentifier() == $this->getUserIdentifier()
-                || $this->_customerSession->getCustomerId() == null) {
-                $process = $draftCollection->getFirstItem();
-                if ($process->getId() && $process->getDraftId()) {
-                    $this->_sessionHelper->setCurrentIntent($process->getIntent());
-                }
+            $process = $draftCollection->getFirstItem();
+            if ($process->getId() && $process->getDraftId()) {
+                $this->_sessionHelper->setCurrentIntent($process->getIntent());
             }
         } else {
             $process = $draftCollection->getLastItem();
