@@ -32,17 +32,5 @@ class Customer implements ObserverInterface
     {
         /** @var AclData $aclData */
         $aclData = $observer->getAclData();
-
-        $collection = $this->customerCollection
-            ->addAttributeToSelect('*')
-            ->addAttributeToFilter('printformer_identification', $aclData->getUserIdentifier())
-            ->load();
-
-        if($collection->count() == 1) {
-            /** @var \Magento\Customer\Model\Customer $customer */
-            $customer = $collection->getFirstItem();
-
-            $aclData->setAllowAction(true);
-        }
     }
 }

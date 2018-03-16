@@ -16,6 +16,5 @@ class Admin implements ObserverInterface
     {
         /** @var AclData $aclData */
         $aclData = $observer->getAclData();
-        //$aclData->setAllowAction(true);
     }
 }

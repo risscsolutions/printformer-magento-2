@@ -5,45 +5,30 @@ namespace Rissc\Printformer\Controller\Adminhtml\Group;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Framework\View\Result\PageFactory;
 use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
-use Magento\Customer\Api\GroupRepositoryInterface;
 use Rissc\Printformer\Api\Data\Customer\Group\RightInterface;
-use Rissc\Printformer\Model\Customer\Group\RightRepository;
-use Rissc\Printformer\Model\Customer\Group\RightFactory;
 use Rissc\Printformer\Helper\Customer\Group\Right as RightHelper;
 
 class Save extends Action
 {
     /**
-     * @var PageFactory
-     */
-    protected $pageFactory;
-
-    /**
-     * @var RightRepository
-     */
-    protected $rightRepository;
-
-    /**
      * @var GroupCollection
      */
     protected $groupCollection;
-
-    protected $groupRepository;
-
-    /**
-     * @var RightFactory
-     */
-    protected $rightFactory;
 
     /**
      * @var RightHelper
      */
     protected $rightHelper;
 
+    /**
+     * @var array
+     */
     protected $group = [];
 
+    /**
+     * @var array
+     */
     protected $rights = [
         RightInterface::DRAFT_EDITOR_VIEW,
         RightInterface::DRAFT_EDITOR_UPDATE,
@@ -54,26 +39,16 @@ class Save extends Action
 
     /**
      * Save constructor.
-     * @param PageFactory $pageFactory
      * @param GroupCollection $groupCollection
-     * @param RightRepository $rightRepository
-     * @param RightFactory $rightFactory
+     * @param RightHelper $rightHelper
      * @param Context $context
      */
     public function __construct(
-        PageFactory $pageFactory,
-        GroupRepositoryInterface $groupRepository,
         GroupCollection $groupCollection,
-        RightRepository $rightRepository,
-        RightFactory $rightFactory,
         RightHelper $rightHelper,
         Context $context
     ) {
-        $this->pageFactory = $pageFactory;
-        $this->groupRepository = $groupRepository;
         $this->groupCollection = $groupCollection;
-        $this->rightRepository = $rightRepository;
-        $this->rightFactory = $rightFactory;
         $this->rightHelper = $rightHelper;
         parent::__construct($context);
     }
@@ -90,6 +65,10 @@ class Save extends Action
         return $this->group[$groupId];
     }
 
+    /**
+     * Save printformer customer rights
+     * @return $this|\Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
+     */
     public function execute()
     {
         $resultRedirect = $this->resultRedirectFactory->create()->setPath('*/*/rights');

@@ -100,4 +100,10 @@ interface RightInterface
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function reset();
+
+    /**
+     * @param string $key
+     * @return bool
+     */
+    public function hasRight($key);
 }

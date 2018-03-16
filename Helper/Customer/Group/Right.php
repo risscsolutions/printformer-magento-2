@@ -7,6 +7,7 @@ use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Customer\Model\Group;
 use Magento\Framework\App\Helper\Context;
 use Rissc\Printformer\Api\Data\Customer\Group\RightInterface;
+use Rissc\Printformer\Model\AclData;
 use Rissc\Printformer\Model\Customer\Group\RightRepository;
 use Rissc\Printformer\Model\Customer\Group\RightFactory;
 
@@ -118,5 +119,14 @@ class Right extends AbstractHelper
             }
         }
         return $this->rights;
+    }
+
+    /**
+     * @param AclData $aclData
+     * @return string
+     */
+    public function getRightKey(AclData $aclData)
+    {
+        return $aclData->getEntityType() . '_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $aclData->getAction()));
     }
 }

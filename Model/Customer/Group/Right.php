@@ -146,4 +146,12 @@ class Right extends AbstractModel implements RightInterface
         $this->setReviewView(false);
         return $this;
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasRight($key)
+    {
+        return (bool)$this->getData($key);
+    }
 }
