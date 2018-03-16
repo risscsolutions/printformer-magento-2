@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface" type="Magento\Framework\Api\SearchResults" />
     <type name="Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer">
         <plugin name="set-adminhtml-order-view-item-renderer" type="Rissc\Printformer\Block\Adminhtml\Sales\Order\View\Items\Renderer\DefaultRendererPlugin" sortOrder="100"/>
     </type>

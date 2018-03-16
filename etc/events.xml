@@ -18,4 +18,9 @@
     <event name="catalog_product_save_after">
         <observer name="rissc_printformer_product_view_buttons" instance="Rissc\Printformer\Observer\Product\View\Buttons\Observer" />
     </event>
+    <event name="printformer_acl_process">
+        <observer name="rissc_printformer_acl_processor_admin" instance="Rissc\Printformer\Observer\Acl\Processor\Admin" />
+        <observer name="rissc_printformer_acl_processor_customer" instance="Rissc\Printformer\Observer\Acl\Processor\Customer" />
+        <observer name="rissc_printformer_acl_processor_group" instance="Rissc\Printformer\Observer\Acl\Processor\Group" />
+    </event>
 </config>

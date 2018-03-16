@@ -96,6 +96,7 @@ class Open extends Action
 
     public function execute()
     {
+        \Klytta\Debug\Logger::debug(__METHOD__);
         /**
          * Get all params and variables needed
          */

@@ -28,5 +28,14 @@
          action="printformer/history/index"
          parent="Rissc_Printformer::module"
     />
+    <add id="Rissc_Printformer::customer_group_rights"
+         title="Customer Group Rights"
+         translate="title"
+         module="Rissc_Printformer"
+         sortOrder="60"
+         parent="Magento_Backend::other_settings"
+         action="printformer/group/rights"
+         resource="Rissc_Printformer::group"
+    />
 </menu>
 </config>

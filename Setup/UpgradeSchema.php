@@ -11,9 +11,10 @@ use \Magento\Framework\DB\Adapter\AdapterInterface;
 class UpgradeSchema
     implements UpgradeSchemaInterface
 {
-    const TABLE_NAME_DRAFT    = 'printformer_draft';
-    const TABLE_NAME_PRODUCT  = 'printformer_product';
-    const TABLE_NAME_HISTORY  = 'printformer_async_history';
+    const TABLE_NAME_DRAFT                = 'printformer_draft';
+    const TABLE_NAME_PRODUCT              = 'printformer_product';
+    const TABLE_NAME_HISTORY              = 'printformer_async_history';
+    const TABLE_NAME_CUSTOMER_GROUP_RIGHT = 'printformer_customer_group_right';
     
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
@@ -291,6 +292,28 @@ class UpgradeSchema
             }
         }
 
+        if(version_compare($context->getVersion(), '100.3.1', '<')) {
+            $table = $connection->newTable($setup->getTable(self::TABLE_NAME_CUSTOMER_GROUP_RIGHT))
+                ->addColumn(
+                    'id',
+                    DdlTable::TYPE_INTEGER,
+                    null,
+                    [
+                        'identity' => true,
+                        'nullable' => false,
+                        'primary' => true,
+                        'unsigned' => true
+                    ]
+                )
+                ->addColumn('customer_group_id', DdlTable::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true])
+                ->addColumn('draft_editor_view', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('draft_editor_update', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('review_view', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('review_finish', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('review_end', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0]);
+
+            $setup->getConnection()->createTable($table);
+        }
 
         $setup->endSetup();
     }
