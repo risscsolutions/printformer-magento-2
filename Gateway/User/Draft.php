@@ -112,7 +112,6 @@ class Draft
         UrlInterface $url,
         Media $mediaHelper
     ) {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
         $this->_jsonDecoder = $jsonDecoder;
@@ -132,11 +131,9 @@ class Draft
      * @return bool
      */
     public function isV2Enabled() {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         if($this->v2enabled === null) {
             $this->v2enabled = ($this->_scopeConfig->getValue('printformer/version2group/version2', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) == 1);
         }
-        \Klytta\Debug\Logger::debug($this->v2enabled);
         return $this->v2enabled;
     }
 
@@ -144,7 +141,6 @@ class Draft
      * @return mixed
      */
     public function getClientApiKey() {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         if($this->apiKey === null) {
             $this->apiKey = $this->_scopeConfig->getValue('printformer/version2group/v2apiKey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         }
@@ -156,7 +152,6 @@ class Draft
      */
     public function createUser()
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $url = $this->_urlHelper->getUser();
         if(!$url) {
             return '';
@@ -173,14 +168,12 @@ class Draft
      */
     public function getUserIdentifier()
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $userIdentifier = $this->_customerSession->getPrintformerIdentification();
         if(!$userIdentifier) {
             if ($this->_customerSession->isLoggedIn()) {
                 $customer = $this->_customerSession->getCustomer();
                 $userIdentifier = $customer->getData('printformer_identification');
                 if (!$userIdentifier) {
-                    \Klytta\Debug\Logger::debug('Creating new user identifier');
                     $userIdentifier = $this->createUser();
                     $customer->setData('printformer_identification', $userIdentifier);
                     $customer->getResource()->save($customer);
@@ -196,12 +189,10 @@ class Draft
     }
 
     public function setUserIdentifier($userIdentifier) {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $this->userIdentifier = $userIdentifier;
     }
 
     public function getClientIdentifier() {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         return $this->_scopeConfig->getValue('printformer/version2group/v2identifier', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
@@ -210,7 +201,6 @@ class Draft
      * @return string
      */
     public function getRedirectUrl($redirectUrl) {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         /**
          * Create a valid JWT
          */
@@ -235,7 +225,6 @@ class Draft
 
 
     public function getPdfDocument($draftId) {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         /**
          * Create a valid JWT
          */
@@ -256,7 +245,6 @@ class Draft
      * @return Client
      */
     protected function getGuzzleClient() {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraft();
@@ -282,7 +270,6 @@ class Draft
      */
     public function deleteDraft($draftId, $storeId)
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $url = $this->_urlHelper
             ->setStoreId($storeId)
             ->getDraftDelete($draftId);
@@ -323,7 +310,6 @@ class Draft
      */
     public function createDraft($masterId, $intent = null, $userIdentifier = null)
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $url      = null;
         $response = null;
 
@@ -391,7 +377,6 @@ class Draft
      */
     public function getDraft($draftId)
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $url = $this->_urlHelper
             ->getDraft($draftId);
 
@@ -424,7 +409,6 @@ class Draft
 
     protected function _curlRequest($url, $options)
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         $ch = curl_init($url);
         if (is_array($options)) {
             foreach ($options as $key => $option) {
@@ -449,7 +433,6 @@ class Draft
 
     public function getIntent($intent)
     {
-        \Klytta\Debug\Logger::debug(__METHOD__);
         switch(strtolower($intent)) {
             case 'editor':
                 return 'customize';
