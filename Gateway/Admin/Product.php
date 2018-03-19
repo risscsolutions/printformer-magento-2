@@ -143,37 +143,37 @@ class Product
     /**
      * @return bool
      */
-    protected function isV2Enabled()
+    protected function isV2Enabled($storeId = Store::DEFAULT_STORE_ID)
     {
         return
             $this->_scopeConfig->getValue(
                 'printformer/version2group/version2',
                 ScopeInterface::SCOPE_STORES,
-                $this->storeManager->getStore()->getId()
+                $storeId
             ) == 1;
     }
 
     /**
      * @return string
      */
-    protected function getV2ApiKey()
+    protected function getV2ApiKey($storeId = Store::DEFAULT_STORE_ID)
     {
         return $this->_scopeConfig->getValue(
             'printformer/version2group/v2apiKey',
             ScopeInterface::SCOPE_STORES,
-            $this->storeManager->getStore()->getId()
+            $storeId
         );
     }
 
     /**
      * @return string
      */
-    protected function getV2Endpoint()
+    protected function getV2Endpoint($storeId = Store::DEFAULT_STORE_ID)
     {
         return $this->_scopeConfig->getValue(
             'printformer/version2group/v2url',
             ScopeInterface::SCOPE_STORES,
-            $this->storeManager->getStore()->getId()
+            $storeId
         );
     }
 
@@ -207,16 +207,17 @@ class Product
     protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
-        $apiKey = $this->getV2ApiKey();
+
+        $apiKey = $this->getV2ApiKey($storeId);
 
         $this->logger->debug($url);
 
-        if ($this->isV2Enabled() && !empty($apiKey)) {
+        if ($this->isV2Enabled($storeId) && !empty($apiKey)) {
             $request = new HttpClient([
                 'base_url' => $url,
                 'headers' => [
                     'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->getV2ApiKey()
+                    'Authorization' => 'Bearer ' . $apiKey
                 ]
             ]);
         } else {
@@ -232,6 +233,7 @@ class Product
         }
 
         $responseArray = $this->jsonDecoder->decode($response->getBody());
+
         if (!is_array($responseArray)) {
             throw new Exception(__('Error decoding products.'));
         }
@@ -250,7 +252,7 @@ class Product
         $responseRealigned = [];
         foreach($responseArray['data'] as $responseData)
         {
-            $masterID = ($this->isV2Enabled() && isset($responseData['id']['id']) ? $responseData['id']['id'] :
+            $masterID = ($this->isV2Enabled($storeId) && isset($responseData['id']['id']) ? $responseData['id']['id'] :
                 $responseData['rissc_w2p_master_id']);
             if(!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
@@ -278,14 +280,14 @@ class Product
             {
                 $pfProduct = $this->printformerProductFactory->create();
                 $pfProduct->setStoreId($storeId)
-                    ->setSku($this->isV2Enabled() ? null : $responseRealigned[$masterID]['sku'])
+                    ->setSku($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
                     ->setName($responseRealigned[$masterID]['name'])
-                    ->setDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['description'])
-                    ->setShortDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['short_description'])
-                    ->setStatus($this->isV2Enabled() ? 1 : $responseRealigned[$masterID]['status'])
-                    ->setMasterId($this->isV2Enabled() ? $responseRealigned[$masterID]['id']['id'] :
+                    ->setDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
+                    ->setShortDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
+                    ->setStatus($this->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
+                    ->setMasterId($this->isV2Enabled($storeId) ? $responseRealigned[$masterID]['id']['id'] :
                         $responseRealigned[$masterID]['rissc_w2p_master_id'])
-                    ->setMd5($this->isV2Enabled() ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
+                    ->setMd5($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
                     ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
                     ->setCreatedAt(time())
                     ->setUpdatedAt(time());
@@ -295,11 +297,11 @@ class Product
             else
             {
                 $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
-                $pfProduct->setSku($this->isV2Enabled() ? null : $responseRealigned[$masterID]['sku'])
+                $pfProduct->setSku($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
                     ->setName($responseRealigned[$masterID]['name'])
-                    ->setDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['description'])
-                    ->setShortDescription($this->isV2Enabled() ? null : $responseRealigned[$masterID]['short_description'])
-                    ->setStatus($this->isV2Enabled() ? 1 : $responseRealigned[$masterID]['status'])
+                    ->setDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
+                    ->setShortDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
+                    ->setStatus($this->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
                     ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
                     ->setUpdatedAt(time());
 

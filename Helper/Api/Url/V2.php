@@ -36,6 +36,8 @@ class V2
 
     /** @var CustomerSession */
     protected $_customerSession;
+
+    protected $_storeId = 0;
     /**
      * V2 constructor.
      *
@@ -61,6 +63,8 @@ class V2
      */
     public function setStoreId($storeId)
     {
+        $this->_storeId = $storeId;
+
         return $this;
     }
 
@@ -69,7 +73,7 @@ class V2
      */
     public function getStoreId()
     {
-        return null;
+        return $this->_storeId;
     }
 
     /**
@@ -98,7 +102,7 @@ class V2
      */
     public function getPrintformerBaseUrl()
     {
-        $store = $this->_storeManager->getStore();
+        $store = $this->_storeManager->getStore($this->getStoreId());
         return $this->scopeConfig->getValue('printformer/version2group/v2url',
             ScopeInterface::SCOPE_STORES, $store->getId());
     }

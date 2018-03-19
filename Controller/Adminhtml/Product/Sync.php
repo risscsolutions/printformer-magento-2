@@ -65,7 +65,7 @@ class Sync extends Action
             $this->gateway->syncProducts($storeId);
             $response = ['success' => 'true', 'message' => __('Products sync successful.')];
         } catch (\Exception $e) {
-        $response = ['error' => 'true', 'message' => $e->getMessage()];
+            $response = ['error' => 'true', 'message' => $e->getMessage()];
         }
         $this->_actionFlag->set('', self::FLAG_NO_POST_DISPATCH, true);
         $resultJson = $this->resultJsonFactory->create();
