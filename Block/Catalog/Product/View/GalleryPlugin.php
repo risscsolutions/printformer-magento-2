@@ -187,7 +187,7 @@ class GalleryPlugin
                     $this->logger->error($e->getTraceAsString());
                 }
             } else {
-                $url = $this->urlHelper->getThumbImgUrl($this->getDraftId());
+                $url = $this->urlHelper->getThumbnail($this->getDraftId());
             }
         }
         return $url;
