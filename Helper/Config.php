@@ -49,9 +49,6 @@ class Config
     const XML_PATH_CONFIG_COLOR_OPTION_NAME         = 'printformer/color/option_name';
     const XML_PATH_CONFIG_COLOR_OPTION_VALUES       = 'printformer/color/option_values';
 
-    const XML_PATH_CONFIG_CRON_ENABLED              = 'printformer/cron/enabled';
-    const XML_PATH_CONFIG_CRON_CLEANUP_DAYS         = 'printformer/cron/cleanup_days';
-
     const XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE     = 'printformer/general/processing_type';
 
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
@@ -383,22 +380,6 @@ class Config
     {
         $value = $this->scopeConfig->getValue(self::XML_PATH_CONFIG_COLOR_OPTION_VALUES, ScopeInterface::SCOPE_STORE, $this->getStoreId());
         return unserialize($value);
-    }
-
-    /**
-     * @return string
-     */
-    public function isCronEnabled()
-    {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_CRON_ENABLED, ScopeInterface::SCOPE_STORE, $this->getStoreId());
-    }
-
-    /**
-     * @return string
-     */
-    public function getCronCleanupDays()
-    {
-        return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_CRON_CLEANUP_DAYS, ScopeInterface::SCOPE_STORE, $this->getStoreId());
     }
 
     /**
