@@ -173,9 +173,19 @@ class GalleryPlugin
                         $imageFilePath = $this->mediaHelper->getImageFilePath($this->getDraftId(), $page);
 
                         $image = imagecreatefromstring($printformerImage);
-                        imageAlphaBlending($image, true);
-                        imageSaveAlpha($image, true);
-                        imagejpeg($image, $imageFilePath, 90);
+
+                        $width = imagesx($image);
+                        $height = imagesy($image);
+
+                        $out = imagecreatetruecolor($width, $height);
+                        imagealphablending($out,false);
+                        $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
+                        imagefill($out, 0, 0, $transparentindex);
+                        imagesavealpha($out, true);
+
+                        imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
+                        imagepng($out,$imageFilePath);
+
                         imagedestroy($image);
 
                         $this->draftImageCreated[$page] = true;
