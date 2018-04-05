@@ -311,7 +311,7 @@ class Api
      */
     public function setAsyncOrdered($draftIds)
     {
-        $draftProcessingUrl = $this->apiUrl()->getDraftProcessing($draftIds);
+        $draftProcessingUrl = $this->apiUrl()->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
         $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
 
         $postFields = [
