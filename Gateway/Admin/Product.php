@@ -253,7 +253,7 @@ class Product
         foreach($responseArray['data'] as $responseData)
         {
             $masterID = ($this->isV2Enabled($storeId) && isset($responseData['id']['id']) ? $responseData['id']['id'] :
-                $responseData['rissc_w2p_master_id']);
+                ($this->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] : $responseData['rissc_w2p_master_id']));
             if(!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
                 $responseRealigned[$masterID] = $responseData;
