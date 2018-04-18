@@ -24,10 +24,6 @@
                 <query_parameter>risscw2pcustomcolorvariant</query_parameter>
                 <option_name>color</option_name>
             </color>
-            <cron>
-                <enabled>1</enabled>
-                <cleanup_days>30</cleanup_days>
-            </cron>
         </printformer>
     </default>
 </config>

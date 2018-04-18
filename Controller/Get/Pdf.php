@@ -18,17 +18,15 @@ class Pdf extends Action
 
     /**
      * Pdf constructor.
-     *
-     * @param Context                $context
+     * @param Context $context
      * @param DraftCollectionFactory $draftCollectionFactory
-     * @param Api                    $apiHelper
+     * @param Api $apiHelper
      */
     public function __construct(
         Context $context,
         DraftCollectionFactory $draftCollectionFactory,
         Api $apiHelper
-    )
-    {
+    ) {
         $this->_apiHelper = $apiHelper;
         $this->_draftCollectionFactory = $draftCollectionFactory;
         parent::__construct($context);
@@ -46,15 +44,12 @@ class Pdf extends Action
         /** @var DraftModel $draft */
         $draft = $this->_apiHelper->draftProcess($draftId);
 
-        if ($draftId == $draft->getDraftid()) {
+        if ($draftId == $draft->getDraftId()) {
             $url = $this->_apiHelper->apiUrl()->getAdminPdf($draft->getDraftId(), $quoteId);
             $this->_redirect($url);
-
             return;
         }
 
         $this->_redirect($this->_url->getUrl('/'));
-
-
     }
 }
