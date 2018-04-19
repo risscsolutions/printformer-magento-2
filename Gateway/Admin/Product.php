@@ -252,8 +252,8 @@ class Product
         $responseRealigned = [];
         foreach($responseArray['data'] as $responseData)
         {
-            $masterID = ($this->isV2Enabled($storeId) && isset($responseData['id']['id']) ? $responseData['id']['id'] :
-                ($this->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] : $responseData['rissc_w2p_master_id']));
+            $masterID = ($this->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
+                $responseData['rissc_w2p_master_id']);
             if(!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
                 $responseRealigned[$masterID] = $responseData;
@@ -285,7 +285,7 @@ class Product
                     ->setDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
                     ->setShortDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
                     ->setStatus($this->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
-                    ->setMasterId($this->isV2Enabled($storeId) ? $responseRealigned[$masterID]['id']['id'] :
+                    ->setMasterId($this->isV2Enabled($storeId) ? $responseRealigned[$masterID]['id'] :
                         $responseRealigned[$masterID]['rissc_w2p_master_id'])
                     ->setMd5($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
                     ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
