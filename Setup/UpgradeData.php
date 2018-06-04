@@ -1,54 +1,42 @@
 <?php
+
 namespace Rissc\Printformer\Setup;
 
-use \Magento\Customer\Model\ResourceModel\Customer;
-use \Magento\Eav\Setup\EavSetup;
-use \Magento\Eav\Setup\EavSetupFactory;
+use Magento\Eav\Setup\EavSetup;
+use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
-use Magento\Catalog\Model\ProductFactory;
-use Magento\Catalog\Model\Product as CatalogProduct;
 
-/**
- * Class UpgradeData
- * @package Rissc\Printformer\Setup
- */
-class UpgradeData
-    implements UpgradeDataInterface
+class UpgradeData implements UpgradeDataInterface
 {
-    /** @var EavSetupFactory */
+    /**
+     * @var EavSetupFactory
+     */
     private $eavSetupFactory;
-
-    /** @var ProductFactory */
-    protected $_productFactory;
 
     /**
      * UpgradeData constructor.
      * @param EavSetupFactory $eavSetupFactory
-     * @param ProductFactory $productFactory
      */
     public function __construct(
-        EavSetupFactory $eavSetupFactory,
-        ProductFactory $productFactory
-    )
-    {
+        EavSetupFactory $eavSetupFactory
+    ) {
         $this->eavSetupFactory = $eavSetupFactory;
-        $this->_productFactory = $productFactory;
     }
 
     /**
-     * @param \Magento\Framework\Setup\ModuleDataSetupInterface $setup
-     * @param \Magento\Framework\Setup\ModuleContextInterface   $context
+     * @param ModuleDataSetupInterface $setup
+     * @param ModuleContextInterface $context
+     * @throws \Zend_Db_Statement_Exception
      */
     public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
         $setup->startSetup();
-
         $connection = $setup->getConnection();
-        if(version_compare($context->getVersion(), '100.0.1', '<'))
-        {
+
+        if(version_compare($context->getVersion(), '100.0.1', '<')) {
             /** @var EavSetup $eavSetup */
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
             $eavSetup->addAttribute(
@@ -107,8 +95,7 @@ class UpgradeData
 
         }
 
-        if(version_compare($context->getVersion(), '100.1.6', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.6', '<')) {
             $_attributesArray = [
                 Product::PF_ATTRIBUTE_ENABLED,
                 Product::PF_ATTRIBUTE_PRODUCT,
@@ -149,8 +136,7 @@ class UpgradeData
             }
         }
 
-        if(version_compare($context->getVersion(), '100.1.11', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.11', '<')) {
             /** @var EavSetup $eavSetup */
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_upload_enabled');
@@ -188,8 +174,7 @@ class UpgradeData
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.13', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.13', '<')) {
             /** @var EavSetup $eavSetup */
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
@@ -203,7 +188,7 @@ class UpgradeData
                     'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
                     'label' => 'Printformer Capabilities',
                     'input' => 'multiselect',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeIntrface::SCOPE_STORE,
                     'visible' => true,
                     'required' => false,
                     'user_defined' => false,
@@ -254,6 +239,38 @@ class UpgradeData
                     'apply_to' => ''
                 ]
             );
+        }
+
+        if(version_compare($context->getVersion(), '100.3.8', '<')) {
+            /**
+             * Split intents in printformer_product table - every product/intent will be an own row
+             */
+            $select = $connection->select()->from('printformer_product');
+            $result = $connection->fetchAll($select);
+
+            $insertData = [];
+
+            $i = 0;
+            foreach($result as $row) {
+                foreach(explode(',', $row['intent']) as $intent) {
+                    $insertData[$i] = $row;
+                    unset($insertData[$i]['id']);
+                    $insertData[$i]['intent'] = $intent;
+                    $i++;
+                }
+            }
+
+            $connection->beginTransaction();
+            $connection->delete('printformer_product');
+            $connection->insertMultiple('printformer_product', $insertData);
+            $connection->commit();
+        }
+
+        if(version_compare($context->getVersion(), '100.3.9', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_enabled');
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_product');
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
         }
 
         $setup->endSetup();

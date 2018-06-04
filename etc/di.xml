@@ -41,12 +41,19 @@
         <plugin name="printformer-quote-quote" type="Rissc\Printformer\Model\Quote\QuotePlugin" sortOrder="100"/>
     </type>
     <type name="Magento\Downloadable\Block\Customer\Products\ListProducts">
-        <plugin name="DownloadableProducts" type="Rissc\Printformer\Plugin\DownloadableProducts\Plugin" sortOrder="100" />
+        <plugin name="DownloadableProducts_ListProducts" type="Rissc\Printformer\Plugin\DownloadableProducts\ListProducts" sortOrder="100" />
+    </type>
+    <type name="Magento\Downloadable\Block\Sales\Order\Email\Items\Order\Downloadable">
+        <plugin name="DownloadableProducts_EmailItemsOrder" type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItemsOrder" sortOrder="100" />
+    </type>
+    <type name="Magento\Downloadable\Block\Sales\Order\Email\Items\Downloadable">
+        <plugin name="DownloadableProducts_EmailItems" type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItems" sortOrder="100" />
     </type>
 
     <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
                 type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
 
-    <preference for="Magento\Ui\Component\Form\Element\MultiSelect"
-                type="Rissc\Printformer\Block\Adminhtml\System\Catalog\Product\Form\Renderer\MultiSelect" />
+    <type name="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\CustomOptions">
+        <plugin name="Rissc_Printformer_Edit_PrintformerProduct" type="Rissc\Printformer\Plugin\Product\Edit\Metadata\PrintformerProduct" sortOrder="9999" />
+    </type>
 </config>

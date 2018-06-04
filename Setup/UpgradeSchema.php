@@ -1,28 +1,33 @@
 <?php
+
 namespace Rissc\Printformer\Setup;
 
 use Magento\Framework\DB\Ddl\Table;
-use \Magento\Framework\Setup\UpgradeSchemaInterface;
-use \Magento\Framework\Setup\ModuleContextInterface;
-use \Magento\Framework\Setup\SchemaSetupInterface;
-use \Magento\Framework\DB\Ddl\Table as DdlTable;
-use \Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Setup\UpgradeSchemaInterface;
+use Magento\Framework\Setup\ModuleContextInterface;
+use Magento\Framework\Setup\SchemaSetupInterface;
+use Magento\Framework\DB\Ddl\Table as DdlTable;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 
-class UpgradeSchema
-    implements UpgradeSchemaInterface
+class UpgradeSchema implements UpgradeSchemaInterface
 {
     const TABLE_NAME_DRAFT                = 'printformer_draft';
     const TABLE_NAME_PRODUCT              = 'printformer_product';
     const TABLE_NAME_HISTORY              = 'printformer_async_history';
     const TABLE_NAME_CUSTOMER_GROUP_RIGHT = 'printformer_customer_group_right';
-    
+    const TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT = 'catalog_product_printformer_product';
+
+    /**
+     * @param SchemaSetupInterface $setup
+     * @param ModuleContextInterface $context
+     * @throws \Zend_Db_Exception
+     */
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
         $setup->startSetup();
-
         $connection = $setup->getConnection();
-        if(version_compare($context->getVersion(), '100.0.1', '<'))
-        {
+
+        if(version_compare($context->getVersion(), '100.0.1', '<')) {
             $table = $connection->newTable(
                 $setup->getTable(self::TABLE_NAME_DRAFT)
             )->addColumn(
@@ -89,11 +94,10 @@ class UpgradeSchema
                 ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
             );
 
-            $setup->getConnection()->createTable($table);
+            $connection->createTable($table);
         }
 
-        if(version_compare($context->getVersion(), '100.1.5', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.5', '<')) {
             $connection->addColumn(
                 $setup->getTable(self::TABLE_NAME_DRAFT),
                 'processing_id',
@@ -118,8 +122,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.7', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.7', '<')) {
             $table = $connection->newTable(
                 $setup->getTable(self::TABLE_NAME_HISTORY)
             )
@@ -198,11 +201,10 @@ class UpgradeSchema
                     'Called URL'
                 );
 
-            $setup->getConnection()->createTable($table);
+            $connection->createTable($table);
         }
 
-        if(version_compare($context->getVersion(), '100.1.21', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.21', '<')) {
             $connection->addColumn(
                 $connection->getTableName('printformer_product'),
                 'intents',
@@ -214,8 +216,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.22', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.22', '<')) {
             $connection->addColumn(
                 $connection->getTableName('printformer_draft'),
                 'intent',
@@ -227,8 +228,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.23', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.23', '<')) {
             $connection->addColumn(
                 $connection->getTableName('printformer_draft'),
                 'session_unique_id',
@@ -240,8 +240,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.24', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.24', '<')) {
             $connection->addColumn(
                 $connection->getTableName('printformer_draft'),
                 'product_id',
@@ -252,8 +251,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.25', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.25', '<')) {
             $connection->addColumn(
                 $connection->getTableName('printformer_draft'),
                 'customer_id',
@@ -264,8 +262,7 @@ class UpgradeSchema
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.25', '<'))
-        {
+        if(version_compare($context->getVersion(), '100.1.25', '<')) {
             $connection->addColumn(
                 $connection->getTableName('printformer_draft'),
                 'user_identifier',
@@ -312,7 +309,38 @@ class UpgradeSchema
                 ->addColumn('review_finish', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
                 ->addColumn('review_end', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0]);
 
-            $setup->getConnection()->createTable($table);
+            $connection->createTable($table);
+        }
+
+        if(version_compare($context->getVersion(), '100.3.8', '<')) {
+            $connection->changeColumn(
+                self::TABLE_NAME_PRODUCT,
+                'intents',
+                'intent',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Intent'
+                ]);
+        }
+
+        if(version_compare($context->getVersion(), '100.3.10', '<')) {
+            $table = $connection->newTable($setup->getTable(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT))
+                ->addColumn(
+                    'id',
+                    DdlTable::TYPE_INTEGER,
+                    null,
+                    [
+                        'identity' => true,
+                        'nullable' => false,
+                        'primary' => true,
+                        'unsigned' => true
+                    ]
+                )
+                ->addColumn('product_id', DdlTable::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true])
+                ->addColumn('printformer_product_id', DdlTable::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true]);
+
+            $connection->createTable($table);
         }
 
         $setup->endSetup();

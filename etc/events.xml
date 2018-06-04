@@ -23,4 +23,9 @@
         <observer name="rissc_printformer_acl_processor_customer" instance="Rissc\Printformer\Observer\Acl\Processor\Customer" />
         <observer name="rissc_printformer_acl_processor_group" instance="Rissc\Printformer\Observer\Acl\Processor\Group" />
     </event>
+    <!-- Backend product edit (SAVE) -->
+    <event name="controller_action_catalog_product_save_entity_after">
+        <!-- Save printformer products -->
+        <observer name="Product_SaveAfter_PrintformerProducts" instance="Rissc\Printformer\Observer\Product\Save\SavePrintformerProducts" />
+    </event>
 </config>

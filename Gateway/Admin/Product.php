@@ -1,186 +1,128 @@
 <?php
 namespace Rissc\Printformer\Gateway\Admin;
 
+use Magento\Framework\Json\Decoder;
+use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Gateway\Exception;
 use Magento\Store\Model\Store;
-use Magento\Framework\Event\ManagerInterface as EventManager;
-use Rissc\Printformer\Helper\Log;
+use Rissc\Printformer\Helper\Api\Url;
+use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
+use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\Product as CatalogProduct;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Framework\HTTP\ZendClient;
 use GuzzleHttp\Client as HttpClient;
 
 class Product
 {
-
     const PF_ATTRIBUTE_ENABLED = 'printformer_enabled';
     const PF_ATTRIBUTE_PRODUCT = 'printformer_product';
     const PF_ATTRIBUTE_UPLOAD_ENABLED = 'printformer_upload_enabled';
     const PF_ATTRIBUTE_UPLOAD_PRODUCT = 'printformer_upload_product';
-    const TEMPLATE_ENDPOINT = '/api-ext/template';
 
     /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $storeManager;
 
     /**
-     * @var \Magento\Framework\HTTP\ZendClientFactory
-     */
-    protected $httpClientFactory;
-
-    /**
-     * @var \Magento\Framework\Json\Decoder
+     * @var Decoder
      */
     protected $jsonDecoder;
 
     /**
-     * @var \Rissc\Printformer\Helper\Api\Url
+     * @var Url
      */
     protected $urlHelper;
 
     /**
-     * @var \Rissc\Printformer\Model\ProductFactory
+     * @var PrintformerProductFactory
      */
     protected $printformerProductFactory;
 
-    protected $_eventManager;
+    /**
+     * @var \Magento\Framework\DB\Adapter\AdapterInterface
+     */
+    protected $connection;
 
-    /** @var \Magento\Framework\DB\Adapter\AdapterInterface */
-    protected $_connection;
+    protected $attributePfEnabled;
+    protected $attributePfProduct;
+    protected $attributePfUploadEnabled;
+    protected $attributePfUploadProduct;
 
-    protected $_attributePfEnabled;
-    protected $_attributePfProduct;
-    protected $_attributePfUploadEnabled;
-    protected $_attributePfUploadProduct;
+    /**
+     * @var ProductFactory
+     */
+    protected $productFactory;
 
-    protected $_updatedRows = ['sku', 'name', 'description', 'short_description', 'status'];
-
-    protected $_productFactory;
-
-    /** @var ScopeConfigInterface */
-    protected $_scopeConfig;
+    /**
+     * @var Config
+     */
+    protected $configHelper;
 
     /**
      * Product constructor.
-     *
-     * @param \Psr\Log\LoggerInterface                   $logger
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Framework\HTTP\ZendClientFactory  $httpClientFactory
-     * @param \Magento\Framework\Json\Decoder            $jsonDecoder
-     * @param \Rissc\Printformer\Helper\Api\Url          $urlHelper
-     * @param \Rissc\Printformer\Model\ProductFactory    $printformerProductFactory
-     * @param EventManager                               $_eventManager
-     * @param ProductFactory                             $productFactory
-     * @param ScopeConfigInterface                       $scopeConfig
-     *
+     * @param StoreManagerInterface $storeManager
+     * @param Decoder $jsonDecoder
+     * @param Url $urlHelper
+     * @param PrintformerProductFactory $printformerProductFactory
+     * @param ProductFactory $productFactory
+     * @param Config $configHelper
      * @throws \Zend_Db_Statement_Exception
      */
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory,
-        \Magento\Framework\Json\Decoder $jsonDecoder,
-        \Rissc\Printformer\Helper\Api\Url $urlHelper,
-        \Rissc\Printformer\Model\ProductFactory $printformerProductFactory,
-        EventManager $_eventManager,
+        StoreManagerInterface $storeManager,
+        Decoder $jsonDecoder,
+        Url $urlHelper,
+        PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
-        ScopeConfigInterface $scopeConfig
+        Config $configHelper
     ) {
-        $this->logger = $logger;
-        $this->httpClientFactory = $httpClientFactory;
         $this->storeManager = $storeManager;
         $this->jsonDecoder = $jsonDecoder;
         $this->urlHelper = $urlHelper;
         $this->printformerProductFactory = $printformerProductFactory;
-        $this->_eventManager = $_eventManager;
-        $this->_productFactory = $productFactory;
-        $this->_scopeConfig = $scopeConfig;
+        $this->productFactory = $productFactory;
+        $this->configHelper = $configHelper;
 
         $printformerProduct = $this->printformerProductFactory->create();
-        $this->_connection = $printformerProduct->getResource()->getConnection();
+        $this->connection = $printformerProduct->getResource()->getConnection();
 
-        $_attributesArray = [
+        $attributesArray = [
             self::PF_ATTRIBUTE_ENABLED,
             self::PF_ATTRIBUTE_PRODUCT,
             self::PF_ATTRIBUTE_UPLOAD_ENABLED,
             self::PF_ATTRIBUTE_UPLOAD_PRODUCT
         ];
 
-        $result = $this->_connection->query("
-            SELECT `attribute_id`, `attribute_code` FROM `eav_attribute` WHERE `attribute_code` IN ('" . implode("', '", $_attributesArray) . "')
+        $result = $this->connection->query("
+            SELECT `attribute_id`, `attribute_code` FROM `eav_attribute` WHERE `attribute_code` IN ('" . implode("', '", $attributesArray) . "')
         ");
 
-        while($row = $result->fetch())
-        {
-            switch($row['attribute_code'])
-            {
+        while($row = $result->fetch()) {
+            switch($row['attribute_code']) {
                 case self::PF_ATTRIBUTE_ENABLED:
-                    $this->_attributePfEnabled = $row['attribute_id'];
+                    $this->attributePfEnabled = $row['attribute_id'];
                 break;
                 case self::PF_ATTRIBUTE_PRODUCT:
-                    $this->_attributePfProduct = $row['attribute_id'];
+                    $this->attributePfProduct = $row['attribute_id'];
                 break;
                 case self::PF_ATTRIBUTE_UPLOAD_ENABLED:
-                    $this->_attributePfUploadEnabled = $row['attribute_id'];
+                    $this->attributePfUploadEnabled = $row['attribute_id'];
                 break;
                 case self::PF_ATTRIBUTE_UPLOAD_PRODUCT:
-                    $this->_attributePfUploadProduct = $row['attribute_id'];
+                    $this->attributePfUploadProduct = $row['attribute_id'];
                 break;
             }
         }
-
     }
 
     /**
-     * @return bool
-     */
-    protected function isV2Enabled($storeId = Store::DEFAULT_STORE_ID)
-    {
-        return
-            $this->_scopeConfig->getValue(
-                'printformer/version2group/version2',
-                ScopeInterface::SCOPE_STORES,
-                $storeId
-            ) == 1;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getV2ApiKey($storeId = Store::DEFAULT_STORE_ID)
-    {
-        return $this->_scopeConfig->getValue(
-            'printformer/version2group/v2apiKey',
-            ScopeInterface::SCOPE_STORES,
-            $storeId
-        );
-    }
-
-    /**
-     * @return string
-     */
-    protected function getV2Endpoint($storeId = Store::DEFAULT_STORE_ID)
-    {
-        return $this->_scopeConfig->getValue(
-            'printformer/version2group/v2url',
-            ScopeInterface::SCOPE_STORES,
-            $storeId
-        );
-    }
-
-    /**
-     * @param integer $storeId
+     * @param int $storeId
+     * @return $this
      * @throws Exception
-     * @return \Rissc\Printformer\Gateway\Admin\Product
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
@@ -200,19 +142,18 @@ class Product
     }
 
     /**
-     * @param integer $storeId
+     * @param int $storeId
+     * @return $this
      * @throws Exception
-     * @return \Rissc\Printformer\Gateway\Admin\Product
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
+        $apiKey = $this->configHelper->getClientApiKey($storeId);
 
-        $apiKey = $this->getV2ApiKey($storeId);
-
-        $this->logger->debug($url);
-
-        if ($this->isV2Enabled($storeId) && !empty($apiKey)) {
+        if ($this->configHelper->isV2Enabled($storeId) && !empty($apiKey)) {
             $request = new HttpClient([
                 'base_url' => $url,
                 'headers' => [
@@ -250,9 +191,8 @@ class Product
 
         $masterIDs = [];
         $responseRealigned = [];
-        foreach($responseArray['data'] as $responseData)
-        {
-            $masterID = ($this->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
+        foreach($responseArray['data'] as $responseData) {
+            $masterID = ($this->configHelper->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
                 $responseData['rissc_w2p_master_id']);
             if(!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
@@ -268,45 +208,42 @@ class Product
 
         $existingPrintformerProductMasterIDs = [];
         $existingPrintformerProductsByMasterId = [];
-        foreach($pfProductCollection as $pfProduct)
-        {
+        foreach($pfProductCollection as $pfProduct) {
             $existingPrintformerProductMasterIDs[] = $pfProduct->getMasterId();
             $existingPrintformerProductsByMasterId[$pfProduct->getMasterId()] = $pfProduct;
         }
 
-        foreach($masterIDs as $masterID)
-        {
-            if(!in_array($masterID, $existingPrintformerProductMasterIDs))
-            {
-                $pfProduct = $this->printformerProductFactory->create();
-                $pfProduct->setStoreId($storeId)
-                    ->setSku($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
-                    ->setName($responseRealigned[$masterID]['name'])
-                    ->setDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
-                    ->setShortDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
-                    ->setStatus($this->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
-                    ->setMasterId($this->isV2Enabled($storeId) ? $responseRealigned[$masterID]['id'] :
-                        $responseRealigned[$masterID]['rissc_w2p_master_id'])
-                    ->setMd5($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
-                    ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
-                    ->setCreatedAt(time())
-                    ->setUpdatedAt(time());
-                $pfProduct->getResource()->save($pfProduct);
-                continue;
-            }
-            else
-            {
-                $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
-                $pfProduct->setSku($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
-                    ->setName($responseRealigned[$masterID]['name'])
-                    ->setDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
-                    ->setShortDescription($this->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
-                    ->setStatus($this->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
-                    ->setIntents(implode(',', $responseRealigned[$masterID]['intents']))
-                    ->setUpdatedAt(time());
+        foreach($masterIDs as $masterID) {
+            if(!in_array($masterID, $existingPrintformerProductMasterIDs)) {
+                foreach($responseRealigned[$masterID]['intents'] as $intent) {
+                    $pfProduct = $this->printformerProductFactory->create();
+                    $pfProduct->setStoreId($storeId)
+                        ->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
+                        ->setName($responseRealigned[$masterID]['name'])
+                        ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
+                        ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
+                        ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
+                        ->setMasterId($this->configHelper->isV2Enabled($storeId) ? $responseRealigned[$masterID]['id'] :
+                            $responseRealigned[$masterID]['rissc_w2p_master_id'])
+                        ->setMd5($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
+                        ->setIntent($intent)
+                        ->setCreatedAt(time())
+                        ->setUpdatedAt(time());
+                    $pfProduct->getResource()->save($pfProduct);
+                }
+            } else {
+                foreach($responseRealigned[$masterID]['intents'] as $intent) {
+                    $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
+                    $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
+                        ->setName($responseRealigned[$masterID]['name'])
+                        ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
+                        ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
+                        ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
+                        ->setIntent($intent)
+                        ->setUpdatedAt(time());
 
-                $pfProduct->getResource()->save($pfProduct);
-                continue;
+                    $pfProduct->getResource()->save($pfProduct);
+                }
             }
         }
 
@@ -316,9 +253,8 @@ class Product
             ->addFieldToFilter('master_id', ['nin' => $masterIDs]);
 
         /** @var PrintformerProduct $pfProductToDelete */
-        foreach($pfProductToDeleteCollection as $pfProductToDelete)
-        {
-            $catalogProduct = $this->_productFactory->create();
+        foreach($pfProductToDeleteCollection as $pfProductToDelete) {
+            $catalogProduct = $this->productFactory->create();
             /** @var CatalogProduct $catalogProductToEdit */
             $catalogProductToEdit = $catalogProduct->getCollection()
                 ->setStoreId($storeId)
@@ -326,12 +262,11 @@ class Product
                 ->addAttributeToFilter('printformer_enabled', ['eq' => 1]);
 
             $catalogProductToEdit = $catalogProductToEdit->getFirstItem();
-            if($catalogProductToEdit->getId())
-            {
-                $query = "UPDATE `" . $this->_connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->_attributePfEnabled . " AND `value` = 1 AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
-                $this->_connection->query($query);
-                $query = "UPDATE `" . $this->_connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->_attributePfProduct . " AND `value` = " . $pfProductToDelete->getMasterId() . " AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
-                $this->_connection->query($query);
+            if($catalogProductToEdit->getId()) {
+                $query = "UPDATE `" . $this->connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->attributePfEnabled . " AND `value` = 1 AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
+                $this->connection->query($query);
+                $query = "UPDATE `" . $this->connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->attributePfProduct . " AND `value` = " . $pfProductToDelete->getMasterId() . " AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
+                $this->connection->query($query);
             }
 
             $pfProductToDelete->getResource()->delete($pfProductToDelete);
