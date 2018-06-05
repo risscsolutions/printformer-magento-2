@@ -26,7 +26,7 @@ class DefaultItem
     protected $mediaHelper;
 
     /**
-     * DefaultItemPlugin constructor.
+     * DefaultItem constructor.
      * @param Url $urlHelper
      * @param Config $configHelper
      * @param Media $mediaHelper
