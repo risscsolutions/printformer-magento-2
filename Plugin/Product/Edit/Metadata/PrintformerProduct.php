@@ -277,8 +277,6 @@ class PrintformerProduct
                                 ],
                                 'exports' => [
                                     'storeId' => '${ $.externalProvider }:params.current_store_id',
-                                    'master_id' => '${ $.externalProvider }:params.current_master_id',
-                                    'name' => '${ $.externalProvider }:params.current_name',
                                 ],
                             ],
                         ],
