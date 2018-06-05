@@ -3,7 +3,6 @@
 namespace Rissc\Printformer\Ui\DataProvider\Product;
 
 use Magento\Framework\App\RequestInterface;
-use Magento\Store\Api\Data\StoreInterface;
 use Magento\Ui\DataProvider\AbstractDataProvider;
 use Rissc\Printformer\Model\ResourceModel\Product\CollectionFactory;
 
