@@ -6,7 +6,7 @@
         <plugin name="set-adminhtml-order-view-item-renderer" type="Rissc\Printformer\Plugin\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer" sortOrder="100"/>
     </type>
     <type name="Magento\Catalog\Block\Product\View\Gallery">
-        <plugin name="set-catalog-product-view-preview-image" type="Rissc\Printformer\Block\Catalog\Product\View\GalleryPlugin" sortOrder="100"/>
+        <plugin name="set-catalog-product-view-preview-image" type="Rissc\Printformer\Plugin\Catalog\Product\View\Gallery" sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit">
         <plugin name="set-checkout-cart-item-edit-text" type="Rissc\Printformer\Block\Checkout\Cart\Item\Renderer\Actions\EditPlugin" sortOrder="100"/>

@@ -1,8 +1,8 @@
 <?php
 
-namespace Rissc\Printformer\Block\Catalog\Product\View;
+namespace Rissc\Printformer\Plugin\Catalog\Product\View;
 
-use Magento\Catalog\Block\Product\View\Gallery;
+use Magento\Catalog\Block\Product\View\Gallery as SubjectGallery;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Rissc\Printformer\Helper\Api as PrintformerApi;
@@ -10,7 +10,7 @@ use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 
-class GalleryPlugin
+class Gallery
 {
     /**
      * @var ConfigHelper
@@ -53,12 +53,12 @@ class GalleryPlugin
     protected $printformerDraft = null;
 
     /**
-     * GalleryPlugin constructor.
+     * Gallery constructor.
      * @param ConfigHelper $config
      * @param Media $mediaHelper
      * @param UrlHelper $urlHelper
      * @param PrintformerApi $printformerApi
-     * @param Printformer $printformerBlock
+     * @param PrintformerBlock $printformerBlock
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -79,12 +79,12 @@ class GalleryPlugin
 
     /**
      * If printformer images have been loaded, check if one of them is the main image
-     * @param Gallery $gallery
+     * @param SubjectGallery $gallery
      * @param \Closure $proceed
      * @param \Magento\Framework\DataObject $image
      * @return bool
      */
-    public function aroundIsMainImage(Gallery $gallery, \Closure $proceed, $image)
+    public function aroundIsMainImage(SubjectGallery $gallery, \Closure $proceed, $image)
     {
         if(count($this->draftImageCreated) > 0) {
             return $image->getIsMainImage();
@@ -93,11 +93,11 @@ class GalleryPlugin
     }
 
     /**
-     * @param Gallery $gallery
+     * @param SubjectGallery $gallery
      * @param \Magento\Framework\Data\Collection $result
-     * @return \Magento\Framework\Data\Collection
+     * @return \Magento\Framework\Data\Collection mixed
      */
-    public function afterGetGalleryImages(Gallery $gallery, $result)
+    public function afterGetGalleryImages(SubjectGallery $gallery, $result)
     {
         if ($this->getImagePreviewUrl()) {
             if($this->config->isV2Enabled()) {
@@ -139,7 +139,7 @@ class GalleryPlugin
     /**
      * @return int
      */
-    public function getDraftId()
+    private function getDraftId()
     {
         return $this->printformerBlock->getDraftId();
     }
@@ -147,7 +147,7 @@ class GalleryPlugin
     /**
      * @return array
      */
-    public function getPrintformerDraft()
+    private function getPrintformerDraft()
     {
         if($this->printformerDraft === null) {
             $this->printformerDraft = $this->printformerApi->getPrintformerDraft($this->getDraftId());
@@ -159,7 +159,7 @@ class GalleryPlugin
      * @param int $page
      * @return null|string
      */
-    public function getImagePreviewUrl($page = 1)
+    private function getImagePreviewUrl($page = 1)
     {
         $url = null;
         if ($this->config->isUseImagePreview() && $this->getDraftId()) {
