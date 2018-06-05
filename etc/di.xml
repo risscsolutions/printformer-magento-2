@@ -14,7 +14,7 @@
         <plugin name="set-checkout-cart-item-edit-text" type="Rissc\Printformer\Block\Checkout\Cart\Item\Renderer\Actions\EditPlugin" sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\CustomerData\DefaultItem">
-        <plugin name="set-mini-cart-item-preview-image" type="Rissc\Printformer\Checkout\CustomerData\DefaultItemPlugin" sortOrder="100"/>
+        <plugin name="set-mini-cart-item-preview-image" type="Rissc\Printformer\Plugin\Checkout\CustomerData\DefaultItem" sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\Controller\Cart\Add">
         <plugin name="printformer-checkout-cart-add" type="Rissc\Printformer\Controller\Checkout\Cart\AddPlugin" sortOrder="100"/>

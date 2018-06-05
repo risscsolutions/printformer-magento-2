@@ -1,14 +1,14 @@
 <?php
 
-namespace Rissc\Printformer\Checkout\CustomerData;
+namespace Rissc\Printformer\Plugin\Checkout\CustomerData;
 
-use Magento\Checkout\CustomerData\DefaultItem;
+use Magento\Checkout\CustomerData\DefaultItem as SubjectDefaultItem;
 use Magento\Quote\Api\Data\CartItemInterface;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Media;
 
-class DefaultItemPlugin
+class DefaultItem
 {
     /**
      * @var Url
@@ -42,12 +42,12 @@ class DefaultItemPlugin
     }
 
     /**
-     * @param DefaultItem $defaultItem
+     * @param SubjectDefaultItem $defaultItem
      * @param \Closure $proceed
      * @param CartItemInterface $item
      * @return mixed
      */
-    public function aroundGetItemData(DefaultItem $defaultItem, \Closure $proceed, CartItemInterface $item)
+    public function aroundGetItemData(SubjectDefaultItem $defaultItem, \Closure $proceed, CartItemInterface $item)
     {
         $result = $proceed($item);
         $draftId = $item->getPrintformerDraftid();
