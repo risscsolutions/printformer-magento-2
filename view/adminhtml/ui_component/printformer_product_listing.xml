@@ -31,16 +31,7 @@
             </item>
         </argument>
         <container name="columns_controls" />
-        <filters name="listing_filters">
-            <filterSelect name="store_id" provider="${ $.parentName }">
-                <settings>
-                    <options class="Magento\Store\Ui\Component\Listing\Column\Store\Options"/>
-                    <caption translate="true">All Store Views</caption>
-                    <label translate="true">Store View</label>
-                    <dataScope>store_id</dataScope>
-                </settings>
-            </filterSelect>
-        </filters>
+        <filters name="listing_filters" />
         <paging name="listing_paging" />
     </container>
     <columns name="printformer_product_columns" class="Magento\Ui\Component\Listing\Columns">
