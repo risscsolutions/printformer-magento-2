@@ -1,18 +1,19 @@
 <?php
-namespace Rissc\Printformer\Model\Quote\Quote;
 
-use Magento\Framework\App\ObjectManager;
+namespace Rissc\Printformer\Plugin\Quote\Quote;
+
 use Rissc\Printformer\Setup\InstallSchema;
+use Magento\Quote\Model\Quote\Item;
 
-class ItemPlugin
+class ItemModel
 {
     /**
-     * @param \Magento\Quote\Api\Data\CartItemInterface $item
+     * @param Item $item
      * @param \Closure $proceed
      * @param $product
      * @return bool
      */
-    public function aroundRepresentProduct(\Magento\Quote\Api\Data\CartItemInterface $item, \Closure $proceed, $product)
+    public function aroundRepresentProduct(Item $item, \Closure $proceed, $product)
     {
         $result = $proceed($product);
         if ($result) {
@@ -47,10 +48,9 @@ class ItemPlugin
 
     /**
      * @param string $string
-     *
      * @return mixed
      */
-    protected function unserialize($string)
+    private function unserialize($string)
     {
         if($this->isJson($string)) {
             return json_decode($string, true);
@@ -61,10 +61,9 @@ class ItemPlugin
 
     /**
      * @param $string
-     *
      * @return bool
      */
-    protected function isJson($string) {
+    private function isJson($string) {
         json_decode($string);
 
         return json_last_error() == JSON_ERROR_NONE;

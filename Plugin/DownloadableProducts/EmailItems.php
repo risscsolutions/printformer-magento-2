@@ -14,7 +14,7 @@ class EmailItems
     protected $downloadableProductHelper;
 
     /**
-     * Plugin constructor.
+     * EmailItems constructor.
      * @param DownloadableProductHelper $downloadableProductHelper
      */
     public function __construct(

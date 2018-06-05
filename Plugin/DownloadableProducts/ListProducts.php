@@ -14,7 +14,7 @@ class ListProducts
     protected $downloadableProductHelper;
 
     /**
-     * Plugin constructor.
+     * ListProducts constructor.
      * @param DownloadableProductHelper $downloadableProductHelper
      */
     public function __construct(

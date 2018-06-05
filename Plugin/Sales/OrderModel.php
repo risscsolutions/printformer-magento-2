@@ -1,65 +1,89 @@
 <?php
-namespace Rissc\Printformer\Model\Sales;
 
-use Magento\Quote\Model\Quote;
+namespace Rissc\Printformer\Plugin\Sales;
+
 use Magento\Sales\Model\Order;
+use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Admin\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
-use Magento\Sales\Api\Data\OrderInterface;
+use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Model\DraftFactory;
+use Magento\Quote\Api\CartRepositoryInterface;
 
-class OrderPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
+class OrderModel
 {
-    /** @var ApiHelper */
-    protected $_apiHelper;
+    /**
+     * @var ApiHelper
+     */
+    protected $apiHelper;
+
+    /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    protected $cartRepository;
+
+    /**
+     * @var Draft
+     */
+    protected $draft;
+
+    /**
+     * @var DraftFactory
+     */
+    protected $draftFactory;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
 
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Quote\Api\CartRepositoryInterface $cartRepositoryInterface,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\Message\ManagerInterface $messageManager,
-        \Magento\Framework\Registry $coreRegistry,
-        \Rissc\Printformer\Model\DraftFactory $draftFactory,
-        \Rissc\Printformer\Gateway\Admin\Draft $printformerDraft,
-        \Rissc\Printformer\Helper\Config $config,
-        \Rissc\Printformer\Helper\Session $sessionHelper,
-        ApiHelper $apiHelper
-    )
-    {
-        $this->_apiHelper = $apiHelper;
-
-        parent::__construct($logger, $cartRepositoryInterface, $storeManager, $messageManager, $coreRegistry, $draftFactory, $printformerDraft, $config, $sessionHelper);
+        ApiHelper $apiHelper,
+        Config $config,
+        CartRepositoryInterface $cartRepository,
+        Draft $draft,
+        DraftFactory $draftFactory,
+        LoggerInterface $logger
+    ) {
+        $this->apiHelper = $apiHelper;
+        $this->config = $config;
+        $this->cartRepository = $cartRepository;
+        $this->draftFactory = $draftFactory;
+        $this->draft = $draft;
+        $this->logger = $logger;
     }
 
     /**
      * Set printformer data to order item
      *
-     * @param OrderInterface $subject
+     * @param Order $subject
      */
-    public function beforePlace(OrderInterface $subject)
+    public function beforePlace(Order $subject)
     {
         try {
             if(!$subject->getQuote()) {
-                $quote = $this->cartRepositoryInterface->get($subject->getQuoteId());
+                $quote = $this->cartRepository->get($subject->getQuoteId());
             } else {
                 $quote = $subject->getQuote();
             }
             $allItems = $quote->getAllItems();
-            if(count($allItems) > 0)
-            {
-                /** @var Order\Item $item */
-                foreach ($subject->getAllItems() as $key => $item)
-                {
-                    /** @var Quote\Item $quoteItem */
+            if(count($allItems) > 0) {
+                /** @var \Magento\Sales\Model\Order\Item $item */
+                foreach ($subject->getAllItems() as $key => $item) {
+                    /** @var \Magento\Quote\Model\Quote\Item $quoteItem */
                     $quoteItem = $allItems[$key];
                     $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                    if ($draftId)
-                    {
+                    if ($draftId) {
                         $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
                     }
                     $storeId = $quoteItem->getData(InstallSchema::COLUMN_NAME_STOREID);
-                    if ($storeId)
-                    {
+                    if ($storeId) {
                         $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
                     }
                 }
@@ -72,10 +96,10 @@ class OrderPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
     /**
      * Check status for payed order
      *
-     * @param OrderInterface $subject
-     * @return OrderInterface
+     * @param Order $subject
+     * @return Order
      */
-    public function afterPlace(OrderInterface $subject)
+    public function afterPlace(Order $subject)
     {
         try {
             $draftIds = [];
@@ -97,9 +121,9 @@ class OrderPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
 
             if ($subject->getStatus() == $this->config->getOrderStatus()) {
                 if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
-                    $this->printformerDraft->setDraftOrdered($subject);
+                    $this->draft->setDraftOrdered($subject);
                 } else {
-                    $this->_apiHelper->setAsyncOrdered($draftIds);
+                    $this->apiHelper->setAsyncOrdered($draftIds);
                 }
             }
         } catch (\Exception $e) {

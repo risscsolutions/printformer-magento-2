@@ -1,14 +1,14 @@
 <?php
 
-namespace Rissc\Printformer\Block\Wishlist\Customer\Wishlist\Item;
+namespace Rissc\Printformer\Plugin\Wishlist\Customer\Wishlist\Item;
 
-use Magento\Wishlist\Block\Customer\Wishlist\Item\Column;
+use Magento\Wishlist\Block\Customer\Wishlist\Item\Column as SubjectColumn;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Setup\InstallSchema;
 use Rissc\Printformer\Helper\Api\Url;
 
-class ColumnPlugin
+class Column
 {
     /**
      * @var Media
@@ -26,7 +26,7 @@ class ColumnPlugin
     protected $config;
 
     /**
-     * ColumnPlugin constructor.
+     * Column constructor.
      * @param Config $config
      * @param Url $urlHelper
      * @param Media $mediaHelper
@@ -44,11 +44,11 @@ class ColumnPlugin
     /**
      * Set image url for printformer item
      *
-     * @param Column $subject
+     * @param SubjectColumn $subject
      * @param $result
      * @return mixed
      */
-    public function afterGetImage(Column $subject, $result)
+    public function afterGetImage(SubjectColumn $subject, $result)
     {
         $item = $subject->getItem();
         if($item) {

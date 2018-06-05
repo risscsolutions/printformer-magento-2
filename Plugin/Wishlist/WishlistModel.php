@@ -1,24 +1,59 @@
 <?php
-namespace Rissc\Printformer\Model\Wishlist;
 
+namespace Rissc\Printformer\Plugin\Wishlist;
+
+use Magento\Framework\Registry;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Wishlist\Model\Wishlist;
 use Rissc\Printformer\Setup\InstallSchema;
 use Rissc\Printformer\Helper as Helper;
+use Rissc\Printformer\Helper\Session;
 
-class WishlistPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
+class WishlistModel
 {
     /**
-     * @param \Magento\Wishlist\Model\Wishlist $subject
+     * @var Registry
+     */
+    protected $registry;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
+     * @var Session
+     */
+    protected $session;
+
+    /**
+     * WishlistModel constructor.
+     * @param Registry $registry
+     * @param StoreManagerInterface $storeManager
+     * @param Session $session
+     */
+    public function __construct(
+        Registry $registry,
+        StoreManagerInterface $storeManager,
+        Session $session
+    ) {
+        $this->registry = $registry;
+        $this->storeManager = $storeManager;
+        $this->session = $session;
+    }
+
+    /**
+     * @param Wishlist $subject
      * @param $product
      * @param null $buyRequest
      * @param bool $forciblySetQty
      */
     public function beforeAddNewItem(
-        \Magento\Wishlist\Model\Wishlist $subject,
+        Wishlist $subject,
         $product,
         $buyRequest = null,
         $forciblySetQty = false
-    )
-    {
+    ) {
         if ($product instanceof \Magento\Catalog\Model\Product) {
             $productId = $product->getId();
         } else {
@@ -47,21 +82,21 @@ class WishlistPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
             if ($existDraftId) {
                 $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $existDraftId);
             }
-        } elseif ($this->sessionHelper->getDraftId($productId, $storeId)) {
+        } elseif ($this->session->getDraftId($productId, $storeId)) {
             $buyRequest->setData(
                 InstallSchema::COLUMN_NAME_DRAFTID,
-                $this->sessionHelper->getDraftId($productId, $storeId)
+                $this->session->getDraftId($productId, $storeId)
             );
-            $this->sessionHelper->unsDraftId($productId, $storeId);
+            $this->session->unsDraftId($productId, $storeId);
         }
     }
 
     /**
-     * @param \Magento\Wishlist\Model\Wishlist $subject
+     * @param Wishlist $subject
      * @param $result
      * @return mixed
      */
-    public function afterAddNewItem(\Magento\Wishlist\Model\Wishlist $subject, $result)
+    public function afterAddNewItem(Wishlist $subject, $result)
     {
         if (!is_string($result)) {
             $value = $result->getBuyRequest()->getData(InstallSchema::COLUMN_NAME_DRAFTID);
@@ -71,7 +106,7 @@ class WishlistPlugin extends \Rissc\Printformer\Model\PrintformerPlugin
                 'product_id' => $result->getProductId()
             );
             $result->addOption($option)->saveItemOptions();
-            $this->coreRegistry->register(
+            $this->registry->register(
                 Helper\Config::REGISTRY_KEY_WISHLIST_NEW_ITEM_ID,
                 $result->getData('wishlist_item_id')
             );

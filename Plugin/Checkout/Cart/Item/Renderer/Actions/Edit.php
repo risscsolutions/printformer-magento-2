@@ -1,11 +1,11 @@
 <?php
 
-namespace Rissc\Printformer\Block\Checkout\Cart\Item\Renderer\Actions;
+namespace Rissc\Printformer\Plugin\Checkout\Cart\Item\Renderer\Actions;
 
 use Rissc\Printformer\Helper\Config;
-use Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit;
+use Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit as SubjectEdit;
 
-class EditPlugin
+class Edit
 {
     /**
      * @var Config
@@ -13,7 +13,7 @@ class EditPlugin
     protected $configHelper;
 
     /**
-     * EditPlugin constructor.
+     * Edit constructor.
      * @param Config $configHelper
      */
     public function __construct(
@@ -23,11 +23,12 @@ class EditPlugin
     }
 
     /**
-     * @param Edit $edit
+     * @param SubjectEdit $edit
      * @param string $result
      * @return string
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function afterGetTemplate(Edit $edit, $result)
+    public function afterGetTemplate(SubjectEdit $edit, $result)
     {
         $edit->setEditItemText($this->configHelper->getEditText());
         return 'Rissc_Printformer::checkout/cart/item/renderer/actions/edit.phtml';
