@@ -164,7 +164,14 @@ class PrintformerProduct
         }
 
         $productId = $this->locator->getProduct()->getId();
-        $meta[$productId]['product']['printformer_products'] = $this->productHelper->getPrintformerProducts($productId);
+        $printformerProducts = [];
+        $i = 0;
+        foreach($this->productHelper->getPrintformerProducts($productId) as $product) {
+            $printformerProducts[$i] = $product->getData();
+            $printformerProducts[$i]['record_id'] = $i;
+            $i++;
+        }
+        $meta[$productId]['product']['printformer_products'] = $printformerProducts;
         return $meta;
     }
 

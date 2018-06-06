@@ -44,6 +44,10 @@ class Product extends AbstractHelper
         parent::__construct($context);
     }
 
+    /**
+     * @param $productId
+     * @return \Rissc\Printformer\Model\Product[]
+     */
     public function getPrintformerProducts($productId)
     {
         $printformerProducts = [];
@@ -52,18 +56,28 @@ class Product extends AbstractHelper
         $select = $connection->select()->from('catalog_product_printformer_product')->where('product_id = ?', $productId);
         $result = $connection->fetchAll($select);
 
-        $i = 0;
         foreach($result as $row) {
             $printformerProduct = $this->productFactory->create();
-            $this->resource->load($printformerProduct, $row['id']);
+            $this->resource->load($printformerProduct, $row['printformer_product_id']);
 
             if($printformerProduct->getId()) {
-                $printformerProducts[$i] = $printformerProduct->getData();
-                $printformerProducts[$i]['record_id'] = $i;
-                $i++;
+                $printformerProducts[] = $printformerProduct;
             }
         }
 
+        return $printformerProducts;
+    }
+
+    /**
+     * @param $productId
+     * @return array
+     */
+    public function getPrintformerProductsArray($productId)
+    {
+        $printformerProducts = [];
+        foreach($this->getPrintformerProducts($productId) as $printformerProduct) {
+            $printformerProducts[] = $printformerProduct->getData();
+        }
         return $printformerProducts;
     }
 }

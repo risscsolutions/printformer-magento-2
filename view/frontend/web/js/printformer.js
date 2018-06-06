@@ -1,4 +1,3 @@
-var globalPrintformerOptions = null;
 var printformerInstance = null;
 
 define([
@@ -13,6 +12,69 @@ define([
     $.widget('mage.printformer', {
         formatChange: false,
         currentDrafts: null,
+
+        _create: function () {
+            var that = this;
+            this.form = this.element;
+            this.callbacks = {};
+            this.addToCartFormUrl = null;
+            this.persoOptionAdded = false;
+
+            this.printformerOptions = this.options;
+
+            if(this.isDefined(printformerInstance)) {
+                printformerInstance = this;
+            }
+            $(document).trigger('printformer:loaded:before');
+
+            this.runCallbacks('printformer:loaded:before');
+            this._initEditorMain();
+            $.ajax({
+                url: that.printformerOptions.DraftsGetUrl + 'product/' + that.printformerOptions.ProductId + '/',
+                method: 'get',
+                dataType: 'json'
+            }).done(function(data){
+                that.currentDrafts = data;
+                $.each(that.printformerOptions.printformerProducts, function (index, printformerProduct) {
+                    switch (printformerProduct['intent']) {
+                        case 'customize':
+                        case 'upload-and-editor':
+                            that._initEditBtn(printformerProduct);
+                            break;
+                        case 'upload-and-editor':
+                        case 'upload':
+                            that._initUploadBtn(printformerProduct);
+                            break;
+                    }
+                });
+                that._initAddBtn();
+                that._initVariations();
+                if(that.printformerOptions.isConfigure) {
+                    that.hideSecondButton();
+                    that.setPrimaryButton();
+                }
+
+                if (
+                    that.isDefined(that.printformerOptions.personalizations_conf) &&
+                    that.printformerOptions.personalizations_conf &&
+                    that.isDefined(that.printformerOptions.personalizations) &&
+                    that.printformerOptions.personalizations > 1
+                ) {
+                    that.initPersonalisationQty();
+                }
+
+                if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
+                    that.preselectOptions(that.printformerOptions.preselection);
+                }
+
+                if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
+                    that.initPersonalisationQty();
+                }
+
+                $(document).trigger('printformer:loaded');
+                that.runCallbacks('printformer:loaded:after');
+            });
+        },
 
         isDefined: function(value) {
             return typeof value !== typeof undefined;
@@ -43,17 +105,7 @@ define([
             if(params) {
                 action = params.action.split('/');
             }
-            /**
-             * todo: Check why it's not working?
-             * for (var k in this.printformerOptions.variations) {
-                if (!this.printformerOptions.variations[k].length) {
-                    continue;
-                }
-                url += '/';
-                url +=  k;
-                url += '/';
-                url += this.printformerOptions.variations[k];
-            }*/
+
             url += '?';
             url += urlParts[1];
 
@@ -135,60 +187,6 @@ define([
             }
         },
 
-        _create: function () {
-            var that = this;
-            this.form = this.element;
-            this.callbacks = {};
-            this.addToCartFormUrl = null;
-            this.persoOptionAdded = false;
-
-            this.printformerOptions = this.options;
-            globalPrintformerOptions = this.printformerOptions;
-
-            if(this.isDefined(printformerInstance)) {
-                printformerInstance = this;
-            }
-            $(document).trigger('printformer:loaded:before');
-
-            this.runCallbacks('printformer:loaded:before');
-            this._initEditorMain();
-            $.ajax({
-                url: that.printformerOptions.DraftsGetUrl + 'product/' + that.printformerOptions.ProductId + '/',
-                method: 'get',
-                dataType: 'json'
-            }).done(function(data){
-                that.currentDrafts = data;
-                that._initAddBtn();
-                that._initEditBtn();
-                that._initUploadBtn();
-                that._initVariations();
-                if(that.printformerOptions.isConfigure) {
-                    that.hideSecondButton();
-                    that.setPrimaryButton();
-                }
-
-                if (
-                    that.isDefined(that.printformerOptions.personalizations_conf) &&
-                    that.printformerOptions.personalizations_conf &&
-                    that.isDefined(that.printformerOptions.personalizations) &&
-                    that.printformerOptions.personalizations > 1
-                ) {
-                    that.initPersonalisationQty();
-                }
-
-                if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
-                    that.preselectOptions(that.printformerOptions.preselection);
-                }
-
-                if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
-                    that.initPersonalisationQty();
-                }
-
-                $(document).trigger('printformer:loaded');
-                that.runCallbacks('printformer:loaded:after');
-            });
-        },
-
         hideSecondButton: function(){
             if($(this.uploaBtn).length) {
                 $(this.uploaBtn).hide();
@@ -205,7 +203,7 @@ define([
                 draftType = 'upload';
                 ButtonText = $t('View upload');
             }
-            
+
             $(this.editBtn).attr('data-pf-masterid', this.printformerOptions.masterId);
             $(this.editBtn).attr('data-pf-type', draftType);
             $(this.editBtn).attr('data-pf-intent', editDraftIntent);
@@ -394,17 +392,20 @@ define([
             }
         },
 
-        _initEditBtn: function () {
+        _initEditBtn: function (printformerProduct) {
             var that = this;
             var options = this.printformerOptions;
-            this.editBtn = $(this.printformerOptions.editBtnSelector);
+            this.editBtn = $(this.printformerOptions.editBtnSelector + printformerProduct['id']);
 
             this.editBtn.click({printformer: this}, function(event) {
+                var editorUrl;
                 if($(that.editBtn).data('pf-intent') === 'personalize') {
-                    event.data.printformer.editorMainOpen(that.getPersonalizeUrl());
+                    editorUrl = that.getPersonalizeUrl();
                 } else {
-                    event.data.printformer.editorMainOpen(that.getEditorUrl());
+                    editorUrl = that.getEditorUrl();
                 }
+                editorUrl = editorUrl.replace('/0/', '/' + printformerProduct['master_id'] + '/');
+                event.data.printformer.editorMainOpen(editorUrl);
             })
             /**
              * Removed moving button because we need it in another Container.
@@ -433,31 +434,22 @@ define([
             this.editBtn.prop('disabled', true);
         },
 
-        _initUploadBtn: function () {
-            var that = this;
-            var options = this.printformerOptions;
-            this.uploaBtn = $(this.printformerOptions.uploadBtnSelector);
-            var isWithEditor = false;
-            var url = that.getUploadUrl();
-            if($(that.uploaBtn).data('pf-intent') === 'upload-and-editor') {
-                url = that.getUploadAndEditorUrl();
-                isWithEditor = true;
+        _initUploadBtn: function (printformerProduct) {
+            this.uploadBtn = $(this.printformerOptions.uploadBtnSelector + printformerProduct['id']);
+
+            var url = this.getUploadUrl();
+            if(printformerProduct['intent'] === 'upload-and-editor') {
+                url = this.getUploadAndEditorUrl();
             }
-            this.uploaBtn.click({printformer: this}, function(event) {
+            url = url.replace('/0/', '/' + printformerProduct['master_id'] + '/');
+
+            this.uploadBtn.click({printformer: this}, function(event) {
                 event.data.printformer.editorMainOpen(url);
-            })
-            /**
-             * Removed moving button because we need it in another Container.
-             * .insertBefore(this.addBtn)
-             */
-                .show();
-            var buttonIntent = (isWithEditor ? 'upload-and-editor' : 'upload');
-            var hasDraft = false;
-            if(this.currentDrafts && this.isDefined(this.currentDrafts[buttonIntent])) {
-                hasDraft = true;
-            }
-            if(hasDraft) {
-                this.setButtonText($(this.uploaBtn), $t('View upload'));
+            });
+            this.uploadBtn.show();
+
+            if(this.currentDrafts && this.isDefined(this.currentDrafts[printformerProduct['intent']])) {
+                this.setButtonText($(this.uploadBtn), $t('View upload'));
             }
         },
 

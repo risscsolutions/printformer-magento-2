@@ -4,7 +4,6 @@ namespace Rissc\Printformer\Block\Catalog\Product\View;
 
 use Magento\Catalog\Block\Product\Context;
 use Magento\Catalog\Block\Product\View\AbstractView;
-use Magento\Catalog\Model\Product as CatalogProduct;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Checkout\Model\Cart;
 use Magento\Framework\App\ObjectManager;
@@ -19,7 +18,9 @@ use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
+use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 
 class Printformer extends AbstractView
 {
@@ -64,9 +65,9 @@ class Printformer extends AbstractView
     protected $draftMasterId;
 
     /**
-     * @var DataObject
+     * @var PrintformerProductHelper
      */
-    protected $_capabilities = null;
+    protected $printformerProductHelper;
 
     /**
      * Printformer constructor.
@@ -82,8 +83,9 @@ class Printformer extends AbstractView
      * @param CatalogSession $catalogSession
      * @param array          $data
      */
-    public function __construct(Config $configHelper, Url $urlHelper, Session $sessionHelper, DraftFactory $draftFactory, Cart $cart, Context $context, ArrayUtils $arrayUtils, Item $wishlistItem, CatalogSession $catalogSession, array $data = [])
+    public function __construct(PrintformerProductHelper $printformerProductHelper, Config $configHelper, Url $urlHelper, Session $sessionHelper, DraftFactory $draftFactory, Cart $cart, Context $context, ArrayUtils $arrayUtils, Item $wishlistItem, CatalogSession $catalogSession, array $data = [])
     {
+        $this->printformerProductHelper = $printformerProductHelper;
         $this->configHelper = $configHelper;
         $this->urlHelper = $urlHelper;
         $this->sessionHelper = $sessionHelper;
@@ -103,19 +105,11 @@ class Printformer extends AbstractView
      */
     protected function _toHtml()
     {
-        if (!$this->getProduct() || ($this->isPrintformerEnabled() == '1' && $this->getProduct()->isSaleable())) {
+        if (!$this->getProduct() || ($this->getProduct()->isSaleable())) {
             return parent::_toHtml();
         }
 
         return '';
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPrintformerEnabled()
-    {
-        return $this->getProduct()->getPrintformerEnabled();
     }
 
     public function getPersonalisations()
@@ -235,17 +229,25 @@ class Printformer extends AbstractView
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
      */
-    public function getMasterId()
+    public function getPrintformerProducts()
     {
-        return $this->getProduct()->getPrintformerProduct();
+        return $this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId());
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPrintformerPRoductsArray()
+    {
+        return $this->printformerProductHelper->getPrintformerProductsArray($this->getProduct()->getId());
     }
 
     /**
      * @param string $intent
-     *
      * @return string
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function getEditorUrl($intent = null)
     {
@@ -254,7 +256,7 @@ class Printformer extends AbstractView
             $editParams = ['quote_id' => $this->getRequest()->getParam('id'), 'product_id' => $this->getRequest()->getParam('product_id')];
         }
 
-        return $this->urlHelper->getEditorEntry($this->getProduct()->getId(), $this->getMasterId(), $this->getDraftId(), $editParams, $intent);
+        return $this->urlHelper->getEditorEntry($this->getProduct()->getId(), 0, $this->getDraftId(), $editParams, $intent);
     }
 
     /**
@@ -661,6 +663,11 @@ class Printformer extends AbstractView
      */
     public function getJsonConfig()
     {
+        $product = $this->getProduct();
+        if (!$product) {
+            return '{}';
+        }
+
         $uniqueId = $this->getUniqueSessionId();
         $uniqueIdExplode = explode(':', $uniqueId);
         if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId()) {
@@ -669,16 +676,16 @@ class Printformer extends AbstractView
         $config = [
             'qtySelector' => '#qty',
             'addBtnSelector' => '#product-addtocart-button, #product-updatecart-button',
-            'editBtnSelector' => '#printformer-edit-button',
-            'uploadBtnSelector' => '#printformer-upload-button',
+            'editBtnSelector' => '#printformer-edit-button-',
+            'uploadBtnSelector' => '#printformer-upload-button-',
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
             'draftId' => $this->getDraftId(),
-            'intent' => $this->getIntent(),
             'unique_id' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
             'allowAddCart' => $this->isAllowSkipConfig() || $this->getDraftId(),
+            'printformerProducts' => $this->getPrintformerPRoductsArray(),
             'urls' => [
                 'customize' => $this->getEditorUrl('customize'),
                 'personalize' => $this->getEditorUrl('personalize'),
@@ -687,24 +694,40 @@ class Printformer extends AbstractView
             ],
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => $this->getProductVariations($this->getDraftId()),
-            'qty' => $this->getProductQty($this->getDraftId())
+            'qty' => $this->getProductQty($this->getDraftId()),
+            'IsUploadProduct' => true,
+            'DraftsGetUrl' => $this->getDraftsGetUrl(),
+            'ProductId' => $this->getProduct()->getId(),
+            'isConfigure' => $this->isOnConfigurePDS(),
+            'draftMasterId' => $this->getDraftMasterId(),
+            'currentSessionIntent' => $this->getIntent(),
+            Save::PERSONALISATIONS_QUERY_PARAM => 0,
+            Save::PERSONALISATIONS_QUERY_PARAM . '_conf' => false,
+            'preselection' => [],
+            'openControllerPreselect' => true
         ];
 
-        $extendConfig = ['IsUploadProduct' => $this->isUploadProduct(), 'DraftsGetUrl' => $this->getDraftsGetUrl(), 'ProductId' => $this->getProduct()->getId(), 'isConfigure' => $this->isOnConfigurePDS(), 'draftMasterId' => $this->getDraftMasterId(),];
-
-        $extendConfig['currentSessionIntent'] = $this->getIntent();
-
-        $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = 0;
         if ($this->getPersonalisations()) {
-            $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();
+            $config[Save::PERSONALISATIONS_QUERY_PARAM] = $this->getPersonalisations();
             if ($this->isOnConfigurePDS()) {
-                $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM . '_conf'] = true;
-            } else {
-                $extendConfig[Save::PERSONALISATIONS_QUERY_PARAM . '_conf'] = false;
+                $config[Save::PERSONALISATIONS_QUERY_PARAM . '_conf'] = true;
             }
         }
 
-        return json_encode(array_merge($config, $extendConfig));
+        $catalogSession = $this->sessionHelper->getCatalogSession();
+        $preselectData = $catalogSession->getSavedPrintformerOptions();
+        if ($product->getId() != $preselectData['product']) {
+            $preselectData = [];
+        }
+        if (!empty($preselectData) || $this->isOnConfigurePDS()) {
+            if ($this->isOnConfigurePDS()) {
+                $config['preselection'] = $this->getConfigurePreselection();
+            } else {
+                $config['preselection'] = $preselectData;
+            }
+        }
+
+        return json_encode($config);
     }
 
     /**
@@ -730,72 +753,6 @@ class Printformer extends AbstractView
     /**
      * @return string
      */
-    public function getUploadEditorUrl()
-    {
-        return $this->getEditorUrl('upload-and-editor');
-    }
-
-    /**
-     * @param \Magento\Catalog\Model\Product $product
-     *
-     * @return \Magento\Framework\DataObject
-     */
-    public function getCapabilities(CatalogProduct $product)
-    {
-        if (!$this->_capabilities) {
-            $obj = new DataObject();
-            $attribute = $product->getResource()->getAttribute('printformer_capabilities');
-            $capabilities = explode(', ', $attribute->getFrontend()->getValue($product));
-
-            foreach ($capabilities as $value) {
-                $obj->setData(strtolower(str_replace(' ', '_', $value)), true);
-            }
-            $this->_capabilities = $obj;
-        }
-
-        return $this->_capabilities;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isEditorProduct()
-    {
-        $capabilities = $this->getCapabilities($this->getProduct());
-
-        return $capabilities->getEditor();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPersonalizationProduct()
-    {
-        $capabilities = $this->getCapabilities($this->getProduct());
-
-        return $capabilities->getPersonalizations();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isUploadProduct()
-    {
-        $capabilities = $this->getCapabilities($this->getProduct());
-
-        return $capabilities->getUpload();
-    }
-
-    public function isUploadAndEditorProduct()
-    {
-        $capabilities = $this->getCapabilities($this->getProduct());
-
-        return $capabilities->getUploadAndEditor();
-    }
-
-    /**
-     * @return string
-     */
     public function getDraftsGetUrl()
     {
         return $this->_urlBuilder->getUrl('printformer/get/draft');
@@ -806,37 +763,7 @@ class Printformer extends AbstractView
      */
     public function isOnConfigurePDS()
     {
-        $_request = $this->getRequest();
-        $isConfigure = false;
-        if ($_request->getModuleName() == 'checkout' && $_request->getActionName() == 'configure') {
-            $isConfigure = true;
-        }
-
-        return $isConfigure;
-    }
-
-    public function getPreselection()
-    {
-        $product = $this->getProduct();
-        if (!$product) {
-            return '{}';
-        }
-        $printformerData = json_decode($this->getJsonConfig(), true);
-        $catalogSession = $this->sessionHelper->getCatalogSession();
-        $preselectData = $catalogSession->getSavedPrintformerOptions();
-        if ($product->getId() != $preselectData['product']) {
-            $preselectData = [];
-        }
-        if (!empty($preselectData) || $this->isOnConfigurePDS()) {
-            if ($this->isOnConfigurePDS()) {
-                $printformerData['preselection'] = $this->getConfigurePreselection();
-            } else {
-                $printformerData['preselection'] = $preselectData;
-            }
-        }
-        $printformerData['openControllerPreselect'] = true;
-
-        return json_encode($printformerData);
+        return ($this->getRequest()->getModuleName() == 'checkout' && $this->getRequest()->getActionName() == 'configure');
     }
 
     /**

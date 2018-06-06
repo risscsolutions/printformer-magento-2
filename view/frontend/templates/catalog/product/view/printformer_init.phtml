@@ -1,19 +1,19 @@
 <?php
 /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $block */
 $block->cleanupDraftSession();
-$_hasCapability = $block->isUploadProduct() || $block->isEditorProduct() || $block->isPersonalizationProduct() || $block->isUploadAndEditorProduct();
 ?>
 
-<?php if($block->getProduct()->isSalable() && $_hasCapability): ?>
+<?php if($block->getProduct()->isSalable()): ?>
     <script type="text/javascript">
-        var globalPrintformerOptions = null;
         var printformerInstance = null;
     </script>
-    <script type="text/x-magento-init">
-        {
-            "#product_addtocart_form": {
-                "printformer": <?php echo $block->getPreselection(); ?>
+    <?php foreach($block->getPrintformerProducts() as $_printformerProduct): ?>
+        <script type="text/x-magento-init">
+            {
+                "#product_addtocart_form": {
+                    "printformer": <?php echo $block->getJsonConfig(); ?>
+                }
             }
-        }
-    </script>
+        </script>
+    <?php endforeach; ?>
 <?php endif; ?>
