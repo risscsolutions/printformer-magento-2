@@ -11,7 +11,6 @@ define([
 
     $.widget('mage.printformer', {
         formatChange: false,
-        currentDrafts: null,
 
         _create: function () {
             var that = this;
@@ -29,46 +28,40 @@ define([
 
             this.runCallbacks('printformer:loaded:before');
             this._initEditorMain();
-            $.ajax({
-                url: that.printformerOptions.DraftsGetUrl + 'product/' + that.printformerOptions.ProductId + '/',
-                method: 'get',
-                dataType: 'json'
-            }).done(function(data){
-                that.currentDrafts = data;
-                $.each(that.printformerOptions.printformerProducts, function (index, printformerProduct) {
-                    that.initButton(printformerProduct);
-                });
-                that._initAddBtn();
-                that._initVariations();
-                if(that.printformerOptions.isConfigure) {
-                    that.hideSecondButton();
-                    that.setPrimaryButton();
-                }
 
-                if (
-                    that.isDefined(that.printformerOptions.personalizations_conf) &&
-                    that.printformerOptions.personalizations_conf &&
-                    that.isDefined(that.printformerOptions.personalizations) &&
-                    that.printformerOptions.personalizations > 1
-                ) {
-                    that.initPersonalisationQty();
-                }
-
-                if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
-                    that.runCallbacks('printformer:preselection:before');
-                    if (that.printformerOptions.preselection.product === that.printformerOptions.ProductId) {
-                        that.preselectOptions(that.printformerOptions.preselection);
-                    }
-                    that.runCallbacks('printformer:preselection:after');
-                }
-
-                if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
-                    that.initPersonalisationQty();
-                }
-
-                $(document).trigger('printformer:loaded');
-                that.runCallbacks('printformer:loaded:after');
+            $.each(this.printformerOptions.printformerProducts, function (index, printformerProduct) {
+                that.initButton(printformerProduct);
             });
+            this._initAddBtn();
+            this._initVariations();
+            if(this.printformerOptions.isConfigure) {
+                this.hideSecondButton();
+                this.setPrimaryButton();
+            }
+
+            if (
+                this.isDefined(this.printformerOptions.personalizations_conf) &&
+                this.printformerOptions.personalizations_conf &&
+                this.isDefined(this.printformerOptions.personalizations) &&
+                this.printformerOptions.personalizations > 1
+            ) {
+                this.initPersonalisationQty();
+            }
+
+            if(this.isDefined(this.printformerOptions.preselection) && this.printformerOptions.preselection !== null) {
+                this.runCallbacks('printformer:preselection:before');
+                if (this.printformerOptions.preselection.product === this.printformerOptions.ProductId) {
+                    this.preselectOptions(this.printformerOptions.preselection);
+                }
+                this.runCallbacks('printformer:preselection:after');
+            }
+
+            if (this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
+                this.initPersonalisationQty();
+            }
+
+            $(document).trigger('printformer:loaded');
+            this.runCallbacks('printformer:loaded:after');
         },
 
         isDefined: function(value) {
@@ -391,13 +384,11 @@ define([
 
             button.prop('disabled', false);
 
-            if (this.currentDrafts) {
-                if (this.isDefined(this.currentDrafts['customize']) || this.isDefined(this.currentDrafts['personalize'])) {
-                    this.setButtonText($(button), $t('View draft'));
-                }
-
-                if (this.isDefined(this.currentDrafts[printformerProduct['intent']])) {
+            if (printformerProduct['draft_id']) {
+                if (printformerProduct['intent'] == 'upload' || printformerProduct['intent'] == 'upload-and-editor') {
                     this.setButtonText($(button), $t('View upload'));
+                } else {
+                    this.setButtonText($(button), $t('View draft'));
                 }
             }
         },
