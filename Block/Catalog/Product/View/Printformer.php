@@ -281,14 +281,6 @@ class Printformer extends AbstractView
     }
 
     /**
-     * @return boolean
-     */
-    public function isAllowSkipConfig()
-    {
-        return $this->configHelper->isAllowSkipConfig();
-    }
-
-    /**
      * @return string
      */
     public function getButtonText()
@@ -701,9 +693,9 @@ class Printformer extends AbstractView
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
-            'unique_id' => $uniqueId,
+            'uniqueId' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
-            'allowAddCart' => $this->isAllowSkipConfig(), //@todo || $this->getDraftId(),
+            'allowSkipConfig' => $this->configHelper->isAllowSkipConfig(), //@todo || $this->getDraftId(),
             'printformerProducts' => $this->getPrintformerProductsArray(),
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => [], //@todo $this->getProductVariations($this->getDraftId()),

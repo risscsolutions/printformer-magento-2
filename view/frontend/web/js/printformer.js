@@ -19,8 +19,6 @@ define([
             this.addToCartFormUrl = null;
             this.persoOptionAdded = false;
 
-            this.printformerOptions = this.options;
-
             if(this.isDefined(printformerInstance)) {
                 printformerInstance = this;
             }
@@ -29,34 +27,34 @@ define([
             this.runCallbacks('printformer:loaded:before');
             this._initEditorMain();
 
-            $.each(this.printformerOptions.printformerProducts, function (index, printformerProduct) {
+            $.each(this.options.printformerProducts, function (index, printformerProduct) {
                 that.initButton(printformerProduct);
             });
             this._initAddBtn();
             this._initVariations();
-            if(this.printformerOptions.isConfigure) {
+            if(this.options.isConfigure) {
                 this.hideSecondButton();
                 this.setPrimaryButton();
             }
 
             if (
-                this.isDefined(this.printformerOptions.personalizations_conf) &&
-                this.printformerOptions.personalizations_conf &&
-                this.isDefined(this.printformerOptions.personalizations) &&
-                this.printformerOptions.personalizations > 1
+                this.isDefined(this.options.personalizations_conf) &&
+                this.options.personalizations_conf &&
+                this.isDefined(this.options.personalizations) &&
+                this.options.personalizations > 1
             ) {
                 this.initPersonalisationQty();
             }
 
-            if(this.isDefined(this.printformerOptions.preselection) && this.printformerOptions.preselection !== null) {
+            if(this.isDefined(this.options.preselection) && this.options.preselection !== null) {
                 this.runCallbacks('printformer:preselection:before');
-                if (this.printformerOptions.preselection.product === this.printformerOptions.ProductId) {
-                    this.preselectOptions(this.printformerOptions.preselection);
+                if (this.options.preselection.product === this.options.ProductId) {
+                    this.preselectOptions(this.options.preselection);
                 }
                 this.runCallbacks('printformer:preselection:after');
             }
 
-            if (this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
+            if (this.isDefined(this.options.personalizations) && this.options.personalizations > 1) {
                 this.initPersonalisationQty();
             }
 
@@ -69,23 +67,22 @@ define([
         },
 
         getUploadUrl: function() {
-            return this.printformerOptions.urls.upload;
+            return this.options.urls.upload;
         },
 
         getUploadAndEditorUrl: function() {
-            return this.printformerOptions.urls.uploadAndEditor;
+            return this.options.urls.uploadAndEditor;
         },
 
         getPersonalizeUrl: function() {
-            return this.printformerOptions.urls.personalize;
+            return this.options.urls.personalize;
         },
 
         getEditorUrl: function() {
             // prepare URL
-            var options = this.printformerOptions,
-                urlParts = options.urls.customize.split('?'),
+            var urlParts = this.options.urls.customize.split('?'),
                 url = urlParts[0],
-                inputQty = $(options.qtySelector),
+                inputQty = $(this.options.qtySelector),
                 params = $('[data-action="add-to-wishlist"]').data('post'),
                 formKey = $('[name="form_key"]'),
                 updateWishlistItemOptions = '';
@@ -133,12 +130,12 @@ define([
 
         initPersonalisationQty: function() {
             var instance = this;
-            if(this.isDefined(this.printformerOptions.personalizations) && this.printformerOptions.personalizations > 1) {
-                var oldQtyTrans = $(this.printformerOptions.qtySelector);
+            if(this.isDefined(this.options.personalizations) && this.options.personalizations > 1) {
+                var oldQtyTrans = $(this.options.qtySelector);
                 if ($(oldQtyTrans).prop('tagName').toLowerCase() === 'select' && !this.persoOptionAdded) {
                     var persoOption = $('<option/>');
-                    $(persoOption).val(parseFloat(this.printformerOptions.personalizations));
-                    $(persoOption).text(this.printformerOptions.personalizations);
+                    $(persoOption).val(parseFloat(this.options.personalizations));
+                    $(persoOption).text(this.options.personalizations);
                     var selectChilds = $(oldQtyTrans).children();
                     for(var i = 0; i < selectChilds.length; i++) {
                         var qty = parseInt($(selectChilds[i]).val());
@@ -153,15 +150,15 @@ define([
                         }
                     }
                 }
-                $(oldQtyTrans).val(this.printformerOptions.personalizations);
-                $(oldQtyTrans).data('pf-perso-count', this.printformerOptions.personalizations);
+                $(oldQtyTrans).val(this.options.personalizations);
+                $(oldQtyTrans).data('pf-perso-count', this.options.personalizations);
                 var newQtyTrans = null;
                 if ($('#personalisation_qty').length < 1) {
                     newQtyTrans = $('<input/>')
                         .attr('type', 'text')
                         .attr('class', $(oldQtyTrans).attr('class'))
                         .attr('id', 'personalisation_qty')
-                        .val(this.printformerOptions.personalizations)
+                        .val(this.options.personalizations)
                         .prop('disabled', true);
                     $(newQtyTrans).insertAfter($(oldQtyTrans));
                 }
@@ -169,7 +166,7 @@ define([
                 $(oldQtyTrans).trigger('change').hide();
 
                 if ($('#printformer_personalisations').length < 1) {
-                    var personalisationsInput = $('<input value="' + this.printformerOptions.personalizations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
+                    var personalisationsInput = $('<input value="' + this.options.personalizations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
                     $(personalisationsInput).insertAfter($(newQtyTrans));
                 }
             }
@@ -184,7 +181,7 @@ define([
         setPrimaryButton: function() {
             var that = this;
 
-            var editDraftIntent = this.printformerOptions.currentSessionIntent;
+            var editDraftIntent = this.options.currentSessionIntent;
             var draftType = 'editor';
             var ButtonText = $t('View draft');
             if(editDraftIntent === 'upload' || editDraftIntent === 'upload-and-editor') {
@@ -192,7 +189,7 @@ define([
                 ButtonText = $t('View upload');
             }
 
-            $(this.editBtn).attr('data-pf-masterid', this.printformerOptions.masterId);
+            $(this.editBtn).attr('data-pf-masterid', this.options.masterId);
             $(this.editBtn).attr('data-pf-type', draftType);
             $(this.editBtn).attr('data-pf-intent', editDraftIntent);
 
@@ -211,11 +208,10 @@ define([
         },
 
         _initEditorMain: function () {
-            var options = this.printformerOptions;
-            this.editorMain = $(options.editorMainSelector);
+            this.editorMain = $(this.options.editorMainSelector);
             this.editorMain.modal({
                 modalClass: 'printformer-editor-main-modal',
-                title: options.productTitle,
+                title: this.options.productTitle,
                 buttons: [],
                 modalCloseBtnHandler: this.editorCloseOpen.bind(this)
             });
@@ -246,8 +242,7 @@ define([
         },
 
         _initEditorClose: function () {
-            var options = this.printformerOptions;
-            this.editorClose = $(options.editorCloseSelector);
+            this.editorClose = $(this.options.editorCloseSelector);
             this.editorClose.modal({
                 modalClass: "printformer-editor-close-modal",
                 modalCloseBtnHandler: this.editorCloseCancel.bind(this),
@@ -287,8 +282,7 @@ define([
         },
 
         _initEditorNotice: function () {
-            var options = this.printformerOptions;
-            this.editorNotice = $(options.editorNoticeSelector);
+            this.editorNotice = $(this.options.editorNoticeSelector);
             if (!this.editorNotice) {
                 return;
             }
@@ -322,8 +316,8 @@ define([
             this.formatChange = false;
             this.editorNotice.modal('closeModal');
             if(!this.formatChange) {
-                for (var id in this.printformerOptions.variationsFront) {
-                    $("#" + id).val(this.printformerOptions.variationsFront[id]).trigger('change', {skip: true});
+                for (var id in this.options.variationsFront) {
+                    $("#" + id).val(this.options.variationsFront[id]).trigger('change', {skip: true});
                 }
             }
             this.resetForm();
@@ -340,26 +334,28 @@ define([
         },
 
         _initAddBtn: function () {
-            var options = this.printformerOptions;
+            var draftIds = [];
+            $.each(this.options.printformerProducts, function (index, printformerProduct) {
+                if (printformerProduct['draft_id']) {
+                    draftIds.push(printformerProduct['draft_id']);
+                }
+            });
 
-            this.addBtn = $(options.addBtnSelector);
-            var draftIdInput = null;
-            if (options.draftId) {
-                draftIdInput = $('<input value="' + options.draftId + '" type="hidden" id="printformer_draftid" name="printformer_draftid"/>');
-                $(options.qtySelector).after(draftIdInput);
-            }
-            var intentInput = null;
-            if (draftIdInput && options.intent) {
-                intentInput = $('<input value="' + options.intent + '" type="hidden" id="printformer_intent" name="printformer_intent"/>');
-                $(draftIdInput).after(intentInput);
-            }
-            var uniqueIdInput = null;
-            if (draftIdInput && intentInput && options.unique_id) {
-                uniqueIdInput = $('<input value="' + options.unique_id + '" type="hidden" id="printformer_unique_session_id" name="printformer_unique_session_id"/>');
-                $(intentInput).after(uniqueIdInput);
+            this.addBtn = $(this.options.addBtnSelector);
+
+            if (draftIds.length > 0) {
+                var draftIdInput = $('<input value="' + draftIds + '" type="hidden" id="printformer_draftid" name="printformer_draftid"/>');
+                $(this.options.qtySelector).after(draftIdInput);
+
+                if (this.options.uniqueId) {
+                    var uniqueIdInput = $('<input value="' + this.options.uniqueId + '" type="hidden" id="printformer_unique_session_id" name="printformer_unique_session_id"/>');
+                    $(draftIdInput).after(uniqueIdInput);
+                }
             }
 
-            this.addBtnDisable();
+            if (!this.options.allowSkipConfig && draftIds.length < this.options.printformerProducts.length) {
+                this.addBtnDisable();
+            }
         },
 
         addBtnEnable: function () {
@@ -367,14 +363,11 @@ define([
         },
 
         addBtnDisable: function () {
-            var options = this.printformerOptions;
-            if (!options.allowAddCart) {
-                this.addBtn.prop('disabled', true);
-            }
+            this.addBtn.prop('disabled', true);
         },
 
         initButton: function(printformerProduct) {
-            var button = $(this.printformerOptions.buttonSelector + printformerProduct['id']);
+            var button = $(this.options.buttonSelector + printformerProduct['id']);
 
             var url = printformerProduct['url'];
 
@@ -394,7 +387,7 @@ define([
         },
 
         _initVariations: function () {
-            var varConf = this.printformerOptions.variationsConfig;
+            var varConf = this.options.variationsConfig;
             if (typeof varConf !== 'object') {
                 return;
             }
@@ -410,10 +403,10 @@ define([
                     }
                     event.data.printformer.setVariation($(this).attr('id'), $(this).val());
                 });
-                for (var k in this.printformerOptions.variations) {
+                for (var k in this.options.variations) {
                     if (varConf[id]['param'] === k) {
                         for (var mk in varConf[id]['map']) {
-                            if (varConf[id]['map'][mk] === this.printformerOptions.variations[k]) {
+                            if (varConf[id]['map'][mk] === this.options.variations[k]) {
                                 input.val(mk);
                             }
                         }
@@ -422,22 +415,22 @@ define([
                 input.change();
             }
 
-            if(this.isDefined(this.printformerOptions.preselection.qty) && this.printformerOptions.preselection !== null) {
-                if(parseInt(this.printformerOptions.preselection.qty.value) !==  parseInt(this.printformerOptions.qty)) {
-                    this.printformerOptions.qty = this.printformerOptions.preselection.qty.value
+            if(this.isDefined(this.options.preselection.qty) && this.options.preselection !== null) {
+                if(parseInt(this.options.preselection.qty.value) !==  parseInt(this.options.qty)) {
+                    this.options.qty = this.options.preselection.qty.value
                 }
             }
 
             if (
-                this.printformerOptions.qty &&
-                $(this.printformerOptions.qtySelector).prop('tagName') !== 'SELECT'
+                this.options.qty &&
+                $(this.options.qtySelector).prop('tagName') !== 'SELECT'
             ) {
-                $(this.printformerOptions.qtySelector).val(this.printformerOptions.qty);
+                $(this.options.qtySelector).val(this.options.qty);
             }
         },
 
         setVariation: function (id, value) {
-            var varConf = this.printformerOptions.variationsConfig;
+            var varConf = this.options.variationsConfig;
             if (!id
                 || !varConf[id]
                 || !varConf[id]['param'].length) {
@@ -445,17 +438,17 @@ define([
             }
             if (!this.formatChange
                 && varConf[id]['notice']
-                && this.printformerOptions.variationsFront[id] !== undefined
-                && this.printformerOptions.variationsFront[id].length) {
+                && this.options.variationsFront[id] !== undefined
+                && this.options.variationsFront[id].length) {
                 this.editorNotice.modal('openModal');
                 return;
             }
             this.editBtnEnable();
             this.uploadBtnEnable();
-            this.printformerOptions.variationsFront[id] = value;
-            this.printformerOptions.variations[varConf[id]['param']] = varConf[id]['map'][value];
-            for (var k in this.printformerOptions.variations) {
-                if (this.printformerOptions.variations[k] === undefined || !this.printformerOptions.variations[k].length) {
+            this.options.variationsFront[id] = value;
+            this.options.variations[varConf[id]['param']] = varConf[id]['map'][value];
+            for (var k in this.options.variations) {
+                if (this.options.variations[k] === undefined || !this.options.variations[k].length) {
                     //@todo disable button
                 }
             }
