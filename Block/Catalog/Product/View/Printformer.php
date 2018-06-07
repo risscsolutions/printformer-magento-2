@@ -694,7 +694,6 @@ class Printformer extends AbstractView
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => $this->getProductVariations($this->getDraftId()),
             'qty' => $this->getProductQty($this->getDraftId()),
-            'IsUploadProduct' => true,
             'DraftsGetUrl' => $this->getDraftsGetUrl(),
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->isOnConfigurePDS(),
