@@ -6,26 +6,18 @@ $block->cleanupDraftSession();
 <?php if($block->getProduct()->isSalable()): ?>
     <?php foreach($block->getPrintformerProducts() as $_printformerProduct): ?>
         <div class="printformer-actions box-tocart">
-            <?php $buttonTitle = $block->getButtonText() ?>
-            <button style="display:none;"
-                    id="printformer-edit-button-<?php echo $_printformerProduct->getId() ?>"
+            <button id="printformer-button-<?php echo $_printformerProduct->getId() ?>"
                     type="button"
                     data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
                     data-pf-type="editor"
-                    data-pf-intent="customize"
-                    class="printformer-preselect action primary tocart <?php echo $block->getButtonCss() ?>">
-                <span><?php echo __($buttonTitle) ?></span>
-            </button>
-
-            <?php $buttonTitle = 'Upload' ?>
-            <button style="display:none;"
-                    id="printformer-upload-button-<?php echo $_printformerProduct->getId() ?>"
-                    type="button"
-                    data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
-                    data-pf-type="upload"
-                    data-pf-intent="upload"
-                    class="printformer-preselect action primary tocart <?php echo $block->getButtonCss() ?>">
-                <span><?php echo __($buttonTitle) ?></span>
+                    data-pf-intent="<?php echo $_printformerProduct->getIntent(); ?>"
+                    class="printformer-preselect action primary tocart <?php echo $block->getButtonCss() ?>"
+                    disabled="disabled">
+                <?php if($_printformerProduct->getIntent() == 'upload' || $_printformerProduct->getIntent() == 'upload-and-editor'): ?>
+                    <span><?php echo __('Upload') ?></span>
+                <?php else: ?>
+                    <span><?php echo __($block->getButtonText()) ?></span>
+                <?php endif; ?>
             </button>
         </div>
     <?php endforeach; ?>

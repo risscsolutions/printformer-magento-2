@@ -5,8 +5,9 @@ define([
     'jquery/ui',
     'jquery/jquery.parsequery',
     'Magento_Ui/js/modal/modal',
+    'Rissc_Printformer/js/printformer/preselection',
     'mage/translate'
-], function ($, $ui, $pq, $modal, $t) {
+], function ($, $ui, $pq, $modal, $t, $preselection) {
     'use strict';
 
     $.widget('mage.printformer', {
@@ -36,16 +37,7 @@ define([
             }).done(function(data){
                 that.currentDrafts = data;
                 $.each(that.printformerOptions.printformerProducts, function (index, printformerProduct) {
-                    switch (printformerProduct['intent']) {
-                        case 'customize':
-                        case 'upload-and-editor':
-                            that._initEditBtn(printformerProduct);
-                            break;
-                        case 'upload-and-editor':
-                        case 'upload':
-                            that._initUploadBtn(printformerProduct);
-                            break;
-                    }
+                    that.initButton(printformerProduct);
                 });
                 that._initAddBtn();
                 that._initVariations();
@@ -64,7 +56,11 @@ define([
                 }
 
                 if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
-                    that.preselectOptions(that.printformerOptions.preselection);
+                    that.runCallbacks('printformer:preselection:before');
+                    if (that.printformerOptions.preselection.product === that.printformerOptions.ProductId) {
+                        $preselection.preselectOptions(that.printformerOptions.preselection);
+                    }
+                    that.runCallbacks('printformer:preselection:after');
                 }
 
                 if (that.isDefined(that.printformerOptions.personalizations) && that.printformerOptions.personalizations > 1) {
@@ -351,13 +347,6 @@ define([
             }
         },
 
-        isUploadProduct: function() {
-            return (
-                this.printformerOptions.currentSessionIntent === 'upload-and-editor' ||
-                this.printformerOptions.currentSessionIntent === 'upload'
-            );
-        },
-
         _initAddBtn: function () {
             var options = this.printformerOptions;
 
@@ -392,73 +381,42 @@ define([
             }
         },
 
-        _initEditBtn: function (printformerProduct) {
-            var that = this;
-            var options = this.printformerOptions;
-            this.editBtn = $(this.printformerOptions.editBtnSelector + printformerProduct['id']);
+        initButton: function(printformerProduct) {
+            var button = $(this.printformerOptions.buttonSelector + printformerProduct['id']);
 
-            this.editBtn.click({printformer: this}, function(event) {
-                var editorUrl;
-                if($(that.editBtn).data('pf-intent') === 'personalize') {
-                    editorUrl = that.getPersonalizeUrl();
-                } else {
-                    editorUrl = that.getEditorUrl();
-                }
-                editorUrl = editorUrl.replace('/0/', '/' + printformerProduct['master_id'] + '/');
-                event.data.printformer.editorMainOpen(editorUrl);
-            })
-            /**
-             * Removed moving button because we need it in another Container.
-             * .insertBefore(this.addBtn)
-             */
-                .show();
-
-            var hasDraft = false;
-            if(this.currentDrafts) {
-                if (this.isDefined(this.currentDrafts['customize'])) {
-                    hasDraft = true;
-                } else if (this.isDefined(this.currentDrafts['personalize'])) {
-                    hasDraft = true;
-                }
+            var url;
+            switch (printformerProduct['intent']) {
+                case 'customize':
+                    url = this.getEditorUrl();
+                    break;
+                case 'personalize':
+                    url = this.getPersonalizeUrl();
+                    break;
+                case 'upload':
+                    url = this.getUploadUrl();
+                    break;
+                case 'upload-and-editor':
+                    url = this.getUploadAndEditorUrl();
+                    break;
             }
-            if (hasDraft) {
-                this.setButtonText($(this.editBtn), $t('View draft'));
-            }
-        },
 
-        editBtnEnable: function () {
-            this.editBtn.prop('disabled', false);
-        },
-
-        editBtnDisable: function () {
-            this.editBtn.prop('disabled', true);
-        },
-
-        _initUploadBtn: function (printformerProduct) {
-            this.uploadBtn = $(this.printformerOptions.uploadBtnSelector + printformerProduct['id']);
-
-            var url = this.getUploadUrl();
-            if(printformerProduct['intent'] === 'upload-and-editor') {
-                url = this.getUploadAndEditorUrl();
-            }
             url = url.replace('/0/', '/' + printformerProduct['master_id'] + '/');
 
-            this.uploadBtn.click({printformer: this}, function(event) {
+            button.click({printformer: this}, function(event) {
                 event.data.printformer.editorMainOpen(url);
             });
-            this.uploadBtn.show();
 
-            if(this.currentDrafts && this.isDefined(this.currentDrafts[printformerProduct['intent']])) {
-                this.setButtonText($(this.uploadBtn), $t('View upload'));
+            button.prop('disabled', false);
+
+            if (this.currentDrafts) {
+                if (this.isDefined(this.currentDrafts['customize']) || this.isDefined(this.currentDrafts['personalize'])) {
+                    this.setButtonText($(button), $t('View draft'));
+                }
+
+                if (this.isDefined(this.currentDrafts[printformerProduct['intent']])) {
+                    this.setButtonText($(button), $t('View upload'));
+                }
             }
-        },
-
-        uploadBtnEnable: function () {
-            this.uploadBtn.prop('disabled', false);
-        },
-
-        uploadBtnDisable: function () {
-            $(this.uploadBtn).prop('disabled', true);
         },
 
         _initVariations: function () {
@@ -471,8 +429,7 @@ define([
                 if (!input.length) {
                     continue;
                 }
-                this.editBtnDisable();
-                this.uploadBtnDisable();
+                //@Todo disable button
                 input.change({printformer: this}, function(event, skip){
                     if (skip) {
                         return;
@@ -491,7 +448,7 @@ define([
                 input.change();
             }
 
-            if(this.isDefined(this.printformerOptions.preselection) && this.printformerOptions.preselection !== null) {
+            if(this.isDefined(this.printformerOptions.preselection.qty) && this.printformerOptions.preselection !== null) {
                 if(parseInt(this.printformerOptions.preselection.qty.value) !==  parseInt(this.printformerOptions.qty)) {
                     this.printformerOptions.qty = this.printformerOptions.preselection.qty.value
                 }
@@ -525,98 +482,9 @@ define([
             this.printformerOptions.variations[varConf[id]['param']] = varConf[id]['map'][value];
             for (var k in this.printformerOptions.variations) {
                 if (this.printformerOptions.variations[k] === undefined || !this.printformerOptions.variations[k].length) {
-                    this.editBtnDisable();
-                    this.uploadBtnDisable();
+                    //@todo disable button
                 }
             }
-        },
-
-        preselectOptions: function(selectedOptions) {
-            this.runCallbacks('printformer:preselection:before');
-            var that = this;
-            if (!this.isDefined(selectedOptions)) {
-                return;
-            }
-
-            if (selectedOptions.product === that.printformerOptions.ProductId) {
-                if (this.isDefined(selectedOptions.qty) && this.isDefined(selectedOptions.qty.value)) {
-                    var qtySelector = '#qty';
-                    if ($(qtySelector).length) {
-                        if($(qtySelector).prop('tagName').toLowerCase() === 'input') {
-                            $(qtySelector).val(parseInt(selectedOptions.qty.value));
-                        } else {
-                            $(qtySelector).val(selectedOptions.qty.value);
-                        }
-                        $(qtySelector).trigger('change');
-                    }
-                }
-                if(this.isDefined(selectedOptions['options']) && selectedOptions['options'] !== null) {
-                    var preselectoptions = $('.product-options-wrapper :input');
-                    var inputId = null;
-                    $.each(preselectoptions, function (i, opt) {
-                        if (
-                            $(opt).hasClass('product-custom-option') &&
-                            ($(opt).is('textarea') || $(opt).attr('type') === 'text')
-                        ) {
-                            var regex = new RegExp(/options_([0-9]+)_.*/i);
-                            inputId = $(opt).attr('id').replace(regex, '$1');
-                            if(that.isDefined(selectedOptions['options'][inputId])) {
-                                $(opt).val(selectedOptions['options'][inputId].value);
-                            }
-                        }
-                        if (
-                            $(opt).hasClass('product-custom-option') &&
-                            $(opt).attr('type') === 'checkbox'
-                        ) {
-                            var checkboxId = $(opt).attr('id').replace(/options_([0-9]+)_[0-9]+/i, '$1');
-                            if (that.isDefined(selectedOptions['options'][checkboxId])) {
-                                $.each(selectedOptions['options'][checkboxId].value, function(o, option){
-                                    if($(opt).val() === option) {
-                                        $(opt).prop('checked', true);
-                                    }
-                                });
-                            }
-                        }
-                        if (
-                            $(opt).prop('tagName').toLowerCase() === 'select' &&
-                            $(opt).hasClass('product-custom-option')
-                        ) {
-                            if($(opt).hasClass('datetime-picker')) {
-                                $.each(selectedOptions['options'], function (i, optionValue) {
-                                    if($(opt).data('selector') === 'options[' + i + '][' + $(opt).data('calendar-role') + ']') {
-                                        if(that.isDefined(optionValue.value[$(opt).data('calendar-role')])) {
-                                            $(opt).val(optionValue.value[$(opt).data('calendar-role')]);
-                                        }
-                                    }
-                                });
-                            } else {
-                                $.each(selectedOptions['options'], function (i, optionValue) {
-                                    if ($(opt).data('selector') === 'options[' + i + ']') {
-                                        $(opt).val(optionValue.value);
-                                    }
-                                });
-                            }
-                        }
-                        if (
-                            $(opt).hasClass('product-custom-option') &&
-                            $(opt).attr('type') === 'radio'
-                        ) {
-                            $.each(selectedOptions['options'], function (i, optionValue) {
-                                if (
-                                    $(opt).data('selector') === 'options[' + i + ']' &&
-                                    $(opt).val() === optionValue.value
-                                ) {
-                                    $(opt).prop('checked', true);
-                                }
-                            });
-                        }
-
-                        $(opt).trigger('change');
-                    });
-                }
-            }
-            this.runCallbacks('printformer:preselection:after');
-            return this;
         },
 
         registerCallback: function(event, name, method) {

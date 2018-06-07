@@ -239,7 +239,7 @@ class Printformer extends AbstractView
     /**
      * {@inheritdoc}
      */
-    public function getPrintformerPRoductsArray()
+    public function getPrintformerProductsArray()
     {
         return $this->printformerProductHelper->getPrintformerProductsArray($this->getProduct()->getId());
     }
@@ -675,9 +675,8 @@ class Printformer extends AbstractView
         }
         $config = [
             'qtySelector' => '#qty',
+            'buttonSelector' => '#printformer-button-',
             'addBtnSelector' => '#product-addtocart-button, #product-updatecart-button',
-            'editBtnSelector' => '#printformer-edit-button-',
-            'uploadBtnSelector' => '#printformer-upload-button-',
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
@@ -685,7 +684,7 @@ class Printformer extends AbstractView
             'unique_id' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
             'allowAddCart' => $this->isAllowSkipConfig() || $this->getDraftId(),
-            'printformerProducts' => $this->getPrintformerPRoductsArray(),
+            'printformerProducts' => $this->getPrintformerProductsArray(),
             'urls' => [
                 'customize' => $this->getEditorUrl('customize'),
                 'personalize' => $this->getEditorUrl('personalize'),
