@@ -140,7 +140,7 @@ class Printformer extends AbstractView
     /**
      * @return int
      */
-    public function getDraftId()
+    public function getDraftId(PrintformerProduct $printformerProduct)
     {
         $draftId = null;
         // Get draft ID on cart product edit page
@@ -174,7 +174,10 @@ class Printformer extends AbstractView
                 if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $this->getProduct()->getId()) {
                     /** @var Draft $draft */
                     $draft = $this->draftFactory->create();
-                    $draftCollection = $draft->getCollection()->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
+                    $draftCollection = $draft->getCollection()
+                        ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
+                        ->addFieldToFilter('printformer_product_id', $printformerProduct->getId())
+                        ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
 
                     if ($draftCollection->count() > 0) {
                         $draft = $draftCollection->getFirstItem();
@@ -247,6 +250,7 @@ class Printformer extends AbstractView
         foreach($this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId()) as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct);
+            $printformerProducts[$i]['draft_id'] = $this->getDraftId($printformerProduct);
             $i++;
         }
 
@@ -260,15 +264,20 @@ class Printformer extends AbstractView
      */
     public function getEditorUrl(PrintformerProduct $printformerProduct)
     {
-        $editParams = [];
+        $params = ['printformer_product_id' => $printformerProduct->getId()];
+
         if ($this->isOnConfigurePDS()) {
-            $editParams = [
-                'quote_id' => $this->getRequest()->getParam('id'),
-                'product_id' => $this->getRequest()->getParam('product_id')
-            ];
+            $params['quote_id'] = $this->getRequest()->getParam('id');
+            $params['product_id'] = $this->getRequest()->getParam('product_id');
         }
 
-        return $this->urlHelper->getEditorEntry($this->getProduct()->getId(), $printformerProduct->getMasterId(), $this->getDraftId(), $editParams, $printformerProduct->getIntent());
+        return $this->urlHelper->getEditorEntry(
+            $this->getProduct()->getId(),
+            $printformerProduct->getMasterId(),
+            $this->getDraftId($printformerProduct),
+            $params,
+            $printformerProduct->getIntent()
+        );
     }
 
     /**
@@ -692,14 +701,13 @@ class Printformer extends AbstractView
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
-            'draftId' => $this->getDraftId(),
             'unique_id' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
-            'allowAddCart' => $this->isAllowSkipConfig() || $this->getDraftId(),
+            'allowAddCart' => $this->isAllowSkipConfig(), //@todo || $this->getDraftId(),
             'printformerProducts' => $this->getPrintformerProductsArray(),
             'variationsConfig' => $this->getVariationsConfig(),
-            'variations' => $this->getProductVariations($this->getDraftId()),
-            'qty' => $this->getProductQty($this->getDraftId()),
+            'variations' => [], //@todo $this->getProductVariations($this->getDraftId()),
+            'qty' => 1, //@todo $this->getProductQty($this->getDraftId()),
             'DraftsGetUrl' => $this->getDraftsGetUrl(),
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->isOnConfigurePDS(),
@@ -835,12 +843,15 @@ class Printformer extends AbstractView
             return;
         }
 
+        /*
+         * @todo
         if ($this->isDraftInCart($this->getDraftId())) {
             $this->sessionHelper->getCatalogSession()->setSavedPrintformerOptions(null);
             $this->sessionHelper->getCatalogSession()->setData(Save::PERSONALISATIONS_QUERY_PARAM, null);
             $this->sessionHelper->getCatalogSession()->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
             $this->sessionHelper->getCustomerSession()->setSessionUniqueID(null);
         }
+        */
     }
 
     /**

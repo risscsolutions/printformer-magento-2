@@ -343,6 +343,22 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $connection->createTable($table);
         }
 
+        if(version_compare($context->getVersion(), '100.3.11', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_DRAFT);
+            $columnName = 'printformer_product_id';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_INTEGER,
+                        'length' => 10,
+                        'comment' => 'Printformer product identifier'
+                    ]
+                );
+            }
+        }
+
         $setup->endSetup();
     }
 }

@@ -141,6 +141,7 @@ class Gallery
      */
     private function getDraftId()
     {
+        return null; //@todo getDraftId
         return $this->printformerBlock->getDraftId();
     }
 

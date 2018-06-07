@@ -211,6 +211,7 @@ class Api
      * @param string $intent
      * @param string $sessionUniqueId
      * @param int    $customerId
+     * @param int    $printformerProductId
      *
      * @return Draft
      * @throws \Exception
@@ -221,9 +222,9 @@ class Api
         $productId = null,
         $intent = null,
         $sessionUniqueId = null,
-        $customerId = null
-    )
-    {
+        $customerId = null,
+        $printformerProductId = null
+    ) {
         $store = $this->_storeManager->getStore();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
@@ -241,7 +242,8 @@ class Api
                 'product_id' => $productId,
                 'customer_id' => $customerId,
                 'user_identifier' => $this->getUserIdentifier(),
-                'created_at' => time()
+                'created_at' => time(),
+                'printformer_product_id' => $printformerProductId
             ]);
             $process->getResource()->save($process);
         }
@@ -254,6 +256,7 @@ class Api
      * @param int    $productId
      * @param string $intent
      * @param string $sessionUniqueId
+     * @param int    $printformerProductId
      *
      * @return \Magento\Framework\DataObject|Draft
      * @throws \Exception
@@ -262,9 +265,9 @@ class Api
         $draftHash = null,
         $productId = null,
         $intent = null,
-        $sessionUniqueId = null
-    )
-    {
+        $sessionUniqueId = null,
+        $printformerProductId = null
+    ) {
         /** @var Draft $process */
         $process = $this->_draftFactory->create();
 
@@ -277,6 +280,9 @@ class Api
             }
             $draftCollection->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId]);
             $draftCollection->addFieldToFilter('product_id', ['eq' => $productId]);
+        }
+        if($printformerProductId !== null) {
+            $draftCollection->addFieldToFilter('printformer_product_id', ['eq' => $printformerProductId]);
         }
         if ($draftCollection->count() == 1) {
             $process = $draftCollection->getFirstItem();

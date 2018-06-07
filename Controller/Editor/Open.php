@@ -99,16 +99,16 @@ class Open extends Action
         /**
          * Get all params and variables needed
          */
-        $params           = $this->getRequest()->getParams();
-
-        $productId        = $this->getRequest()->getParam('product_id');
-        $masterId         = $this->getRequest()->getParam('master_id');
-        $intent           = $this->getRequest()->getParam('intent');
-        $printformerDraft = $this->getRequest()->getParam('draft_id');
-        $sessionUniqueId  = $this->getRequest()->getParam('session_id');
-        $requestReferrer  = $this->getRequest()->getParam('custom_referrer');
-        $storeId          = $this->_storeManager->getStore()->getId();
-        $customerSession  = $this->_sessionHelper->getCustomerSession();
+        $params               = $this->getRequest()->getParams();
+        $productId            = $this->getRequest()->getParam('product_id');
+        $masterId             = $this->getRequest()->getParam('master_id');
+        $intent               = $this->getRequest()->getParam('intent');
+        $printformerDraft     = $this->getRequest()->getParam('draft_id');
+        $sessionUniqueId      = $this->getRequest()->getParam('session_id');
+        $requestReferrer      = $this->getRequest()->getParam('custom_referrer');
+        $printformerProductId = $this->getRequest()->getParam('printformer_product_id');
+        $storeId              = $this->_storeManager->getStore()->getId();
+        $customerSession      = $this->_sessionHelper->getCustomerSession();
 
         /**
          * Show an error if product id was not set
@@ -139,7 +139,9 @@ class Open extends Action
              $masterId,
              $product->getId(),
              $intent,
-             $sessionUniqueId
+             $sessionUniqueId,
+             null,
+             $printformerProductId
          );
 
         /**
@@ -166,11 +168,21 @@ class Open extends Action
         }
 
         if($this->_draftGateway->isV2Enabled()) {
-            $editorUrl = $this->_apiHelper->getEditorWebtokenUrl($draftProcess->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
+            $editorUrl = $this->_apiHelper->getEditorWebtokenUrl(
+                $draftProcess->getDraftId(),
+                $draftProcess->getUserIdentifier(),
+                $editorParams
+            );
         } else {
             $editorUrl = $this->_urlHelper->getEditor($draftProcess->getDraftId(), null, $editorParams);
-            $editorUrl = $this->_buildRedirectUrl($editorUrl, $requestReferrer, $draftProcess, $customerSession,
-                $storeId, $params);
+            $editorUrl = $this->_buildRedirectUrl(
+                $editorUrl,
+                $requestReferrer,
+                $draftProcess,
+                $customerSession,
+                $storeId,
+                $params
+            );
         }
 
         /**
