@@ -384,23 +384,7 @@ define([
         initButton: function(printformerProduct) {
             var button = $(this.printformerOptions.buttonSelector + printformerProduct['id']);
 
-            var url;
-            switch (printformerProduct['intent']) {
-                case 'customize':
-                    url = this.getEditorUrl();
-                    break;
-                case 'personalize':
-                    url = this.getPersonalizeUrl();
-                    break;
-                case 'upload':
-                    url = this.getUploadUrl();
-                    break;
-                case 'upload-and-editor':
-                    url = this.getUploadAndEditorUrl();
-                    break;
-            }
-
-            url = url.replace('/0/', '/' + printformerProduct['master_id'] + '/');
+            var url = printformerProduct['url'];
 
             button.click({printformer: this}, function(event) {
                 event.data.printformer.editorMainOpen(url);

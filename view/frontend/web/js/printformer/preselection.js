@@ -3,7 +3,7 @@ define([
 ], function ($) {
     'use strict';
 
-    $.widget('mage.printformerPreselection', {
+    $.widget('mage.preselection', {
         isDefined: function(value) {
             return typeof value !== typeof undefined;
         },
@@ -91,5 +91,5 @@ define([
         }
     });
 
-    return $.mage.printformerPreselection;
+    return $.mage.preselection;
 });

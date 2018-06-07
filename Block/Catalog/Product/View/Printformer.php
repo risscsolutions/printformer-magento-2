@@ -241,22 +241,34 @@ class Printformer extends AbstractView
      */
     public function getPrintformerProductsArray()
     {
-        return $this->printformerProductHelper->getPrintformerProductsArray($this->getProduct()->getId());
+        $printformerProducts = [];
+
+        $i = 0;
+        foreach($this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId()) as $printformerProduct) {
+            $printformerProducts[$i] = $printformerProduct->getData();
+            $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct);
+            $i++;
+        }
+
+        return $printformerProducts;
     }
 
     /**
-     * @param string $intent
+     * @param PrintformerProduct $printformerProduct
      * @return string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function getEditorUrl($intent = null)
+    public function getEditorUrl(PrintformerProduct $printformerProduct)
     {
         $editParams = [];
         if ($this->isOnConfigurePDS()) {
-            $editParams = ['quote_id' => $this->getRequest()->getParam('id'), 'product_id' => $this->getRequest()->getParam('product_id')];
+            $editParams = [
+                'quote_id' => $this->getRequest()->getParam('id'),
+                'product_id' => $this->getRequest()->getParam('product_id')
+            ];
         }
 
-        return $this->urlHelper->getEditorEntry($this->getProduct()->getId(), 0, $this->getDraftId(), $editParams, $intent);
+        return $this->urlHelper->getEditorEntry($this->getProduct()->getId(), $printformerProduct->getMasterId(), $this->getDraftId(), $editParams, $printformerProduct->getIntent());
     }
 
     /**
@@ -685,12 +697,6 @@ class Printformer extends AbstractView
             'productTitle' => $this->getProduct()->getName(),
             'allowAddCart' => $this->isAllowSkipConfig() || $this->getDraftId(),
             'printformerProducts' => $this->getPrintformerProductsArray(),
-            'urls' => [
-                'customize' => $this->getEditorUrl('customize'),
-                'personalize' => $this->getEditorUrl('personalize'),
-                'upload' => $this->getEditorUrl('upload'),
-                'uploadAndEditor' => $this->getEditorUrl('upload-and-editor')
-            ],
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => $this->getProductVariations($this->getDraftId()),
             'qty' => $this->getProductQty($this->getDraftId()),
