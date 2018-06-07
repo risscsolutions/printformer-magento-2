@@ -5,8 +5,8 @@ define([
     'jquery/ui',
     'jquery/jquery.parsequery',
     'Magento_Ui/js/modal/modal',
-    'Rissc_Printformer/js/printformer/preselection',
-    'mage/translate'
+    'mage/translate',
+    'Rissc_Printformer/js/printformer/preselection'
 ], function ($, $ui, $pq, $modal, $t, $preselection) {
     'use strict';
 
