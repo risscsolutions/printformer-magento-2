@@ -708,7 +708,6 @@ class Printformer extends AbstractView
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => [], //@todo $this->getProductVariations($this->getDraftId()),
             'qty' => 1, //@todo $this->getProductQty($this->getDraftId()),
-            'DraftsGetUrl' => $this->getDraftsGetUrl(),
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->isOnConfigurePDS(),
             'draftMasterId' => $this->getDraftMasterId(),
@@ -760,14 +759,6 @@ class Printformer extends AbstractView
         }
 
         return $this->draftMasterId;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDraftsGetUrl()
-    {
-        return $this->_urlBuilder->getUrl('printformer/get/draft');
     }
 
     /**
