@@ -7,13 +7,11 @@ $block->cleanupDraftSession();
     <script type="text/javascript">
         var printformerInstance = null;
     </script>
-    <?php foreach($block->getPrintformerProducts() as $_printformerProduct): ?>
-        <script type="text/x-magento-init">
-            {
-                "#product_addtocart_form": {
-                    "printformer": <?php echo $block->getJsonConfig(); ?>
-                }
+    <script type="text/x-magento-init">
+        {
+            "#product_addtocart_form": {
+                "printformer": <?php echo $block->getJsonConfig(); ?>
             }
-        </script>
-    <?php endforeach; ?>
+        }
+    </script>
 <?php endif; ?>
