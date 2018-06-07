@@ -5,9 +5,8 @@ define([
     'jquery/ui',
     'jquery/jquery.parsequery',
     'Magento_Ui/js/modal/modal',
-    'mage/translate',
-    'Rissc_Printformer/js/printformer/preselection'
-], function ($, $ui, $pq, $modal, $t, $preselection) {
+    'mage/translate'
+], function ($, $ui, $pq, $modal, $t) {
     'use strict';
 
     $.widget('mage.printformer', {
@@ -58,7 +57,7 @@ define([
                 if(that.isDefined(that.printformerOptions.preselection) && that.printformerOptions.preselection !== null) {
                     that.runCallbacks('printformer:preselection:before');
                     if (that.printformerOptions.preselection.product === that.printformerOptions.ProductId) {
-                        $preselection.preselectOptions(that.printformerOptions.preselection);
+                        that.preselectOptions(that.printformerOptions.preselection);
                     }
                     that.runCallbacks('printformer:preselection:after');
                 }
@@ -469,6 +468,89 @@ define([
                     //@todo disable button
                 }
             }
+        },
+
+
+        preselectOptions: function(selectedOptions) {
+            var that = this;
+            if (this.isDefined(selectedOptions)) {
+                if (this.isDefined(selectedOptions.qty) && this.isDefined(selectedOptions.qty.value)) {
+                    var qtySelector = '#qty';
+                    if ($(qtySelector).length) {
+                        if ($(qtySelector).prop('tagName').toLowerCase() === 'input') {
+                            $(qtySelector).val(parseInt(selectedOptions.qty.value));
+                        } else {
+                            $(qtySelector).val(selectedOptions.qty.value);
+                        }
+                        $(qtySelector).trigger('change');
+                    }
+                }
+                if (this.isDefined(selectedOptions['options']) && selectedOptions['options'] !== null) {
+                    var preselectoptions = $('.product-options-wrapper :input');
+                    var inputId = null;
+                    $.each(preselectoptions, function (i, opt) {
+                        if (
+                            $(opt).hasClass('product-custom-option') &&
+                            ($(opt).is('textarea') || $(opt).attr('type') === 'text')
+                        ) {
+                            var regex = new RegExp(/options_([0-9]+)_.*/i);
+                            inputId = $(opt).attr('id').replace(regex, '$1');
+                            if (that.isDefined(selectedOptions['options'][inputId])) {
+                                $(opt).val(selectedOptions['options'][inputId].value);
+                            }
+                        }
+                        if (
+                            $(opt).hasClass('product-custom-option') &&
+                            $(opt).attr('type') === 'checkbox'
+                        ) {
+                            var checkboxId = $(opt).attr('id').replace(/options_([0-9]+)_[0-9]+/i, '$1');
+                            if (that.isDefined(selectedOptions['options'][checkboxId])) {
+                                $.each(selectedOptions['options'][checkboxId].value, function (o, option) {
+                                    if ($(opt).val() === option) {
+                                        $(opt).prop('checked', true);
+                                    }
+                                });
+                            }
+                        }
+                        if (
+                            $(opt).prop('tagName').toLowerCase() === 'select' &&
+                            $(opt).hasClass('product-custom-option')
+                        ) {
+                            if ($(opt).hasClass('datetime-picker')) {
+                                $.each(selectedOptions['options'], function (i, optionValue) {
+                                    if ($(opt).data('selector') === 'options[' + i + '][' + $(opt).data('calendar-role') + ']') {
+                                        if (that.isDefined(optionValue.value[$(opt).data('calendar-role')])) {
+                                            $(opt).val(optionValue.value[$(opt).data('calendar-role')]);
+                                        }
+                                    }
+                                });
+                            } else {
+                                $.each(selectedOptions['options'], function (i, optionValue) {
+                                    if ($(opt).data('selector') === 'options[' + i + ']') {
+                                        $(opt).val(optionValue.value);
+                                    }
+                                });
+                            }
+                        }
+                        if (
+                            $(opt).hasClass('product-custom-option') &&
+                            $(opt).attr('type') === 'radio'
+                        ) {
+                            $.each(selectedOptions['options'], function (i, optionValue) {
+                                if (
+                                    $(opt).data('selector') === 'options[' + i + ']' &&
+                                    $(opt).val() === optionValue.value
+                                ) {
+                                    $(opt).prop('checked', true);
+                                }
+                            });
+                        }
+
+                        $(opt).trigger('change');
+                    });
+                }
+            }
+            return this;
         },
 
         registerCallback: function(event, name, method) {
