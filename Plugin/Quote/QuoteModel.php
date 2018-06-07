@@ -76,10 +76,12 @@ class QuoteModel
         try {
             if (isset($item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID])) {
                 $storeId = $this->storeManager->getStore()->getId();
-                $draftId = $item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID];
+                $draftIds = $item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID];
 
-                $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-                $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                foreach(explode(',', $draftIds) as $draftId) {
+                    $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
+                    $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                }
 
                 $this->session->unsDraftId($item->getProduct()->getId(), $storeId);
             }

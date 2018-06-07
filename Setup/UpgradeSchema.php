@@ -359,6 +359,28 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if(version_compare($context->getVersion(), '100.3.12', '<')) {
+            $connection->changeColumn(
+                'quote_item',
+                InstallSchema::COLUMN_NAME_DRAFTID,
+                InstallSchema::COLUMN_NAME_DRAFTID,
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Printformer Draft Id List'
+                ]);
+
+            $connection->changeColumn(
+                'sales_order_item',
+                InstallSchema::COLUMN_NAME_DRAFTID,
+                InstallSchema::COLUMN_NAME_DRAFTID,
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Printformer Draft Id List'
+                ]);
+        }
+
         $setup->endSetup();
     }
 }

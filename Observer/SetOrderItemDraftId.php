@@ -54,9 +54,9 @@ class SetOrderItemDraftId implements ObserverInterface
             $order = $observer->getData('order');
             foreach ($order->getAllItems() as $item) {
                 $quoteItem = $quote->getItemById($item->getQuoteItemId());
-                $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                $draftIds = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                 $storeId = $quoteItem->getData(InstallSchema::COLUMN_NAME_STOREID);
-                $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
                 $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
             }
         } catch (\Exception $e) {

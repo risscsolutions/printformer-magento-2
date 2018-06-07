@@ -62,10 +62,10 @@ class SetQuoteItemDraftId implements ObserverInterface
                 return;
             }
             $storeId = $this->storeManager->getStore()->getId();
-            $draftId = $item->getBuyRequest()['printformer_draftid'];
+            $draftIds = $item->getBuyRequest()['printformer_draftid'];
 
             $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-            $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+            $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
 
             $this->sessionHelper->unsDraftId($item->getProduct()->getId(), $storeId);
         } catch (\Exception $e) {

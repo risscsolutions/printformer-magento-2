@@ -50,11 +50,13 @@ class SetDraftOrderItemId implements ObserverInterface
              */
             $order = $observer->getData('order');
             foreach ($order->getAllItems() as $item) {
-                $this->draftFactory
-                    ->create()
-                    ->load($item->getData(InstallSchema::COLUMN_NAME_DRAFTID), 'draft_id')
-                    ->setOrderItemId($item->getId())
-                    ->save();
+                foreach(explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID)) as $draftId) {
+                    $this->draftFactory
+                        ->create()
+                        ->load($draftId, 'draft_id')
+                        ->setOrderItemId($item->getId())
+                        ->save();
+                }
             }
         } catch (\Exception $e) {
             $this->logger->critical($e);
