@@ -66,7 +66,7 @@ class SavePrintformerProducts implements ObserverInterface
             }
         }
 
-        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before', ['product' => $product, 'data' => $data]);
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before', ['request' => $request, 'product' => $product, 'data' => $data]);
 
         $connection->beginTransaction();
         $connection->delete('catalog_product_printformer_product', ['product_id = ?' => $product->getId()]);
@@ -75,6 +75,6 @@ class SavePrintformerProducts implements ObserverInterface
         }
         $connection->commit();
 
-        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after', ['product' => $product, 'data' => $data]);
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after', ['request' => $request,'product' => $product, 'data' => $data]);
     }
 }
