@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Observer\Product\Save;
 
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 
@@ -14,12 +15,20 @@ class SavePrintformerProducts implements ObserverInterface
     protected $resourceConnection;
 
     /**
-     * SaveDefaultColor constructor.
+     * @var ManagerInterface
+     */
+    protected $eventManager;
+
+    /**
+     * SavePrintformerProducts constructor.
+     * @param ManagerInterface $eventManager
      * @param ResourceConnection $resourceConnection
      */
     public function __construct(
+        ManagerInterface $eventManager,
         ResourceConnection $resourceConnection
     ) {
+        $this->eventManager = $eventManager;
         $this->resourceConnection = $resourceConnection;
     }
 
@@ -57,11 +66,15 @@ class SavePrintformerProducts implements ObserverInterface
             }
         }
 
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before', ['product' => $product, 'data' => $data]);
+
         $connection->beginTransaction();
         $connection->delete('catalog_product_printformer_product', ['product_id = ?' => $product->getId()]);
         if(count($data) > 0) {
             $connection->insertMultiple('catalog_product_printformer_product', $data);
         }
         $connection->commit();
+
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after', ['product' => $product, 'data' => $data]);
     }
 }
