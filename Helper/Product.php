@@ -69,6 +69,30 @@ class Product extends AbstractHelper
     }
 
     /**
+     * @param int $productId
+     * @return array
+     */
+    public function getCatalogProductPrintformerProducts($productId)
+    {
+        $connection = $this->resourceConnection->getConnection();
+        $select = $connection->select()->from('catalog_product_printformer_product')->where('product_id = ?', $productId);
+        $result = $connection->fetchAll($select);
+
+        foreach($result as &$row) {
+            $printformerProduct = $this->productFactory->create();
+            $this->resource->load($printformerProduct, $row['printformer_product_id']);
+
+            if($printformerProduct->getId()) {
+                $id = $row['id'];
+                $row = array_merge($row, $printformerProduct->getData());
+                $row['id'] = $id;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * @param $productId
      * @return array
      */
