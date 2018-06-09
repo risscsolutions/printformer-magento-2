@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Observer\Product\Save;
 
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -66,7 +67,11 @@ class SavePrintformerProducts implements ObserverInterface
             }
         }
 
-        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before', ['request' => $request, 'product' => $product, 'data' => $data]);
+        $dataWrapper = new DataObject();
+
+        $dataWrapper->setContent($data);
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before', ['controller' => $controller, 'product' => $product, 'insert_data' => $dataWrapper]);
+        $data = $dataWrapper->getContent();
 
         $connection->beginTransaction();
         $connection->delete('catalog_product_printformer_product', ['product_id = ?' => $product->getId()]);
@@ -75,6 +80,6 @@ class SavePrintformerProducts implements ObserverInterface
         }
         $connection->commit();
 
-        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after', ['request' => $request,'product' => $product, 'data' => $data]);
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after', ['controller' => $controller, 'product' => $product, 'insert_data' => $dataWrapper]);
     }
 }
