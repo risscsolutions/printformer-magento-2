@@ -166,7 +166,7 @@ class PrintformerProduct
         $productId = $this->locator->getProduct()->getId();
         $printformerProducts = [];
         $i = 0;
-        foreach($this->productHelper->getCatalogProductPrintformerProducts($productId) as $product) {
+        foreach($this->productHelper->getCatalogProductPrintformerProductsArray($productId) as $product) {
             $printformerProducts[$i] = $product;
             $printformerProducts[$i]['record_id'] = $i;
             $i++;

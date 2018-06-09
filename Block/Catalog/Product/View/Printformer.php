@@ -232,11 +232,11 @@ class Printformer extends AbstractView
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
-    public function getPrintformerProducts()
+    public function getCatalogProductPrintformerProducts()
     {
-        return $this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId());
+        return $this->printformerProductHelper->getCatalogProductPrintformerProducts($this->getProduct()->getId());
     }
 
     /**
@@ -289,11 +289,18 @@ class Printformer extends AbstractView
     }
 
     /**
+     * @param DataObject $catalogProductPrintformerProduct
      * @return string
      */
-    public function getButtonCss()
+    public function getButtonCss($catalogProductPrintformerProduct)
     {
-        return $this->configHelper->getButtonCss();
+        $additionalCss = new DataObject();
+        $this->_eventManager->dispatch('printformer_product_button_css', [
+            'block' => $this,
+            'catalog_product_printformer_product' => $catalogProductPrintformerProduct,
+            'additional_css' => $additionalCss
+        ]);
+        return $this->configHelper->getButtonCss() . ' ' . $additionalCss->getValue();
     }
 
     /**

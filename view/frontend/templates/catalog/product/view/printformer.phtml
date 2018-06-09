@@ -4,14 +4,15 @@ $block->cleanupDraftSession();
 ?>
 
 <?php if($block->getProduct()->isSalable()): ?>
-    <?php foreach($block->getPrintformerProducts() as $_printformerProduct): ?>
+    <?php foreach($block->getCatalogProductPrintformerProducts() as $_catalogProductPrintformerProduct): ?>
+        <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
         <div class="printformer-actions box-tocart">
             <button id="printformer-button-<?php echo $_printformerProduct->getId() ?>"
                     type="button"
                     data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
                     data-pf-type="editor"
                     data-pf-intent="<?php echo $_printformerProduct->getIntent(); ?>"
-                    class="printformer-preselect action primary tocart <?php echo $block->getButtonCss() ?>"
+                    class="printformer-preselect action primary tocart printformer-button <?php echo $block->getButtonCss($_catalogProductPrintformerProduct) ?>"
                     disabled="disabled">
                 <?php if($_printformerProduct->getIntent() == 'upload' || $_printformerProduct->getIntent() == 'upload-and-editor'): ?>
                     <span><?php echo __('Upload') ?></span>
