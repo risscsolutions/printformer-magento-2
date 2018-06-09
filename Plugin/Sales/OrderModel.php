@@ -104,8 +104,8 @@ class OrderModel
         try {
             $draftIds = [];
             foreach ($subject->getAllItems() as $item) {
-                $draftId = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                if ($draftId) {
+                $itemDraftIds = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                foreach (explode(',', $itemDraftIds) as $draftId) {
                     $this->draftFactory
                         ->create()
                         ->load($draftId, 'draft_id')
@@ -116,7 +116,7 @@ class OrderModel
                 if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
                     continue;
                 }
-                $draftIds[] = $item->getPrintformerDraftid();
+                $draftIds = array_merge($draftIds, explode(',', $item->getPrintformerDraftid()));
             }
 
             if ($subject->getStatus() == $this->config->getOrderStatus()) {
