@@ -64,23 +64,51 @@ class View
         /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $printFormerBlock */
         $printFormerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
 
-        /** @var \Rissc\Printformer\Block\Custom\Editor\Link $viewBlock */
-        $viewBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Custom\Editor\Link');
-        $viewBlock->setTemplate('Rissc_Printformer::custom/editor/view.phtml');
-        $viewBlock->addData([
-            'quote_item' => $quoteItem,
-            'product' => $product,
-            'editor_link' => $this->_getEditorUrl($quoteItem),
-            'printformer_block' => $printFormerBlock
-        ]);
+        $editors = $this->_getEditorUrl($quoteItem);
+        $viewHtml = '';
+        if (is_array($editors)) {
+            $counter = 0;
+            foreach($editors as $editor) {
+                /** @var \Rissc\Printformer\Block\Custom\Editor\Link $viewBlock */
+                $viewBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Custom\Editor\Link');
+                $viewBlock->setTemplate('Rissc_Printformer::custom/editor/view.phtml');
+                $viewBlock->setName('editor.data.item_' . $counter);
+                $viewBlock->addData([
+                    'quote_item' => $quoteItem,
+                    'product' => $product,
+                    'editor_link' => $editor['url'],
+                    'printformer_block' => $printFormerBlock,
+                    'draft_hash' => $editor['hash'],
+                    'pos_counter' => $counter + 1
+                ]);
 
-        return $viewBlock->toHtml();
+                $viewHtml .= $viewBlock->toHtml();
+                $counter++;
+            }
+        } else if (is_string($editors)) {
+            /** @var \Rissc\Printformer\Block\Custom\Editor\Link $viewBlock */
+            $viewBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Custom\Editor\Link');
+            $viewBlock->setTemplate('Rissc_Printformer::custom/editor/view.phtml');
+            $viewBlock->setName('editor.data.item_0');
+            $viewBlock->addData([
+                'quote_item' => $quoteItem,
+                'product' => $product,
+                'editor_link' => $editors['url'],
+                'printformer_block' => $printFormerBlock,
+                'draft_hash' => $editors['hash'],
+                'pos_counter' => 1
+            ]);
+
+            $viewHtml .= $viewBlock->toHtml();
+        }
+
+        return $viewHtml;
     }
 
     /**
      * @param Item $quoteItem
      *
-     * @return string
+     * @return string|array
      * @throws \Exception
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -90,26 +118,47 @@ class View
         $product = $quoteItem->getProduct();
         $product->getResource()->load($product, $product->getId());
 
-        $draftProcess = $this->_apiHelper->draftProcess($buyRequest->getData('printformer_draftid'));
-        $editorUrl = $this->_urlHelper->getEditorEntry(
-            $draftProcess->getProductId(),
-            $product->getPrintformerProduct(),
-            $draftProcess->getDraftId(),
-            null,
-            $draftProcess->getIntent()
-        );
+        $draftHashes = explode(',', $buyRequest->getData('printformer_draftid'));
 
-        $request = $this->_request;
-        $route = $request->getModuleName() . '/' . $request->getControllerName() . '/' . $request->getActionName();
+        $editorUrls = [];
+        foreach($draftHashes as $draftHash) {
+            $draftProcess = $this->_apiHelper->draftProcess($draftHash);
+            $editorUrl = $this->_urlHelper->getEditorEntry(
+                $draftProcess->getProductId(),
+                $product->getPrintformerProduct(),
+                $draftProcess->getDraftId(),
+                null,
+                $draftProcess->getIntent()
+            );
 
-        if($this->_appState->getAreaCode() == Area::AREA_ADMINHTML) {
-            $referrerUrl = $this->_backendUrl->getUrl($route, ['order_id' => $request->getParam('order_id')]);
-        } else {
-            $referrerUrl = $this->_urlBuilder->getUrl($route, ['quote_id' => $request->getParam('quote_id')]);
+            $request = $this->_request;
+            $route = $request->getModuleName() . '/' .
+                $request->getControllerName() . '/' .
+                $request->getActionName();
+
+            if ($this->_appState->getAreaCode() == Area::AREA_ADMINHTML) {
+                $referrerUrl = $this->_backendUrl->getUrl(
+                    $route,
+                    ['order_id' => $request->getParam('order_id')]
+                );
+            } else {
+                $referrerUrl = $this->_urlBuilder->getUrl(
+                    $route,
+                    ['quote_id' => $request->getParam('quote_id')]
+                );
+            }
+
+            if (count($draftHashes) === 1) {
+                return ['url' => $editorUrl .
+                    (strpos($editorUrl, '?') ? '&amp;' : '?') .
+                    'custom_referrer=' . urlencode($referrerUrl), 'hash' => $draftProcess->getDraftId()];
+            }
+
+            $editorUrls[] = ['url' => $editorUrl .
+                (strpos($editorUrl, '?') ? '&amp;' : '?') .
+                'custom_referrer=' . urlencode($referrerUrl), 'hash' => $draftProcess->getDraftId()];
         }
 
-        return $editorUrl .
-            (strpos($editorUrl, '?') ? '&amp;' : '?') .
-            'custom_referrer=' . urlencode($referrerUrl);
+        return $editorUrls;
     }
 }
