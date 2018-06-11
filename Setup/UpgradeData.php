@@ -188,7 +188,7 @@ class UpgradeData implements UpgradeDataInterface
                     'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
                     'label' => 'Printformer Capabilities',
                     'input' => 'multiselect',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeIntrface::SCOPE_STORE,
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
                     'visible' => true,
                     'required' => false,
                     'user_defined' => false,
