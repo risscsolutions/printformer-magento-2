@@ -75,11 +75,12 @@ class MassResend extends AbstractController
             $draft = $this->_draftFactory->create();
             $draftCollection = $draft->getCollection()->addFieldToFilter('id', ['in' => $drafts]);
 
+            $draftIds = [];
             foreach($draftCollection as $draft) {
                 /** @var OrderItem $orderItem */
                 $orderItem = $this->_orderItemFactory->create();
                 $orderItem = $orderItem->getCollection()
-                    ->addFieldToFilter('printformer_draftid', ['eq' => $draft->getDraftId()])
+                    ->addFieldToFilter('printformer_draftid', ['like' => '%' . $draft->getDraftId() . '%'])
                     ->addFieldToFilter('printformer_storeid', ['eq' => $draft->getStoreId()])
                     ->load()
                     ->getFirstItem();
@@ -87,23 +88,33 @@ class MassResend extends AbstractController
                 if($orderItem->getId()) {
                     /** @var Order $order */
                     $order = $orderItem->getOrder();
-                    $draftIds = [];
                     foreach ($order->getAllItems() as $item) {
                         if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
                             continue;
                         }
-                        $draftIds[] = $item->getPrintformerDraftid();
+                        $draftHashes = explode(',', $item->getPrintformerDraftid());
+                        foreach($draftHashes as $draftHash) {
+                            $draftIds[] = $draftHash;
+                        }
                     }
-                    if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC &&
-                        !$this->_config->isV2Enabled()) {
-                        $this->_printformerDraft->setDraftOrdered($order);
-                    } else {
-                        $this->_apiHelper->setAsyncOrdered($draftIds);
-                    }
+
                     $orderItem->setPrintformerOrdered(1);
                     $orderItem->getResource()->save($orderItem);
                 }
             }
+
+            if (empty($draftIds)) {
+                $this->messageManager->addWarningMessage(__('Drafts have been resend previously.'));
+                return $this->_redirect('*/*/index');
+            }
+
+            if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC &&
+                !$this->_config->isV2Enabled()) {
+                $this->_printformerDraft->setDraftOrdered($order);
+            } else {
+                $this->_apiHelper->setAsyncOrdered(array_unique($draftIds));
+            }
+
             $this->messageManager->addSuccessMessage(__('Drafts have been resend to processing.'));
             return $this->_redirect('*/*/index');
         }
