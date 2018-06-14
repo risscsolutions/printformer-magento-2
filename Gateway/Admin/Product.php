@@ -200,7 +200,6 @@ class Product
             }
         }
 
-        /** @var PrintformerProduct $pfProduct */
         $pfProduct = $this->printformerProductFactory->create();
         $pfProductCollection = $pfProduct->getCollection()
             ->addFieldToFilter('store_id', ['eq' => $storeId])
@@ -213,9 +212,11 @@ class Product
             $existingPrintformerProductsByMasterId[$pfProduct->getMasterId()] = $pfProduct;
         }
 
+        $updateMasterIds = [];
         foreach($masterIDs as $masterID) {
             if(!in_array($masterID, $existingPrintformerProductMasterIDs)) {
                 foreach($responseRealigned[$masterID]['intents'] as $intent) {
+                    /** @var PrintformerProduct $pfProduct */
                     $pfProduct = $this->printformerProductFactory->create();
                     $pfProduct->setStoreId($storeId)
                         ->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
@@ -233,6 +234,7 @@ class Product
                 }
             } else {
                 foreach($responseRealigned[$masterID]['intents'] as $intent) {
+                    /** @var PrintformerProduct $pfProduct */
                     $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
                     $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
                         ->setName($responseRealigned[$masterID]['name'])
@@ -243,35 +245,49 @@ class Product
                         ->setUpdatedAt(time());
 
                     $pfProduct->getResource()->save($pfProduct);
+                    $updateMasterIds[$pfProduct->getId()] = $pfProduct->getMasterId();
                 }
             }
         }
 
-        $pfProduct = $this->printformerProductFactory->create();
-        $pfProductToDeleteCollection = $pfProduct->getCollection()
-            ->addFieldToFilter('store_id', ['eq' => $storeId])
-            ->addFieldToFilter('master_id', ['nin' => $masterIDs]);
-
-        /** @var PrintformerProduct $pfProductToDelete */
-        foreach($pfProductToDeleteCollection as $pfProductToDelete) {
-            $catalogProduct = $this->productFactory->create();
-            /** @var CatalogProduct $catalogProductToEdit */
-            $catalogProductToEdit = $catalogProduct->getCollection()
-                ->setStoreId($storeId)
-                ->addAttributeToFilter('printformer_product', ['eq' => $pfProductToDelete->getMasterId()])
-                ->addAttributeToFilter('printformer_enabled', ['eq' => 1]);
-
-            $catalogProductToEdit = $catalogProductToEdit->getFirstItem();
-            if($catalogProductToEdit->getId()) {
-                $query = "UPDATE `" . $this->connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->attributePfEnabled . " AND `value` = 1 AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
-                $this->connection->query($query);
-                $query = "UPDATE `" . $this->connection->getTableName('catalog_product_entity_int') . "` SET `value` = 0 WHERE `attribute_id` = " . $this->attributePfProduct . " AND `value` = " . $pfProductToDelete->getMasterId() . " AND store_id = " . $storeId . " AND `entity_id` = " . $catalogProductToEdit->getId() . ";";
-                $this->connection->query($query);
-            }
-
-            $pfProductToDelete->getResource()->delete($pfProductToDelete);
-        }
+        $this->_updateProductRelations($updateMasterIds, (int)$storeId);
 
         return $this;
+    }
+
+    /**
+     * @param array $masterIds
+     * @param int   $storeId
+     *
+     * @return bool
+     */
+    protected function _updateProductRelations(array $masterIds, $storeId)
+    {
+        $rowsToUpdate = count($masterIds);
+        $tableName = $this->connection->getTableName('catalog_product_printformer_product');
+        foreach($masterIds as $pfProductId => $masterId) {
+            $resultRows = $this->connection->fetchAll('
+                SELECT * FROM
+                    `' . $tableName . '`
+                WHERE
+                    `master_id` = ' . $masterId . '
+                AND
+                    `store_id` = ' . $storeId . ';
+            ');
+
+            foreach($resultRows as $row) {
+                $this->connection->query('
+                    UPDATE `' . $tableName . '`
+                    SET
+                        `printformer_product_id` = ' . $pfProductId . '
+                    WHERE
+                        `id` = ' . $row['id'] . ';
+                ');
+            }
+
+            $rowsToUpdate--;
+        }
+
+        return $rowsToUpdate == 0;
     }
 }

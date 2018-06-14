@@ -21,6 +21,7 @@ use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Setup\InstallSchema;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class Printformer extends AbstractView
 {
@@ -70,6 +71,11 @@ class Printformer extends AbstractView
     protected $printformerProductHelper;
 
     /**
+     * @var ApiHelper
+     */
+    protected $_apiHelper;
+
+    /**
      * Printformer constructor.
      *
      * @param Config         $configHelper
@@ -81,9 +87,23 @@ class Printformer extends AbstractView
      * @param ArrayUtils     $arrayUtils
      * @param Item           $wishlistItem
      * @param CatalogSession $catalogSession
+     * @param ApiHelper      $apiHelper
      * @param array          $data
      */
-    public function __construct(PrintformerProductHelper $printformerProductHelper, Config $configHelper, Url $urlHelper, Session $sessionHelper, DraftFactory $draftFactory, Cart $cart, Context $context, ArrayUtils $arrayUtils, Item $wishlistItem, CatalogSession $catalogSession, array $data = [])
+    public function __construct(
+        PrintformerProductHelper $printformerProductHelper,
+        Config $configHelper,
+        Url $urlHelper,
+        Session $sessionHelper,
+        DraftFactory $draftFactory,
+        Cart $cart,
+        Context $context,
+        ArrayUtils $arrayUtils,
+        Item $wishlistItem,
+        CatalogSession $catalogSession,
+        ApiHelper $apiHelper,
+        array $data = []
+    )
     {
         $this->printformerProductHelper = $printformerProductHelper;
         $this->configHelper = $configHelper;
@@ -94,6 +114,7 @@ class Printformer extends AbstractView
         $this->_isScopePrivate = true; //@todo remove?
         $this->wishlistItem = $wishlistItem;
         $this->_catalogSession = $catalogSession;
+        $this->_apiHelper = $apiHelper;
 
         parent::__construct($context, $arrayUtils, $data);
 
@@ -154,7 +175,11 @@ class Printformer extends AbstractView
                     case 'checkout':
                         $quoteItem = $this->cart->getQuote()->getItemById($id);
                         if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                            $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                            $buyRequest = $quoteItem->getBuyRequest();
+                            $draftHashRelations = $buyRequest->getDraftHashRelations();
+                            if (isset($draftHashRelations[$printformerProduct->getId()])) {
+                                $draftId = $draftHashRelations[$printformerProduct->getId()];
+                            }
                         }
                     break;
                     case 'wishlist':
@@ -247,7 +272,8 @@ class Printformer extends AbstractView
         $printformerProducts = [];
 
         $i = 0;
-        foreach($this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId()) as $printformerProduct) {
+        $pfProducts = $this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId());
+        foreach($pfProducts as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct);
             $printformerProducts[$i]['draft_id'] = $this->getDraftId($printformerProduct);

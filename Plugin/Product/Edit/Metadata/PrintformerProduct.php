@@ -92,12 +92,12 @@ class PrintformerProduct
             ],
             'children' => [
                 'button_set' => $this->getButtonSet(
-                    __('Add printformer products to current product.'),
-                    __('Add Printformer Products'),
+                    __('Add printformer templates to current product.'),
+                    __('Add Printformer Templates'),
                     'printformer_products'
                 ),
                 'modal' => $this->getGenericModal(
-                    __('Add Printformer Products')
+                    __('Add Printformer Templates')
                 ),
                 'printformer_products' => [
                     'arguments' => [
@@ -240,7 +240,7 @@ class PrintformerProduct
                                     ]
                                 ],
                                 [
-                                    'text' => __('Add Selected Products'),
+                                    'text' => __('Add Selected Templates'),
                                     'class' => 'action-primary',
                                     'actions' => [
                                         [

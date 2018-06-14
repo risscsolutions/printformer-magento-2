@@ -3,9 +3,6 @@
         <printformer>
             <general>
                 <enabled>1</enabled>
-                <remote_host>http://pf-mage2.ops.printformer.net</remote_host>
-                <license_key>M0YSA-N9S0F-N04E1-7RD7A</license_key>
-                <secret_word>risscw2pmagento</secret_word>
                 <locale>de_DE</locale>
                 <redirect_after_config>1</redirect_after_config>
                 <guest_wishlist_hint><![CDATA[You have to be registered to add this product to your Wishlist.]]></guest_wishlist_hint>
@@ -14,6 +11,7 @@
                 <processing_type>sync</processing_type>
                 <product_image_preview_width>1000</product_image_preview_width>
                 <product_image_preview_height>1000</product_image_preview_height>
+                <order_status>pending</order_status>
             </general>
             <format>
                 <notice_text>Format change will reset your cofiguration progress.</notice_text>
