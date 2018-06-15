@@ -66,19 +66,24 @@ class QuoteModel
     )
     {
         $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-        $draftHashArray = explode(',', $draftIds);
+        if (!empty($draftIds)) {
+            $draftHashArray = explode(',', $draftIds);
 
-        $draftHashRelations = [];
-        foreach($draftHashArray as $draftId) {
-            /** @var Draft $draftProcess */
-            $draftProcess = $this->_apiHelper->draftProcess($draftId);
-            if ($draftProcess->getId()) {
-                $draftHashRelations[$draftProcess->getPrintformerProductId()] = $draftProcess->getDraftId();
+            $draftHashRelations = [];
+            foreach ($draftHashArray as $draftId) {
+                if ($draftId == '') {
+                    continue;
+                }
+                /** @var Draft $draftProcess */
+                $draftProcess = $this->_apiHelper->draftProcess($draftId);
+                if ($draftProcess->getId()) {
+                    $draftHashRelations[$draftProcess->getPrintformerProductId()] = $draftProcess->getDraftId();
+                }
             }
-        }
 
-        if (!empty($draftHashRelations)) {
-            $buyRequest->setData('draft_hash_relations', $draftHashRelations);
+            if (!empty($draftHashRelations)) {
+                $buyRequest->setData('draft_hash_relations', $draftHashRelations);
+            }
         }
 
         $result = $proceed($product, $buyRequest, $processMode);
