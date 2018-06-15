@@ -410,6 +410,22 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if(version_compare($context->getVersion(), '100.3.14', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT);
+            $columnName = 'intent';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_TEXT,
+                        'length' => 55,
+                        'comment' => 'Printformer product intent'
+                    ]
+                );
+            }
+        }
+
         $setup->endSetup();
     }
 }

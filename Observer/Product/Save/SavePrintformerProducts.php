@@ -62,7 +62,8 @@ class SavePrintformerProducts implements ObserverInterface
                         'product_id' => $product->getId(),
                         'printformer_product_id' => !empty($record['printformer_product_id']) ? $record['printformer_product_id'] : $record['id'],
                         'master_id' => $record['master_id'],
-                        'store_id' => $product->getStoreId()
+                        'store_id' => $product->getStoreId(),
+                        'intent' => $result['intent']
                     ];
                     $data[] = $item;
                 }

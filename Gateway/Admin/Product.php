@@ -241,7 +241,7 @@ class Product
                         ->setUpdatedAt(time());
 
                     $pfProduct->getResource()->save($pfProduct);
-                    $updateMasterIds[$pfProduct->getId()] = $pfProduct->getMasterId();
+                    $updateMasterIds[$pfProduct->getId()] = ['id' => $pfProduct->getMasterId(), 'intent' => $intent];
                 }
             }
         }
@@ -266,8 +266,9 @@ class Product
                 SELECT * FROM
                     `' . $tableName . '`
                 WHERE
-                    `master_id` = ' . $masterId . ' AND
-                    `store_id` = ' . $storeId . ';
+                    `master_id` = ' . $masterId['id'] . ' AND
+                    `store_id` = ' . $storeId . ' AND
+                    `intent` = \'' . $masterId['intent'] . '\';
             ');
 
             foreach($resultRows as $row) {
