@@ -200,22 +200,19 @@ class Product
             }
         }
 
-        $pfProduct = $this->printformerProductFactory->create();
-        $pfProductCollection = $pfProduct->getCollection()
-            ->addFieldToFilter('store_id', ['eq' => $storeId])
-            ->addFieldToFilter('master_id', ['in' => $masterIDs]);
-
-        $existingPrintformerProductMasterIDs = [];
-        $existingPrintformerProductsByMasterId = [];
-        foreach($pfProductCollection as $pfProduct) {
-            $existingPrintformerProductMasterIDs[] = $pfProduct->getMasterId();
-            $existingPrintformerProductsByMasterId[$pfProduct->getMasterId()] = $pfProduct;
-        }
-
         $updateMasterIds = [];
         foreach($masterIDs as $masterID) {
-            if(!in_array($masterID, $existingPrintformerProductMasterIDs)) {
-                foreach($responseRealigned[$masterID]['intents'] as $intent) {
+            foreach($responseRealigned[$masterID]['intents'] as $intent) {
+                $resultProduct = $this->connection->fetchRow('
+                    SELECT * FROM
+                        `' . $this->connection->getTableName('printformer_product') . '`
+                    WHERE
+                        `store_id` = ' . $storeId . ' AND
+                        `master_id` = ' . $masterID . ' AND
+                        `intent` = \'' . $intent . '\';
+                ');
+
+                if (!$resultProduct) {
                     /** @var PrintformerProduct $pfProduct */
                     $pfProduct = $this->printformerProductFactory->create();
                     $pfProduct->setStoreId($storeId)
@@ -231,11 +228,10 @@ class Product
                         ->setCreatedAt(time())
                         ->setUpdatedAt(time());
                     $pfProduct->getResource()->save($pfProduct);
-                }
-            } else {
-                foreach($responseRealigned[$masterID]['intents'] as $intent) {
+                } else {
                     /** @var PrintformerProduct $pfProduct */
-                    $pfProduct = $existingPrintformerProductsByMasterId[$masterID];
+                    $pfProduct = $this->printformerProductFactory->create();
+                    $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
                     $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
                         ->setName($responseRealigned[$masterID]['name'])
                         ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
@@ -270,8 +266,7 @@ class Product
                 SELECT * FROM
                     `' . $tableName . '`
                 WHERE
-                    `master_id` = ' . $masterId . '
-                AND
+                    `master_id` = ' . $masterId . ' AND
                     `store_id` = ' . $storeId . ';
             ');
 
