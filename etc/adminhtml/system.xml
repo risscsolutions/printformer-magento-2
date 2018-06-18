@@ -14,24 +14,6 @@
                     <label>Enabled</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="license_key" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>License Key</label>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="remote_host" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Remote Host</label>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="secret_word" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Secret Word</label>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
                 <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Status for Payed Order</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status</source_model>
@@ -116,7 +98,7 @@
                     </depends>
                 </field>
                 <field id="sync_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <button_label>Synchronize</button_label>
+                    <button_label>Synchronize templates</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync</frontend_model>
                     <depends>
                         <field id="enabled">1</field>
@@ -124,7 +106,7 @@
                 </field>
             </group>
             <group id="version2group" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>API Version 2</label>
+                <label>API Credentials</label>
                 <field id="version2" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Enable Version 2</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -146,111 +128,6 @@
                     <depends>
                         <field id="version2">1</field>
                     </depends>
-                </field>
-            </group>
-            <group id="format" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Format Variations</label>
-                <field id="change_notice" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Notice of Progress Reset on Format Change?</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="notice_text" translate="label" type="textarea" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Format Change Notice Text</label>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="query_parameter" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Parameter Name</label>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="attribute_enabled" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Enable Attribute for Formats</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="attribute_name" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Attribute Name for Formats</label>
-                    <source_model>Rissc\Printformer\Model\Config\Source\Attribute</source_model>
-                    <depends>
-                        <field id="attribute_enabled">1</field>
-                    </depends>
-                </field>
-                <field id="attribute_values" translate="label" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Userdefined Attribute Values for Formats</label>
-                    <depends>
-                        <field id="attribute_enabled">1</field>
-                    </depends>
-                    <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field\AttributeMap</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized</backend_model>
-                </field>
-                <field id="option_enabled" translate="label" type="select" sortOrder="200" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Enable Option for Formats</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="option_name" translate="label" type="text" sortOrder="210" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Option Name for Formats</label>
-                    <depends>
-                        <field id="option_enabled">1</field>
-                    </depends>
-                </field>
-                <field id="option_values" translate="label" sortOrder="220" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Userdefined Option Values for Formats</label>
-                    <depends>
-                        <field id="option_enabled">1</field>
-                    </depends>
-                    <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field\OptionMap</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                </field>
-            </group>
-            <group id="color" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                <label>Color Variations</label>
-                <field id="query_parameter" translate="label" type="text" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Parameter Name for Color Variations</label>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="attribute_enabled" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Enable Color Variations for Attribute</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="attribute_name" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Attribute Name for Color Variations</label>
-                    <source_model>Rissc\Printformer\Model\Config\Source\Attribute</source_model>
-                    <depends>
-                        <field id="attribute_enabled">1</field>
-                    </depends>
-                </field><field id="attribute_values" translate="label" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Userdefined Attribute Values for Color Variations</label>
-                    <depends>
-                        <field id="attribute_enabled">1</field>
-                    </depends>
-                    <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field\AttributeMap</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized</backend_model>
-                </field>
-                
-                <field id="option_enabled" translate="label" type="select" sortOrder="200" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Enable Color Variations for Option</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="option_name" translate="label" type="text" sortOrder="210" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Option Name for Color Variations</label>
-                    <depends>
-                        <field id="option_enabled">1</field>
-                    </depends>
-                </field>
-                <field id="option_values" translate="label" sortOrder="220" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Userdefined Option Values for Color Variations</label>
-                    <depends>
-                        <field id="option_enabled">1</field>
-                    </depends>
-                    <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field\OptionMap</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                 </field>
             </group>
         </section>

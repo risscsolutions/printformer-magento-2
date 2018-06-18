@@ -5,69 +5,83 @@ $quoteItem = $block->getQuoteItem();
 $product = $block->getProduct();
 $editorLink = $block->getEditorOpenLink();
 $printformerBlock = $block->getPrintformerBlock();
+$draftHash = $block->getDraftHash();
+$isOrdered = $block->isOrdered($quoteItem, $draftHash);
 
 $quoteItemId = $quoteItem->getId();
 ?>
 <br />
-<div id="printformer_draftid_<?php echo $quoteItemId; ?>" style="width: max-content">
-    <button id="openEditor" href="<?php echo $editorLink; ?>" class="pf-link"><?php echo __('Open Editor');?></button>
-    <div id="info">
-        <br /><span>Draft ID: </span> <a href="<?php echo $block->getDraftURL($quoteItem->getPrintformerDraftid()) ?>"> <?php echo $quoteItem->getPrintformerDraftid(); ?></a>
-        <br /><button id="copy"><?php echo __('Copy Draft ID'); ?></button>
-        <?php //Textarea for coping the draft id ?>
-        <textarea id="draftID" style="display: none"><?php echo $quoteItem->getPrintformerDraftid(); ?></textarea>
-    </div>
-    <?php if ($block->isOrdered($quoteItem, $quoteItem->getPrintformerDraftid())): ?>
-        <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl($quoteItem); ?>" target="_blank">
+<div id="printformer_draftid_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>" style="width:
+max-content">
+    <?php if (!$isOrdered): ?>
+        <button id="openEditor" href="<?php echo $editorLink; ?>" class="pf-link"><?php echo __('Open Editor');?></button>
+        <div id="info">
+            <br /><span>Draft ID: </span> <a href="<?php echo $block->getDraftURL($draftHash) ?>"> <?php echo $draftHash; ?></a>
+            <br /><button class="copy-draft-id" data-pos-counter="<?php echo $block->getData('pos_counter'); ?>"><?php echo __('Copy Draft ID'); ?></button>
+            <?php //Textarea for coping the draft id ?>
+            <textarea id="draftID_<?php echo $block->getData('pos_counter'); ?>" style="display: none"><?php echo $draftHash; ?></textarea>
+        </div>
+    <?php endif; ?>
+    <?php if ($isOrdered): ?>
+        <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl
+        ($quoteItem, $draftHash); ?>" target="_blank">
             <?php echo __('Show print file'); ?>
         </a>
     <?php endif; ?>
 </div>
 
+<?php if (!$isOrdered): ?>
 <div class="printformer-editor-main"
-     id="printformer-editor-main_<?php echo $quoteItemId; ?>"
+     id="printformer-editor-main_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>"
      title="<?php echo $product->getName(); ?>">
 </div>
-<div id="printformer-editor-close_<?php echo $quoteItemId; ?>">
+<div id="printformer-editor-close_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>">
     <p><?php echo __($printformerBlock->getCloseNoticeText()); ?></p>
 </div>
 <?php if($printformerBlock->isFormatChangeNotice()): ?>
-    <div id="printformer-editor-notice_<?php echo $quoteItemId; ?>">
+    <div id="printformer-editor-notice_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>">
         <p><?php echo __($printformerBlock->getFormatNoticeText()); ?></p>
     </div>
 <?php endif; ?>
 <script type="text/x-magento-init">
     <?php echo json_encode([
-            '#printformer_draftid_' . $quoteItemId => [
+            '#printformer_draftid_' . $quoteItemId . '_' . $block->getData('pos_counter') => [
                 'Rissc_Printformer/js/custom-printformer' => [
-                    'editBtnSelector'       => '#printformer_draftid_' . $quoteItemId . ' .pf-link',
-                    'editorMainSelector'    => '#printformer-editor-main_' . $quoteItemId,
-                    'editorCloseSelector'   => '#printformer-editor-close_' . $quoteItemId,
-                    'editorNoticeSelector'  => '#printformer-editor-notice_' . $quoteItemId,
+                    'editBtnSelector'       => '#printformer_draftid_' . $quoteItemId . '_' . $block->getData('pos_counter') . ' .pf-link',
+                    'editorMainSelector'    => '#printformer-editor-main_' . $quoteItemId . '_' . $block->getData('pos_counter'),
+                    'editorCloseSelector'   => '#printformer-editor-close_' . $quoteItemId . '_' . $block->getData('pos_counter'),
+                    'editorNoticeSelector'  => '#printformer-editor-notice_' . $quoteItemId . '_' . $block->getData('pos_counter'),
                     'productTitle' => $product->getName()
                 ]
             ]
         ]);
     ?>
 </script>
-
+<?php endif; ?>
 <script>
     require(['jquery', 'jquery/ui', 'domReady!'], function($){
-        var copyBtn = $('#copy');
+        var copyBtn = $('.copy-draft-id');
 
-        //copy the draft id on button click event
-        copyBtn.click(function (event) {
-            var draftID = $('#draftID');
-            draftID.css('display', 'block');
-            draftID.select();
+        $.each(copyBtn, function(i, el){
+            //copy the draft id on button click event
+            $(el).click(function (event) {
+                var pos = $(el).data('pos-counter');
+                var draftID = $('#draftID_' + pos);
+                draftID.css('display', 'block');
+                draftID.select();
 
-            try {
-                document.execCommand('copy');
-            } catch(err) {
-                console.log('Copying was unsuccessful');
-            }
-            draftID.css('display', 'none');
+                var once = false;
+                try {
+                    document.execCommand('copy');
+                    if (!once) {
+                        alert('DraftHash has been copied to clipboard.');
+                        once = true;
+                    }
+                } catch(err) {
+                    console.log('Copying was unsuccessful');
+                }
+                draftID.css('display', 'none');
+            });
         });
-
     });
 </script>

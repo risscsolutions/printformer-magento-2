@@ -85,10 +85,10 @@ class Link
      *
      * @return string
      */
-    public function getPdfUrl(DataObject $item)
+    public function getPdfUrl(DataObject $item, $draftHash)
     {
         return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
-            ->getAdminPdf($item->getPrintformerDraftid(), $item->getOrder()->getQuoteId());
+            ->getAdminPdf($draftHash, $item->getOrder()->getQuoteId());
     }
 
     /**

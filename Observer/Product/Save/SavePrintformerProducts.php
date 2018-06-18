@@ -60,7 +60,10 @@ class SavePrintformerProducts implements ObserverInterface
                 if(!isset($record['is_delete']) || $record['is_delete'] != 1) {
                     $item = [
                         'product_id' => $product->getId(),
-                        'printformer_product_id' => $record['id'],
+                        'printformer_product_id' => !empty($record['printformer_product_id']) ? $record['printformer_product_id'] : $record['id'],
+                        'master_id' => $record['master_id'],
+                        'store_id' => $product->getStoreId(),
+                        'intent' => $record['intent']
                     ];
                     $data[] = $item;
                 }

@@ -3,7 +3,7 @@
 ?>
 <?php
 /**
- * @see \Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync
+ * @var $block \Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync
  */
 ?>
 <script>
@@ -36,7 +36,6 @@ require(['prototype'], function(){
 });
 </script>
 <div class="actions">
-    <span><?php echo __('Match Products') ?></span>
     <button onclick="printformerSync(); return false;" class="action-printformer-sync" type="button" id="<?php echo $block->getHtmlId() ?>">
         <span><?php echo $block->escapeHtml($block->getButtonLabel()) ?></span>
     </button>

@@ -1,5 +1,4 @@
 <?php
-
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
 
 use Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
@@ -14,7 +13,7 @@ class Sync extends Button
     /**
      * @var string
      */
-    protected $_buttonLabel = 'Synchronize';
+    protected $_buttonLabel = 'Synchronize templates';
 
     /**
      * @return int|null
@@ -46,7 +45,7 @@ class Sync extends Button
     {
         parent::_prepareLayout();
         if (!$this->getTemplate()) {
-            $this->setTemplate('system/config/form/button/sync.phtml');
+            $this->setTemplate('Rissc_Printformer::system/config/form/button/sync.phtml');
         }
         return $this;
     }

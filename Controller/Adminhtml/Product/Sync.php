@@ -63,7 +63,7 @@ class Sync extends Action
             }
 
             $this->gateway->syncProducts($storeId);
-            $response = ['success' => 'true', 'message' => __('Products sync successful.')];
+            $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.')];
         } catch (\Exception $e) {
             $response = ['error' => 'true', 'message' => $e->getMessage()];
         }

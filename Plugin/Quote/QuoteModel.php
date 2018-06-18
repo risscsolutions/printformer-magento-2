@@ -5,8 +5,10 @@ namespace Rissc\Printformer\Plugin\Quote;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\Quote as SubjectQuote;
 use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
 use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class QuoteModel
 {
@@ -26,6 +28,11 @@ class QuoteModel
     protected $logger;
 
     /**
+     * @var ApiHelper
+     */
+    protected $_apiHelper;
+
+    /**
      * QuoteModel constructor.
      * @param StoreManagerInterface $storeManager
      * @param Session $session
@@ -34,11 +41,13 @@ class QuoteModel
     public function __construct(
         StoreManagerInterface $storeManager,
         Session $session,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ApiHelper $apiHelper
     ) {
         $this->storeManager = $storeManager;
         $this->session = $session;
         $this->logger = $logger;
+        $this->_apiHelper = $apiHelper;
     }
 
     /**
@@ -48,8 +57,37 @@ class QuoteModel
      * @param $result
      * @return \Magento\Quote\Model\Quote\Item|string
      */
-    public function afterAddProduct(SubjectQuote $subject, $result)
+    public function aroundAddProduct(
+        SubjectQuote $subject,
+        \Closure $proceed,
+        \Magento\Catalog\Model\Product $product,
+        $buyRequest = null,
+        $processMode = \Magento\Catalog\Model\Product\Type\AbstractType::PROCESS_MODE_FULL
+    )
     {
+        $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+        if (!empty($draftIds)) {
+            $draftHashArray = explode(',', $draftIds);
+
+            $draftHashRelations = [];
+            foreach ($draftHashArray as $draftId) {
+                if ($draftId == '') {
+                    continue;
+                }
+                /** @var Draft $draftProcess */
+                $draftProcess = $this->_apiHelper->draftProcess($draftId);
+                if ($draftProcess->getId()) {
+                    $draftHashRelations[$draftProcess->getPrintformerProductId()] = $draftProcess->getDraftId();
+                }
+            }
+
+            if (!empty($draftHashRelations)) {
+                $buyRequest->setData('draft_hash_relations', $draftHashRelations);
+            }
+        }
+
+        $result = $proceed($product, $buyRequest, $processMode);
+
         return is_string($result) ? $result : $this->setPrintformerData($result);
     }
 
@@ -76,13 +114,15 @@ class QuoteModel
         try {
             if (isset($item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID])) {
                 $storeId = $this->storeManager->getStore()->getId();
-                $draftIds = $item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID];
+                $buyRequest = $item->getBuyRequest();
+                $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                $draftHashArray = explode(',', $draftIds);
 
-                foreach(explode(',', $draftIds) as $draftId) {
+                foreach($draftHashArray as $draftId) {
                     $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
                     $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
                 }
-
+                
                 $this->session->unsDraftId($item->getProduct()->getId(), $storeId);
             }
         } catch (\Exception $e) {

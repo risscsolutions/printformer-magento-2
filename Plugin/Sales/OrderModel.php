@@ -104,19 +104,20 @@ class OrderModel
         try {
             $draftIds = [];
             foreach ($subject->getAllItems() as $item) {
-                $itemDraftIds = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                foreach (explode(',', $itemDraftIds) as $draftId) {
+                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+                    continue;
+                }
+
+                $itemDraftIds = explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID));
+                foreach ($itemDraftIds as $draftId) {
                     $this->draftFactory
                         ->create()
                         ->load($draftId, 'draft_id')
                         ->setOrderItemId($item->getId())
                         ->save();
-                }
 
-                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
-                    continue;
+                    $draftIds[] = $draftId;
                 }
-                $draftIds = array_merge($draftIds, explode(',', $item->getPrintformerDraftid()));
             }
 
             if ($subject->getStatus() == $this->config->getOrderStatus()) {
