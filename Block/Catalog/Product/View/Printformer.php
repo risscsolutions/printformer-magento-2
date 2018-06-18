@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Block\Catalog\Product\View;
 
 use Magento\Catalog\Block\Product\Context;
 use Magento\Catalog\Block\Product\View\AbstractView;
+use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Checkout\Model\Cart;
 use Magento\Framework\App\ObjectManager;
@@ -267,12 +268,16 @@ class Printformer extends AbstractView
     /**
      * {@inheritdoc}
      */
-    public function getPrintformerProductsArray()
+    public function getPrintformerProductsArray(Product $product = null)
     {
+        if (!$product) {
+            $product = $this->getProduct();
+        }
+
         $printformerProducts = [];
 
         $i = 0;
-        $pfProducts = $this->printformerProductHelper->getPrintformerProducts($this->getProduct()->getId());
+        $pfProducts = $this->printformerProductHelper->getPrintformerProducts($product->getId());
         foreach($pfProducts as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct);

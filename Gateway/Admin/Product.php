@@ -200,6 +200,8 @@ class Product
             }
         }
 
+        $this->_deleteDeletedPrintformerProductReleations($masterIDs, $storeId);
+
         $updateMasterIds = [];
         foreach($masterIDs as $masterID) {
             foreach($responseRealigned[$masterID]['intents'] as $intent) {
@@ -249,6 +251,44 @@ class Product
         $this->_updateProductRelations($updateMasterIds, (int)$storeId);
 
         return $this;
+    }
+
+    /**
+     * @param array  $newMasterIds
+     * @param int    $storeId
+     */
+    protected function _deleteDeletedPrintformerProductReleations(array $newMasterIds, $storeId)
+    {
+        $tableName = $this->connection->getTableName('catalog_product_printformer_product');
+        $sqlQuery = '
+            SELECT * FROM
+                `' . $tableName . '`
+            WHERE
+                `master_id` NOT IN (\'' . implode('\',\'', $newMasterIds) . '\') AND
+                `store_id` = ' . $storeId . ';
+        ';
+        $resultRows = $this->connection->fetchAll($sqlQuery);
+
+        if (!empty($resultRows)) {
+            foreach($resultRows as $row) {
+                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+            }
+        }
+
+        $tableName = $this->connection->getTableName('printformer_product');
+        $sqlQuery = '
+            SELECT * FROM
+                `' . $tableName . '`
+            WHERE
+                `master_id` NOT IN (\'' . implode('\',\'', $newMasterIds) . '\') AND
+                `store_id` = ' . $storeId . ';
+        ';
+        $resultRows = $this->connection->fetchAll($sqlQuery);
+        if (!empty($resultRows)) {
+            foreach($resultRows as $row) {
+                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+            }
+        }
     }
 
     /**
