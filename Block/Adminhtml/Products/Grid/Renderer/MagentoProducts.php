@@ -32,12 +32,8 @@ class MagentoProducts extends AbstractRenderer
     public function render(DataObject $row)
     {
         $product = $this->_productFactory->create();
-        $productCollection = $product->getCollection()
-            ->addAttributeToFilter(
-                [
-                    ['attribute' => 'printformer_product', 'eq' => $row->getMasterId()]
-                ]
-            )
+        $productCollection = $product->getCollection()->getSelect()
+            ->joinLeft($product->getResource()->getConnection()->getTableName('catalog_product_printformer_product'), $cond)
             ->addStoreFilter($row->getStoreId())
             ->load();
 
