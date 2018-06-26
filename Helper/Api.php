@@ -494,4 +494,45 @@ class Api
         return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() . 'api-ext/user/' .
                 $userIdentifierOne . '/merge', $postFields)->getBody());
     }
+
+    /**
+     * @param string $draftHash
+     * @param array  $dataParams
+     *
+     * @return mixed
+     */
+    public function updatePrintformerDraft($draftHash, $dataParams = [])
+    {
+        $url = $this->apiUrl()->getDraft($draftHash);
+
+        $response = $this->_httpClient->put($url, [
+            'json' => $dataParams
+        ]);
+
+        if ($response->getStatusCode() == 200) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $draftHash
+     * @param string $colorVariant
+     *
+     * @return bool
+     */
+    public function updateColorVariant($draftHash, $colorVariant)
+    {
+        if ($draftHash && $colorVariant) {
+            $draftData = $this->getPrintformerDraft($draftHash);
+            if ($draftData['variant']['version'] != $colorVariant) {
+                return $this->updatePrintformerDraft($draftHash, [
+                    'version' => $colorVariant
+                ]);
+            }
+        }
+
+        return false;
+    }
 }

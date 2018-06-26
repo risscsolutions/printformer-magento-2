@@ -280,7 +280,7 @@ class Printformer extends AbstractView
         $pfProducts = $this->printformerProductHelper->getPrintformerProducts($product->getId());
         foreach($pfProducts as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
-            $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct);
+            $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
             $printformerProducts[$i]['draft_id'] = $this->getDraftId($printformerProduct);
             $i++;
         }
@@ -293,8 +293,12 @@ class Printformer extends AbstractView
      * @return string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function getEditorUrl(PrintformerProduct $printformerProduct)
+    public function getEditorUrl(PrintformerProduct $printformerProduct, Product $product = null)
     {
+        if (!$product) {
+            $product = $this->getProduct();
+        }
+
         $params = ['printformer_product_id' => $printformerProduct->getId()];
 
         if ($this->isOnConfigurePDS()) {
@@ -303,7 +307,7 @@ class Printformer extends AbstractView
         }
 
         return $this->urlHelper->getEditorEntry(
-            $this->getProduct()->getId(),
+            $product->getId(),
             $printformerProduct->getMasterId(),
             $this->getDraftId($printformerProduct),
             $params,

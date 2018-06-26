@@ -85,21 +85,6 @@ class View
                 $viewHtml .= $viewBlock->toHtml();
                 $counter++;
             }
-        } else if (is_string($editors)) {
-            /** @var \Rissc\Printformer\Block\Custom\Editor\Link $viewBlock */
-            $viewBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Custom\Editor\Link');
-            $viewBlock->setTemplate('Rissc_Printformer::custom/editor/view.phtml');
-            $viewBlock->setName('editor.data.item_0');
-            $viewBlock->addData([
-                'quote_item' => $quoteItem,
-                'product' => $product,
-                'editor_link' => $editors['url'],
-                'printformer_block' => $printFormerBlock,
-                'draft_hash' => $editors['hash'],
-                'pos_counter' => 1
-            ]);
-
-            $viewHtml .= $viewBlock->toHtml();
         }
 
         return $viewHtml;
@@ -146,12 +131,6 @@ class View
                     $route,
                     ['quote_id' => $request->getParam('quote_id')]
                 );
-            }
-
-            if (count($draftHashes) === 1) {
-                return ['url' => $editorUrl .
-                    (strpos($editorUrl, '?') ? '&amp;' : '?') .
-                    'custom_referrer=' . urlencode($referrerUrl), 'hash' => $draftProcess->getDraftId()];
             }
 
             $editorUrls[] = ['url' => $editorUrl .
