@@ -65,18 +65,16 @@ class Observer implements ObserverInterface
                 $connection = $product->getResource()->getConnection();
                 $table = $connection->getTableName('catalog_product_entity_text');
 
-                $qry = "
-                    UPDATE `$table`
+                $qry = '
+                    UPDATE `' . $table . '`
                         SET
-                            `value` = ?
+                            `value` = \'' . implode(',', $allOptionIds) . '\'
                         WHERE
-                            `attribute_id` = ?
-                        AND
-                            `store_id` = ?
-                        AND
-                            `entity_id` = ?";
+                            `attribute_id` = ' . $attribute->getId() . ' AND
+                            `store_id` = ' . $storeId . ' AND
+                            `entity_id` = ' . $product->getId() . ';';
 
-                $connection->query($qry, [implode(',', $allOptionIds), $attribute->getId(), $storeId, $product->getId()]);
+                $connection->query($qry);
             }
         }
     }
