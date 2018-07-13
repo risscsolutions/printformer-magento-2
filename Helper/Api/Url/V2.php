@@ -92,6 +92,10 @@ class V2
             ]);
         }
 
+        if (!empty($params['quote_id'])) {
+            $baseParams['quote_id'] = $params['quote_id'];
+        }
+
         $baseUrl = $this->_urlBuilder->getUrl('printformer/editor/open', $baseParams);
 
         return $baseUrl . (!empty($params) ? '?' . http_build_query($params) : '');
