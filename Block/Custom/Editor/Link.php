@@ -10,6 +10,8 @@ use Rissc\Printformer\Helper\Api\Url;
 use Magento\Framework\DataObject;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Model\Draft;
+use Magento\Framework\AuthorizationInterface;
+use Magento\Framework\App\ObjectManager;
 
 class Link
     extends Template
@@ -19,6 +21,12 @@ class Link
 
     /** @var ApiHelper */
     protected $_apiHelper;
+
+    /** @var ObjectManager */
+    protected $_objManager;
+
+    /** @var AuthorizationInterface */
+    protected $_authorization;
 
     /**
      * Link constructor.
@@ -31,12 +39,15 @@ class Link
         Template\Context $context,
         Url $urlHelper,
         ApiHelper $apiHelper,
+        AuthorizationInterface $authorization,
         array $data = []
     )
     {
         parent::__construct($context, $data);
         $this->_urlHelper = $urlHelper;
         $this->_apiHelper = $apiHelper;
+        $this->_objManager = ObjectManager::getInstance();
+        $this->_authorization = $authorization;
     }
 
     /**
@@ -92,6 +103,17 @@ class Link
     }
 
     /**
+     * @param DataObject $item
+     *
+     * @return string
+     */
+    public function getPreviewPdfUrl(DataObject $item, $draftHash)
+    {
+        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
+            ->getAdminPreviewPDF($draftHash, $item->getOrder()->getQuoteId());
+    }
+
+    /**
      * @param $draftHash
      *
      * @return \Rissc\Printformer\Model\Draft
@@ -129,5 +151,16 @@ class Link
         }
 
         return false;
+    }
+
+    public function canViewHighRes()
+    {
+        /** @var \Magento\Framework\App\State $appState */
+        $appState = $this->_objManager->get('Magento\Framework\App\State');
+        if ($appState->getAreaCode() !== 'adminhtml') {
+            return true;
+        }
+
+        return $this->_authorization->isAllowed('Rissc_Printformer::view_highres_pdf');
     }
 }
