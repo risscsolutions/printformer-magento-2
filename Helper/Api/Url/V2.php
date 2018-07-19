@@ -24,6 +24,7 @@ class V2
 
     const API_FILES_DRAFT_PNG           = '/api-ext/files/draft/{draftId}/image';
     const API_FILES_DRAFT_PDF           = '/api-ext/files/draft/{draftId}/print';
+    const API_FILES_DRAFT_PREVIEW       = '/api-ext/files/draft/{draftId}/low-res';
 
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
@@ -90,6 +91,10 @@ class V2
             $baseParams = array_merge($baseParams, [
                 'draft_id' => $draftHash
             ]);
+        }
+
+        if (!empty($params['quote_id'])) {
+            $baseParams['quote_id'] = $params['quote_id'];
         }
 
         $baseUrl = $this->_urlBuilder->getUrl('printformer/editor/open', $baseParams);
@@ -230,6 +235,14 @@ class V2
     /**
      * {@inheritdoc}
      */
+    public function getPreviewPDF($draftHash, $quoteid = null) {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PREVIEW);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getProducts()
     {
         return $this->getPrintformerBaseUrl() .
@@ -275,6 +288,29 @@ class V2
             ->getToken();
 
         $pdfUrl = $this->getPDF($draftHash);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $pdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminPreviewPDF($draftHash, $quoteId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $pdfUrl = $this->getPreviewPDF($draftHash);
 
         $postFields = [
             'jwt' => $JWT

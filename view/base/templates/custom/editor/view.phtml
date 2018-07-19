@@ -23,10 +23,17 @@ max-content">
         </div>
     <?php endif; ?>
     <?php if ($isOrdered): ?>
-        <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl
-        ($quoteItem, $draftHash); ?>" target="_blank">
-            <?php echo __('Show print file'); ?>
-        </a>
+        <?php if($block->canViewHighRes()): ?>
+            <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl
+            ($quoteItem, $draftHash); ?>" target="_blank">
+                <?php echo __('Show print file'); ?>
+            </a>
+        <?php else: ?>
+            <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPreviewPdfUrl
+            ($quoteItem, $draftHash); ?>" target="_blank">
+                <?php echo __('Show preview PDF'); ?>
+            </a>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 

@@ -188,6 +188,14 @@ class Url
     /**
      * {@inheritdoc}
      */
+    public function getPreviewPDF($draftHash, $quoteId = null)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPreviewPDF($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getProducts()
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getProducts();
@@ -207,6 +215,14 @@ class Url
     public function getAdminPDF($draftHash, $quoteId)
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminPDF($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminPreviewPDF($draftHash, $quoteId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminPreviewPDF($draftHash, $quoteId);
     }
 
     /**

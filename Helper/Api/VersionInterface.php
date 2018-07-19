@@ -85,6 +85,14 @@ interface VersionInterface
     public function getPDF($draftHash, $quoteId = null);
 
     /**
+     * @param string $draftHash
+     * @param int    $quoteId
+     *
+     * @return string
+     */
+    public function getPreviewPDF($draftHash, $quoteid = null);
+
+    /**
      * @return string
      */
     public function getProducts();
@@ -101,6 +109,14 @@ interface VersionInterface
      * @return string
      */
     public function getAdminPDF($draftHash, $quoteId);
+
+    /**
+     * @param string $draftHash
+     * @param int    $quoteId
+     *
+     * @return string
+     */
+    public function getAdminPreviewPDF($draftHash, $quoteId);
 
     /**
      * @param string $draftHash

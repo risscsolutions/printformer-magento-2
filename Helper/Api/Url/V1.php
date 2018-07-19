@@ -250,6 +250,14 @@ class V1
     /**
      * {@inheritdoc}
      */
+    public function getPreviewPDF($draftHash, $quoteId = null)
+    {
+        return $this->getAdminPDF($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getProducts()
     {
         return $this->getAdminProducts();
@@ -287,6 +295,14 @@ class V1
         $this->authRole = self::ROLE_USER;
 
         return implode('/', $urlParts);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminPreviewPDF($draftHash, $quoteId)
+    {
+        return $this->getAdminPDF($draftHash, $quoteId);
     }
 
     /**

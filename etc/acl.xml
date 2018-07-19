@@ -7,6 +7,7 @@
                     <resource id="Rissc_Printformer::products" title="Printfomer Products" sortOrder="10" />
                     <resource id="Rissc_Printformer::drafts" title="Printfomer Drafts" sortOrder="20" />
                     <resource id="Rissc_Printformer::history_log" title="Printformer History Log" sortOrder="30" />
+                    <resource id="Rissc_Printformer::view_highres_pdf" title="Show High-Res PDF on Order" sortOrder="40" />
                 </resource>
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">

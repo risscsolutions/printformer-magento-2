@@ -128,7 +128,7 @@ class Open extends Action
          * Load product and save intent to session data
          */
         /** @var Product $product */
-        $product = $this->_productFactory->create()->load($productId);
+        $product = $this->_productFactory->create()->load($this->_request->getParam('product'));
         $this->_sessionHelper->setCurrentIntent($intent);
 
         /**
@@ -156,7 +156,7 @@ class Open extends Action
          */
         $editorParams = [
             'master_id' => $masterId,
-            'product_id' => $draftProcess->getProductId(),
+            'product_id' => $this->getRequest()->getParam('product'),
             'data' => [
                 'draft_process' => $draftProcess->getId(),
                 'draft_hash' => $draftProcess->getDraftId(),

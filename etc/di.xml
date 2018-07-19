@@ -54,4 +54,10 @@
     <type name="Magento\Wishlist\Model\Wishlist">
         <plugin name="Rissc_Printformer_WishlistModel" type="Rissc\Printformer\Plugin\Wishlist\WishlistModel" sortOrder="100"/>
     </type>
+    <type name="Rissc\Printformer\Block\Catalog\Product\View\Printformer">
+        <plugin name="printformer_delete_session_after_configure"
+                type="Rissc\Printformer\Plugin\Block\Printformer\Plugin"
+                sortOrder="1000"
+        />
+    </type>
 </config>
