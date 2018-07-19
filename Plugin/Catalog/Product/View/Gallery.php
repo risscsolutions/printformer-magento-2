@@ -50,7 +50,7 @@ class Gallery
     /**
      * @var array
      */
-    protected $printformerDraft = null;
+    protected $printformerDraft = [];
 
     /**
      * Gallery constructor.
@@ -99,79 +99,96 @@ class Gallery
      */
     public function afterGetGalleryImages(SubjectGallery $gallery, $result)
     {
-        if ($this->getImagePreviewUrl()) {
-            if($this->config->isV2Enabled()) {
-                $printformerDraft = $this->getPrintformerDraft();
-                $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
+        $draftIds = $this->getDraftIds();
+        $j = 0;
+        foreach($draftIds as $draftId) {
+            if ($this->getImagePreviewUrl(1, $draftId)) {
+                if ($this->config->isV2Enabled()) {
+                    $printformerDraft = $this->getPrintformerDraft($draftId);
+                    $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
 
-                for($i = 0; $i < $pages; $i++) {
+                    for ($i = 0; $i < $pages; $i++) {
+                        try {
+                            $result->addItem(new \Magento\Framework\DataObject([
+                                'id' => $i + $j,
+                                'small_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
+                                'medium_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
+                                'large_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
+                                'is_main_image' => ($i + $j == 0)
+                            ]));
+                        } catch (\Exception $e) {
+                            $this->logger->error($e->getMessage());
+                            $this->logger->error($e->getTraceAsString());
+                        }
+                    }
+                } else {
                     try {
                         $result->addItem(new \Magento\Framework\DataObject([
-                            'id' => $i,
-                            'small_image_url' => $this->getImagePreviewUrl(($i + 1)),
-                            'medium_image_url' => $this->getImagePreviewUrl(($i + 1)),
-                            'large_image_url' => $this->getImagePreviewUrl(($i + 1)),
-                            'is_main_image' => ($i == 0)
+                            'id' => 0,
+                            'small_image_url' => $this->getImagePreviewUrl(1, $draftId),
+                            'medium_image_url' => $this->getImagePreviewUrl(1, $draftId),
+                            'large_image_url' => $this->getImagePreviewUrl(1, $draftId),
+                            'is_main_image' => true
                         ]));
-                    } catch(\Exception $e) {
+                    } catch (\Exception $e) {
                         $this->logger->error($e->getMessage());
                         $this->logger->error($e->getTraceAsString());
                     }
                 }
-            } else {
-                try {
-                    $result->addItem(new \Magento\Framework\DataObject([
-                        'id' => 0,
-                        'small_image_url' => $this->getImagePreviewUrl(),
-                        'medium_image_url' => $this->getImagePreviewUrl(),
-                        'large_image_url' => $this->getImagePreviewUrl(),
-                        'is_main_image' => true
-                    ]));
-                } catch(\Exception $e) {
-                    $this->logger->error($e->getMessage());
-                    $this->logger->error($e->getTraceAsString());
-                }
             }
+            $j += 100;
         }
         return $result;
     }
 
     /**
-     * @return int
+     * @return array
      */
-    private function getDraftId()
+    private function getDraftIds()
     {
-        return null; //@todo getDraftId
-        return $this->printformerBlock->getDraftId();
+        $draftIds = [];
+        $catalogProductPrintformerProducts = $this->printformerBlock->getCatalogProductPrintformerProducts();
+        foreach($catalogProductPrintformerProducts as $catalogProductPrintformerProduct) {
+            $draftIds[] = $this->printformerBlock->getDraftId($catalogProductPrintformerProduct->getPrintformerProduct());
+        }
+        return $draftIds;
     }
 
     /**
+     * @param string $draftId
      * @return array
      */
-    private function getPrintformerDraft()
+    private function getPrintformerDraft($draftId)
     {
-        if($this->printformerDraft === null) {
-            $this->printformerDraft = $this->printformerApi->getPrintformerDraft($this->getDraftId());
+        if(!isset($this->printformerDraft[$draftId])) {
+            $this->printformerDraft[$draftId] = $this->printformerApi->getPrintformerDraft($draftId);
         }
-        return $this->printformerDraft;
+        return $this->printformerDraft[$draftId];
     }
 
     /**
      * @param int $page
+     * @param string $draftId
      * @return null|string
      */
-    private function getImagePreviewUrl($page = 1)
+    private function getImagePreviewUrl($page = 1, $draftId)
     {
         $url = null;
-        if ($this->config->isUseImagePreview() && $this->getDraftId()) {
+        if ($this->config->isUseImagePreview() && $draftId) {
             if($this->config->isV2Enabled()) {
                 try {
-                    if (!isset($this->draftImageCreated[$page])) {
-                        $draft = $this->printformerApi->draftProcess($this->getDraftId());
-                        $jpgImg = $this->printformerApi->getThumbnail($this->getDraftId(), $draft->getUserIdentifier(), $this->config->getImagePreviewWidth(), $this->config->getImagePreviewHeight(), $page);
+                    if (!isset($this->draftImageCreated[$draftId.$page])) {
+                        $jpgImg = $this->printformerApi->getThumbnail(
+                            $draftId,
+                            $this->printformerApi->getUserIdentifier(),
+                            $this->config->getImagePreviewWidth(),
+                            $this->config->getImagePreviewHeight(),
+                            $page
+                        );
+
                         $printformerImage = $jpgImg['content'];
 
-                        $imageFilePath = $this->mediaHelper->getImageFilePath($this->getDraftId(), $page);
+                        $imageFilePath = $this->mediaHelper->getImageFilePath($draftId, $page);
 
                         $image = imagecreatefromstring($printformerImage);
 
@@ -189,16 +206,16 @@ class Gallery
 
                         imagedestroy($image);
 
-                        $this->draftImageCreated[$page] = true;
+                        $this->draftImageCreated[$draftId.$page] = true;
                     }
 
-                    $url = $this->mediaHelper->getImageUrl($this->getDraftId(), $page);
+                    $url = $this->mediaHelper->getImageUrl($draftId, $page);
                 } catch (\Exception $e) {
                     $this->logger->error($e->getMessage());
                     $this->logger->error($e->getTraceAsString());
                 }
             } else {
-                $url = $this->urlHelper->getThumbnail($this->getDraftId());
+                $url = $this->urlHelper->getThumbnail($draftId);
             }
         }
         return $url;
