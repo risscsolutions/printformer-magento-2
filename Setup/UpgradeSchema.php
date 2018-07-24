@@ -426,6 +426,54 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if(version_compare($context->getVersion(), '100.4.0', '<')) {
+            $pfrelateTable = $setup->getTable('catalog_product_printformer_product');
+
+            $connection->modifyColumn($pfrelateTable, 'store_id', [
+                'type' => Table::TYPE_INTEGER,
+                'length' => 5,
+                'comment' => 'Printformer product store ID'
+            ]);
+
+            $storeTable = $setup->getTable('store');
+            $productTable = $setup->getTable('catalog_product_entity');
+            $pfproductTable = $setup->getTable('printformer_product');
+
+            $connection->addIndex(
+                $pfrelateTable,
+                $setup->getIdxName($pfrelateTable, ['product_id']),
+                ['product_id']
+            );
+            $connection->addIndex(
+                $pfrelateTable,
+                $setup->getIdxName($pfrelateTable, ['printformer_product_id']),
+                ['printformer_product_id']
+            );
+            $connection->addIndex(
+                $pfrelateTable,
+                $setup->getIdxName($pfrelateTable, ['store_id']),
+                ['store_id']
+            );
+
+            $connection->addForeignKey(
+                $setup->getFkName($pfrelateTable, 'product_id', $productTable, 'entity_id'),
+                $pfrelateTable,
+                'product_id',
+                $productTable,
+                'entity_id',
+                Table::ACTION_CASCADE
+            );
+
+            $connection->addForeignKey(
+                $setup->getFkName($pfrelateTable, 'printformer_product_id', $pfproductTable, 'id'),
+                $pfrelateTable,
+                'printformer_product_id',
+                $pfproductTable,
+                'id',
+                Table::ACTION_CASCADE
+            );
+        }
+
         $setup->endSetup();
     }
 }
