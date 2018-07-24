@@ -176,7 +176,8 @@ class Config extends AbstractHelper
      */
     public function isAllowSkipConfig()
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_SKIP_CONFIG, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+        return intval($this->scopeConfig->getValue(self::XML_PATH_CONFIG_SKIP_CONFIG, ScopeInterface::SCOPE_STORE,
+            $this->getStoreId()));
     }
 
     /**
