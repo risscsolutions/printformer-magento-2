@@ -36,7 +36,7 @@
                 </field>
                 <field id="allow_skip_config" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Allow Add to Cart without Configuration</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <source_model>Rissc\Printformer\Model\Config\Source\YesNoPartitial</source_model>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>

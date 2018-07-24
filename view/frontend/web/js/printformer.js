@@ -353,8 +353,21 @@ define([
                 }
             }
 
-            if (!this.options.allowSkipConfig && draftIds.length < this.options.printformerProducts.length) {
-                this.addBtnDisable();
+            var canSkipConfig = this.options.allowSkipConfig;
+            switch (canSkipConfig) {
+                case 0:
+                    if (draftIds.length < this.options.printformerProducts.length) {
+                        this.addBtnDisable();
+                    }
+                    break;
+                case 2:
+                    if (draftIds.length < 1) {
+                        this.addBtnDisable();
+                    }
+                    break;
+                case 1:
+                default:
+                    break;
             }
         },
 
