@@ -406,7 +406,8 @@ class Config
     {
         return $this->scopeConfig->getValue(
             'printformer/version2group/v2apiKey',
-            ScopeInterface::SCOPE_STORES
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreId()
         );
     }
 
@@ -417,7 +418,8 @@ class Config
     {
         return $this->scopeConfig->getValue(
             'printformer/version2group/v2identifier',
-            ScopeInterface::SCOPE_STORES
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreId()
         );
     }
 }
