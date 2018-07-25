@@ -194,7 +194,7 @@ define([
                         }
                     }
                 }
-                $(oldQtyTrans).val(printformerProduct.personalisations);
+                $(oldQtyTrans).attr('value', printformerProduct.personalisations);
                 $(oldQtyTrans).data('pf-perso-count', printformerProduct.personalisations);
                 var newQtyTrans = null;
                 if ($('#personalisation_qty').length < 1) {
