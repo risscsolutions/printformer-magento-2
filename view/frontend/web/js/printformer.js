@@ -171,6 +171,53 @@ define([
                 }
             }
         },
+        
+        initDraftPersonalizations: function(printformerProduct) {
+            var instance = this;
+            if(this.isDefined(printformerProduct.personalisations) && printformerProduct.personalisations > 1) {
+                var oldQtyTrans = $(this.options.qtySelector);
+                if ($(oldQtyTrans).prop('tagName').toLowerCase() === 'select' && !this.persoOptionAdded) {
+                    var persoOption = $('<option/>');
+                    $(persoOption).val(parseFloat(printformerProduct.personalisations));
+                    $(persoOption).text(printformerProduct.personalisations);
+                    var selectChilds = $(oldQtyTrans).children();
+                    for(var i = 0; i < selectChilds.length; i++) {
+                        var qty = parseInt($(selectChilds[i]).val());
+                        var nextQty = parseInt($(selectChilds[i + 1]).val());
+                        if(
+                            qty < parseInt(printformerProduct.personalisations) &&
+                            nextQty > parseInt(printformerProduct.personalisations)
+                        ) {
+                            $(selectChilds[i + 1]).after($(persoOption));
+                            this.persoOptionAdded = true;
+                            break;
+                        }
+                    }
+                }
+                $(oldQtyTrans).val(printformerProduct.personalisations);
+                $(oldQtyTrans).data('pf-perso-count', printformerProduct.personalisations);
+                var newQtyTrans = null;
+                if ($('#personalisation_qty').length < 1) {
+                    newQtyTrans = $('<input/>')
+                        .attr('type', 'text')
+                        .attr('class', $(oldQtyTrans).attr('class'))
+                        .attr('id', 'personalisation_qty')
+                        .val(printformerProduct.personalisations)
+                        .prop('disabled', true);
+                    $(newQtyTrans).insertAfter($(oldQtyTrans));
+                }
+                $(oldQtyTrans).data('pf-personalized', 'true');
+                $(oldQtyTrans).trigger('change').hide();
+
+                if ($('#printformer_personalisations').length < 1) {
+                    var personalisationsInput = $('<input value="' + printformerProduct.personalisations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
+                    $(personalisationsInput).insertAfter($(newQtyTrans));
+                } else {
+                    var personalisationsInput = $('#printformer_personalisations');
+                    $(personalisationsInput).val(printformerProduct.personalisations);
+                }
+            }
+        },
 
         hideSecondButton: function(){
             if($(this.uploaBtn).length) {
@@ -396,6 +443,8 @@ define([
                 } else {
                     this.setButtonText($(button), $t('View draft'));
                 }
+
+                this.initDraftPersonalizations(printformerProduct);
             }
         },
 
