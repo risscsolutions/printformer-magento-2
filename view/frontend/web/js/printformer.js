@@ -200,6 +200,18 @@ define([
                     .prop('readonly', true)
                     .trigger('change');
 
+                if ($(oldQtyTrans).prop('readonly')) {
+                    $(oldQtyTrans).on('change', function(e){
+                        if (
+                            parseInt($(oldQtyTrans).val()) !==  printformerProduct.personalisations ||
+                            parseInt($(oldQtyTrans).attr('value')) !== printformerProduct.personalisations
+                        ) {
+                            $(oldQtyTrans).val(printformerProduct.personalisations);
+                            $(oldQtyTrans).attr('value', printformerProduct.personalisations)
+                        }
+                    });
+                }
+
                 if ($('#printformer_personalisations').length < 1) {
                     var personalisationsInput = $('<input value="' + printformerProduct.personalisations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
                     $(personalisationsInput).insertAfter($(oldQtyTrans));
