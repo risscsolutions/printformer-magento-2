@@ -202,7 +202,7 @@ define([
 
                 if ($('#printformer_personalisations').length < 1) {
                     var personalisationsInput = $('<input value="' + printformerProduct.personalisations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
-                    $(personalisationsInput).insertAfter($(newQtyTrans));
+                    $(personalisationsInput).insertAfter($(oldQtyTrans));
                 } else {
                     var personalisationsInput = $('#printformer_personalisations');
                     $(personalisationsInput).val(printformerProduct.personalisations);
