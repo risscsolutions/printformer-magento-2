@@ -282,6 +282,11 @@ class Printformer extends AbstractView
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
             $printformerProducts[$i]['draft_id'] = $this->getDraftId($printformerProduct);
+
+            $personalisations = $this->getPersonalisationCount($printformerProducts[$i]['draft_id']);
+            if ($personalisations > 1) {
+                $printformerProducts[$i]['personalisations'] = $personalisations;
+            }
             $i++;
         }
 
@@ -896,5 +901,20 @@ class Printformer extends AbstractView
         }
 
         return false;
+    }
+
+    /**
+     * @param $draftHash
+     *
+     * @return int
+     */
+    public function getPersonalisationCount($draftHash)
+    {
+        if (!$draftHash) {
+            return 0;
+        }
+        $draftData = $this->_apiHelper->getPrintformerDraft($draftHash);
+
+        return intval($draftData['personalizations']['amount']);
     }
 }

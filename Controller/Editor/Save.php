@@ -130,6 +130,7 @@ class Save extends Action
                 $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()] = $personalisations;
             }
 
+
             $params = $this->initDraft($product, $draftId, $storeId, $extraParams);
             if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
                 // update wishlist item options if true
