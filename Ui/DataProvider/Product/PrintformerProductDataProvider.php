@@ -5,6 +5,7 @@ namespace Rissc\Printformer\Ui\DataProvider\Product;
 use Magento\Framework\App\RequestInterface;
 use Magento\Ui\DataProvider\AbstractDataProvider;
 use Rissc\Printformer\Model\ResourceModel\Product\CollectionFactory;
+use Magento\Backend\Model\Session as BackendSession;
 
 class PrintformerProductDataProvider extends AbstractDataProvider
 {
@@ -29,6 +30,9 @@ class PrintformerProductDataProvider extends AbstractDataProvider
      */
     protected $request;
 
+    /** @var BackendSession */
+    protected $_session;
+
     /**
      * Construct
      *
@@ -37,6 +41,7 @@ class PrintformerProductDataProvider extends AbstractDataProvider
      * @param string $requestFieldName
      * @param CollectionFactory $collectionFactory
      * @param RequestInterface $request
+     * @param BackendSession $session
      * @param \Magento\Ui\DataProvider\AddFieldToCollectionInterface[] $addFieldStrategies
      * @param \Magento\Ui\DataProvider\AddFilterToCollectionInterface[] $addFilterStrategies
      * @param array $meta
@@ -48,6 +53,7 @@ class PrintformerProductDataProvider extends AbstractDataProvider
         $requestFieldName,
         CollectionFactory $collectionFactory,
         RequestInterface $request,
+        BackendSession $session,
         array $addFieldStrategies = [],
         array $addFilterStrategies = [],
         array $meta = [],
@@ -58,6 +64,7 @@ class PrintformerProductDataProvider extends AbstractDataProvider
         $this->addFieldStrategies = $addFieldStrategies;
         $this->addFilterStrategies = $addFilterStrategies;
         $this->request = $request;
+        $this->_session = $session;
     }
 
     /**
@@ -67,7 +74,11 @@ class PrintformerProductDataProvider extends AbstractDataProvider
     {
         $collection = $this->getCollection();
         $collection->addFieldToSelect('*');
-        $storeId = (int)$this->request->getParam('current_store_id', 0);
+        $storeId = intval($this->request->getParam('store', 0));
+        if ($storeId > 0 || $this->_session->getPrintformerProductStoreId() === null) {
+            $this->_session->setPrintformerProductStoreId($storeId);
+        }
+        $storeId = intval($this->_session->getPrintformerProductStoreId());
         $collection->addFieldToFilter('store_id', $storeId);
         return $collection->toArray();
     }

@@ -277,7 +277,8 @@ class Printformer extends AbstractView
         $printformerProducts = [];
 
         $i = 0;
-        $pfProducts = $this->printformerProductHelper->getPrintformerProducts($product->getId());
+        $pfProducts = $this->printformerProductHelper->getPrintformerProducts($product->getId(), $product->getStoreId
+        ());
         foreach($pfProducts as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
