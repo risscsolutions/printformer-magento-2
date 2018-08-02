@@ -262,7 +262,11 @@ class Printformer extends AbstractView
      */
     public function getCatalogProductPrintformerProducts()
     {
-        return $this->printformerProductHelper->getCatalogProductPrintformerProducts($this->getProduct()->getId());
+        return $this->printformerProductHelper
+            ->getCatalogProductPrintformerProducts(
+                $this->getProduct()->getId(),
+                $this->_storeManager->getStore()->getId()
+            );
     }
 
     /**
@@ -277,8 +281,10 @@ class Printformer extends AbstractView
         $printformerProducts = [];
 
         $i = 0;
-        $pfProducts = $this->printformerProductHelper->getPrintformerProducts($product->getId(), $product->getStoreId
-        ());
+        $pfProducts = $this->printformerProductHelper->getPrintformerProducts(
+            $product->getId(),
+            $this->_storeManager->getStore()->getId()
+        );
         foreach($pfProducts as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);

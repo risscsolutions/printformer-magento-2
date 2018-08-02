@@ -88,8 +88,8 @@ class Product extends AbstractHelper
         $connection = $this->resourceConnection->getConnection();
         $select = $connection->select()
             ->from('catalog_product_printformer_product')
-            ->where('product_id = ?', $productId)
-            ->where('store_id = ?', $storeId);
+            ->where('product_id = ?', intval($productId))
+            ->where('store_id = ?', intval($storeId));
 
         return $connection->fetchAll($select);
     }
