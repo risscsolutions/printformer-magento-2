@@ -83,7 +83,7 @@ class Product extends AbstractHelper
      *
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, $storeId = 0)
+    protected function getCatalogProductPrintformerProductsData($productId, $storeId = 0, $chain = true)
     {
         $connection = $this->resourceConnection->getConnection();
         $select = $connection->select()
@@ -91,7 +91,12 @@ class Product extends AbstractHelper
             ->where('product_id = ?', intval($productId))
             ->where('store_id = ?', intval($storeId));
 
-        return $connection->fetchAll($select);
+        $templates = $connection->fetchAll($select);
+        if ($chain && empty($templates)) {
+            $templates = $this->getCatalogProductPrintformerProductsData($productId, 0, false);
+        }
+
+        return $templates;
     }
 
     /**
