@@ -8,6 +8,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject;
 use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
+use Magento\Framework\App\RequestInterface;
 
 class Product extends AbstractHelper
 {
@@ -27,33 +28,44 @@ class Product extends AbstractHelper
     protected $resource;
 
     /**
+     * @var RequestInterface
+     */
+    protected $_request;
+
+    /**
      * Product constructor.
      * @param ProductFactory $productFactory
      * @param ResourceProduct $resource
      * @param ResourceConnection $resourceConnection
      * @param Context $context
+     * @param RequestInterface $request
      */
     public function __construct(
         ProductFactory $productFactory,
         ResourceProduct $resource,
         ResourceConnection $resourceConnection,
-        Context $context
+        Context $context,
+        RequestInterface $request
     ) {
         $this->productFactory = $productFactory;
         $this->resource = $resource;
         $this->resourceConnection = $resourceConnection;
+        $this->_request = $request;
+
         parent::__construct($context);
     }
 
     /**
-     * @param $productId
-     * @return \Rissc\Printformer\Model\Product[]
+     * @param     $productId
+     * @param int $storeId
+     *
+     * @return array
      */
-    public function getPrintformerProducts($productId)
+    public function getPrintformerProducts($productId, $storeId = 0)
     {
         $printformerProducts = [];
 
-        foreach($this->getCatalogProductPrintformerProductsData($productId) as $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId) as $row) {
             $printformerProduct = $this->productFactory->create();
             $this->resource->load($printformerProduct, $row['printformer_product_id']);
 
@@ -66,23 +78,36 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param int $productId
+     * @param     $productId
+     * @param int $storeId
+     *
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId)
+    protected function getCatalogProductPrintformerProductsData($productId, $storeId = 0, $chain = true)
     {
         $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()->from('catalog_product_printformer_product')->where('product_id = ?', $productId);
-        return $connection->fetchAll($select);
+        $select = $connection->select()
+            ->from('catalog_product_printformer_product')
+            ->where('product_id = ?', intval($productId))
+            ->where('store_id = ?', intval($storeId));
+
+        $templates = $connection->fetchAll($select);
+        if ($chain && empty($templates)) {
+            $templates = $this->getCatalogProductPrintformerProductsData($productId, 0, false);
+        }
+
+        return $templates;
     }
 
     /**
-     * @param int $productId
+     * @param     $productId
+     * @param int $storeId
+     *
      * @return array
      */
-    public function getCatalogProductPrintformerProductsArray($productId)
+    public function getCatalogProductPrintformerProductsArray($productId, $storeId = 0)
     {
-        $result = $this->getCatalogProductPrintformerProductsData($productId);
+        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId);
 
         foreach($result as &$row) {
             $printformerProduct = $this->productFactory->create();
@@ -99,14 +124,16 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param int $productId
+     * @param     $productId
+     * @param int $storeId
+     *
      * @return array
      */
-    public function getCatalogProductPrintformerProducts($productId)
+    public function getCatalogProductPrintformerProducts($productId, $storeId = 0)
     {
         $catalogProductPrintformerProducts = [];
 
-        foreach($this->getCatalogProductPrintformerProductsData($productId) as $i => $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId) as $i => $row) {
             $catalogProductPrintformerProducts[$i] = new DataObject();
             $catalogProductPrintformerProducts[$i]->setCatalogProductPrintformerProduct(new DataObject($row));
 
@@ -119,13 +146,15 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param $productId
+     * @param     $productId
+     * @param int $storeId
+     *
      * @return array
      */
-    public function getPrintformerProductsArray($productId)
+    public function getPrintformerProductsArray($productId, $storeId = 0)
     {
         $printformerProducts = [];
-        foreach($this->getPrintformerProducts($productId) as $printformerProduct) {
+        foreach($this->getPrintformerProducts($productId, $storeId) as $printformerProduct) {
             $printformerProducts[] = $printformerProduct->getData();
         }
         return $printformerProducts;

@@ -35,7 +35,6 @@ class SavePrintformerProducts implements ObserverInterface
 
     /**
      * @param Observer $observer
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function execute(Observer $observer)
     {
@@ -77,7 +76,7 @@ class SavePrintformerProducts implements ObserverInterface
         $data = $dataWrapper->getContent();
 
         $connection->beginTransaction();
-        $connection->delete('catalog_product_printformer_product', ['product_id = ?' => $product->getId()]);
+        $connection->delete('catalog_product_printformer_product', ['product_id = ?' => $product->getId(), 'store_id = ?' => $product->getStoreId()]);
         if(count($data) > 0) {
             $connection->insertMultiple('catalog_product_printformer_product', $data);
         }

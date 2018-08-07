@@ -173,7 +173,6 @@ define([
         },
         
         initDraftPersonalizations: function(printformerProduct) {
-            var instance = this;
             if(this.isDefined(printformerProduct.personalisations) && printformerProduct.personalisations > 1) {
                 var oldQtyTrans = $(this.options.qtySelector);
                 if ($(oldQtyTrans).prop('tagName').toLowerCase() === 'select' && !this.persoOptionAdded) {
@@ -194,24 +193,28 @@ define([
                         }
                     }
                 }
-                $(oldQtyTrans).val(printformerProduct.personalisations);
-                $(oldQtyTrans).data('pf-perso-count', printformerProduct.personalisations);
-                var newQtyTrans = null;
-                if ($('#personalisation_qty').length < 1) {
-                    newQtyTrans = $('<input/>')
-                        .attr('type', 'text')
-                        .attr('class', $(oldQtyTrans).attr('class'))
-                        .attr('id', 'personalisation_qty')
-                        .val(printformerProduct.personalisations)
-                        .prop('disabled', true);
-                    $(newQtyTrans).insertAfter($(oldQtyTrans));
+                $(oldQtyTrans).attr('value', printformerProduct.personalisations)
+                    .data('pf-perso-count', printformerProduct.personalisations)
+                    .data('pf-personalized', 'true')
+                    .addClass('disabled')
+                    .prop('readonly', true)
+                    .trigger('change');
+
+                if ($(oldQtyTrans).prop('readonly')) {
+                    $(oldQtyTrans).on('change', function(e){
+                        if (
+                            parseInt($(oldQtyTrans).val()) !==  printformerProduct.personalisations ||
+                            parseInt($(oldQtyTrans).attr('value')) !== printformerProduct.personalisations
+                        ) {
+                            $(oldQtyTrans).val(printformerProduct.personalisations);
+                            $(oldQtyTrans).attr('value', printformerProduct.personalisations)
+                        }
+                    });
                 }
-                $(oldQtyTrans).data('pf-personalized', 'true');
-                $(oldQtyTrans).trigger('change').hide();
 
                 if ($('#printformer_personalisations').length < 1) {
                     var personalisationsInput = $('<input value="' + printformerProduct.personalisations + '" type="hidden" id="printformer_personalisations" name="printformer_personalisations"/>');
-                    $(personalisationsInput).insertAfter($(newQtyTrans));
+                    $(personalisationsInput).insertAfter($(oldQtyTrans));
                 } else {
                     var personalisationsInput = $('#printformer_personalisations');
                     $(personalisationsInput).val(printformerProduct.personalisations);

@@ -120,6 +120,10 @@ class OrderModel
                 }
             }
 
+            if (empty($draftIds)) {
+                return $subject;
+            }
+
             if ($subject->getStatus() == $this->config->getOrderStatus()) {
                 if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
                     $this->draft->setDraftOrdered($subject);
