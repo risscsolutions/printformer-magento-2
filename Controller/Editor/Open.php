@@ -173,6 +173,12 @@ class Open extends Action
                 $storeId, $params);
         }
 
+        // Append SearchPath urldecoded
+        if($this->getRequest()->getParam('search_path')) {
+            $s = urldecode(urldecode($this->getRequest()->getParam('search_path')));
+            $editorUrl .= '&search_path=' . $s;
+        }
+
         /**
          * Build redirect url
          */
