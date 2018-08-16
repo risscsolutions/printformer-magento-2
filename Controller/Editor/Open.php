@@ -61,6 +61,11 @@ class Open extends Action
     protected $_preselectHelper;
 
     /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
+
+    /**
      * Open constructor.
      * @param Context $context
      * @param DraftGateway $draftGateway
@@ -73,6 +78,7 @@ class Open extends Action
      */
     public function __construct(
         Context $context,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         DraftGateway $draftGateway,
         UrlHelper $urlHelper,
         ProductFactory $productFactory,
@@ -90,6 +96,7 @@ class Open extends Action
         $this->_sessionHelper = $sessionHelper;
         $this->_preselectHelper = $preselectHelper;
         $this->_apiHelper = $apiHelper;
+        $this->scopeConfig = $scopeConfig;
 
         parent::__construct($context);
     }
@@ -175,17 +182,36 @@ class Open extends Action
 
         // Append SearchPath urldecoded
         if($this->getRequest()->getParam('search_path')) {
-            $s = urldecode(urldecode($this->getRequest()->getParam('search_path')));
-            $editorUrl .= '&search_path=' . $s;
+//            $s = urldecode(urldecode($this->getRequest()->getParam('search_path')));
+//            $editorUrl .= '&search_path=' . $s;
+            $editorUrl .= '&search_path=' .$this->buildSearchPath($this->getRequest()->getParam('product_id'));
         }
-
         /**
          * Build redirect url
          */
         $redirect = $this->resultRedirectFactory->create();
         $redirect->setUrl($editorUrl);
-
         return $redirect;
+    }
+    private function buildSearchPath($productId, $encode = true)
+    {
+        $product = $this->_productFactory->create()->load($productId);
+        $crossMediaMandatorFolder = $this->scopeConfig->getValue('mandator/mandator_config/crossmedia_folder',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        $crossMediaProductFolder = $product->getMgoCrossmediaFolder();
+
+        $searchPath = '';
+        // Änderung der Reihenfolge
+        if(!empty($crossMediaProductFolder)) {
+            $searchPath = $crossMediaProductFolder;
+        }
+        else if(!empty($crossMediaMandatorFolder)) {
+            $searchPath = $crossMediaMandatorFolder;
+        }
+        if($encode) {
+            $searchPath = urlencode(base64_encode($searchPath));
+        }
+        return $searchPath;
     }
 
     /**
