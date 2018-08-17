@@ -181,9 +181,7 @@ class Open extends Action
         }
 
         // Append SearchPath urldecoded
-        if($this->getRequest()->getParam('search_path')) {
-//            $s = urldecode(urldecode($this->getRequest()->getParam('search_path')));
-//            $editorUrl .= '&search_path=' . $s;
+        if(1 || $this->getRequest()->getParam('search_path')) { // Wenn keiner gesetzt war
             $editorUrl .= '&search_path=' .$this->buildSearchPath($this->getRequest()->getParam('product_id'));
         }
         /**
