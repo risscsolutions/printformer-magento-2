@@ -606,6 +606,7 @@ define([
                                 $.each(selectedOptions['options'], function (i, optionValue) {
                                     if ($(opt).data('selector') === 'options[' + i + ']') {
                                         $(opt).val(optionValue.value);
+                                        opt.dispatchEvent(new Event('change', { 'bubbles': true }))
                                     }
                                 });
                             }
