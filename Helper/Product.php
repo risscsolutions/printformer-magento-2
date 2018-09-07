@@ -100,6 +100,19 @@ class Product extends AbstractHelper
     }
 
     /**
+     * @param string $masterId
+     * @return array
+     */
+    public function getCatalogProductPrintformerProductsByMasterId($masterId)
+    {
+        $connection = $this->resourceConnection->getConnection();
+        $select = $connection->select()
+            ->from('catalog_product_printformer_product')
+            ->where('master_id = ?', $masterId);
+        return $connection->fetchAll($select);
+    }
+
+    /**
      * @param     $productId
      * @param int $storeId
      *

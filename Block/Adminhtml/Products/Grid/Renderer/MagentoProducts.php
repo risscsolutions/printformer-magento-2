@@ -4,42 +4,43 @@ namespace Rissc\Printformer\Block\Adminhtml\Products\Grid\Renderer;
 
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Magento\Framework\DataObject;
-use Magento\Catalog\Model\ProductFactory;
 use Magento\Backend\Block\Context;
+use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 
 class MagentoProducts extends AbstractRenderer
 {
     /**
-     * @var ProductFactory
+     * @var PrintformerProductHelper
      */
-    protected $_productFactory;
+    protected $printformerProductHelper;
 
     /**
      * MagentoProducts constructor.
      * @param Context $context
-     * @param ProductFactory $productFactory
+     * @param PrintformerProductHelper $printformerProductHelper
      * @param array $data
      */
     public function __construct(
         Context $context,
-        ProductFactory $productFactory,
+        PrintformerProductHelper $printformerProductHelper,
         array $data = []
     ) {
-        $this->_productFactory = $productFactory;
+        $this->printformerProductHelper = $printformerProductHelper;
         parent::__construct($context, $data);
     }
 
     public function render(DataObject $row)
     {
-        $product = $this->_productFactory->create();
-        $productCollection = $product->getCollection()->getSelect()
-            ->joinLeft($product->getResource()->getConnection()->getTableName('catalog_product_printformer_product'), $cond)
-            ->addStoreFilter($row->getStoreId())
-            ->load();
+        $catalogProductPrintformerProducts = [];
+        if($row->getMasterId()) {
+            $catalogProductPrintformerProducts = $this->printformerProductHelper->getCatalogProductPrintformerProductsByMasterId($row->getMasterId());
+        }
 
         $assigned = [];
-        foreach($productCollection as $assignedProduct) {
-            $assigned[] = '<a href="' . $this->_urlBuilder->getUrl('catalog/product/edit', ['id' => $assignedProduct->getId()]) . '">' . $assignedProduct->getId() . '</a>';
+        foreach($catalogProductPrintformerProducts as $assignedProduct) {
+            if(isset($assignedProduct['product_id'])) {
+                $assigned[] = '<a href="' . $this->_urlBuilder->getUrl('catalog/product/edit', ['id' => $assignedProduct['product_id']]) . '">' . $assignedProduct['product_id'] . '</a>';
+            }
         }
 
         if(count($assigned) == 0) {
