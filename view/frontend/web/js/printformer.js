@@ -601,7 +601,15 @@ define([
                                 $.each(selectedOptions['options'], function (i, optionValue) {
                                     if ($(opt).data('selector') === 'options[' + i + ']') {
                                         $(opt).val(optionValue.value);
-                                        opt.dispatchEvent(new Event('change', { 'bubbles': true }))
+
+                                        var isIE = document.body.style.msTouchAction !== undefined;
+                                        if (isIE) {
+                                            var event = document.createEvent("Event");
+                                            event.initEvent("change", true, false);
+                                            opt.dispatchEvent(event);
+                                        }  else {
+                                            opt.dispatchEvent(new Event('change', { 'bubbles': true }))
+                                        }
                                     }
                                 });
                             }
