@@ -12,6 +12,7 @@ use Magento\Ui\Component\Form\Element\ActionDelete;
 use Magento\Ui\Component\Modal;
 use Rissc\Printformer\Helper\Product;
 use Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider;
+use Rissc\Printformer\Helper\Config as PrintformerConfigHelper;
 
 class PrintformerProduct
 {
@@ -41,6 +42,11 @@ class PrintformerProduct
     protected $productHelper;
 
     /**
+     * @var PrintformerConfigHelper
+     */
+    protected $printformerConfigHelper;
+
+    /**
      * @var string
      */
     protected $scopeName = 'product_form.product_form';
@@ -51,6 +57,7 @@ class PrintformerProduct
      * @param PrintformerProductDataProvider $dataProvider
      * @param UrlInterface $urlBuilder
      * @param RequestInterface $request
+     * @param PrintformerConfigHelper $printformerConfigHelper
      * @param LocatorInterface $locator
      */
     public function __construct(
@@ -58,6 +65,7 @@ class PrintformerProduct
         PrintformerProductDataProvider $dataProvider,
         UrlInterface $urlBuilder,
         RequestInterface $request,
+        PrintformerConfigHelper $printformerConfigHelper,
         LocatorInterface $locator
     ) {
         $this->productHelper = $productHelper;
@@ -65,6 +73,7 @@ class PrintformerProduct
         $this->urlBuilder = $urlBuilder;
         $this->request = $request;
         $this->locator = $locator;
+        $this->printformerConfigHelper = $printformerConfigHelper;
     }
 
     /**
@@ -74,9 +83,8 @@ class PrintformerProduct
      */
     public function afterModifyMeta(CustomOptions $subject, $meta)
     {
-        if($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product') {
+        if(!$this->printformerConfigHelper->isEnabled() || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
             return $meta;
-        }
 
         $meta['printformer_products'] = [
             'arguments' => [
@@ -159,9 +167,8 @@ class PrintformerProduct
      */
     public function afterModifyData(CustomOptions $subject, $meta)
     {
-        if($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product') {
+        if(!$this->printformerConfigHelper->isEnabled() || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
             return $meta;
-        }
 
         $productId = $this->locator->getProduct()->getId();
         $storeId = $this->locator->getProduct()->getStoreId();
