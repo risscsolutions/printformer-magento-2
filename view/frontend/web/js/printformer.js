@@ -14,11 +14,6 @@ define([
 
         _create: function () {
             var that = this;
-
-            if (this.options.printformerProducts.length === 0) {
-                return;
-            }
-
             this.form = this.element;
             this.callbacks = {};
             this.addToCartFormUrl = null;
