@@ -11,6 +11,7 @@ use Rissc\Printformer\Helper\Config;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Customer\Model\Session as CustomerSession;
+use Rissc\Printformer\Helper\Catalog as CatalogHelper;
 
 class V2
     extends AbstractHelper
@@ -39,6 +40,10 @@ class V2
     protected $_customerSession;
 
     protected $_storeId = 0;
+
+    /** @var CatalogHelper */
+    protected $_catalogHelper;
+
     /**
      * V2 constructor.
      *
@@ -49,12 +54,13 @@ class V2
         Context $context,
         StoreManagerInterface $storeManager,
         Config $config,
-        CustomerSession $customerSession
-    )
-    {
+        CustomerSession $customerSession,
+        CatalogHelper $catalogHelper
+    ) {
         $this->_storeManager = $storeManager;
         $this->_config = $config;
         $this->_customerSession = $customerSession;
+        $this->_catalogHelper = $catalogHelper;
 
         parent::__construct($context);
     }
@@ -162,6 +168,10 @@ class V2
         $queryParams['callback'] = $this->_getCallbackUrl($customCallbackUrl, $this->_storeManager->getStore()->getId(),
             $dataParams);
 
+        if ($this->_config->getRedirectProductOnCancel()) {
+            $queryParams['callback_cancel'] = $this->_getProductCallbackUrl(intval($params['product_id']), $params['data'], $this->_storeManager->getStore()->getId());
+        }
+
         return $editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams);
     }
 
@@ -205,6 +215,36 @@ class V2
         }
 
         return $referrer;
+    }
+
+    /**
+     * @param Product | int $product
+     * @param int  $storeId
+     * @param bool $encodeUrl
+     *
+     * @return string
+     */
+    protected function _getProductCallbackUrl($product, $params = [], $storeId = 0, $encodeUrl = true)
+    {
+        $product = $this->_catalogHelper->prepareProduct($product);
+        if ($storeId > 0) {
+            $product->setStoreId($storeId);
+        }
+
+        if (isset($params['quote_id']) && $product->getId()) {
+            $referrerParams['id'] = $params['quote_id'];
+            $referrerParams['product_id'] = $product->getId();
+
+            $baseUrl = $this->_urlBuilder->getUrl('checkout/cart/configure', $referrerParams);
+        } else {
+            $baseUrl = $product->getProductUrl(null);
+        }
+
+        if ($encodeUrl) {
+            $baseUrl = base64_encode($baseUrl);
+        }
+
+        return $baseUrl;
     }
 
     /**

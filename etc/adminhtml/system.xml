@@ -28,69 +28,76 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="redirect_alt_url" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="redirect_on_cancel" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Redirect to product detail page on cancel</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="redirect_alt_url" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Alternative URL</label>
                     <depends>
                         <field id="redirect_after_config">3</field>
                     </depends>
                 </field>
-                <field id="allow_skip_config" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="allow_skip_config" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Allow Add to Cart without Configuration</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\YesNoPartitial</source_model>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="guest_wishlist_hint" translate="label" type="textarea" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="guest_wishlist_hint" translate="label" type="textarea" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Wishlist Hint Text for Guest Users</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="cart_edit_text" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="cart_edit_text" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>"Edit" Text in Cart</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="product_image_preview" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="product_image_preview" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Replace Product Image with Preview</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="product_image_preview_width" translate="label" type="text" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="product_image_preview_width" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Preview image width</label>
                     <depends>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
-                <field id="product_image_preview_height" translate="label" type="text" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="product_image_preview_height" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Preview image height</label>
                     <depends>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
-                <field id="config_button_text" translate="label" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="config_button_text" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>"Configure" Button Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="config_button_css" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="config_button_css" translate="label" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>"Configure" Button CSS</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="close_text" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="close_text" translate="label" type="text" sortOrder="160" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>"Editor Close" Notice Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="processing_type" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="processing_type" translate="label" type="select" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Processing Type</label>
                     <source_model>Rissc\Printformer\Gateway\Admin\Draft</source_model>
                     <depends>

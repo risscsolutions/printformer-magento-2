@@ -20,6 +20,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_LOCALE                    = 'printformer/general/locale';
     const XML_PATH_CONFIG_STATUS                    = 'printformer/general/order_status';
 
+    const XML_PATH_CONFIG_REDIRECT_ON_CANCEL        = 'printformer/general/redirect_on_cancel';
     const XML_PATH_CONFIG_REDIRECT                  = 'printformer/general/redirect_after_config';
     const XML_PATH_CONFIG_REDIRECT_URL              = 'printformer/general/redirect_alt_url';
     const XML_PATH_CONFIG_SKIP_CONFIG               = 'printformer/general/allow_skip_config';
@@ -153,6 +154,15 @@ class Config extends AbstractHelper
     public function getOrderStatus()
     {
         return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_STATUS, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return bool
+     */
+    public function getRedirectProductOnCancel()
+    {
+        return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_REDIRECT_ON_CANCEL, ScopeInterface::SCOPE_STORE,
+            $this->getStoreId()) == '1';
     }
 
     /**
