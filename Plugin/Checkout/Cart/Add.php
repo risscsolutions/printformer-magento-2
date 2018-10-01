@@ -12,7 +12,7 @@ class Add
 {
     /**
      * @param SubjectAdd $subject
-     * @param \Magento\Framework\Controller\Result\Redirect $result
+     * @param \Magento\Framework\Controller\Result\Redirect | \Magento\Framework\App\Response\Http $result
      * @return \Magento\Framework\Controller\Result\Redirect
      */
     public function afterExecute(SubjectAdd $subject, $result)
@@ -34,13 +34,19 @@ class Add
         $product = $productFactory->create();
         $productResource->load($product, (int)$subject->getRequest()->getParam('product'));
 
-        $resultArray = [];
+        /** @var JsonHelper $jsonHelper */
+        $jsonHelper = $objm->get(JsonHelper::class);
+        $content = $result->getContent();
+        if (!empty($content)) {
+            $content = $jsonHelper->jsonDecode($content);
+        }
+        $resultArray = is_array($content) ? $content : [];
         if ($product && $product->getId()) {
             $resultArray['backUrl'] = $product->getProductUrl();
         }
 
         $subject->getResponse()->representJson(
-            $objm->get(JsonHelper::class)->jsonEncode($resultArray)
+            $jsonHelper->jsonEncode($resultArray)
         );
     }
 }
