@@ -449,6 +449,25 @@ define([
 
                 this.initDraftPersonalizations(printformerProduct);
             }
+            this.initDeleteButton(printformerProduct);
+        },
+
+        initDeleteButton: function(printformerProduct) {
+            if (!this.isDefined(printformerProduct.delete_url)) {
+                return;
+            }
+
+            if (printformerProduct.draft_id !== null) {
+                var button = $('#printformer-delete-' + printformerProduct.id);
+                $(button).prop('disabled', false);
+                $(button).on('click', function(e) {
+                    e.preventDefault();
+
+                    window.location.href = printformerProduct.delete_url;
+
+                    return false;
+                });
+            }
         },
 
         _initVariations: function () {

@@ -288,6 +288,9 @@ class Printformer extends AbstractView
         foreach($pfProducts as $printformerProduct) {
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
+            if ($this->canShowDeleteButton($this->getDraftId($printformerProduct))) {
+                $printformerProducts[$i]['delete_url'] = $this->getDeleteUrl($printformerProduct, $product->getId());
+            }
             $printformerProducts[$i]['draft_id'] = $this->getDraftId($printformerProduct);
 
             $personalisations = $this->getPersonalisationCount($printformerProducts[$i]['draft_id']);
@@ -302,6 +305,8 @@ class Printformer extends AbstractView
 
     /**
      * @param PrintformerProduct $printformerProduct
+     * @param Product $product
+     *
      * @return string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -325,6 +330,21 @@ class Printformer extends AbstractView
             $params,
             $printformerProduct->getIntent()
         );
+    }
+
+    /**
+     * @param PrintformerProduct $printformerProduct
+     * @param int                $productId
+     *
+     * @return string
+     */
+    public function getDeleteUrl(PrintformerProduct $printformerProduct, $productId)
+    {
+        return $this->_urlBuilder->getUrl('printformer/delete/draft', [
+            'printformer_product' => $printformerProduct->getId(),
+            'intent' => $printformerProduct->getIntent(),
+            'product_id' => $productId
+        ]);
     }
 
     /**
@@ -923,5 +943,17 @@ class Printformer extends AbstractView
         $draftData = $this->_apiHelper->getPrintformerDraft($draftHash);
 
         return intval($draftData['personalizations']['amount']);
+    }
+
+    /**
+     * @return bool
+     */
+    public function canShowDeleteButton()
+    {
+        if ($this->isOnConfigurePDS()) {
+            return false;
+        }
+
+        return $this->configHelper->isDeleteButtonEnabled();
     }
 }

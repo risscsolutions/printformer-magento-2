@@ -38,3 +38,26 @@
 .printformer-editor-close-modal .cancel-btn {
     min-width: 160px; background-color: #c2c1c1; border: 0; border-radius: 0; box-shadow: 0;
 }
+
+.printformer-delete {
+    position: absolute;
+    left: auto;
+    top: auto;
+    width: auto !important;
+}
+
+.printformer-delete:before {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 18px;
+    line-height: 18px;
+    color: #FFF;
+    content: '\e604' !important;
+    font-family: 'luma-icons';
+    vertical-align: middle;
+    display: inline-block;
+    font-weight: normal;
+    overflow: hidden;
+    speak: none;
+    text-align: center;
+}

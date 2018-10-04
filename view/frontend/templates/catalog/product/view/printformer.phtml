@@ -20,6 +20,14 @@ $block->cleanupDraftSession();
                     <span><?php echo __($block->getButtonText()) ?></span>
                 <?php endif; ?>
             </button>
+            <?php if ($block->canShowDeleteButton()): ?>
+                <button id="printformer-delete-<?php echo $_printformerProduct->getId() ?>"
+                        data-printformer-product="<?php echo $_printformerProduct->getId() ?>"
+                        data-printformer-master="<?php echo $_printformerProduct->getMasterId(); ?>"
+                        data-product-id="<?php echo $block->getProduct()->getId(); ?>"
+                        class="action primary tocart printformer-delete"
+                        disabled="disabled"></button>
+            <?php endif; ?>
         </div>
     <?php endforeach; ?>
 
