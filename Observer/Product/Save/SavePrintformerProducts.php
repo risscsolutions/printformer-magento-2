@@ -56,7 +56,7 @@ class SavePrintformerProducts implements ObserverInterface
 
         if(isset($params['product']['printformer_products'])) {
             foreach ($params['product']['printformer_products'] as $record) {
-                if(!isset($record['is_delete']) || $record['is_delete'] != 1) {
+                if(is_array($record) && (!isset($record['is_delete']) || $record['is_delete'] != 1)) {
                     $item = [
                         'product_id' => $product->getId(),
                         'printformer_product_id' => !empty($record['printformer_product_id']) ? $record['printformer_product_id'] : $record['id'],
