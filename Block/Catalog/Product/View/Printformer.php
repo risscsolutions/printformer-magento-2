@@ -956,4 +956,9 @@ class Printformer extends AbstractView
 
         return $this->configHelper->isDeleteButtonEnabled();
     }
+
+    public function getDeleteConfirmText()
+    {
+        return $this->configHelper->getDeleteConfirmText();
+    }
 }

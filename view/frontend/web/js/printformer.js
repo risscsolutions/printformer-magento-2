@@ -453,20 +453,49 @@ define([
         },
 
         initDeleteButton: function(printformerProduct) {
+            var instance = this;
+
             if (!this.isDefined(printformerProduct.delete_url)) {
                 return;
             }
 
+            var confirmModal = $('#printformer-delete-confirm-' + printformerProduct.id).modal({
+                modalClass: "printformer-editor-close-modal",
+                buttons: [
+                    {
+                        'text': $t('Yes'),
+                        'class': 'ok-btn',
+                        'click': function () {
+                            window.location.href = printformerProduct.delete_url;
+                            confirmModal.modal('closeModal');
+
+                            return true;
+                        }
+                    }, {
+                        'text': $t('No'),
+                        'class': 'cancel-btn',
+                        'click': function () {
+                            confirmModal.modal('closeModal');
+
+                            return true;
+                        }
+                    }
+                ]
+            });
+
             if (printformerProduct.draft_id !== null) {
                 var button = $('#printformer-delete-' + printformerProduct.id);
                 $(button).prop('disabled', false);
+
                 $(button).on('click', function(e) {
                     e.preventDefault();
 
-                    window.location.href = printformerProduct.delete_url;
+                    confirmModal.modal('openModal');
 
                     return false;
                 });
+
+
             }
         },
 

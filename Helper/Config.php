@@ -32,6 +32,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
+    const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
     const XML_PATH_CONFIG_FORMAT_NOTICE_TEXT        = 'printformer/format/notice_text';
@@ -450,5 +451,16 @@ class Config extends AbstractHelper
             self::XML_PATH_CONFIG_SHOW_DELETE_BUTTON,
             ScopeInterface::SCOPE_STORES
         ) == '1';
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeleteConfirmText()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_DELETE_CONFIRM_TEXT,
+            ScopeInterface::SCOPE_STORES
+        );
     }
 }
