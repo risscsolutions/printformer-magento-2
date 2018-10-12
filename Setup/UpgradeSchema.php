@@ -474,6 +474,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if(version_compare($context->getVersion(), '100.5.4', '<')) {
+            $customerTable = $setup->getTable('customer_entity');
+            $connection->addColumn(
+                $customerTable,
+                'printformer_identification',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 100,
+                    'comment' => 'Printformer User Identifier'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }

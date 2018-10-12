@@ -7,15 +7,13 @@ use GuzzleHttp\Client;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
-use Magento\Store\Model\ScopeInterface;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
-use Rissc\Printformer\Model\ResourceModel\Draft\Collection;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
-use Rissc\Printformer\Helper\Config;
+
 
 use DateTime;
 use DateInterval;
@@ -42,12 +40,6 @@ class Api
 
     /** @var DraftFactory */
     protected $_draftFactory;
-
-    /** @var string */
-    private $_clientApiKey = null;
-
-    /** @var string */
-    private $_clientIdentifier = null;
 
     /** @var Config */
     protected $_config;
@@ -93,24 +85,30 @@ class Api
             return null;
         }
 
-        $userIdentifier = $this->_customerSession->getPrintformerIdentification();
-        if(!$userIdentifier) {
-            if ($this->_customerSession->isLoggedIn()) {
-                $customer = $this->_customerSession->getCustomer();
-                $userIdentifier = $customer->getData('printformer_identification');
-                if (!$userIdentifier) {
-                    $userIdentifier = $this->createUser();
-                    $customer->setData('printformer_identification', $userIdentifier);
-                    $customer->getResource()->save($customer);
-                }
+        if ($this->_customerSession->isLoggedIn()) {
+            $customer = $this->_customerSession->getCustomer();
+            $customer->getResource()->load($customer, $customer->getId());
+            if (!$customer->getData('printformer_identification')) {
+                $customerUserIdentifier = $this->createUser();
+                $customer->setData('printformer_identification', $customerUserIdentifier);
+                $customer->getResource()->save($customer);
+                $this->_customerSession->setPrintformerIdentification($customerUserIdentifier);
             } else {
-                $userIdentifier = $this->createUser();
+                if ($customer->getData('printformer_identification') !=
+                    $this->_customerSession->getPrintformerIdentification()) {
+                    $this->_customerSession->setPrintformerIdentification(
+                        $customer->getData('printformer_identification')
+                    );
+                }
             }
-
-            $this->_customerSession->setPrintformerIdentification($userIdentifier);
+        } else {
+            if (!$this->_customerSession->getPrintformerIdentification()) {
+                $guestUserIdentifier = $this->createUser();
+                $this->_customerSession->setPrintformerIdentification($guestUserIdentifier);
+            }
         }
 
-        return $userIdentifier;
+        return $this->_customerSession->getPrintformerIdentification();
     }
 
     /**
