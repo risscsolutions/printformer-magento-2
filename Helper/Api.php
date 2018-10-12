@@ -98,6 +98,7 @@ class Api
                     WHERE
                         `entity_id` = " . $customer->getId() . ";
                 ");
+                $customer->setData('printformer_identification', $customerUserIdentifier);
                 $this->_customerSession->setPrintformerIdentification($customerUserIdentifier);
             } else {
                 if ($customer->getData('printformer_identification') !=
