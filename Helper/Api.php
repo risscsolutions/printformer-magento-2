@@ -100,8 +100,18 @@ class Api
                 $userIdentifier = $customer->getData('printformer_identification');
                 if (!$userIdentifier) {
                     $userIdentifier = $this->createUser();
+//                    $customer->setData('printformer_identification', $userIdentifier);
+//                    $customer->getResource()->save($customer);
+                    // Fix
+                    $connection = $customer->getResource()->getConnection();
+                    $connection->query("
+                    UPDATE " . $connection->getTableName('customer_entity') . "
+                    SET
+                        `printformer_identification` = '" . $userIdentifier . "'
+                    WHERE
+                        `entity_id` = " . $customer->getId() . ";
+                    ");
                     $customer->setData('printformer_identification', $userIdentifier);
-                    $customer->getResource()->save($customer);
                 }
             } else {
                 $userIdentifier = $this->createUser();
