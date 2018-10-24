@@ -168,6 +168,22 @@ class Api
     }
 
     /**
+     * @param $oldDraftId
+     * @return mixed
+     */
+    public function getReplicateDraft($oldDraftId)
+    {
+        $url = $this->apiUrl()->getReplicateDraft($oldDraftId);
+
+        $response = $this->_httpClient->get($url);
+        $response = json_decode($response->getBody(), true);
+
+        $newDraft = $response['data']['draftHash'];
+
+        return $newDraft;
+    }
+
+    /**
      * @param $draftHash
      *
      * @return mixed
@@ -237,7 +253,10 @@ class Api
             $dataParams = [
                 'intent' => $intent
             ];
-            $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+
+            if (!$draftHash) {
+                $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+            }
 
             $process->addData([
                 'draft_id' => $draftHash,

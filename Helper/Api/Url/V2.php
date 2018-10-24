@@ -19,6 +19,7 @@ class V2
 {
     const API_CREATE_USER               = '/api-ext/user';
     const API_CREATE_DRAFT              = '/api-ext/draft';
+    const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
     const API_GET_PRODUCTS              = '/api-ext/template';
@@ -47,8 +48,11 @@ class V2
     /**
      * V2 constructor.
      *
-     * @param Context               $context
+     * @param Context $context
      * @param StoreManagerInterface $storeManager
+     * @param Config $config
+     * @param CustomerSession $customerSession
+     * @param CatalogHelper $catalogHelper
      */
     public function __construct(
         Context $context,
@@ -140,6 +144,14 @@ class V2
         }
 
         return $draftUrl;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getReplicateDraft($oldDraft)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraft, self::API_REPLICATE_DRAFT);
     }
 
     /**
