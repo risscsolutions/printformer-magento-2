@@ -272,8 +272,8 @@ class Url
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraft($oldDraft)
+    public function getReplicateDraftId($oldDraftId)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraft($oldDraft);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
     }
 }

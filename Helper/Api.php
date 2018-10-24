@@ -13,8 +13,6 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
-
-
 use DateTime;
 use DateInterval;
 
@@ -168,19 +166,19 @@ class Api
     }
 
     /**
-     * @param $oldDraftId
-     * @return mixed
+     * @param string $oldDraftId
+     * @return string
      */
-    public function getReplicateDraft($oldDraftId)
+    public function getReplicateDraftId(string $oldDraftId) : string
     {
-        $url = $this->apiUrl()->getReplicateDraft($oldDraftId);
+        $url = $this->apiUrl()->getReplicateDraftId($oldDraftId);
 
         $response = $this->_httpClient->get($url);
-        $response = json_decode($response->getBody(), true);
+        $draftInfo = json_decode($response->getBody(), true);
 
-        $newDraft = $response['data']['draftHash'];
+        $draftHash = $draftInfo['data']['draftHash'];
 
-        return $newDraft;
+        return $draftHash;
     }
 
     /**

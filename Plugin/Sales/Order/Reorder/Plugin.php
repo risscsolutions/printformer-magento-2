@@ -54,22 +54,15 @@ class Plugin
 
         if ($this->_registry->registry('printformer_is_reorder')) {
             $this->_registry->unregister('printformer_is_reorder');
-
-            //olddraftid
             $oldDraftId = $buyRequest['printformer_draftid'];
-
-            //replicate get
-            $newDraftId = $this->_apiHelper->getReplicateDraft($oldDraftId);
-
-            //draft_has_relations holen
-            //select from catalog_product_printformer_product with printformer_process_id
+            $newDraftId = $this->_apiHelper->getReplicateDraftId($oldDraftId);
             $allRelations = [];
             $draftProcess = null;
-            foreach ($buyRequest['draft_hash_relations'] as $printformer_product_id => $draft_hash_relation) {
-                $sql = "SELECT * FROM {$tableName} WHERE printformer_product_id = {$printformer_product_id} AND product_id = {$product->getId()}";
-                $dbRowResults = $connection->fetchAll($sql);
 
-                $allRelations[$printformer_product_id] = $newDraftId;
+            foreach ($buyRequest['draft_hash_relations'] as $printformerProductId => $draftHashRelation) {
+                $sql = "SELECT * FROM {$tableName} WHERE printformer_product_id = {$printformerProductId} AND product_id = {$product->getId()}";
+                $dbRowResults = $connection->fetchAll($sql);
+                $allRelations[$printformerProductId] = $newDraftId;
 
                 foreach ($dbRowResults as $dbRowResult) {
                     $masterId = $dbRowResult['master_id'];
@@ -77,17 +70,14 @@ class Plugin
                     $intent = $dbRowResult['intent'];
                     $sessionUniqueId = $buyRequest['printformer_unique_session_id'];
                     $customerId = $this->_customerSession->getCustomerId();
-                    $printformerProductId = $dbRowResult['printformer_product_id'];
+                    $printformerProductIdDb = $dbRowResult['printformer_product_id'];
+                    $draftProcess = $this->_apiHelper->draftProcess($newDraftId, $masterId, $productId, $intent, $sessionUniqueId, $customerId, $printformerProductIdDb);
 
-                    //draftprocess() -> alle daten notwendig
-                    $draftProcess = $this->_apiHelper->draftProcess($newDraftId, $masterId, $productId, $intent, $sessionUniqueId, $customerId, $printformerProductId);
-
-                    $draftProcess->setData('copy_from', $draft_hash_relation);
+                    $draftProcess->setData('copy_from', $oldDraftId);
                     $this->_draftResource->save($draftProcess);
                 }
             }
 
-            //draftid durch replicate ersetzen => buyrequest abändern ['draft_hash_relations', 'draft_id']
             $buyRequest->setData('printformer_draftid', $newDraftId);
             $buyRequest->setData('draft_hash_relations', $allRelations);
         }
