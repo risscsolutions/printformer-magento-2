@@ -149,7 +149,7 @@ class V2
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraftId($oldDraftId)
+    public function getReplicateDraftId(string $oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::API_REPLICATE_DRAFT);
     }

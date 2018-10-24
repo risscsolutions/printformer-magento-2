@@ -154,5 +154,5 @@ interface VersionInterface
      * @param $oldDraftId
      * @return string
      */
-    public function getReplicateDraftId($oldDraftId);
+    public function getReplicateDraftId(string $oldDraftId);
 }
