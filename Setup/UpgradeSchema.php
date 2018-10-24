@@ -487,6 +487,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if(version_compare($context->getVersion(), '100.6.0', '<')) {
+            $printformerDraftTable = $setup->getTable(self::TABLE_NAME_DRAFT);
+            $connection->addColumn(
+                $printformerDraftTable,
+                'copy_from',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Printformer Draft Id Copy for Reorder'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }

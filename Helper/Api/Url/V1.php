@@ -27,6 +27,7 @@ class V1
     const URI_CUSTOMER_PDF_PROCESSING   = 'api-ext/pdf-processing';
     const URI_CUSTOMER_CREATE_DRAFT     = 'some/path/on/server';
     const URI_CUSTOMER_AUTH             = 'auth';
+    const URI_REPLICATE_DRAFT           = 'api-ext/draft/{draftId}/replicate';
 
     /** @var Config*/
     protected $config;
@@ -354,5 +355,13 @@ class V1
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
     {
         return '';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getReplicateDraftId(string $oldDraftId)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::URI_REPLICATE_DRAFT);
     }
 }

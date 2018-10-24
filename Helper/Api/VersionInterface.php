@@ -149,4 +149,10 @@ interface VersionInterface
      * @return string
      */
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null);
+
+    /**
+     * @param $oldDraftId
+     * @return string
+     */
+    public function getReplicateDraftId(string $oldDraftId);
 }
