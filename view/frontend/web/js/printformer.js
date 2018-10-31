@@ -411,7 +411,7 @@ define([
                     }
                     break;
                 case 2:
-                    if (draftIds.length < 1) {
+                    if (this.options.printformerProducts.length > 0 && draftIds.length < 1) {
                         this.addBtnDisable();
                     }
                     break;
