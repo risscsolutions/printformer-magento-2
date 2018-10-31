@@ -62,12 +62,15 @@ class PrintformerProduct
      */
     public function __construct(
         Product $productHelper,
+        //\Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProviderFactory $dataProvider,
         PrintformerProductDataProvider $dataProvider,
         UrlInterface $urlBuilder,
         RequestInterface $request,
         PrintformerConfigHelper $printformerConfigHelper,
         LocatorInterface $locator
     ) {
+        //$dataProvider = $dataProvider->create(['name'=>'printformer_product_listing_data_source','primaryFieldName'=>'id','requestFieldName'=>'id']);
+        $this->dataProvider = $dataProvider;
         $this->productHelper = $productHelper;
         $this->dataProvider = $dataProvider;
         $this->urlBuilder = $urlBuilder;
@@ -238,6 +241,9 @@ class PrintformerProduct
                     'config' => [
                         'componentType' => Modal::NAME,
                         'dataScope' => '',
+                        'component' => 'Rissc_Printformer/component/addprintformerdlg',
+                        //,['store_id' => $this->getCurrentStoreId()]
+                        'syncUrl'     => $this->urlBuilder->getUrl('printformer/product/sync'),
                         'options' => [
                             'title' => $title,
                             'buttons' => [
@@ -245,6 +251,12 @@ class PrintformerProduct
                                     'text' => __('Cancel'),
                                     'actions' => [
                                         'closeModal'
+                                    ]
+                                ],
+                                [
+                                    'text' => __('Synchronize templates'),
+                                    'actions' => [
+                                        'synchronizeTemplates'
                                     ]
                                 ],
                                 [
