@@ -13,6 +13,7 @@ class Add
     /**
      * @param SubjectAdd $subject
      * @param \Magento\Framework\Controller\Result\Redirect | \Magento\Framework\App\Response\Http $result
+     *
      * @return \Magento\Framework\Controller\Result\Redirect
      */
     public function afterExecute(SubjectAdd $subject, $result)
@@ -36,9 +37,12 @@ class Add
 
         /** @var JsonHelper $jsonHelper */
         $jsonHelper = $objm->get(JsonHelper::class);
-        $content = $result->getContent();
-        if (!empty($content)) {
-            $content = $jsonHelper->jsonDecode($content);
+        $content = [];
+        if ($result != null && is_string($result->getContent())) {
+            $contentString = $result->getContent();
+            if (!empty($contentString)) {
+                $content = $jsonHelper->jsonDecode($contentString);
+            }
         }
         $resultArray = is_array($content) ? $content : [];
         if ($product && $product->getId()) {
