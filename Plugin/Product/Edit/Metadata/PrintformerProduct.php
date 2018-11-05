@@ -62,14 +62,12 @@ class PrintformerProduct
      */
     public function __construct(
         Product $productHelper,
-        //\Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProviderFactory $dataProvider,
         PrintformerProductDataProvider $dataProvider,
         UrlInterface $urlBuilder,
         RequestInterface $request,
         PrintformerConfigHelper $printformerConfigHelper,
         LocatorInterface $locator
     ) {
-        //$dataProvider = $dataProvider->create(['name'=>'printformer_product_listing_data_source','primaryFieldName'=>'id','requestFieldName'=>'id']);
         $this->dataProvider = $dataProvider;
         $this->productHelper = $productHelper;
         $this->dataProvider = $dataProvider;
