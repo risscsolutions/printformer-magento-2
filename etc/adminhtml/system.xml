@@ -125,7 +125,7 @@
             </group>
             <group id="version2group" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>API Version 2</label>
-                <field id="version2" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="version2" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Version 2</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
