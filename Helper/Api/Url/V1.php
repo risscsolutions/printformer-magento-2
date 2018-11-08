@@ -339,4 +339,14 @@ class V1
     {
         return '';
     }
+
+    /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivat($fileId)
+    {
+        // TODO: Implement getDerivat() method.
+    }
 }
