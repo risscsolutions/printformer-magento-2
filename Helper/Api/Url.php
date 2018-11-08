@@ -188,6 +188,14 @@ class Url
     /**
      * {@inheritdoc}
      */
+    public function getDerivat($fileId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDerivat($fileId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getProducts()
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getProducts();

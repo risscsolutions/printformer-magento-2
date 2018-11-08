@@ -377,14 +377,14 @@ class Api
         switch($stringStatus) {
             case 'processed':
                 return 1;
-            break;
+                break;
             case 'failed':
                 return 0;
-            break;
+                break;
             case 'pending':
             case 'in-process':
                 return 2;
-            break;
+                break;
         }
 
         return -1;
@@ -461,6 +461,31 @@ class Api
     }
 
     /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivateLink($fileId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $derivateDownloadLink = $this->apiUrl()->getDerivat($fileId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $derivateDownloadLink . '?' . http_build_query($postFields);
+    }
+
+    /**
      * @param string $userIdentifier
      * @param array  $drafts
      * @param bool   $dryRun
@@ -478,7 +503,7 @@ class Api
         ];
 
         return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() .
-                '/api-ext/draft/claim', $postFields)->getBody());
+            '/api-ext/draft/claim', $postFields)->getBody());
     }
 
     /**
@@ -496,6 +521,6 @@ class Api
         ];
 
         return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() . 'api-ext/user/' .
-                $userIdentifierOne . '/merge', $postFields)->getBody());
+            $userIdentifierOne . '/merge', $postFields)->getBody());
     }
 }

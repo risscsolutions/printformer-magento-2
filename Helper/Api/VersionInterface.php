@@ -133,4 +133,11 @@ interface VersionInterface
      * @return string
      */
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null);
+
+    /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivat($fileId);
 }
