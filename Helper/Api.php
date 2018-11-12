@@ -1,6 +1,7 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use GuzzleHttp\Exception\ServerException;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use GuzzleHttp\Client;
@@ -418,6 +419,15 @@ class Api
      */
     public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
+        $httpClient = new Client([
+            'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
+            'headers' => [
+                'Accept' => 'application/json'
+            ]
+        ]);
+
+        $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash);
+
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier())
@@ -428,18 +438,19 @@ class Api
             ->sign(new Sha256(), $this->_config->getClientApiKey())
             ->getToken();
 
-        $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash);
-
         $postFields = [
-            'json' => [
-                'jwt' => $JWT,
-                'width' => $width,
-                'height' => $height,
-                'page' => $page
-            ]
+            'jwt' => $JWT,
+            'width' => $width,
+            'height' => $height,
+            'page' => $page
         ];
 
-        $response = $this->_httpClient->get($thumbnailUrl, $postFields);
+        try {
+            $response = $httpClient->get($thumbnailUrl . '?' . http_build_query($postFields));
+        } catch(ServerException $e) {
+            throw $e;
+        }
+
 
         /** @var Psr7Stream $stream */
         $stream = $response->getBody();

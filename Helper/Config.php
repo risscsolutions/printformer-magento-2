@@ -28,7 +28,10 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_EDIT_TEXT                 = 'printformer/general/cart_edit_text';
     const XML_PATH_CONFIG_IMAGE_PREVIEW             = 'printformer/general/product_image_preview';
     const XML_PATH_CONFIG_IMAGE_PREVIEW_WIDTH       = 'printformer/general/product_image_preview_width';
-    const XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT      = 'printformer/general/product_image/preview_height';
+    const XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT      = 'printformer/general/product_image_preview_height';
+
+    const XML_PATH_CONFIG_IMAGE_THUMB_WIDTH         = 'printformer/general/product_image_thumbnail_width';
+    const XML_PATH_CONFIG_IMAGE_THUMB_HEIGHT        = 'printformer/general/product_image_thumbnail_height';
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
@@ -222,6 +225,22 @@ class Config extends AbstractHelper
     public function getImagePreviewHeight()
     {
         return (int)$this->scopeConfig->getValue(self::XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return int
+     */
+    public function getImageThumbnailWidth()
+    {
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_CONFIG_IMAGE_THUMB_WIDTH, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return int
+     */
+    public function getImageThumbnailHeight()
+    {
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_CONFIG_IMAGE_THUMB_HEIGHT, ScopeInterface::SCOPE_STORE, $this->getStoreId());
     }
 
     /**

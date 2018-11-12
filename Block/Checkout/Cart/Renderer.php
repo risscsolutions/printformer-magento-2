@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Block\Checkout\Cart;
 
+use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Catalog\Helper\Product\Configuration;
 use Magento\Checkout\Model\Session;
@@ -93,6 +94,10 @@ class Renderer extends ItemRenderer
         $draftId = $this->getItem()->getPrintformerDraftid();
         if ($draftId && $this->configHelper->isUseImagePreview()) {
             if($this->configHelper->isV2Enabled()) {
+                $draftId = explode(',', $draftId)[0];
+                if (!file_exists($this->mediaHelper->getImageFilePath($draftId))) {
+                    $this->mediaHelper->createThumbnail($draftId);
+                }
                 $result->setImageUrl($this->mediaHelper->getImageUrl($draftId));
             } else {
                 $result->setImageUrl($this->apiUrlHelper->getThumbnail($draftId));

@@ -19,6 +19,12 @@ class Media extends AbstractHelper
      */
     protected $storeManager;
 
+    /** @var Api */
+    protected $_apiHelper;
+
+    /** @var Config */
+    protected $_config;
+
     /**
      * @var string
      */
@@ -43,10 +49,15 @@ class Media extends AbstractHelper
     public function __construct(
         Context $context,
         Filesystem $filesystem,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        Api $apiHelper,
+        Config $config
     ) {
         $this->filesystem = $filesystem;
         $this->storeManager = $storeManager;
+        $this->_apiHelper = $apiHelper;
+        $this->_config = $config;
+
         parent::__construct($context);
     }
 
@@ -99,10 +110,50 @@ class Media extends AbstractHelper
     /**
      * @param string $draftId
      * @param int $page
+     *
      * @return string
+     *
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function getImageUrl($draftId, $page = 1)
     {
         return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB) . sprintf($this->imageUrlPath, $draftId, $page);
+    }
+
+    /**
+     * @param string $draftId
+     * @param int $page
+     *
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function createThumbnail(string $draftId, $page = 1)
+    {
+        $jpgImg = $this->_apiHelper->getThumbnail(
+            $draftId,
+            $this->_apiHelper->getUserIdentifier(),
+            $this->_config->getImageThumbnailWidth(),
+            $this->_config->getImageThumbnailHeight(),
+            $page
+        );
+
+        $printformerImage = $jpgImg['content'];
+
+        $imageFilePath = $this->getImageFilePath($draftId, $page);
+
+        $image = imagecreatefromstring($printformerImage);
+
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        $out = imagecreatetruecolor($width, $height);
+        imagealphablending($out,false);
+        $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
+        imagefill($out, 0, 0, $transparentindex);
+        imagesavealpha($out, true);
+
+        imagecopyresampled($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
+        imagepng($out, $imageFilePath, 7);
+
+        imagedestroy($image);
     }
 }
