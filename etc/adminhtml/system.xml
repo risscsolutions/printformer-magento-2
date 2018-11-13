@@ -148,7 +148,7 @@
                     <depends>
                         <field id="version2">1</field>
                     </depends>
-                    <validate>validate-url validate-clean-url</validate>
+                    <validate>validate-url</validate>
                 </field>
                 <field id="v2apiKey" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Key</label>

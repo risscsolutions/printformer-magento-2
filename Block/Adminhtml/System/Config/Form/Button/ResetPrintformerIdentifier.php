@@ -2,7 +2,6 @@
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
 
 use Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
-use function Symfony\Component\Debug\Tests\testHeader;
 
 class ResetPrintformerIdentifier extends Button
 {
