@@ -79,13 +79,13 @@
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
-                <field id="product_image_thumbnail_width" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="product_image_thumbnail_width" translate="label" type="text" sortOrder="135" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Thumbnail image width</label>
                     <depends>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
-                <field id="product_image_thumbnail_height" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="product_image_thumbnail_height" translate="label" type="text" sortOrder="136" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Thumbnail image height</label>
                     <depends>
                         <field id="product_image_preview">1</field>

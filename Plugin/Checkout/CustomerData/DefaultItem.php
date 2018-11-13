@@ -53,9 +53,12 @@ class DefaultItem
         $draftId = $item->getPrintformerDraftid();
         if ($draftId && $this->configHelper->isUseImagePreview()) {
             if($this->configHelper->isV2Enabled()) {
-                $result['product_image']['src'] = $this->mediaHelper->getImageUrl($item->getPrintformerDraftid());
+                if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
+                    $this->mediaHelper->createThumbnail($draftId);
+                }
+                $result['product_image']['src'] = $this->mediaHelper->getImageUrl($draftId, 1, true);
             } else {
-                $result['product_image']['src'] = $this->urlHelper->getThumbnail($item->getPrintformerDraftid());
+                $result['product_image']['src'] = $this->urlHelper->getThumbnail($draftId);
             }
         }
         return $result;

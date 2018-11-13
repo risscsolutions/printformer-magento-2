@@ -387,6 +387,12 @@ define([
             var draftIds = [];
             $.each(this.options.printformerProducts, function (index, printformerProduct) {
                 if (printformerProduct['draft_id']) {
+                    for (var idx = 0; idx < draftIds.length; idx++) {
+                        if (draftIds[idx] == printformerProduct['draft_id']) {
+                            return true;
+                        }
+                    }
+
                     draftIds.push(printformerProduct['draft_id']);
                 }
             });
