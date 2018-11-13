@@ -1,0 +1,52 @@
+<?php
+// @codingStandardsIgnoreFile
+?>
+<?php
+/**
+ * @var $block \Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\ResetPrintformerIdentifier
+ */
+?>
+<script type="text/javascript">
+    require(['jquery', 'Magento_Ui/js/modal/confirm'], function ($, confirm) {
+        $('#confirmation').on("click", function (event) {
+            confirm({
+                content: "<?= __('Are you sure you want to delete the printformer identifiers ?')?>",
+                actions: {
+                    confirm: function () {
+                        var messageDiv = $('#printformer_reset_identifier_result');
+                        new Ajax.Request('<?php /* @escapeNotVerified */ echo $block->getAjaxUrl() ?>', {
+                            onSuccess: function (response) {
+                                var result = '<?php /* @escapeNotVerified */ echo __('Error') ?>';
+                                try {
+                                    if (response.responseText.isJSON()) {
+                                        response = response.responseText.evalJSON();
+                                        result = response.message;
+                                    }
+                                    if (response.success) {
+                                        messageDiv.removeClass('hidden').addClass('success')
+                                    } else {
+                                        messageDiv.removeClass('hidden').addClass('error')
+                                    }
+                                } catch (e) {
+                                    messageDiv.removeClass('hidden').addClass('error')
+                                }
+                                messageDiv.html(result);
+                            }
+                        });
+                    },
+                    cancel: function (event) {
+                        return false;
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+<div class="actions">
+    <button class="action-printformer-reset-identifier" type="button" id="confirmation">
+        <span><?php echo $block->escapeHtml($block->getButtonLabel()) ?></span>
+    </button>
+    <div id="printformer_reset_identifier_result" class="message-validation hidden"></div>
+</div>
+

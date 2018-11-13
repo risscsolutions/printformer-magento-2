@@ -136,16 +136,27 @@
                     <depends>
                         <field id="version2">1</field>
                     </depends>
+                    <validate>validate-url</validate>
                 </field>
                 <field id="v2apiKey" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Key</label>
                     <depends>
                         <field id="version2">1</field>
                     </depends>
+                    <validate>validate-length minimum-length-32 maximum-length-32</validate>
                 </field>
                 <field id="v2identifier" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Identifier</label>
                     <depends>
+                        <field id="version2">1</field>
+                    </depends>
+                    <validate>validate-length minimum-length-8 maximum-length-8</validate>
+                </field>
+                <field id="reset_printformer_identifier_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <button_label>Reset Printformer Identifier</button_label>
+                    <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\ResetPrintformerIdentifier</frontend_model>
+                    <depends>
+                        <field id="enabled">1</field>
                         <field id="version2">1</field>
                     </depends>
                 </field>
