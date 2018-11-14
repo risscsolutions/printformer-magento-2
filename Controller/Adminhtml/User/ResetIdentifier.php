@@ -26,7 +26,9 @@ class ResetIdentifier extends Action
      */
     protected $_scopeConfig;
 
-    /** @var PrintformerIdentifier */
+    /**
+     * @var PrintformerIdentifier
+     */
     protected $_gateway;
 
     /**
@@ -71,7 +73,7 @@ class ResetIdentifier extends Action
             }
 
             if ($storeId != "0") {
-                if ($this->_gateway->deletePrintformerIdentificationByStorId($storeId)) {
+                if ($this->_gateway->deletePrintformerIdentificationByStoreId($storeId)) {
                     $response = ['success' => true, 'message' => __('Printformer Identifiers have been removed for Store with ID %1', $storeId)];
                 } else {
                     $response = ['success' => false, 'message' => __('Can\'t reset printformer_identification for %1.', $storeId)];
