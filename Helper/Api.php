@@ -568,4 +568,29 @@ class Api
 
         return false;
     }
+
+    /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivateLink($fileId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $derivateDownloadLink = $this->apiUrl()->getDerivat($fileId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $derivateDownloadLink . '?' . http_build_query($postFields);
+    }
 }

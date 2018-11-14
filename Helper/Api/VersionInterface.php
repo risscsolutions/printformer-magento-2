@@ -155,4 +155,11 @@ interface VersionInterface
      * @return string
      */
     public function getReplicateDraftId(string $oldDraftId);
+
+    /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivat($fileId);
 }

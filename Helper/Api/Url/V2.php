@@ -27,6 +27,7 @@ class V2
     const API_FILES_DRAFT_PNG           = '/api-ext/files/draft/{draftId}/image';
     const API_FILES_DRAFT_PDF           = '/api-ext/files/draft/{draftId}/print';
     const API_FILES_DRAFT_PREVIEW       = '/api-ext/files/draft/{draftId}/low-res';
+    const API_FILES_DERIVATE_FILE       = '/api-ext/files/derivative/{fileId}/file';
 
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
@@ -382,5 +383,13 @@ class V2
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
     {
         return '';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDerivat($fileId) {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{fileId}', $fileId, self::API_FILES_DERIVATE_FILE);
     }
 }
