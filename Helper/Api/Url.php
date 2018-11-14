@@ -276,4 +276,12 @@ class Url
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDerivat($fileId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDerivat($fileId);
+    }
 }

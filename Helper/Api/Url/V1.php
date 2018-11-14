@@ -364,4 +364,14 @@ class V1
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::URI_REPLICATE_DRAFT);
     }
+
+    /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivat($fileId)
+    {
+        // TODO: Implement getDerivat() method.
+    }
 }

@@ -103,16 +103,16 @@ class Product
             switch($row['attribute_code']) {
                 case self::PF_ATTRIBUTE_ENABLED:
                     $this->attributePfEnabled = $row['attribute_id'];
-                break;
+                    break;
                 case self::PF_ATTRIBUTE_PRODUCT:
                     $this->attributePfProduct = $row['attribute_id'];
-                break;
+                    break;
                 case self::PF_ATTRIBUTE_UPLOAD_ENABLED:
                     $this->attributePfUploadEnabled = $row['attribute_id'];
-                break;
+                    break;
                 case self::PF_ATTRIBUTE_UPLOAD_PRODUCT:
                     $this->attributePfUploadProduct = $row['attribute_id'];
-                break;
+                    break;
             }
         }
     }
@@ -216,31 +216,14 @@ class Product
 
                 if (!$resultProduct) {
                     /** @var PrintformerProduct $pfProduct */
-                    $pfProduct = $this->printformerProductFactory->create();
-                    $pfProduct->setStoreId($storeId)
-                        ->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
-                        ->setName($responseRealigned[$masterID]['name'])
-                        ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
-                        ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
-                        ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
-                        ->setMasterId($this->configHelper->isV2Enabled($storeId) ? $responseRealigned[$masterID]['id'] :
-                            $responseRealigned[$masterID]['rissc_w2p_master_id'])
-                        ->setMd5($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['rissc_w2p_md5'])
-                        ->setIntent($intent)
-                        ->setCreatedAt(time())
-                        ->setUpdatedAt(time());
+                    $pfProduct = $this->addPrintformerProduct($responseRealigned[$masterID], $intent, $storeId);
                     $pfProduct->getResource()->save($pfProduct);
                 } else {
                     /** @var PrintformerProduct $pfProduct */
                     $pfProduct = $this->printformerProductFactory->create();
                     $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
-                    $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['sku'])
-                        ->setName($responseRealigned[$masterID]['name'])
-                        ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['description'])
-                        ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $responseRealigned[$masterID]['short_description'])
-                        ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $responseRealigned[$masterID]['status'])
-                        ->setIntent($intent)
-                        ->setUpdatedAt(time());
+
+                    $pfProduct = $this->updatePrintformerProduct($pfProduct, $responseRealigned[$masterID], $intent, $storeId);
 
                     $pfProduct->getResource()->save($pfProduct);
                     $updateMasterIds[$pfProduct->getId()] = ['id' => $pfProduct->getMasterId(), 'intent' => $intent];
@@ -325,5 +308,54 @@ class Product
         }
 
         return $rowsToUpdate == 0;
+    }
+
+    /**
+     * @param array $data
+     * @param string $intent
+     * @param int $storeId
+     *
+     * @return PrintformerProduct
+     */
+    public function addPrintformerProduct(array $data, string $intent, int $storeId)
+    {
+        /** @var PrintformerProduct $pfProduct */
+        $pfProduct = $this->printformerProductFactory->create();
+        $pfProduct->setStoreId($storeId)
+            ->setSku($this->configHelper->isV2Enabled($storeId) ? null : $data['sku'])
+            ->setName($data['name'])
+            ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['description'])
+            ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
+            ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
+            ->setMasterId($this->configHelper->isV2Enabled($storeId) ? $data['id'] : $data['rissc_w2p_master_id'])
+            ->setMd5($this->configHelper->isV2Enabled($storeId) ? null : $data['rissc_w2p_md5'])
+            ->setIntent($intent)
+            ->setCreatedAt(time())
+            ->setUpdatedAt(time());
+
+        return $pfProduct;
+    }
+
+    /**
+     * @param PrintformerProduct $pfProduct
+     * @param array $data
+     * @param string $intent
+     * @param int $storeId
+     *
+     * @return PrintformerProduct
+     *
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
+    public function updatePrintformerProduct(PrintformerProduct $pfProduct, array $data, string $intent, int $storeId)
+    {
+        $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $data['sku'])
+            ->setName($data['name'])
+            ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['description'])
+            ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
+            ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
+            ->setIntent($intent)
+            ->setUpdatedAt(time());
+
+        return $pfProduct;
     }
 }

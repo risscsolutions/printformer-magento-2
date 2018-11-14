@@ -23,6 +23,9 @@ class Plugin
     /** @var DraftResource */
     protected $_draftResource;
 
+    /** @var array  */
+    private $allRlations = [];
+
     public function __construct(
         Api $apiHelper,
         Registry $registry,
@@ -43,6 +46,10 @@ class Plugin
      */
     public function aroundAddOrderItem(Cart $subject, \Closure $originalAddOrderItem, $item)
     {
+        if ($this->_registry->registry('printformer_is_reorder')) {
+            $this->_registry->unregister('printformer_is_reorder');
+        }
+
         $this->_registry->register('printformer_is_reorder', true);
 
         return $originalAddOrderItem($item);
@@ -62,13 +69,12 @@ class Plugin
             $this->_registry->unregister('printformer_is_reorder');
             $oldDraftId = $buyRequest['printformer_draftid'];
             $newDraftId = $this->_apiHelper->getReplicateDraftId($oldDraftId);
-            $allRelations = [];
             $draftProcess = null;
 
             $this->createDraftProcess($buyRequest, $product, $oldDraftId, $newDraftId);
 
             $buyRequest->setData('printformer_draftid', $newDraftId);
-            $buyRequest->setData('draft_hash_relations', $allRelations);
+            $buyRequest->setData('draft_hash_relations', $this->getAllRealtions());
         }
 
         return $originalAddProduct($product, $buyRequest);
@@ -104,5 +110,23 @@ class Plugin
                 $this->_draftResource->save($draftProcess);
             }
         }
+
+        $this->setAllRealtions($allRelations);
+    }
+
+    /**
+     * @param $allRealtions
+     */
+    public function setAllRealtions($allRealtions)
+    {
+        $this->allRlations = $allRealtions;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllRealtions()
+    {
+        return $this->allRlations;
     }
 }

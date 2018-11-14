@@ -11,6 +11,8 @@
                 <processing_type>sync</processing_type>
                 <product_image_preview_width>1000</product_image_preview_width>
                 <product_image_preview_height>1000</product_image_preview_height>
+                <product_image_thumbnail_width>150</product_image_thumbnail_width>
+                <product_image_thumbnail_height>150</product_image_thumbnail_height>
                 <order_status>pending</order_status>
                 <delete_confirm_text><![CDATA[Should the draft get deleted?]]></delete_confirm_text>
             </general>
