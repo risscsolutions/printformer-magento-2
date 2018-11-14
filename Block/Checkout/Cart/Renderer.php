@@ -95,7 +95,7 @@ class Renderer extends ItemRenderer
         if ($draftId && $this->configHelper->isUseImagePreview()) {
             if($this->configHelper->isV2Enabled()) {
                 $draftId = explode(',', $draftId)[0];
-                if (!file_exists($this->mediaHelper->getImageFilePath($draftId))) {
+                if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
                     $this->mediaHelper->createThumbnail($draftId);
                 }
                 $result->setImageUrl($this->mediaHelper->getImageUrl($draftId));

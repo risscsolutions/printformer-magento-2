@@ -9,14 +9,12 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Media extends AbstractHelper
 {
-    /**
-     * @var Filesystem
-     */
+    const IMAGE_PATH = 'printformer/{type}/%s_%d.png';
+
+    /** @var Filesystem */
     protected $filesystem;
 
-    /**
-     * @var StoreManagerInterface
-     */
+    /** @var StoreManagerInterface */
     protected $storeManager;
 
     /** @var Api */
@@ -24,21 +22,6 @@ class Media extends AbstractHelper
 
     /** @var Config */
     protected $_config;
-
-    /**
-     * @var string
-     */
-    protected $imagePath = 'printformer/preview/%s_%d.png';
-
-    /**
-     * @var string
-     */
-    protected $imageUrlPath = 'pub/media/printformer/preview/%s_%d.png';
-
-    /**
-     * @var string
-     */
-    protected $imageFolder = 'printformer/preview';
 
     /**
      * Media constructor.
@@ -67,11 +50,13 @@ class Media extends AbstractHelper
      * @return string
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function getImageFilePath($draftId, $page = 1)
+    public function getImageFilePath($draftId, $page = 1, $isThumbnail = false)
     {
+        $imagePath = $this->getImagePath($isThumbnail, $isThumbnail = false);
+
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-        $mediaDir->create($this->imageFolder);
-        return $mediaDir->getAbsolutePath(sprintf($this->imagePath, $draftId, $page));
+        $mediaDir->create($imagePath);
+        return $mediaDir->getAbsolutePath(sprintf($imagePath, $draftId, $page));
     }
 
     /**
@@ -80,10 +65,12 @@ class Media extends AbstractHelper
      * @return bool
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function deleteImage($draftId, $page = 1)
+    public function deleteImage($draftId, $page = 1, $isThumbnail = false)
     {
+        $imagePath = $this->getImagePath($isThumbnail);
+
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-        $draftImagePath = sprintf($this->imagePath, $draftId, $page);
+        $draftImagePath = sprintf($imagePath, $draftId, $page);
         if($mediaDir->isExist($draftImagePath)) {
             $mediaDir->delete($draftImagePath);
             return true;
@@ -97,12 +84,12 @@ class Media extends AbstractHelper
      * @param string $draftId
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function deleteAllImages($draftId)
+    public function deleteAllImages($draftId, $isThumbnail = false)
     {
         $run = true;
         $page = 1;
         while($run) {
-            $run = $this->deleteImage($draftId, $page);
+            $run = $this->deleteImage($draftId, $page, $isThumbnail);
             $page++;
         }
     }
@@ -115,9 +102,16 @@ class Media extends AbstractHelper
      *
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getImageUrl($draftId, $page = 1)
+    public function getImageUrl($draftId, $page = 1, $isThumbnail = false)
     {
-        return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB) . sprintf($this->imageUrlPath, $draftId, $page);
+        $imagePath = $this->getImagePath($isThumbnail);
+
+        return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . sprintf($imagePath, $draftId, $page);
+    }
+
+    public function getImagePath($isThumbnail = false)
+    {
+        return str_replace('{type}', ($isThumbnail ? 'thumbs' : 'preview'), self::IMAGE_PATH);
     }
 
     /**
@@ -138,7 +132,7 @@ class Media extends AbstractHelper
 
         $printformerImage = $jpgImg['content'];
 
-        $imageFilePath = $this->getImageFilePath($draftId, $page);
+        $imageFilePath = $this->getImageFilePath($draftId, $page, true);
 
         $image = imagecreatefromstring($printformerImage);
 
