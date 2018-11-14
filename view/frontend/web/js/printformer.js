@@ -388,7 +388,7 @@ define([
             $.each(this.options.printformerProducts, function (index, printformerProduct) {
                 if (printformerProduct['draft_id']) {
                     for (var idx = 0; idx < draftIds.length; idx++) {
-                        if (draftIds[idx] == printformerProduct['draft_id']) {
+                        if (draftIds[idx] === printformerProduct['draft_id']) {
                             return true;
                         }
                     }
@@ -409,22 +409,28 @@ define([
                 }
             }
 
-            var canSkipConfig = this.options.allowSkipConfig;
-            switch (canSkipConfig) {
+            if (!this.allDraftsDone(draftIds, this.options.printformerProducts)) {
+                this.addBtnDisable();
+            }
+        },
+
+        allDraftsDone: function(draftIds, allDrafts) {
+            switch (this.options.allowSkipConfig) {
                 case 0:
-                    if (draftIds.length < this.options.printformerProducts.length) {
-                        this.addBtnDisable();
+                    if (draftIds.length < allDrafts.length) {
+                        return false;
                     }
                     break;
                 case 2:
-                    if (this.options.printformerProducts.length > 0 && draftIds.length < 1) {
-                        this.addBtnDisable();
+                    if (allDrafts.length > 0 && draftIds.length < 1) {
+                        return false;
                     }
                     break;
-                case 1:
                 default:
-                    break;
+                    return true;
             }
+
+            return true;
         },
 
         addBtnEnable: function () {

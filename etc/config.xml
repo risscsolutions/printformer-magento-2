@@ -15,6 +15,7 @@
                 <product_image_thumbnail_height>150</product_image_thumbnail_height>
                 <order_status>pending</order_status>
                 <delete_confirm_text><![CDATA[Should the draft get deleted?]]></delete_confirm_text>
+                <redirect_on_cancel>1</redirect_on_cancel>
             </general>
             <format>
                 <notice_text>Format change will reset your cofiguration progress.</notice_text>
