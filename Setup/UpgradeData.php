@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Setup;
 
+use Magento\Customer\Model\Customer;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\UpgradeDataInterface;
@@ -271,6 +272,11 @@ class UpgradeData implements UpgradeDataInterface
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_enabled');
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_product');
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
+        }
+
+        if(version_compare($context->getVersion(), '100.6.9', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->updateAttribute(Customer::ENTITY, 'printformer_identification', 'is_visible', false);
         }
 
         $setup->endSetup();
