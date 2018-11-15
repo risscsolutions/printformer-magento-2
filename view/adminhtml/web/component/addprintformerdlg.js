@@ -2,9 +2,10 @@
 define([
     'jquery',
     'Magento_Ui/js/modal/modal-component',
+    'uiRegistry',
     'mage/translate',
     'Magento_Ui/js/modal/alert'
-], function ($, modal, $t,alert) {
+], function ($, modal, registry, $t,alert) {
     'use strict';
 
     return modal.extend({
@@ -29,9 +30,11 @@ define([
                     });
                 }
                 if (response.success == 'true') {
-
+                    var listing = registry.get("product_form.product_form.printformer_products.modal.printformer_product_listing");
+                    listing.reload();
                 }
             });
+
         }
     });
 });
