@@ -274,7 +274,7 @@ class UpgradeData implements UpgradeDataInterface
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
         }
 
-        if(version_compare($context->getVersion(), '100.6.9', '<')) {
+        if(version_compare($context->getVersion(), '100.6.11', '<')) {
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
             $eavSetup->updateAttribute(Customer::ENTITY, 'printformer_identification', 'is_visible', false);
         }
