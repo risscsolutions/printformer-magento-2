@@ -150,4 +150,41 @@ class Media extends AbstractHelper
 
         imagedestroy($image);
     }
+
+    /**
+     * @param string $draftId
+     * @param int $page
+     *
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function createPreview(string $draftId, $page = 1)
+    {
+        $jpgImg = $this->_apiHelper->getThumbnail(
+            $draftId,
+            $this->_apiHelper->getUserIdentifier(),
+            $this->_config->getImagePreviewWidth(),
+            $this->_config->getImagePreviewHeight(),
+            $page
+        );
+
+        $printformerImage = $jpgImg['content'];
+
+        $imageFilePath = $this->getImageFilePath($draftId, $page);
+
+        $image = imagecreatefromstring($printformerImage);
+
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        $out = imagecreatetruecolor($width, $height);
+        imagealphablending($out,false);
+        $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
+        imagefill($out, 0, 0, $transparentindex);
+        imagesavealpha($out, true);
+
+        imagecopyresampled($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
+        imagepng($out, $imageFilePath, 7);
+
+        imagedestroy($image);
+    }
 }
