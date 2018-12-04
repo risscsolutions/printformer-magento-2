@@ -139,4 +139,11 @@ interface VersionInterface
      * @return string
      */
     public function getReplicateDraft($oldDraft);
+
+    /**
+     * @param $fileId
+     *
+     * @return string
+     */
+    public function getDerivat($fileId);
 }
