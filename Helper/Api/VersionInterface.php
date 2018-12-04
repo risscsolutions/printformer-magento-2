@@ -135,9 +135,8 @@ interface VersionInterface
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null);
 
     /**
-     * @param $fileId
-     *
+     * @param $oldDraft
      * @return string
      */
-    public function getDerivat($fileId);
+    public function getReplicateDraft($oldDraft);
 }

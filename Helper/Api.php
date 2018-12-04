@@ -173,6 +173,22 @@ class Api
     }
 
     /**
+     * @param $oldDraftId
+     * @return mixed
+     */
+    public function getReplicateDraft($oldDraftId)
+    {
+        $url = $this->apiUrl()->getReplicateDraft($oldDraftId);
+
+        $response = $this->_httpClient->get($url);
+        $response = json_decode($response->getBody(), true);
+
+        $newDraft = $response['data']['draftHash'];
+
+        return $newDraft;
+    }
+
+    /**
      * @param $draftHash
      *
      * @return mixed
@@ -216,14 +232,14 @@ class Api
 
     /**
      * @param string $draftHash
-     * @param int    $masterId
-     * @param int    $productId
+     * @param int $masterId
+     * @param int $productId
      * @param string $intent
      * @param string $sessionUniqueId
-     * @param int    $customerId
+     * @param int $customerId
      *
      * @return Draft
-     * @throws \Exception
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     public function draftProcess(
         $draftHash = null,
@@ -241,7 +257,10 @@ class Api
             $dataParams = [
                 'intent' => $intent
             ];
-            $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+
+            if (!$draftHash && $masterId !== null) {
+                $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+            }
 
             $process->addData([
                 'draft_id' => $draftHash,
@@ -261,12 +280,11 @@ class Api
 
     /**
      * @param string $draftHash
-     * @param int    $productId
+     * @param int $productId
      * @param string $intent
      * @param string $sessionUniqueId
      *
      * @return \Magento\Framework\DataObject|Draft
-     * @throws \Exception
      */
     protected function getDraftProcess(
         $draftHash = null,
@@ -288,6 +306,9 @@ class Api
             $draftCollection->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId]);
             $draftCollection->addFieldToFilter('product_id', ['eq' => $productId]);
         }
+//        if($printformerProductId !== null) {
+//            $draftCollection->addFieldToFilter('printformer_product_id', ['eq' => $printformerProductId]);
+//        }
         if ($draftCollection->count() == 1) {
             $process = $draftCollection->getFirstItem();
             if ($process->getId() && $process->getDraftId()) {
@@ -458,31 +479,6 @@ class Api
         ];
 
         return $pdfUrl . '?' . http_build_query($postFields);
-    }
-
-    /**
-     * @param $fileId
-     *
-     * @return string
-     */
-    public function getDerivateLink($fileId)
-    {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
-            ->getToken();
-
-        $derivateDownloadLink = $this->apiUrl()->getDerivat($fileId);
-
-        $postFields = [
-            'jwt' => $JWT
-        ];
-
-        return $derivateDownloadLink . '?' . http_build_query($postFields);
     }
 
     /**

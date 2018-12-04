@@ -27,6 +27,7 @@ class V1
     const URI_CUSTOMER_PDF_PROCESSING   = 'api-ext/pdf-processing';
     const URI_CUSTOMER_CREATE_DRAFT     = 'some/path/on/server';
     const URI_CUSTOMER_AUTH             = 'auth';
+    const URI_REPLICATE_DRAFT           = 'api-ext/draft/{draftId}/replicate';
 
     /** @var Config*/
     protected $config;
@@ -250,6 +251,14 @@ class V1
     /**
      * {@inheritdoc}
      */
+    public function getPreviewPDF($draftHash, $quoteId = null)
+    {
+        return $this->getAdminPDF($draftHash, $quoteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getProducts()
     {
         return $this->getAdminProducts();
@@ -287,6 +296,14 @@ class V1
         $this->authRole = self::ROLE_USER;
 
         return implode('/', $urlParts);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminPreviewPDF($draftHash, $quoteId)
+    {
+        return $this->getAdminPDF($draftHash, $quoteId);
     }
 
     /**
@@ -341,12 +358,10 @@ class V1
     }
 
     /**
-     * @param $fileId
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function getDerivat($fileId)
+    public function getReplicateDraft($oldDraft)
     {
-        // TODO: Implement getDerivat() method.
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraft, self::URI_REPLICATE_DRAFT);
     }
 }

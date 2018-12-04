@@ -50,6 +50,13 @@
     <type name="Magento\Downloadable\Block\Sales\Order\Email\Items\Order\Downloadable">
         <plugin name="Rissc_Printformer_DownloadableProducts_EmailItemsOrder" type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItemsOrder" sortOrder="100" />
     </type>
+    <type name="Magento\Checkout\Model\Cart">
+        <plugin name="Rissc_Printformer_Sales_Order_Reorder_Plugin" type="Rissc\Printformer\Plugin\Sales\Order\Reorder\Plugin" sortOrder="1000"/>
+    </type>
+
+    <type name="Magento\Quote\Model\Quote\Item">
+        <plugin name="Rissc_Printformer_Quote_ItemModel" type="Rissc\Printformer\Plugin\Quote\Quote\ItemModel" sortOrder="100"/>
+    </type>
 
     <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
                 type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>

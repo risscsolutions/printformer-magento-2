@@ -1,7 +1,7 @@
 <?php
+
 namespace Rissc\Printformer\Setup;
 
-use \Magento\Customer\Model\ResourceModel\Customer;
 use \Magento\Eav\Setup\EavSetup;
 use \Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\UpgradeDataInterface;
@@ -9,7 +9,6 @@ use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
 use Magento\Catalog\Model\ProductFactory;
-use Magento\Catalog\Model\Product as CatalogProduct;
 
 /**
  * Class UpgradeData
@@ -40,17 +39,19 @@ class UpgradeData
 
     /**
      * @param \Magento\Framework\Setup\ModuleDataSetupInterface $setup
-     * @param \Magento\Framework\Setup\ModuleContextInterface   $context
+     * @param \Magento\Framework\Setup\ModuleContextInterface $context
+     * @throws \Zend_Db_Statement_Exception
      */
     public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
         $setup->startSetup();
 
         $connection = $setup->getConnection();
-        if(version_compare($context->getVersion(), '100.0.1', '<'))
-        {
-            /** @var EavSetup $eavSetup */
-            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+
+        /** @var EavSetup $eavSetup */
+        $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+
+        if (version_compare($context->getVersion(), '100.0.1', '<')) {
             $eavSetup->addAttribute(
                 \Magento\Catalog\Model\Product::ENTITY,
                 'printformer_upload_product',
@@ -107,8 +108,7 @@ class UpgradeData
 
         }
 
-        if(version_compare($context->getVersion(), '100.1.6', '<'))
-        {
+        if (version_compare($context->getVersion(), '100.1.6', '<')) {
             $_attributesArray = [
                 Product::PF_ATTRIBUTE_ENABLED,
                 Product::PF_ATTRIBUTE_PRODUCT,
@@ -123,21 +123,17 @@ class UpgradeData
             ");
 
             $regex = 'Rissc.*\\\\Printformer.*\\\\Model\\\\Product\\\\Source';
-            while($row = $result->fetch())
-            {
-                if(preg_match('/' . $regex . '/i', $row['source_model'], $match))
-                {
+            while ($row = $result->fetch()) {
+                if (preg_match('/' . $regex . '/i', $row['source_model'], $match)) {
                     $classExplode = explode('\\', $match[0]);
                     $namespace = $classExplode[0];
                     $module = $classExplode[1];
 
-                    if($namespace != InstallData::MODULE_NAMESPACE)
-                    {
+                    if ($namespace != InstallData::MODULE_NAMESPACE) {
                         $classExplode[0] = InstallData::MODULE_NAMESPACE;
                     }
 
-                    if($module != InstallData::MODULE_NAME)
-                    {
+                    if ($module != InstallData::MODULE_NAME) {
                         $classExplode[1] = InstallData::MODULE_NAME;
                     }
                     $connection->query("
@@ -149,10 +145,7 @@ class UpgradeData
             }
         }
 
-        if(version_compare($context->getVersion(), '100.1.11', '<'))
-        {
-            /** @var EavSetup $eavSetup */
-            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+        if (version_compare($context->getVersion(), '100.1.11', '<')) {
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_upload_enabled');
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_upload_product');
 
@@ -188,10 +181,7 @@ class UpgradeData
             );
         }
 
-        if(version_compare($context->getVersion(), '100.1.13', '<'))
-        {
-            /** @var EavSetup $eavSetup */
-            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+        if (version_compare($context->getVersion(), '100.1.13', '<')) {
             $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities');
 
             $eavSetup->addAttribute(
@@ -227,8 +217,7 @@ class UpgradeData
             );
         }
 
-        if(version_compare($context->getVersion(), '100.2.30', '>')) {
-            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+        if (version_compare($context->getVersion(), '100.2.30', '>')) {
             $eavSetup->addAttribute(
                 'customer',
                 'printformer_identification',
@@ -252,6 +241,40 @@ class UpgradeData
                     'used_in_product_listing' => true,
                     'unique' => true,
                     'apply_to' => ''
+                ]
+            );
+        }
+
+        if (!$eavSetup->getAttributeId(\Magento\Catalog\Model\Product::ENTITY, 'printformer_capabilities')) {
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'printformer_capabilities',
+                [
+                    'group' => 'Printformer',
+                    'type' => 'text',
+                    'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
+                    'label' => 'Printformer Capabilities',
+                    'input' => 'multiselect',
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'visible' => true,
+                    'required' => false,
+                    'user_defined' => false,
+                    'default' => 0,
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'used_in_product_listing' => true,
+                    'unique' => false,
+                    'apply_to' => '',
+                    'option' => [
+                        'values' => [
+                            'Editor',
+                            'Personalizations',
+                            'Upload',
+                            'Upload and Editor'
+                        ]
+                    ]
                 ]
             );
         }

@@ -11,6 +11,7 @@ use Rissc\Printformer\Helper\Config;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Customer\Model\Session as CustomerSession;
+use Rissc\Printformer\Helper\Catalog as CatalogHelper;
 
 class V2
     extends AbstractHelper
@@ -18,13 +19,14 @@ class V2
 {
     const API_CREATE_USER               = '/api-ext/user';
     const API_CREATE_DRAFT              = '/api-ext/draft';
+    const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
     const API_GET_PRODUCTS              = '/api-ext/template';
 
     const API_FILES_DRAFT_PNG           = '/api-ext/files/draft/{draftId}/image';
     const API_FILES_DRAFT_PDF           = '/api-ext/files/draft/{draftId}/print';
-    const API_FILES_DERIVATE_FILE       = '/api-ext/files/derivative/{fileId}/file';
+    const API_FILES_DRAFT_PREVIEW       = '/api-ext/files/draft/{draftId}/low-res';
 
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
@@ -39,22 +41,30 @@ class V2
     protected $_customerSession;
 
     protected $_storeId = 0;
+
+    /** @var CatalogHelper */
+    protected $_catalogHelper;
+
     /**
      * V2 constructor.
      *
-     * @param Context               $context
+     * @param Context $context
      * @param StoreManagerInterface $storeManager
+     * @param Config $config
+     * @param CustomerSession $customerSession
+     * @param CatalogHelper $catalogHelper
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
         Config $config,
-        CustomerSession $customerSession
-    )
-    {
+        CustomerSession $customerSession,
+        CatalogHelper $catalogHelper
+    ) {
         $this->_storeManager = $storeManager;
         $this->_config = $config;
         $this->_customerSession = $customerSession;
+        $this->_catalogHelper = $catalogHelper;
 
         parent::__construct($context);
     }
@@ -91,6 +101,10 @@ class V2
             $baseParams = array_merge($baseParams, [
                 'draft_id' => $draftHash
             ]);
+        }
+
+        if (!empty($params['quote_id'])) {
+            $baseParams['quote_id'] = $params['quote_id'];
         }
 
         $baseUrl = $this->_urlBuilder->getUrl('printformer/editor/open', $baseParams);
@@ -130,6 +144,14 @@ class V2
         }
 
         return $draftUrl;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getReplicateDraft($oldDraft)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraft, self::API_REPLICATE_DRAFT);
     }
 
     /**
@@ -204,6 +226,36 @@ class V2
     }
 
     /**
+     * @param Product | int $product
+     * @param int  $storeId
+     * @param bool $encodeUrl
+     *
+     * @return string
+     */
+    protected function _getProductCallbackUrl($product, $params = [], $storeId = 0, $encodeUrl = true)
+    {
+        $product = $this->_catalogHelper->prepareProduct($product);
+        if ($storeId > 0) {
+            $product->setStoreId($storeId);
+        }
+
+        if (isset($params['quote_id']) && $product->getId()) {
+            $referrerParams['id'] = $params['quote_id'];
+            $referrerParams['product_id'] = $product->getId();
+
+            $baseUrl = $this->_urlBuilder->getUrl('checkout/cart/configure', $referrerParams);
+        } else {
+            $baseUrl = $product->getProductUrl(null);
+        }
+
+        if ($encodeUrl) {
+            $baseUrl = base64_encode($baseUrl);
+        }
+
+        return $baseUrl;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getDraftProcessing($draftHashes = [], $quoteId = null)
@@ -231,9 +283,9 @@ class V2
     /**
      * {@inheritdoc}
      */
-    public function getDerivat($fileId) {
+    public function getPreviewPDF($draftHash, $quoteid = null) {
         return $this->getPrintformerBaseUrl() .
-            str_replace('{fileId}', $fileId, self::API_FILES_DERIVATE_FILE);
+            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PREVIEW);
     }
 
     /**
@@ -284,6 +336,29 @@ class V2
             ->getToken();
 
         $pdfUrl = $this->getPDF($draftHash);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $pdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminPreviewPDF($draftHash, $quoteId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $pdfUrl = $this->getPreviewPDF($draftHash);
 
         $postFields = [
             'jwt' => $JWT

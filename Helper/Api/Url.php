@@ -260,4 +260,12 @@ class Url
 
         return $this->_urlBuilder->getUrl($redirectParams['controller'], $redirectParams['params']);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getReplicateDraft($oldDraft)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraft($oldDraft);
+    }
 }
