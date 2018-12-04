@@ -25,6 +25,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_REDIRECT_URL              = 'printformer/general/redirect_alt_url';
     const XML_PATH_CONFIG_SKIP_CONFIG               = 'printformer/general/allow_skip_config';
     const XML_PATH_CONFIG_WISHLIST_HINT             = 'printformer/general/guest_wishlist_hint';
+    const XML_PATH_CONFIG_EXPIRE_DATE               = 'printformer/general/expire_date';
     const XML_PATH_CONFIG_EDIT_TEXT                 = 'printformer/general/cart_edit_text';
     const XML_PATH_CONFIG_IMAGE_PREVIEW             = 'printformer/general/product_image_preview';
     const XML_PATH_CONFIG_IMAGE_PREVIEW_WIDTH       = 'printformer/general/product_image_preview_width';
@@ -251,6 +252,14 @@ class Config extends AbstractHelper
         return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_EDIT_TEXT, ScopeInterface::SCOPE_STORE, $this->getStoreId());
     }
 
+    /**
+     * @return string
+     */
+    public function getExpireDate()
+    {
+        $days = $this->scopeConfig->getValue(self::XML_PATH_CONFIG_EXPIRE_DATE, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+        return (new \DateTime())->add(\DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
+    }
 
     /**
      * @return string

@@ -17,6 +17,7 @@ use Rissc\Printformer\Helper\Api\Url;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
+use Rissc\Printformer\Helper\Config;
 
 class Draft
 {
@@ -88,6 +89,11 @@ class Draft
     protected $mediaHelper;
 
     /**
+     * @var Config $_config
+     */
+    private $_config;
+
+    /**
      * Draft constructor.
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
@@ -99,6 +105,7 @@ class Draft
      * @param LogHelper $logHelper
      * @param UrlInterface $url
      * @param Media $mediaHelper
+     * @param Config $config
      */
     public function __construct(
         LoggerInterface $logger,
@@ -110,7 +117,8 @@ class Draft
         StoreManagerInterface $storeManager,
         LogHelper $logHelper,
         UrlInterface $url,
-        Media $mediaHelper
+        Media $mediaHelper,
+        Config $config
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -125,6 +133,7 @@ class Draft
         $this->mediaHelper = $mediaHelper;
 
         $this->_urlHelper->initVersionHelper($this->isV2Enabled());
+        $this->_config = $config;
     }
 
     /**
@@ -210,7 +219,7 @@ class Draft
             ->set('user', $this->getUserIdentifier())
             ->setId(bin2hex(random_bytes(16)), true)
             ->set('redirect', $redirectUrl)
-            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->getClientApiKey())
@@ -233,7 +242,7 @@ class Draft
             ->set('client', $this->getClientIdentifier())
             ->set('user', $this->getUserIdentifier())
             ->setId(bin2hex(random_bytes(16)), true)
-            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->getClientApiKey())

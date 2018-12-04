@@ -7,6 +7,7 @@
                 <redirect_after_config>1</redirect_after_config>
                 <guest_wishlist_hint><![CDATA[You have to be registered to add this product to your Wishlist.]]></guest_wishlist_hint>
                 <cart_edit_text>Edit</cart_edit_text>
+                <expire_date>30</expire_date>
                 <config_button_text>Configure</config_button_text>
                 <processing_type>sync</processing_type>
                 <product_image_preview_width>1000</product_image_preview_width>
