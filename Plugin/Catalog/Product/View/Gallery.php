@@ -9,6 +9,7 @@ use Rissc\Printformer\Helper\Api as PrintformerApi;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
+use Magento\Framework\Event\ManagerInterface;
 
 class Gallery
 {
@@ -53,12 +54,18 @@ class Gallery
     protected $printformerDraft = [];
 
     /**
+     * @var ManagerInterface
+     */
+    protected $eventManager;
+
+    /**
      * Gallery constructor.
      * @param ConfigHelper $config
      * @param Media $mediaHelper
      * @param UrlHelper $urlHelper
      * @param PrintformerApi $printformerApi
      * @param PrintformerBlock $printformerBlock
+     * @param ManagerInterface $eventManager
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -67,6 +74,7 @@ class Gallery
         UrlHelper $urlHelper,
         PrintformerApi $printformerApi,
         PrintformerBlock $printformerBlock,
+        ManagerInterface $eventManager,
         LoggerInterface $logger
     ) {
         $this->config = $config;
@@ -74,6 +82,7 @@ class Gallery
         $this->urlHelper = $urlHelper;
         $this->printformerApi = $printformerApi;
         $this->printformerBlock = $printformerBlock;
+        $this->eventManager = $eventManager;
         $this->logger = $logger;
     }
 
@@ -196,13 +205,22 @@ class Gallery
                         $height = imagesy($image);
 
                         $out = imagecreatetruecolor($width, $height);
-                        imagealphablending($out,false);
+                        imagealphablending($out, false);
                         $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
                         imagefill($out, 0, 0, $transparentindex);
                         imagesavealpha($out, true);
 
                         imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
-                        imagepng($out,$imageFilePath);
+                        imagepng($out, $imageFilePath);
+
+                        $this->eventManager->dispatch('printformer_image_preview_create', [
+                            'printformer_image' => $printformerImage,
+                            'original_image' => $image,
+                            'width' => $width,
+                            'height' => $height,
+                            'final_image' => $out,
+                            'image_path' => $imageFilePath
+                        ]);
 
                         imagedestroy($image);
 
