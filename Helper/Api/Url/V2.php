@@ -334,7 +334,7 @@ class V2
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey())
@@ -357,7 +357,7 @@ class V2
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration((new \DateTime())->add(\DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey())

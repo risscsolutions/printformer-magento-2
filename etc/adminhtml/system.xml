@@ -60,6 +60,12 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="expire_date" translate="label" type="text" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Printfile ExpireDate (days)</label>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
                 <field id="product_image_preview" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Replace Product Image with Preview</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

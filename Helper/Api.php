@@ -215,7 +215,7 @@ class Api
             ->set('user', $userIdentifier)
             ->setId(bin2hex(random_bytes(16)), true)
             ->set('redirect', $editorOpenUrl)
-            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey())
@@ -432,7 +432,7 @@ class Api
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier())
             ->set('user', $userIdentifier)
-            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey())
@@ -474,7 +474,7 @@ class Api
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey())
@@ -579,7 +579,7 @@ class Api
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration((new DateTime())->add(DateInterval::createFromDateString('+2 days'))->getTimestamp());
+            ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey())
