@@ -146,4 +146,96 @@ class Session extends AbstractHelper
 
         return null;
     }
+
+    /**
+     * @param string $draftId
+     *
+     * @return array|null
+     */
+    public function getDraftCache($draftId)
+    {
+        if (!$this->catalogSession->getPrintformerDraftCache()) {
+            return null;
+        }
+
+        $drafts = $this->catalogSession->getPrintformerDraftCache();
+        if (empty($drafts[$draftId])) {
+            return null;
+        }
+
+        return $drafts[$draftId];
+    }
+
+    /**
+     * @param string $draftId
+     *
+     * @return bool
+     */
+    public function hasDraftInCache($draftId)
+    {
+        return $this->getDraftCache($draftId) != null;
+    }
+
+    /**
+     * @param $draftId
+     * @param $data
+     *
+     * @return void
+     */
+    public function addDraftToCache($draftId, $data)
+    {
+        if ($this->hasDraftInCache($draftId)) {
+            return;
+        }
+
+        $drafts = $this->catalogSession->getPrintformerDraftCache();
+        if (!$drafts) {
+            $drafts = [];
+        }
+
+        $drafts[$draftId] = $data;
+
+        $this->catalogSession->setPrintformerDraftCache($drafts);
+    }
+
+    /**
+     * @param $draftId
+     * @param $data
+     *
+     * @return void
+     */
+    public function updateDraftInCache($draftId, $data)
+    {
+        if (!$this->catalogSession->getPrintformerDraftCache()) {
+            return;
+        }
+
+        if (!$this->hasDraftInCache($draftId)) {
+            return;
+        }
+
+        $drafts = $this->catalogSession->getPrintformerDraftCache();
+
+        $drafts[$draftId] = $data;
+
+        $this->catalogSession->setPrintformerDraftCache($drafts);
+    }
+
+    /**
+     * @param string $draftId
+     */
+    public function removeDraftFromCache($draftId)
+    {
+        if (!$this->catalogSession->getPrintformerDraftCache()) {
+            return;
+        }
+
+        if (!$this->hasDraftInCache($draftId)) {
+            return;
+        }
+
+        $drafts = $this->catalogSession->getPrintformerDraftCache();
+        unset($drafts[$draftId]);
+        $this->catalogSession->setPrintformerDraftCache($drafts);
+    }
 }

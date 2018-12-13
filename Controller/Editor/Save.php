@@ -6,14 +6,17 @@ use Magento\Framework\App\Action\Context;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Session;
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Exception;
+use Rissc\Printformer\Helper\Api;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
 
@@ -118,15 +121,19 @@ class Save extends Action
                 $this->_sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
             }
 
+            /** @var Draft $draft */
             $draft = $this->_draftFactory->create()->load($draftId);
             $draft->setSessionUniqueId($uniqueID);
             $draft->getResource()->save($draft);
 
-            $url = $this->_urlHelper
-                ->setStoreId($storeId)
-                ->getDraft($draft->getDraftId());
+            /** @var Api $apiHelper */
+            $apiHelper = ObjectManager::getInstance()->get(Api::class);
+            $draftData = $apiHelper->getPrintformerDraft($draft->getDraftId(), true);
 
-            if($personalisations = $this->getPersonalisations($url)) {
+            if (
+                !empty($draftData['personalizations']['amount']) &&
+                $personalisations = $draftData['personalizations']['amount']
+            ) {
                 $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()] = $personalisations;
             }
 
@@ -344,33 +351,6 @@ class Save extends Action
                 $this->_configHelper->getColorOptionValues()
             );
         }
-    }
-
-    protected function getPersonalisations($url)
-    {
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-
-        $result = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if($err) {
-            return null;
-        } else {
-            if(!empty($result)) {
-                $json = json_decode($result, true);
-            }
-            if(!isset($json['success'])) {
-                return null;
-            }
-            if(!empty($json) && is_array($json)) {
-                return (isset($json['data']['personalizations']['amount']) ? $json['data']['personalizations']['amount'] : null);
-            }
-        }
-        return null;
     }
 
     /**

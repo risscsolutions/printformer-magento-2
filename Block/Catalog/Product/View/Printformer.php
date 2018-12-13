@@ -286,12 +286,13 @@ class Printformer extends AbstractView
             $this->_storeManager->getStore()->getId()
         );
         foreach($pfProducts as $printformerProduct) {
+            $draftId = $this->getDraftId($printformerProduct);
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
-            if ($this->canShowDeleteButton($this->getDraftId($printformerProduct))) {
+            if ($this->canShowDeleteButton($draftId)) {
                 $printformerProducts[$i]['delete_url'] = $this->getDeleteUrl($printformerProduct, $product->getId());
             }
-            $printformerProducts[$i]['draft_id'] = $this->getDraftId($printformerProduct);
+            $printformerProducts[$i]['draft_id'] = $draftId;
 
             $personalisations = $this->getPersonalisationCount($printformerProducts[$i]['draft_id']);
             if ($personalisations > 1) {

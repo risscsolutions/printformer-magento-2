@@ -162,6 +162,11 @@ class Api
 
         $response = $this->_httpClient->post($url, $options);
         $response = json_decode($response->getBody(), true);
+        if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
+            $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+        } else {
+            $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+        }
 
         return $response['data']['draftHash'];
     }
@@ -172,6 +177,9 @@ class Api
      */
     public function getReplicateDraftId(string $oldDraftId) : string
     {
+        if ($this->_sessionHelper->hasDraftInCache($oldDraftId)) {
+            $this->_sessionHelper->removeDraftFromCache($oldDraftId);
+        }
         $url = $this->apiUrl()->getReplicateDraftId($oldDraftId);
 
         $response = $this->_httpClient->get($url);
@@ -179,22 +187,37 @@ class Api
 
         $draftHash = $draftInfo['data']['draftHash'];
 
+        if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
+            $this->_sessionHelper->updateDraftInCache($draftHash, $response['data']);
+        } else {
+            $this->_sessionHelper->addDraftToCache($draftHash, $response['data']);
+        }
+
         return $draftHash;
     }
 
     /**
-     * @param $draftHash
+     * @param string $draftHash
+     * @param bool $forceUpdate
      *
-     * @return mixed
+     * @return array
      */
-    public function getPrintformerDraft($draftHash)
+    public function getPrintformerDraft($draftHash, $forceUpdate = false)
     {
-        $url = $this->apiUrl()->getDraft($draftHash);
+        if (!$this->_sessionHelper->hasDraftInCache($draftHash) || $forceUpdate) {
+            $url = $this->apiUrl()->getDraft($draftHash);
 
-        $response = $this->_httpClient->get($url);
-        $response = json_decode($response->getBody(), true);
+            $response = $this->_httpClient->get($url);
+            $response = json_decode($response->getBody(), true);
 
-        return $response['data'];
+            if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
+                $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+            } else {
+                $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+            }
+        }
+
+        return $this->_sessionHelper->getDraftCache($draftHash);
     }
 
     /**

@@ -47,12 +47,15 @@ class Media extends AbstractHelper
     /**
      * @param string $draftId
      * @param int $page
+     * @param bool $isThumbnail
+     *
      * @return string
+     *
      * @throws \Magento\Framework\Exception\FileSystemException
      */
     public function getImageFilePath($draftId, $page = 1, $isThumbnail = false)
     {
-        $imagePath = $this->getImagePath($isThumbnail, $isThumbnail = false);
+        $imagePath = $this->getImagePath($isThumbnail);
 
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
         $mediaDir->create($imagePath);
