@@ -213,7 +213,7 @@ class UpgradeData implements UpgradeDataInterface
             );
         }
 
-        if(version_compare($context->getVersion(), '100.2.30', '>')) {
+        if(version_compare($context->getVersion(), '100.2.30', '<')) {
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
             $eavSetup->addAttribute(
                 'customer',
