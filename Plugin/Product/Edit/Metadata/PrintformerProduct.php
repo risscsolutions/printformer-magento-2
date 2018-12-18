@@ -27,11 +27,6 @@ class PrintformerProduct
     protected $request;
 
     /**
-     * @var PrintformerProductDataProvider
-     */
-    protected $dataProvider;
-
-    /**
      * @var UrlInterface
      */
     protected $urlBuilder;
@@ -54,7 +49,6 @@ class PrintformerProduct
     /**
      * PrintformerProduct constructor.
      * @param Product $productHelper
-     * @param PrintformerProductDataProvider $dataProvider
      * @param UrlInterface $urlBuilder
      * @param RequestInterface $request
      * @param PrintformerConfigHelper $printformerConfigHelper
@@ -62,15 +56,12 @@ class PrintformerProduct
      */
     public function __construct(
         Product $productHelper,
-        PrintformerProductDataProvider $dataProvider,
         UrlInterface $urlBuilder,
         RequestInterface $request,
         PrintformerConfigHelper $printformerConfigHelper,
         LocatorInterface $locator
     ) {
-        $this->dataProvider = $dataProvider;
         $this->productHelper = $productHelper;
-        $this->dataProvider = $dataProvider;
         $this->urlBuilder = $urlBuilder;
         $this->request = $request;
         $this->locator = $locator;
@@ -281,7 +272,7 @@ class PrintformerProduct
                                 'autoRender' => false,
                                 'component' => 'Rissc_Printformer/component/insert-listing',
                                 'componentType' => 'insertListing',
-                                'printformerProducts' => $this->dataProvider->getData(),
+                                'printformerProducts' => $this->getPrintformerProducts(),
                                 'dataScope' => $listingTarget,
                                 'externalProvider' => $listingTarget . '.' . $listingTarget . '_data_source',
                                 'selectionsProvider' => $listingTarget . '.' . $listingTarget . '.printformer_product_columns.ids',
@@ -348,5 +339,28 @@ class PrintformerProduct
                 ],
             ],
         ];
+    }
+
+    /**
+     * @return array
+     */
+    private function getPrintformerProducts()
+    {
+        /** @var PrintformerProductDataProvider $dataProvider */
+        $dataProvider = \Magento\Framework\App\ObjectManager::getInstance()->create(PrintformerProductDataProvider::class, [
+            'name' => 'printformer_product_listing_data_source',
+            'primaryFieldName' => 'id',
+            'requestFieldName' => 'id',
+            'data' => [
+                'config' => [
+                    'component' => 'Magento_Ui/js/grid/provider',
+                    'update_url' => 'mui/index/render',
+                    'storageConfig' => [
+                        'indexField' => 'id'
+                    ]
+                ]
+            ]
+        ]);
+        return $dataProvider->getData();
     }
 }
