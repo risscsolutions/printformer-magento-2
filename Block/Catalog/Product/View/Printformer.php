@@ -112,7 +112,7 @@ class Printformer extends AbstractView
         $this->sessionHelper = $sessionHelper;
         $this->draftFactory = $draftFactory;
         $this->cart = $cart;
-        $this->_isScopePrivate = true; //@todo remove?
+        $this->_isScopePrivate = true;
         $this->wishlistItem = $wishlistItem;
         $this->_catalogSession = $catalogSession;
         $this->_apiHelper = $apiHelper;
@@ -768,6 +768,7 @@ class Printformer extends AbstractView
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
+            'editorFullscreenEnabled' => $this->configHelper->isEditorFullscreenEnabled(),
             'uniqueId' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
             'allowSkipConfig' => $this->configHelper->isAllowSkipConfig(), //@todo || $this->getDraftId(),

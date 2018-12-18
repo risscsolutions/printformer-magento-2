@@ -19,6 +19,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_SECRET                    = 'printformer/general/secret_word';
     const XML_PATH_CONFIG_LOCALE                    = 'printformer/general/locale';
     const XML_PATH_CONFIG_STATUS                    = 'printformer/general/order_status';
+    const XML_PATH_CONFIG_IS_FULLSCREEN_ENABLED     = 'printformer/general/editor_fullscreen_enabled';
 
     const XML_PATH_CONFIG_REDIRECT_ON_CANCEL        = 'printformer/general/redirect_on_cancel';
     const XML_PATH_CONFIG_REDIRECT                  = 'printformer/general/redirect_after_config';
@@ -120,6 +121,14 @@ class Config extends AbstractHelper
     public function isEnabled()
     {
         return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_ENABLED, ScopeInterface::SCOPE_STORE, $this->getStoreId());
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEditorFullscreenEnabled()
+    {
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_IS_FULLSCREEN_ENABLED, ScopeInterface::SCOPE_STORE, $this->getStoreId());
     }
 
     /**

@@ -156,13 +156,14 @@ class Open extends Action
          */
         $editorParams = [
             'master_id' => $masterId,
-            'product_id' => $this->getRequest()->getParam('product'),
+            'product_id' => $productId,
             'data' => [
                 'draft_process' => $draftProcess->getId(),
                 'draft_hash' => $draftProcess->getDraftId(),
                 'callback_url' => $requestReferrer
             ]
         ];
+
         if(!empty($params['quote_id']) && !empty($productId)) {
             $editorParams['data']['quote_id'] = $params['quote_id'];
         }

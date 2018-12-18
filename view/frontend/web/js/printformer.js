@@ -270,6 +270,11 @@ define([
         },
 
         editorMainOpen: function(editorUrl) {
+            if (this.options.editorFullscreenEnabled) {
+                window.location.href = editorUrl;
+                return;
+            }
+
             this.addToCartFormUrl = $(this.form).attr('action');
             $(this.form).attr('action', editorUrl);
             $(this.form).attr('target', 'printformer-main-frame');
