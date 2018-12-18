@@ -87,7 +87,8 @@ class Open extends Action
         SessionHelper $sessionHelper,
         PreselectHelper $preselectHelper,
         ApiHelper $apiHelper
-    ) {
+    )
+    {
         $this->_draftGateway = $draftGateway;
         $this->_urlHelper = $urlHelper;
         $this->_productFactory = $productFactory;
@@ -106,28 +107,28 @@ class Open extends Action
         /**
          * Get all params and variables needed
          */
-        $params           = $this->getRequest()->getParams();
+        $params = $this->getRequest()->getParams();
 
-        $productId        = $this->getRequest()->getParam('product_id');
-        $masterId         = $this->getRequest()->getParam('master_id');
-        $intent           = $this->getRequest()->getParam('intent');
+        $productId = $this->getRequest()->getParam('product_id');
+        $masterId = $this->getRequest()->getParam('master_id');
+        $intent = $this->getRequest()->getParam('intent');
         $printformerDraft = $this->getRequest()->getParam('draft_id');
-        $sessionUniqueId  = $this->getRequest()->getParam('session_id');
-        $requestReferrer  = $this->getRequest()->getParam('custom_referrer');
-        $storeId          = $this->_storeManager->getStore()->getId();
-        $customerSession  = $this->_sessionHelper->getCustomerSession();
+        $sessionUniqueId = $this->getRequest()->getParam('session_id');
+        $requestReferrer = $this->getRequest()->getParam('custom_referrer');
+        $storeId = $this->_storeManager->getStore()->getId();
+        $customerSession = $this->_sessionHelper->getCustomerSession();
 
         /**
          * Show an error if product id was not set
          */
-        if(!$productId) {
+        if (!$productId) {
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
         /**
          * Save preselected data
          */
-        if($this->getRequest()->isPost()) {
+        if ($this->getRequest()->isPost()) {
             $this->_savePreselectedData($this->getRequest()->getParams());
         }
 
@@ -141,18 +142,18 @@ class Open extends Action
         /**
          * Try to load draft from database
          */
-         $draftProcess = $this->_apiHelper->draftProcess(
-             $printformerDraft,
-             $masterId,
-             $product->getId(),
-             $intent,
-             $sessionUniqueId
-         );
+        $draftProcess = $this->_apiHelper->draftProcess(
+            $printformerDraft,
+            $masterId,
+            $product->getId(),
+            $intent,
+            $sessionUniqueId
+        );
 
         /**
          * If draft could not be created or loaded, show an error
          */
-        if(!$draftProcess->getId()) {
+        if (!$draftProcess->getId()) {
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
@@ -165,14 +166,16 @@ class Open extends Action
             'data' => [
                 'draft_process' => $draftProcess->getId(),
                 'draft_hash' => $draftProcess->getDraftId(),
-                'callback_url' => $requestReferrer
+                'callback_url' => $requestReferrer,
+                'search_path' => $this->buildSearchPath($this->getRequest()->getParam('product_id'))
             ]
         ];
-        if(!empty($params['quote_id']) && !empty($productId)) {
+
+        if (!empty($params['quote_id']) && !empty($productId)) {
             $editorParams['data']['quote_id'] = $params['quote_id'];
         }
 
-        if($this->_draftGateway->isV2Enabled()) {
+        if ($this->_draftGateway->isV2Enabled()) {
             $editorUrl = $this->_apiHelper->getEditorWebtokenUrl($draftProcess->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
         } else {
             $editorUrl = $this->_urlHelper->getEditor($draftProcess->getDraftId(), null, $editorParams);
@@ -180,17 +183,16 @@ class Open extends Action
                 $storeId, $params);
         }
 
-        // Append SearchPath urldecoded
-        if(1 || $this->getRequest()->getParam('search_path')) { // Wenn keiner gesetzt war
-            $editorUrl .= '&search_path=' .$this->buildSearchPath($this->getRequest()->getParam('product_id'));
-        }
-        /**
-         * Build redirect url
-         */
         $redirect = $this->resultRedirectFactory->create();
         $redirect->setUrl($editorUrl);
         return $redirect;
     }
+
+    /**
+     * @param $productId
+     * @param bool $encode
+     * @return mixed|string
+     */
     private function buildSearchPath($productId, $encode = true)
     {
         $product = $this->_productFactory->create()->load($productId);
@@ -200,13 +202,12 @@ class Open extends Action
 
         $searchPath = '';
         // Änderung der Reihenfolge
-        if(!empty($crossMediaProductFolder)) {
+        if (!empty($crossMediaProductFolder)) {
             $searchPath = $crossMediaProductFolder;
-        }
-        else if(!empty($crossMediaMandatorFolder)) {
+        } else if (!empty($crossMediaMandatorFolder)) {
             $searchPath = $crossMediaMandatorFolder;
         }
-        if($encode) {
+        if ($encode) {
             $searchPath = urlencode(base64_encode($searchPath));
         }
         return $searchPath;
@@ -244,10 +245,10 @@ class Open extends Action
 
     /**
      * @param Product $product
-     * @param string  $intent
-     * @param int     $customerId
-     * @param int     $storeId
-     * @param string  $sessionUniqueId
+     * @param string $intent
+     * @param int $customerId
+     * @param int $storeId
+     * @param string $sessionUniqueId
      *
      * @return Draft
      * @throws \Exception
@@ -257,7 +258,7 @@ class Open extends Action
         $draftId = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
 
         $userIdentifier = NULL;
-        if($this->_draftGateway->isV2Enabled()) {
+        if ($this->_draftGateway->isV2Enabled()) {
             $userIdentifier = $this->_draftGateway->getUserIdentifier();
         }
 
@@ -283,11 +284,11 @@ class Open extends Action
     }
 
     /**
-     * @param string          $sessionUniqueId
-     * @param Product         $product
-     * @param string          $intent
-     * @param string          $printformerDraft
-     * @param int             $storeId
+     * @param string $sessionUniqueId
+     * @param Product $product
+     * @param string $intent
+     * @param string $printformerDraft
+     * @param int $storeId
      * @param CustomerSession $customerSession
      *
      * @return Draft
@@ -298,11 +299,11 @@ class Open extends Action
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
 
-        if($sessionUniqueId == null) {
+        if ($sessionUniqueId == null) {
             $sessionUniqueId = $customerSession->getSessionUniqueID();
         }
 
-        if($sessionUniqueId) {
+        if ($sessionUniqueId) {
             $uniqueExplode = explode(':', $sessionUniqueId);
             if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                 $draftCollection = $draftProcess->getCollection()
@@ -312,7 +313,7 @@ class Open extends Action
                     $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
                 }
                 if ($draftCollection->count() == 1) {
-                    if($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
+                    if ($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
                         || $this->_sessionHelper->getCustomerId() == null) {
                         /** @var Draft $draft */
                         $draftProcess = $draftCollection->getFirstItem();
@@ -325,7 +326,7 @@ class Open extends Action
                 }
             }
         } else {
-            if(!empty($printformerDraft)) {
+            if (!empty($printformerDraft)) {
 
             }
         }
@@ -336,23 +337,23 @@ class Open extends Action
     /**
      * @param       $requestReferrer
      * @param Draft $draftProcess
-     * @param int   $storeId
+     * @param int $storeId
      * @param array $params
-     * @param bool  $encodeUrl
+     * @param bool $encodeUrl
      *
      * @return string
      */
     protected function _getCallbackUrl($requestReferrer, Draft $draftProcess, $storeId = 0, $params = [], $encodeUrl = true)
     {
-        if($requestReferrer != null) {
+        if ($requestReferrer != null) {
             $referrer = urldecode($requestReferrer);
         } else {
             $referrerParams = array_merge($params, [
-                'store_id'      => $storeId,
+                'store_id' => $storeId,
                 'draft_process' => $draftProcess->getId()
             ]);
 
-            if(isset($params['quote_id']) && isset($params['product_id'])) {
+            if (isset($params['quote_id']) && isset($params['product_id'])) {
                 $referrerParams['quote_id'] = $params['quote_id'];
                 $referrerParams['edit_product'] = $params['product_id'];
                 $referrerParams['is_edit'] = 1;
@@ -361,7 +362,7 @@ class Open extends Action
             $referrer = $this->_url->getUrl('printformer/editor/save', $referrerParams);
         }
 
-        if($encodeUrl) {
+        if ($encodeUrl) {
             $referrer = urlencode(base64_encode($referrer));
         }
 
@@ -386,7 +387,7 @@ class Open extends Action
 
         $editorUrlBase = $editorUrlparts[0];
         $editorUrlParams = '';
-        if(isset($editorUrlparts[1])) {
+        if (isset($editorUrlparts[1])) {
             $editorUrlParams = $editorUrlparts[1];
         }
 
@@ -401,7 +402,7 @@ class Open extends Action
         /**
          * Add customer id to params
          */
-        if($customerSession->isLoggedIn()) {
+        if ($customerSession->isLoggedIn()) {
             $editorUrlParamsArray['user'] = $customerSession->getCustomerId();
         }
 
@@ -416,7 +417,7 @@ class Open extends Action
         /**
          * Override editor params with current action params
          */
-        foreach($paramsObject->getData() as $key => $param) {
+        foreach ($paramsObject->getData() as $key => $param) {
             $editorUrlParamsArray[$key] = $param;
         }
 
@@ -424,7 +425,7 @@ class Open extends Action
          * Assemble url with params and return it
          */
         $queryArray = [];
-        foreach($editorUrlParamsArray as $key => $value) {
+        foreach ($editorUrlParamsArray as $key => $value) {
             $queryArray[] = $key . '=' . $value;
         }
 

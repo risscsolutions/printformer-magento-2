@@ -178,10 +178,15 @@ class V2
         }
 
         $queryParams = [];
-        $queryParams['callback'] = $this->_getCallbackUrl($customCallbackUrl, $this->_storeManager->getStore()->getId(),
-            $dataParams);
+        $searchPath = [];
 
-        return $editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams);
+        $queryParams['callback'] = $this->_getCallbackUrl($customCallbackUrl, $this->_storeManager->getStore()->getId(), $dataParams);
+
+        if (!empty($params['data']['search_path'])) {
+            $searchPath['search_path'] = $params['data']['search_path'];
+        }
+
+        return $editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams) . '&search_path=' . $searchPath['search_path'];
     }
 
     /**
