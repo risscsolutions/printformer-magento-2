@@ -63,4 +63,6 @@
                 sortOrder="1000"
         />
     </type>
+
+    <virtualType name="PrintformerProductDataProvider" type="Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider" />
 </config>
