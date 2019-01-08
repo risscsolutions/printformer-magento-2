@@ -42,7 +42,7 @@ class PrintformerIdentifier extends Generic implements TabInterface
      */
     public function canShowTab()
     {
-        return true;
+        return $this->_scopeConfig->isSetFlag(\Rissc\Printformer\Helper\Config::XML_PATH_CONFIG_ENABLED);
     }
 
     /**
