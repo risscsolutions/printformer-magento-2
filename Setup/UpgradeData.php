@@ -249,11 +249,21 @@ class UpgradeData implements UpgradeDataInterface
             $select = $connection->select()->from('printformer_product');
             $result = $connection->fetchAll($select);
 
-            $insertData = [];
+            $connection->beginTransaction();
+            $connection->delete('printformer_product');
+            $connection->commit();
 
+            $insertData = [];
             $i = 0;
             foreach($result as $row) {
                 foreach(explode(',', $row['intent']) as $intent) {
+                    if ($i == 1000) {
+                        $connection->beginTransaction();
+                        $connection->insertMultiple('printformer_product', $insertData);
+                        $connection->commit();
+                        $insertData = [];
+                        $i = 0;
+                    }
                     $insertData[$i] = $row;
                     unset($insertData[$i]['id']);
                     $insertData[$i]['intent'] = $intent;
@@ -262,7 +272,6 @@ class UpgradeData implements UpgradeDataInterface
             }
 
             $connection->beginTransaction();
-            $connection->delete('printformer_product');
             $connection->insertMultiple('printformer_product', $insertData);
             $connection->commit();
         }
