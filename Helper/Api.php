@@ -529,8 +529,8 @@ class Api
             ]
         ];
 
-        return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() .
-                '/api-ext/draft/claim', $postFields)->getBody());
+        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() .
+                '/api-ext/draft/claim', $postFields)->getBody(), true);
     }
 
     /**
@@ -547,8 +547,8 @@ class Api
             ]
         ];
 
-        return json_encode($this->_httpClient->get($this->apiUrl()->getPrintformerBaseUrl() . 'api-ext/user/' .
-                $userIdentifierOne . '/merge', $postFields)->getBody());
+        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() . 'api-ext/user/' .
+                $userIdentifierOne . '/merge', $postFields)->getBody(), true);
     }
 
     /**
