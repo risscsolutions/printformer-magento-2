@@ -550,13 +550,6 @@ define([
                     this.options.qty = this.options.preselection.qty.value
                 }
             }
-
-            if (
-                this.options.qty &&
-                $(this.options.qtySelector).prop('tagName') !== 'SELECT'
-            ) {
-                $(this.options.qtySelector).val(this.options.qty);
-            }
         },
 
         setVariation: function (id, value) {
