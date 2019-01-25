@@ -775,7 +775,7 @@ class Printformer extends AbstractView
             'printformerProducts' => $this->getPrintformerProductsArray(),
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => [], //@todo $this->getProductVariations($this->getDraftId()),
-            'qty' => 1, //@todo $this->getProductQty($this->getDraftId()),
+            'qty' => $product->getExtensionAttributes()->getStockItem()->getMinSaleQty(),
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->isOnConfigurePDS(),
             'draftMasterId' => $this->getDraftMasterId(),
