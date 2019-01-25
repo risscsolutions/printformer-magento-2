@@ -23,6 +23,7 @@ use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Setup\InstallSchema;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Psr\Log\LoggerInterface;
 
 class Printformer extends AbstractView
 {
@@ -77,19 +78,26 @@ class Printformer extends AbstractView
     protected $_apiHelper;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Printformer constructor.
      *
-     * @param Config         $configHelper
-     * @param Url            $urlHelper
-     * @param Session        $sessionHelper
-     * @param DraftFactory   $draftFactory
-     * @param Cart           $cart
-     * @param Context        $context
-     * @param ArrayUtils     $arrayUtils
-     * @param Item           $wishlistItem
+     * @param PrintformerProductHelper $printformerProductHelper
+     * @param Config $configHelper
+     * @param Url $urlHelper
+     * @param Session $sessionHelper
+     * @param DraftFactory $draftFactory
+     * @param Cart $cart
+     * @param Context $context
+     * @param ArrayUtils $arrayUtils
+     * @param Item $wishlistItem
      * @param CatalogSession $catalogSession
-     * @param ApiHelper      $apiHelper
-     * @param array          $data
+     * @param ApiHelper $apiHelper
+     * @param LoggerInterface $logger
+     * @param array $data
      */
     public function __construct(
         PrintformerProductHelper $printformerProductHelper,
@@ -103,6 +111,7 @@ class Printformer extends AbstractView
         Item $wishlistItem,
         CatalogSession $catalogSession,
         ApiHelper $apiHelper,
+        LoggerInterface $logger,
         array $data = []
     )
     {
@@ -116,6 +125,7 @@ class Printformer extends AbstractView
         $this->wishlistItem = $wishlistItem;
         $this->_catalogSession = $catalogSession;
         $this->_apiHelper = $apiHelper;
+        $this->logger = $logger;
 
         parent::__construct($context, $arrayUtils, $data);
 
@@ -761,6 +771,16 @@ class Printformer extends AbstractView
         if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId()) {
             $uniqueId = null;
         }
+
+        $minSaleQty = 1;
+        try {
+            $stockItem = $product->getExtensionAttributes()->getStockItem();
+            $minSaleQty = $stockItem->getMinSaleQty();
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getTraceAsString());
+        }
+
         $config = [
             'qtySelector' => '#qty',
             'buttonSelector' => '#printformer-button-',
@@ -775,7 +795,7 @@ class Printformer extends AbstractView
             'printformerProducts' => $this->getPrintformerProductsArray(),
             'variationsConfig' => $this->getVariationsConfig(),
             'variations' => [], //@todo $this->getProductVariations($this->getDraftId()),
-            'qty' => $product->getExtensionAttributes()->getStockItem()->getMinSaleQty(),
+            'qty' => $minSaleQty,
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->isOnConfigurePDS(),
             'draftMasterId' => $this->getDraftMasterId(),
