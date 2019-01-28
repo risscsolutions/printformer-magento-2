@@ -517,7 +517,7 @@ class Api
      * @param array  $drafts
      * @param bool   $dryRun
      *
-     * @return string
+     * @return array
      */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
@@ -537,7 +537,7 @@ class Api
      * @param string $userIdentifierOne
      * @param string $userIdentifierTwo
      *
-     * @return string
+     * @return array
      */
     public function userMerge($userIdentifierOne, $userIdentifierTwo)
     {
@@ -547,7 +547,7 @@ class Api
             ]
         ];
 
-        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() . 'api-ext/user/' .
+        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() . '/api-ext/user/' .
                 $userIdentifierOne . '/merge', $postFields)->getBody(), true);
     }
 
