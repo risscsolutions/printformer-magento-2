@@ -14,15 +14,15 @@ use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Quote\Model\Quote;
 use Magento\Wishlist\Model\Item;
 use Rissc\Printformer\Controller\Editor\Save;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Setup\InstallSchema;
-use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
-use Rissc\Printformer\Helper\Api as ApiHelper;
 
 class Printformer extends AbstractView
 {
@@ -104,8 +104,7 @@ class Printformer extends AbstractView
         CatalogSession $catalogSession,
         ApiHelper $apiHelper,
         array $data = []
-    )
-    {
+    ) {
         $this->printformerProductHelper = $printformerProductHelper;
         $this->configHelper = $configHelper;
         $this->urlHelper = $urlHelper;
@@ -285,7 +284,7 @@ class Printformer extends AbstractView
             $product->getId(),
             $this->_storeManager->getStore()->getId()
         );
-        foreach($pfProducts as $printformerProduct) {
+        foreach ($pfProducts as $printformerProduct) {
             $draftId = $this->getDraftId($printformerProduct);
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
@@ -761,6 +760,7 @@ class Printformer extends AbstractView
         if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId()) {
             $uniqueId = null;
         }
+
         $config = [
             'qtySelector' => '#qty',
             'buttonSelector' => '#printformer-button-',

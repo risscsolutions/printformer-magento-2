@@ -8,12 +8,10 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Api\Url\V1 as V1Helper;
 use Rissc\Printformer\Helper\Api\Url\V2 as V2Helper;
-use Rissc\Printformer\Model\Config\Source\Redirect;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Model\Config\Source\Redirect;
 
-class Url
-    extends AbstractHelper
-    implements VersionInterface
+class Url extends AbstractHelper implements VersionInterface
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
 
@@ -32,8 +30,7 @@ class Url
         Context $context,
         StoreManagerInterface $storeManager,
         Config $config
-    )
-    {
+    ) {
         $this->_storeManager = $storeManager;
         $this->config = $config;
 
@@ -68,7 +65,7 @@ class Url
     public function initVersionHelper($isV2Api = false)
     {
         $objm = ObjectManager::getInstance();
-        if($isV2Api) {
+        if ($isV2Api) {
             $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V2');
         } else {
             $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V1');
@@ -87,7 +84,7 @@ class Url
             $this->_versionHelper = null;
         }
 
-        if(!$this->_versionHelper) {
+        if (!$this->_versionHelper) {
             $this->initVersionHelper($this->config->isV2Enabled());
         }
 
@@ -254,7 +251,7 @@ class Url
      */
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
     {
-        if (!$redirectParams){
+        if (!$redirectParams) {
             switch ($this->config->getConfigRedirect()) {
                 case Redirect::CONFIG_REDIRECT_URL_ALT:
                     return $this->config->getRedirectAlt();

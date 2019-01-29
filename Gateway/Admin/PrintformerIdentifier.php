@@ -2,10 +2,10 @@
 
 namespace Rissc\Printformer\Gateway\Admin;
 
-use Magento\Store\Model\ResourceModel\Store\CollectionFactory;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\Store\Model\Store;
 use Magento\Customer\Model\CustomerFactory;
+use Magento\Store\Model\ResourceModel\Store\CollectionFactory;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 
 class PrintformerIdentifier
 {
@@ -55,7 +55,7 @@ class PrintformerIdentifier
     public function deletePrintformerIdentificationByStoreId($storeId)
     {
         try {
-            $this->_connection->query("UPDATE `customer_entity` SET `printformer_identification` = NULL WHERE `store_id` = " . $storeId .";");
+            $this->_connection->query("UPDATE `customer_entity` SET `printformer_identification` = NULL WHERE `store_id` = " . $storeId . ";");
 
             return true;
         } catch (\Exception $e) {

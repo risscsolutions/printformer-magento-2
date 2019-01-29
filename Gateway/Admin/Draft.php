@@ -8,9 +8,9 @@ use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
-use Rissc\Printformer\Model\DraftFactory;
-use Rissc\Printformer\Model\Draft as DraftModel;
 use Rissc\Printformer\Helper\Log as LogHelper;
+use Rissc\Printformer\Model\Draft as DraftModel;
+use Rissc\Printformer\Model\DraftFactory;
 
 class Draft
 {
@@ -143,16 +143,15 @@ class Draft
             $this->logger->debug(__('Error setting draft ordered. Item is null or already ordered.'));
         }
         $historyData['response_data'] = $response;
-        if (empty($response))
-        {
+        if (empty($response)) {
             $historyData['status'] = 'failed';
             $this->_logHelper->addEntry($historyData);
-            throw new Exception(__('Error setting draft ordered. Empty Response: '. $response . ', Url: ' . $url));
+            throw new Exception(__('Error setting draft ordered. Empty Response: ' . $response . ', Url: ' . $url));
         }
 
         $responseArray = $this->jsonDecoder->decode($response);
 
-        if(!$responseArray['success']) {
+        if (!$responseArray['success']) {
             $historyData['status'] = 'failed';
             $this->_logHelper->addEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Response success: false'));
@@ -210,8 +209,7 @@ class Draft
             $lastItem = $item;
         }
 
-        if (!is_null($lastItem) && !empty($draftIds))
-        {
+        if (!is_null($lastItem) && !empty($draftIds)) {
             $url = $this->urlHelper
                 ->setStoreId($lastItem->getPrintformerStoreid())
                 ->getDraftProcessing();
@@ -241,25 +239,21 @@ class Draft
 
             $curlResponse = json_decode($this->_curlRequest($url, $curlOptions), true);
             $historyData['response_data'] = json_encode($curlResponse);
-            if(isset($curlResponse['success']) && !$curlResponse['success'])
-            {
+            if (isset($curlResponse['success']) && !$curlResponse['success']) {
                 $historyData['status'] = 'failed';
                 $this->_logHelper->addEntry($historyData);
                 return false;
             }
 
-            if(isset($curlResponse['processingId']))
-            {
+            if (isset($curlResponse['processingId'])) {
                 /** @var DraftModel $draft */
                 $draft = $this->_draftFactory->create();
                 $draftCollection = $draft->getCollection()
                     ->addFieldToFilter('draft_id', ['in' => $draftIds]);
 
-                if(count($draftCollection->getItems()))
-                {
+                if (count($draftCollection->getItems())) {
                     /** @var DraftModel $draftToUpdate */
-                    foreach($draftCollection->getItems() as $draftToUpdate)
-                    {
+                    foreach ($draftCollection->getItems() as $draftToUpdate) {
                         $draftToUpdate->setProcessingId($curlResponse['processingId']);
                         $draftToUpdate->getResource()->save($draftToUpdate);
                     }

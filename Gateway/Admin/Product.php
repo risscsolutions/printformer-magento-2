@@ -1,17 +1,16 @@
 <?php
 namespace Rissc\Printformer\Gateway\Admin;
 
+use GuzzleHttp\Client as HttpClient;
+use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Json\Decoder;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Gateway\Exception;
-use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
-use Magento\Catalog\Model\ProductFactory;
-use Magento\Catalog\Model\Product as CatalogProduct;
-use GuzzleHttp\Client as HttpClient;
 
 class Product
 {
@@ -99,8 +98,8 @@ class Product
             SELECT `attribute_id`, `attribute_code` FROM `eav_attribute` WHERE `attribute_code` IN ('" . implode("', '", $attributesArray) . "')
         ");
 
-        while($row = $result->fetch()) {
-            switch($row['attribute_code']) {
+        while ($row = $result->fetch()) {
+            switch ($row['attribute_code']) {
                 case self::PF_ATTRIBUTE_ENABLED:
                     $this->attributePfEnabled = $row['attribute_id'];
                     break;
@@ -191,10 +190,10 @@ class Product
 
         $masterIDs = [];
         $responseRealigned = [];
-        foreach($responseArray['data'] as $responseData) {
+        foreach ($responseArray['data'] as $responseData) {
             $masterID = ($this->configHelper->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
                 $responseData['rissc_w2p_master_id']);
-            if(!in_array($masterID, $masterIDs)) {
+            if (!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
                 $responseRealigned[$masterID] = $responseData;
             }
@@ -203,8 +202,8 @@ class Product
         $this->_deleteDeletedPrintformerProductReleations($masterIDs, $storeId);
 
         $updateMasterIds = [];
-        foreach($masterIDs as $masterID) {
-            foreach($responseRealigned[$masterID]['intents'] as $intent) {
+        foreach ($masterIDs as $masterID) {
+            foreach ($responseRealigned[$masterID]['intents'] as $intent) {
                 $resultProduct = $this->connection->fetchRow('
                     SELECT * FROM
                         `' . $this->connection->getTableName('printformer_product') . '`
@@ -253,7 +252,7 @@ class Product
         $resultRows = $this->connection->fetchAll($sqlQuery);
 
         if (!empty($resultRows)) {
-            foreach($resultRows as $row) {
+            foreach ($resultRows as $row) {
                 $this->connection->delete($tableName, ['id = ?' => $row['id']]);
             }
         }
@@ -268,7 +267,7 @@ class Product
         ';
         $resultRows = $this->connection->fetchAll($sqlQuery);
         if (!empty($resultRows)) {
-            foreach($resultRows as $row) {
+            foreach ($resultRows as $row) {
                 $this->connection->delete($tableName, ['id = ?' => $row['id']]);
             }
         }
@@ -284,7 +283,7 @@ class Product
     {
         $rowsToUpdate = count($masterIds);
         $tableName = $this->connection->getTableName('catalog_product_printformer_product');
-        foreach($masterIds as $pfProductId => $masterId) {
+        foreach ($masterIds as $pfProductId => $masterId) {
             $resultRows = $this->connection->fetchAll('
                 SELECT * FROM
                     `' . $tableName . '`
@@ -294,7 +293,7 @@ class Product
                     `intent` = \'' . $masterId['intent'] . '\';
             ');
 
-            foreach($resultRows as $row) {
+            foreach ($resultRows as $row) {
                 $this->connection->query('
                     UPDATE `' . $tableName . '`
                     SET
