@@ -188,9 +188,9 @@ class Api
         $draftHash = $draftInfo['data']['draftHash'];
 
         if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
-            $this->_sessionHelper->updateDraftInCache($draftHash, $response['data']);
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftInfo['data']);
         } else {
-            $this->_sessionHelper->addDraftToCache($draftHash, $response['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftInfo['data']);
         }
 
         return $draftHash;
