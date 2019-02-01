@@ -64,5 +64,12 @@
         />
     </type>
 
+    <type name="Magento\Customer\Controller\Section\Load">
+        <plugin name="assign_customer_user_identifier_to_guest_cart"
+                type="Rissc\Printformer\Plugin\Customer\Section\Load\Plugin"
+                sortOrder="100"
+        />
+    </type>
+
     <virtualType name="PrintformerProductDataProvider" type="Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider" />
 </config>
