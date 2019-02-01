@@ -79,7 +79,7 @@ class Right extends AbstractHelper
                 $right->setCustomerGroupId($group->getCustomerGroupId());
                 $right = $this->rightRepository->save($right);
                 $this->rights[$right->getId()] = $right;
-                $this->right[$group->getCustomerGroupId()];
+                $this->right[$group->getCustomerGroupId()] = $right;
             }
         }
         return $this->right[$group->getCustomerGroupId()];

@@ -5,6 +5,7 @@ use GuzzleHttp\Exception\ServerException;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use GuzzleHttp\Client;
+use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
@@ -76,7 +77,6 @@ class Api
 
     /**
      * @return string
-     * @throws \Exception
      */
     public function getUserIdentifier()
     {
