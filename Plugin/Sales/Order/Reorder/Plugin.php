@@ -5,6 +5,8 @@ use Magento\Catalog\Model\Product;
 use Magento\Checkout\Model\Cart;
 use Magento\Framework\DataObject;
 use Rissc\Printformer\Helper\Api;
+use Rissc\Printformer\Model\DraftFactory;
+use Rissc\Printformer\Model\Draft;
 use Magento\Framework\Registry;
 use Magento\Customer\Model\Session;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
@@ -20,6 +22,9 @@ class Plugin
     /** @var Session */
     protected $_customerSession;
 
+    /** @var DraftFactory */
+    protected $_draftFactory;
+
     /** @var DraftResource */
     protected $_draftResource;
 
@@ -30,11 +35,13 @@ class Plugin
         Api $apiHelper,
         Registry $registry,
         Session $customerSession,
+        DraftFactory $draftFactory,
         DraftResource $draftResource
     ) {
         $this->_apiHelper = $apiHelper;
         $this->_registry = $registry;
         $this->_customerSession = $customerSession;
+        $this->_draftFactory = $draftFactory;
         $this->_draftResource = $draftResource;
     }
 
@@ -71,62 +78,33 @@ class Plugin
             $newDraftId = $this->_apiHelper->getReplicateDraftId($oldDraftId);
             $draftProcess = null;
 
-            $this->createDraftProcess($buyRequest, $product, $oldDraftId, $newDraftId);
+            /** @var Draft $draftProcess */
+            $draftProcess = $this->_apiHelper->draftProcess($oldDraftId);
+            if ($draftProcess->getId()) {
+                /** @var Draft $newDraftProcess */
+                $newDraftProcess = $this->_draftFactory->create();
+                $draftData = $draftProcess->getData();
+                unset($draftData['id']);
+                unset($draftData['created_at']);
+                unset($draftData['order_item_id']);
+                unset($draftData['processing_id']);
+                $draftData['processing_status'] = 0;
+                $newDraftProcess->addData($draftData);
 
-            $buyRequest->setData('printformer_draftid', $newDraftId);
-            $buyRequest->setData('draft_hash_relations', $this->getAllRealtions());
-        }
+                $newDraftProcess->setDraftId($newDraftId);
+                $newDraftProcess->setCopyFrom($oldDraftId);
 
-        return $originalAddProduct($product, $buyRequest);
-    }
+                $this->_draftResource->save($newDraftProcess);
 
-    /**
-     * @param DataObject $buyRequest
-     * @param Product $product
-     * @param string $oldDraftId
-     * @param string $newDraftId
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     */
-    public function createDraftProcess(DataObject $buyRequest, Product $product, string $oldDraftId, string $newDraftId)
-    {
-        $connection = $this->_draftResource->getConnection();
-        $tableName = $connection->getTableName('catalog_product_printformer_product');
-
-        foreach ($buyRequest['draft_hash_relations'] as $printformerProductId => $draftHashRelation) {
-            $sql = "SELECT * FROM {$tableName} WHERE printformer_product_id = {$printformerProductId} AND product_id = {$product->getId()}";
-            $dbRowResults = $connection->fetchAll($sql);
-            $allRelations[$printformerProductId] = $newDraftId;
-
-            foreach ($dbRowResults as $dbRowResult) {
-                $masterId = $dbRowResult['master_id'];
-                $productId = $dbRowResult['product_id'];
-                $intent = $dbRowResult['intent'];
-                $sessionUniqueId = $buyRequest['printformer_unique_session_id'];
-                $customerId = $this->_customerSession->getCustomerId();
-                $printformerProductIdDb = $dbRowResult['printformer_product_id'];
-                $draftProcess = $this->_apiHelper->draftProcess($newDraftId, $masterId, $productId, $intent, $sessionUniqueId, $customerId, $printformerProductIdDb);
-
-                $draftProcess->setData('copy_from', $oldDraftId);
-                $this->_draftResource->save($draftProcess);
+                $buyRequest->setData('printformer_draftid', $newDraftId);
+                $relations = $buyRequest->getData('draft_hash_relations');
+                if (!empty($relations[$draftProcess->getPrintformerProductId()])) {
+                    $relations[$draftProcess->getPrintformerProductId()] = $newDraftId;
+                    $buyRequest->setData('draft_hash_relations', $relations);
+                }
             }
         }
 
-        $this->setAllRealtions($allRelations);
-    }
-
-    /**
-     * @param $allRealtions
-     */
-    public function setAllRealtions($allRealtions)
-    {
-        $this->allRlations = $allRealtions;
-    }
-
-    /**
-     * @return array
-     */
-    public function getAllRealtions()
-    {
-        return $this->allRlations;
+        return $originalAddProduct($product, $buyRequest);
     }
 }
