@@ -12,6 +12,7 @@ use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Customer\Model\Session as CustomerSession;
 use Rissc\Printformer\Helper\Catalog as CatalogHelper;
+use Psr\Log\LoggerInterface;
 
 class V2
     extends AbstractHelper
@@ -46,6 +47,9 @@ class V2
     /** @var CatalogHelper */
     protected $_catalogHelper;
 
+    /** @var LoggerInterface */
+    protected $logger;
+
     /**
      * V2 constructor.
      *
@@ -54,18 +58,21 @@ class V2
      * @param Config $config
      * @param CustomerSession $customerSession
      * @param CatalogHelper $catalogHelper
+     * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
         Config $config,
         CustomerSession $customerSession,
-        CatalogHelper $catalogHelper
+        CatalogHelper $catalogHelper,
+        LoggerInterface $logger
     ) {
         $this->_storeManager = $storeManager;
         $this->_config = $config;
         $this->_customerSession = $customerSession;
         $this->_catalogHelper = $catalogHelper;
+        $this->logger = $logger;
 
         parent::__construct($context);
     }
@@ -119,8 +126,16 @@ class V2
     public function getPrintformerBaseUrl()
     {
         $store = $this->_storeManager->getStore($this->getStoreId());
-        return $this->scopeConfig->getValue('printformer/version2group/v2url',
+        $printformerBaseUrl = $this->scopeConfig->getValue('printformer/version2group/v2url',
             ScopeInterface::SCOPE_STORES, $store->getId());
+        try {
+            $printformerBaseUrl = rtrim($printformerBaseUrl,"/");
+        } catch(\Exception $e) {
+            $this->logger->critical($e);
+            return $printformerBaseUrl;
+        }
+
+        return $printformerBaseUrl;
     }
 
     /**
