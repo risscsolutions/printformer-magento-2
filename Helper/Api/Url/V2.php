@@ -16,6 +16,7 @@ use Rissc\Printformer\Helper\Config;
 class V2 extends AbstractHelper implements VersionInterface
 {
     const API_CREATE_USER               = '/api-ext/user';
+    const API_CREATE_DRAFT              = '/api-ext/draft';
     const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
@@ -26,18 +27,21 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_FILES_DRAFT_PREVIEW       = '/api-ext/files/draft/{draftId}/low-res';
     const API_FILES_DERIVATE_FILE       = '/api-ext/files/derivative/{fileId}/file';
 
-    /** Pageplanning Api V2 START */
-
-    const API_CREATE_DRAFT              = '/api-ext/draft';
-    const API_EDITOR_OPEN               = '/editor/{draftId}';
-    const API_REVIEW_STATUS             = '/api-ext/review';
-    const API_REVIEW_EDIT               = '/review/{reviewId}';
-
-
-    /** Pageplanning Api V2 END */
-
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
+
+    /** Pageplanning START */
+
+    const API_DRAFT_SETUP               = '/api-ext/draft-setup';
+    const API_EDITOR_VIEW               = '/editor/{draftId}';
+
+    const API_REVIEW_START              = '/api-ext/review';
+    const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}';
+    const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/review/{reviewId}/create-review-pdf';
+
+    const API_REQUEST_IDML_PACKAGE      = '/api-ext/draft/{draftId}/request-idml-package';
+
+    /** Pageplanning END */
 
     /** @var StoreManagerInterface */
     protected $_storeManager;
@@ -312,6 +316,17 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
+    public function getReviewPDF($reviewId)
+    {
+        $callbackUrl = $this->_getUrl('customer/account', ['store_id' => $this->getStoreId()]);
+
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{reviewId}', $reviewId, self::API_REVIEW_GET_REVIEW_PDF) . "?" . http_build_query(["callbackURL" => $callbackUrl]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getProducts()
     {
         return $this->getPrintformerBaseUrl() .
@@ -388,6 +403,41 @@ class V2 extends AbstractHelper implements VersionInterface
         return $pdfUrl . '?' . http_build_query($postFields);
     }
 
+    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier)
+    {
+
+        $calbackUrls = [
+            'redirect-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl()),
+
+            /**
+             * @TODO get store base url here
+             */
+
+            'submit-callback-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'rest/V1/reviewcustomercomplete')
+        ];
+
+        $reviewEditUrl = $this->getReviewEditUrl($reviewId, $versionId) . '?' . http_build_query($calbackUrls);
+
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->set('user', $userIdentifier)
+            ->setId(bin2hex(random_bytes(16)), true)
+            ->set('redirect', $reviewEditUrl)
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $this->getAuth() . '?' . http_build_query($postFields);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -408,5 +458,27 @@ class V2 extends AbstractHelper implements VersionInterface
     {
         return $this->getPrintformerBaseUrl() .
             str_replace('{fileId}', $fileId, self::API_FILES_DERIVATE_FILE);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPagePlannerUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_DRAFT_SETUP;
+    }
+
+    public function getReviewStartUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_REVIEW_START;
+    }
+
+    public function getReviewEditUrl($reviewId, $versionId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_EDIT, $replaceString);
     }
 }

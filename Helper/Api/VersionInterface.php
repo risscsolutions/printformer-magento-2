@@ -152,6 +152,7 @@ interface VersionInterface
 
     /**
      * @param $oldDraftId
+     *
      * @return string
      */
     public function getReplicateDraftId(string $oldDraftId);
@@ -162,4 +163,11 @@ interface VersionInterface
      * @return string
      */
     public function getDerivat($fileId);
+
+    /**
+     * @param $reviewId
+     *
+     * @return mixed
+     */
+    public function getReviewPDF($reviewId);
 }

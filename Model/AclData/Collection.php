@@ -2,7 +2,6 @@
 
 namespace Rissc\Printformer\Model\AclData;
 
-use Magento\Framework\Data\CollectionFactory;
 use Rissc\Printformer\Model\AclData;
 
 class Collection
@@ -45,7 +44,7 @@ class Collection
     {
         $result = ['actions' => []];
 
-        foreach($this->collection as $item) {
+        foreach ($this->collection as $item) {
             $result['actions'][] = $item->toArray();
         }
 

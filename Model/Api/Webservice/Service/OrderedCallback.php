@@ -1,19 +1,24 @@
 <?php
+
 namespace Rissc\Printformer\Model\Api\Webservice\Service;
 
 use Magento\Framework\DataObject;
 use Magento\Framework\Webapi\Rest\Request;
 use Rissc\Printformer\Model\Api\Webservice\AbstractService;
-use Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface;
+use Rissc\Printformer\Model\Api\Webservice\Data\OrderedCallbackInterface;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\ResourceModel\Draft\Collection as DraftCollection;
 use Magento\Framework\Event\ManagerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
 
+/**
+ * Class OrderedCallback
+ * @package Rissc\Printformer\Model\Api\Webservice\Service
+ */
 class OrderedCallback
     extends AbstractService
-    implements ServiceInterface
+    implements OrderedCallbackInterface
 {
     /** @var DraftFactory */
     protected $_draftFactory;
@@ -40,6 +45,7 @@ class OrderedCallback
 
     /**
      * @return string
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     public function execute()
     {
@@ -52,18 +58,15 @@ class OrderedCallback
         ];
         $existingLogEntry = null;
         $_apiResponseObject = new DataObject();
-        if(
+        if (
             isset($postParams['processingId']) &&
             isset($postParams['draftStates']) &&
             is_array($postParams['draftStates'])
-        )
-        {
+        ) {
             $_draftIdArray = [];
             $_draftStatus = [];
-            foreach($postParams['draftStates'] as $_draftState)
-            {
-                if(isset($_draftState['draftId']))
-                {
+            foreach ($postParams['draftStates'] as $_draftState) {
+                if (isset($_draftState['draftId'])) {
                     $_draftIdArray[] = $_draftState['draftId'];
                     $_draftStatus[$_draftState['draftId']] = $_draftState['state'];
                 }
@@ -93,13 +96,10 @@ class OrderedCallback
             /** @var Draft $_draft */
             $_successedDraftId = 0;
             $_drafts = [];
-            foreach($_draftCollection->getItems() as $_draft)
-            {
-                if(isset($_draftStatus[$_draft->getDraftId()]))
-                {
+            foreach ($_draftCollection->getItems() as $_draft) {
+                if (isset($_draftStatus[$_draft->getDraftId()])) {
                     $status = $this->_getProcessingStatus($_draftStatus[$_draft->getDraftId()]);
-                    if($status == 1)
-                    {
+                    if ($status == 1) {
                         $_successedDraftId++;
                     }
                     $_draft->setProcessingStatus($status);
@@ -108,10 +108,8 @@ class OrderedCallback
                 }
             }
 
-            if($_draftCounter === $_successedDraftId)
-            {
-                if(is_array($_drafts) && !empty($_drafts))
-                {
+            if ($_draftCounter === $_successedDraftId) {
+                if (is_array($_drafts) && !empty($_drafts)) {
                     $_historyData['status'] = 'all-ok';
                     $this->_eventManager->dispatch(
                         'printformer_draft_processed_success',
@@ -120,28 +118,19 @@ class OrderedCallback
                             'api_response_object' => $_apiResponseObject
                         ]
                     );
-                }
-                else
-                {
+                } else {
                     $_historyData['status'] = 'wrong-data';
                 }
-            }
-            else
-            {
+            } else {
                 $_historyData['status'] = 'processing-count-wrong';
             }
-        }
-        else
-        {
+        } else {
             $_historyData['status'] = 'wrong-response-data';
         }
         $_historyData['response_data'] = json_encode($_apiResponseObject->getMessage());
-        if(!$existingLogEntry)
-        {
+        if (!$existingLogEntry) {
             $this->_logHelper->addEntry($_historyData);
-        }
-        else
-        {
+        } else {
             $this->_logHelper->editEntry($existingLogEntry->getId(), $_historyData);
         }
 
@@ -155,8 +144,7 @@ class OrderedCallback
      */
     protected function _getProcessingStatus($stringStatus)
     {
-        switch($stringStatus)
-        {
+        switch ($stringStatus) {
             case 'processed':
                 return 1;
                 break;

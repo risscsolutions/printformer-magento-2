@@ -2,7 +2,9 @@
 
 namespace Rissc\Printformer\Model;
 
-class AclData
+use Rissc\Printformer\Api\Data\AclDataInterface;
+
+class AclData implements AclDataInterface
 {
     /**
      * @var string
@@ -17,7 +19,7 @@ class AclData
     /**
      * @var string
      */
-    protected $entitiyIdentifier;
+    protected $entityIdentifier;
 
     /**
      * @var string
@@ -41,7 +43,7 @@ class AclData
         }
         $this->action = isset($data['action']) ? $data['action'] : '';
         $this->entityType = isset($data['entityType']) ? $data['entityType'] : '';
-        $this->entitiyIdentifier = isset($data['entityIdentifier']) ? $data['entityIdentifier'] : '';
+        $this->entityIdentifier = isset($data['entityIdentifier']) ? $data['entityIdentifier'] : '';
         $this->userIdentifier = isset($data['userIdentifier']) ? $data['userIdentifier'] : '';
         $this->allowAction = isset($data['allowAction']) ? $data['allowAction'] : false;
     }
@@ -54,12 +56,15 @@ class AclData
         return json_encode($this->toArray());
     }
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return [
             'action' => $this->getAction(),
             'entityType' => $this->getEntityType(),
-            'entityIdentifier' => $this->getEntitiyIdentifier(),
+            'entityIdentifier' => $this->getEntityIdentifier(),
             'userIdentifier' => $this->getUserIdentifier(),
             'allowAction' => $this->getAllowAction()
         ];
@@ -104,9 +109,9 @@ class AclData
     /**
      * @return string
      */
-    public function getEntitiyIdentifier()
+    public function getEntityIdentifier()
     {
-        return $this->entitiyIdentifier;
+        return $this->entityIdentifier;
     }
 
     /**
@@ -115,7 +120,7 @@ class AclData
      */
     public function setEntityIdentifier($entityIdentifier)
     {
-        $this->entitiyIdentifier = $entityIdentifier;
+        $this->entityIdentifier = $entityIdentifier;
         return $this;
     }
 

@@ -281,4 +281,29 @@ class Url extends AbstractHelper implements VersionInterface
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDerivat($fileId);
     }
+
+    public function getReviewPDF($reviewId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewPDF($reviewId);
+    }
+
+    public function getPagePlannerUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerUrl();
+    }
+
+    public function getReviewStartUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewStartUrl();
+    }
+
+    public function getReviewEditUrl($reviewId, $versionId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditUrl($reviewId, $versionId);
+    }
+
+    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $versionId, $userIdentifier);
+    }
 }

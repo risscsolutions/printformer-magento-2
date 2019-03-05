@@ -5,6 +5,7 @@ use GuzzleHttp\Exception\ServerException;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use GuzzleHttp\Client;
+use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
@@ -14,11 +15,10 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
-use DateTime;
-use DateInterval;
+use Magento\Customer\Model\CustomerFactory;
+use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 
-class Api
-    extends AbstractHelper
+class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
 
@@ -43,6 +43,12 @@ class Api
     /** @var Config */
     protected $_config;
 
+    /** @var CustomerFactory */
+    protected $_customerFactory;
+
+    /** @var CustomerResource */
+    protected $_customerResource;
+
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
@@ -50,15 +56,18 @@ class Api
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
-        Config $config
-    )
-    {
+        Config $config,
+        CustomerFactory $customerFactory,
+        CustomerResource $customerResource
+    ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
         $this->_config = $config;
+        $this->_customerFactory = $customerFactory;
+        $this->_customerResource = $customerResource;
 
         $this->apiUrl()->initVersionHelper($this->_config->isV2Enabled());
         $this->apiUrl()->setStoreManager($this->_storeManager);
@@ -75,13 +84,41 @@ class Api
     }
 
     /**
-     * @return string
-     * @throws \Exception
+     * @return Client
      */
-    public function getUserIdentifier()
+    public function getHttpClient()
+    {
+        return $this->_httpClient;
+    }
+
+    /**
+     * @param Customer|int $customer
+     *
+     * @return string
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
+    public function getUserIdentifier($customer = null)
     {
         if (!$this->_config->isV2Enabled()) {
             return null;
+        }
+
+        if (is_numeric($customer) && $customer === 0) {
+            return null;
+        }
+
+        $customerModel = null;
+        if (!empty($customer) && is_numeric($customer)) {
+
+            /** @var Customer $customerModel */
+            $customerModel = $this->_customerFactory->create();
+            $this->_customerResource->load($customerModel, $customer);
+
+            $customer = $customerModel;
+        }
+
+        if ($customer !== null) {
+            return $customer->getPrintformerIdentification();
         }
 
         if ($this->_customerSession->isLoggedIn()) {
@@ -98,6 +135,7 @@ class Api
                         `entity_id` = " . $customer->getId() . ";
                 ");
                 $customer->setData('printformer_identification', $customerUserIdentifier);
+                $customer->getResource()->save($customer);
                 $this->_customerSession->setPrintformerIdentification($customerUserIdentifier);
             } else {
                 if ($customer->getData('printformer_identification') !=

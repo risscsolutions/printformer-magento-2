@@ -371,4 +371,14 @@ class V1 extends AbstractHelper implements VersionInterface
     {
         // TODO: Implement getDerivat() method.
     }
+
+    /**
+     * @param $reviewId
+     *
+     * @return mixed
+     */
+    public function getReviewPDF($reviewId)
+    {
+        // TODO: Implement getReviewPDF() method.
+    }
 }
