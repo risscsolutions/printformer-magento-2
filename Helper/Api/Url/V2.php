@@ -274,8 +274,8 @@ class V2
      * {@inheritdoc}
      */
     public function getThumbnail($draftHash) {
-        return $this->getPrintformerBaseUrl() .
-            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PNG);
+        $draftHash = explode(',', $draftHash)[0];
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PNG);;
     }
 
     /**

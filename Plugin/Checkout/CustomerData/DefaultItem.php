@@ -50,7 +50,7 @@ class DefaultItem
     public function aroundGetItemData(SubjectDefaultItem $defaultItem, \Closure $proceed, CartItemInterface $item)
     {
         $result = $proceed($item);
-        $draftId = $item->getPrintformerDraftid();
+        $draftId = explode(',', $item->getPrintformerDraftid())[0];
         if ($draftId && $this->configHelper->isUseImagePreview()) {
             if($this->configHelper->isV2Enabled()) {
                 if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
