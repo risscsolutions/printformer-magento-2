@@ -282,9 +282,14 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDerivat($fileId);
     }
 
-    public function getReviewPDF($reviewId)
+    public function createReviewPDF($reviewId)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewPDF($reviewId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
+    }
+
+    public function getReviewPdf($reviewId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
     }
 
     public function getPagePlannerUrl()
@@ -305,5 +310,20 @@ class Url extends AbstractHelper implements VersionInterface
     public function getReviewEditAuth($reviewId, $versionId, $userIdentifier)
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $versionId, $userIdentifier);
+    }
+
+    public function createIdmlPackage($draftId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->createIdmlPackage($draftId);
+    }
+
+    public function getIdmlPackage($draftId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
+    }
+
+    public function getPagePlannerApproveUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
     }
 }

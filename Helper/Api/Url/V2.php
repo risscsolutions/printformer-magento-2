@@ -31,16 +31,18 @@ class V2 extends AbstractHelper implements VersionInterface
     const EXT_AUTH_PATH                 = '/auth';
 
     /** Pageplanning START */
-
     const API_DRAFT_SETUP               = '/api-ext/draft-setup';
     const API_EDITOR_VIEW               = '/editor/{draftId}';
 
     const API_REVIEW_START              = '/api-ext/review';
     const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}';
-    const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/review/{reviewId}/create-review-pdf';
+    const API_REVIEW_CREATE_REVIEW_PDF  = '/api-ext/review/{reviewId}/{versionId}/create-review-pdf';
+    const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/files/review/{reviewId}/{versionId}/pdf';
 
     const API_REQUEST_IDML_PACKAGE      = '/api-ext/draft/{draftId}/request-idml-package';
+    const API_GET_IDML_PACKAGE          = '/api-ext/files/draft/{draftId}/idml-package';
 
+    const API_PAGE_PLANNER_APPROVE      = '/api-ext/page-planner/approve';
     /** Pageplanning END */
 
     /** @var StoreManagerInterface */
@@ -316,12 +318,34 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getReviewPDF($reviewId)
+    public function createReviewPDF($reviewId, $versionId = 1)
     {
-        $callbackUrl = $this->_getUrl('customer/account', ['store_id' => $this->getStoreId()]);
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_CREATE_REVIEW_PDF, $replaceString);
+    }
 
+    public function getReviewPdf($reviewId, $versionId = 1)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_GET_REVIEW_PDF, $replaceString);
+    }
+
+    public function createIdmlPackage($draftId)
+    {
         return $this->getPrintformerBaseUrl() .
-            str_replace('{reviewId}', $reviewId, self::API_REVIEW_GET_REVIEW_PDF) . "?" . http_build_query(["callbackURL" => $callbackUrl]);
+            str_replace('{draftId}', $draftId, self::API_REQUEST_IDML_PACKAGE);
+    }
+
+    public function getIdmlPackage($draftId)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{draftId}', $draftId, self::API_GET_IDML_PACKAGE);
     }
 
     /**
@@ -408,11 +432,6 @@ class V2 extends AbstractHelper implements VersionInterface
 
         $calbackUrls = [
             'redirect-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl()),
-
-            /**
-             * @TODO get store base url here
-             */
-
             'submit-callback-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'rest/V1/reviewcustomercomplete')
         ];
 
@@ -480,5 +499,10 @@ class V2 extends AbstractHelper implements VersionInterface
             '{versionId}' => $versionId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_EDIT, $replaceString);
+    }
+
+    public function getPagePlannerApproveUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_APPROVE;
     }
 }

@@ -92,6 +92,14 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @return StoreManagerInterface
+     */
+    public function getStoreManager()
+    {
+        return $this->_storeManager;
+    }
+
+    /**
      * @param Customer|int $customer
      *
      * @return string
@@ -653,5 +661,105 @@ class Api extends AbstractHelper
         ];
 
         return $derivateDownloadLink . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return string
+     */
+    public function createReviewPdfUrl($reviewId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->createReviewPDF($reviewId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return string
+     */
+    public function getReviewPdfUrl($reviewId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->getReviewPdf($reviewId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $draftId
+     *
+     * @return string
+     */
+    public function getIdmlPackage($draftId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $getIdmlPackage = $this->apiUrl()->getIdmlPackage($draftId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $getIdmlPackage . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $draftId
+     *
+     * @return string
+     */
+    public function closePagePlanner()
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->getPagePlannerApproveUrl();
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
     }
 }
