@@ -427,12 +427,12 @@ class V2 extends AbstractHelper implements VersionInterface
         return $pdfUrl . '?' . http_build_query($postFields);
     }
 
-    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier)
+    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl)
     {
 
         $calbackUrls = [
             'redirect-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl()),
-            'submit-callback-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'rest/V1/reviewcustomercomplete')
+            'submit-callback-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . $callbackUrl)
         ];
 
         $reviewEditUrl = $this->getReviewEditUrl($reviewId, $versionId) . '?' . http_build_query($calbackUrls);

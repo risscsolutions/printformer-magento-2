@@ -307,9 +307,9 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditUrl($reviewId, $versionId);
     }
 
-    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier)
+    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $versionId, $userIdentifier);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl);
     }
 
     public function createIdmlPackage($draftId)
