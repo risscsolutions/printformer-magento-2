@@ -35,7 +35,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_EDITOR_VIEW               = '/editor/{draftId}';
 
     const API_REVIEW_START              = '/api-ext/review';
-    const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}';
+    const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}/';
     const API_REVIEW_CREATE_REVIEW_PDF  = '/api-ext/review/{reviewId}/{versionId}/create-review-pdf';
     const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/files/review/{reviewId}/{versionId}/pdf';
 
