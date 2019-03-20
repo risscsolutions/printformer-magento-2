@@ -326,4 +326,14 @@ class Url extends AbstractHelper implements VersionInterface
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
     }
+
+    public function getReviewUserAddUrl($reviewId, $versionId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserAddUrl($reviewId, $versionId);
+    }
+
+    public function getReviewUserDeleteUrl($reviewId, $versionId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserDeleteUrl($reviewId, $versionId);
+    }
 }

@@ -38,6 +38,8 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}/';
     const API_REVIEW_CREATE_REVIEW_PDF  = '/api-ext/review/{reviewId}/{versionId}/create-review-pdf';
     const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/files/review/{reviewId}/{versionId}/pdf';
+    const API_REVIEW_ADD_USER           = '/api-ext/review/{reviewId}/{versionId}/add-user';
+    const API_REVIEW_DELETE_USER        = '/api-ext/review/{reviewId}/{versionId}/delete-user';
 
     const API_REQUEST_IDML_PACKAGE      = '/api-ext/draft/{draftId}/request-idml-package';
     const API_GET_IDML_PACKAGE          = '/api-ext/files/draft/{draftId}/idml-package';
@@ -504,5 +506,23 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getPagePlannerApproveUrl()
     {
         return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_APPROVE;
+    }
+
+    public function getReviewUserAddUrl($reviewId, $versionId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_ADD_USER, $replaceString);
+    }
+
+    public function getReviewUserDeleteUrl($reviewId, $versionId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_DELETE_USER, $replaceString);
     }
 }
