@@ -433,7 +433,7 @@ class V2 extends AbstractHelper implements VersionInterface
     {
 
         $calbackUrls = [
-            'redirect-url' => urlencode(base64_encode($this->_storeManager->getStore()->getBaseUrl()) . 'customer/account/'),
+            'redirect-url' => urlencode(base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'customer/account/')),
             'submit-callback-url' => urlencode(base64_encode(rtrim($this->_storeManager->getStore()->getBaseUrl(), '/') . '/' . $callbackUrl))
         ];
 
