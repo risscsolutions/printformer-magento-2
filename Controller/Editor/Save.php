@@ -108,9 +108,9 @@ class Save extends Action
 
             $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
             $uniqueID = null;
-            if($sessionUniqueId) {
+            if ($sessionUniqueId) {
                 $uniqueExplode = explode(':', $sessionUniqueId);
-                if(isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
+                if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                     $uniqueID = $sessionUniqueId;
                 } else {
                     $uniqueID = md5(time() . '_' . $this->_sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
@@ -160,7 +160,7 @@ class Save extends Action
                     ->setController('cart')
                     ->forward('add');
             } else { // redirect to product page
-                if($this->getRequest()->getParam('is_edit') == '1') {
+                if ($this->getRequest()->getParam('is_edit') == '1') {
                     $configureUrl = $this->_url->getUrl('checkout/cart/configure', [
                         'id' => $this->getRequest()->getParam('quote_id'),
                         'product_id' => $this->getRequest()->getParam('edit_product')
@@ -200,7 +200,7 @@ class Save extends Action
 
         /** @var Session $session */
         $session = $this->_sessionHelper->getCatalogSession();
-        foreach($extra as $key => $value) {
+        foreach ($extra as $key => $value) {
             $session->setData($key, $value);
         }
 
@@ -216,7 +216,7 @@ class Save extends Action
         }
 
         $formatVariation = $this->_getFormatVariation();
-        $colorVariation  = $this->_getColorVariation();
+        $colorVariation = $this->_getColorVariation();
 
         if ($formatVariation) {
             $this->_addSelectedProducFormat($params, $product, $formatVariation);
