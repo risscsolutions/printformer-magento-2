@@ -139,8 +139,9 @@ class Draft
     /**
      * @return bool
      */
-    public function isV2Enabled() {
-        if($this->v2enabled === null) {
+    public function isV2Enabled()
+    {
+        if ($this->v2enabled === null) {
             $this->v2enabled = ($this->_scopeConfig->getValue('printformer/version2group/version2', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) == 1);
         }
         return $this->v2enabled;
@@ -149,8 +150,9 @@ class Draft
     /**
      * @return mixed
      */
-    public function getClientApiKey() {
-        if($this->apiKey === null) {
+    public function getClientApiKey()
+    {
+        if ($this->apiKey === null) {
             $this->apiKey = $this->_scopeConfig->getValue('printformer/version2group/v2apiKey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         }
         return $this->apiKey;
@@ -162,7 +164,7 @@ class Draft
     public function createUser()
     {
         $url = $this->_urlHelper->getUser();
-        if(!$url) {
+        if (!$url) {
             return '';
         }
         $response = $this->_httpClient->post($url);
@@ -178,7 +180,7 @@ class Draft
     public function getUserIdentifier()
     {
         $userIdentifier = $this->_customerSession->getPrintformerIdentification();
-        if(!$userIdentifier) {
+        if (!$userIdentifier) {
             if ($this->_customerSession->isLoggedIn()) {
                 $customer = $this->_customerSession->getCustomer();
                 $userIdentifier = $customer->getData('printformer_identification');
@@ -197,11 +199,13 @@ class Draft
         return $userIdentifier;
     }
 
-    public function setUserIdentifier($userIdentifier) {
+    public function setUserIdentifier($userIdentifier)
+    {
         $this->userIdentifier = $userIdentifier;
     }
 
-    public function getClientIdentifier() {
+    public function getClientIdentifier()
+    {
         return $this->_scopeConfig->getValue('printformer/version2group/v2identifier', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
@@ -209,7 +213,8 @@ class Draft
      * @param $redirectUrl
      * @return string
      */
-    public function getRedirectUrl($redirectUrl) {
+    public function getRedirectUrl($redirectUrl)
+    {
         /**
          * Create a valid JWT
          */
@@ -226,14 +231,14 @@ class Draft
             ->getToken();
 
         $authUrl = $this->_urlHelper->getAuth();
-        if(!$authUrl) {
+        if (!$authUrl) {
             return '';
         }
         return $this->_urlHelper->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
     }
 
-
-    public function getPdfDocument($draftId) {
+    public function getPdfDocument($draftId)
+    {
         /**
          * Create a valid JWT
          */
@@ -253,7 +258,8 @@ class Draft
     /**
      * @return Client
      */
-    protected function getGuzzleClient() {
+    protected function getGuzzleClient()
+    {
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraft();
@@ -262,7 +268,7 @@ class Draft
             'Content-Type:' => 'application/json',
             'Accept' => 'application/json'
         ];
-        if($this->isV2Enabled()) {
+        if ($this->isV2Enabled()) {
             $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
         }
         return new Client([
@@ -337,12 +343,11 @@ class Draft
             ]
         ];
 
-        if($this->isV2Enabled()) {
+        if ($this->isV2Enabled()) {
             $postFields['json']['user_identifier'] = $this->getUserIdentifier();
         }
 
-
-        if($intent !== null) {
+        if ($intent !== null) {
             $postFields['intent'] = $this->getIntent($intent);
         }
 
@@ -353,7 +358,7 @@ class Draft
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraft();
 
-        if($this->isV2Enabled()) {
+        if ($this->isV2Enabled()) {
             $header['Authorization'] = 'Bearer' . $this->getClientApiKey();
         }
 
@@ -362,13 +367,13 @@ class Draft
 
         $draftHash = $response['data']['draftHash'];
 
-        if(!isset($draftHash)) {
+        if (!isset($draftHash)) {
             $historyData['status'] = 'failed';
             $this->_logHelper->addEntry($historyData);
             return null;
         }
 
-        if(isset($draftHash)) {
+        if (isset($draftHash)) {
             $historyData['status'] = 'send';
             $this->_logHelper->addEntry($historyData);
             return $draftHash;
@@ -442,7 +447,7 @@ class Draft
 
     public function getIntent($intent)
     {
-        switch(strtolower($intent)) {
+        switch (strtolower($intent)) {
             case 'editor':
                 return 'customize';
                 break;

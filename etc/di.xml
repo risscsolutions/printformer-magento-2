@@ -1,61 +1,84 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!-- Declarations -->
-    <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface" type="Magento\Framework\Api\SearchResults" />
-    <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface" type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
-    <preference for="Magento\Checkout\Block\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer" />
+    <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface"
+                type="Magento\Framework\Api\SearchResults"/>
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\OrderedCallbackInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\AclInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\Acl"/>
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\AclDataInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\AclData"/>
+    <preference for="Rissc\Printformer\Api\Data\AclDataInterface" type="Rissc\Printformer\Model\AclData"/>
+    <preference for="Magento\Checkout\Block\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
 
     <!-- Plugins -->
     <type name="Magento\Catalog\Block\Product\View\Gallery">
-        <plugin name="Rissc_Printformer_Product_Gallery" type="Rissc\Printformer\Plugin\Catalog\Product\View\Gallery" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Product_Gallery" type="Rissc\Printformer\Plugin\Catalog\Product\View\Gallery"
+                sortOrder="100"/>
     </type>
     <type name="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\CustomOptions">
-        <plugin name="Rissc_Printformer_Edit_PrintformerProduct" type="Rissc\Printformer\Plugin\Product\Edit\Metadata\PrintformerProduct" sortOrder="9999" />
+        <plugin name="Rissc_Printformer_Edit_PrintformerProduct"
+                type="Rissc\Printformer\Plugin\Product\Edit\Metadata\PrintformerProduct" sortOrder="9999"/>
     </type>
     <type name="Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit">
-        <plugin name="Rissc_Printformer_Checkout_Item_EditRenderer" type="Rissc\Printformer\Plugin\Checkout\Cart\Item\Renderer\Actions\Edit" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Checkout_Item_EditRenderer"
+                type="Rissc\Printformer\Plugin\Checkout\Cart\Item\Renderer\Actions\Edit" sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\Controller\Cart\Add">
         <plugin name="Rissc_Printformer_Cart_Add" type="Rissc\Printformer\Plugin\Checkout\Cart\Add" sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\CustomerData\DefaultItem">
-        <plugin name="Rissc_Printformer_Checkout_DefaultItem" type="Rissc\Printformer\Plugin\Checkout\CustomerData\DefaultItem" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Checkout_DefaultItem"
+                type="Rissc\Printformer\Plugin\Checkout\CustomerData\DefaultItem" sortOrder="100"/>
     </type>
     <type name="Magento\Downloadable\Block\Customer\Products\ListProducts">
-        <plugin name="Rissc_Printformer_DownloadableProducts_ListProducts" type="Rissc\Printformer\Plugin\DownloadableProducts\ListProducts" sortOrder="100" />
+        <plugin name="Rissc_Printformer_DownloadableProducts_ListProducts"
+                type="Rissc\Printformer\Plugin\DownloadableProducts\ListProducts" sortOrder="100"/>
     </type>
     <type name="Magento\Downloadable\Block\Sales\Order\Email\Items\Downloadable">
-        <plugin name="Rissc_Printformer_DownloadableProducts_EmailItems" type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItems" sortOrder="100" />
+        <plugin name="Rissc_Printformer_DownloadableProducts_EmailItems"
+                type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItems" sortOrder="100"/>
     </type>
     <type name="Magento\Downloadable\Block\Sales\Order\Email\Items\Order\Downloadable">
-        <plugin name="Rissc_Printformer_DownloadableProducts_EmailItemsOrder" type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItemsOrder" sortOrder="100" />
+        <plugin name="Rissc_Printformer_DownloadableProducts_EmailItemsOrder"
+                type="Rissc\Printformer\Plugin\DownloadableProducts\EmailItemsOrder" sortOrder="100"/>
     </type>
     <type name="Magento\Quote\Model\Quote">
         <plugin name="Rissc_Printformer_QuoteModel" type="Rissc\Printformer\Plugin\Quote\QuoteModel" sortOrder="100"/>
     </type>
     <type name="Magento\Quote\Model\Quote\Item">
-        <plugin name="Rissc_Printformer_Quote_ItemModel" type="Rissc\Printformer\Plugin\Quote\Quote\ItemModel" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Quote_ItemModel" type="Rissc\Printformer\Plugin\Quote\Quote\ItemModel"
+                sortOrder="100"/>
     </type>
     <type name="Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer">
-        <plugin name="Rissc_Printformer_Adminhtml_Order_ItemRenderer" type="Rissc\Printformer\Plugin\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Adminhtml_Order_ItemRenderer"
+                type="Rissc\Printformer\Plugin\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer"
+                sortOrder="100"/>
     </type>
     <type name="Magento\Sales\Model\Order">
-        <plugin name="Rissc_Printformer_Sales_OrderModel" type="Rissc\Printformer\Plugin\Sales\OrderModel" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Sales_OrderModel" type="Rissc\Printformer\Plugin\Sales\OrderModel"
+                sortOrder="100"/>
     </type>
     <type name="Magento\Wishlist\Block\Customer\Wishlist\Item\Column">
-        <plugin name="Rissc_Printformer_Wishlist_ItemColumn" type="Rissc\Printformer\Plugin\Wishlist\Customer\Wishlist\Item\Column" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Wishlist_ItemColumn"
+                type="Rissc\Printformer\Plugin\Wishlist\Customer\Wishlist\Item\Column" sortOrder="100"/>
     </type>
     <type name="Magento\Wishlist\Controller\Index\Add">
         <plugin name="Rissc_Printformer_Wishlist_Add" type="Rissc\Printformer\Plugin\Wishlist\Add" sortOrder="100"/>
     </type>
     <type name="Magento\Wishlist\Controller\Index\UpdateItemOptions">
-        <plugin name="Rissc_Printformer_Wishlist_UpdateItemOptions" type="Rissc\Printformer\Plugin\Wishlist\UpdateItemOptions" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Wishlist_UpdateItemOptions"
+                type="Rissc\Printformer\Plugin\Wishlist\UpdateItemOptions" sortOrder="100"/>
     </type>
     <type name="Magento\Wishlist\Model\Wishlist">
-        <plugin name="Rissc_Printformer_WishlistModel" type="Rissc\Printformer\Plugin\Wishlist\WishlistModel" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_WishlistModel" type="Rissc\Printformer\Plugin\Wishlist\WishlistModel"
+                sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\Model\Cart">
-        <plugin name="Rissc_Printformer_Sales_Order_Reorder_Plugin" type="Rissc\Printformer\Plugin\Sales\Order\Reorder\Plugin" sortOrder="100"/>
+        <plugin name="Rissc_Printformer_Sales_Order_Reorder_Plugin"
+                type="Rissc\Printformer\Plugin\Sales\Order\Reorder\Plugin" sortOrder="100"/>
     </type>
     <type name="Rissc\Printformer\Block\Catalog\Product\View\Printformer">
         <plugin name="printformer_delete_session_after_configure"
@@ -63,6 +86,15 @@
                 sortOrder="1000"
         />
     </type>
+    <type name="Magento\Framework\Reflection\FieldNamer">
+        <plugin name="field_namer_method_plugin"
+                type="Rissc\Printformer\Plugin\FieldNamerPlugin"
+                sortOrder="100"
+        />
+    </type>
+
+    <virtualType name="PrintformerProductDataProvider"
+                 type="Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider"/>
 
     <type name="Magento\Customer\Controller\Section\Load">
         <plugin name="assign_customer_user_identifier_to_guest_cart"

@@ -8,7 +8,13 @@
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
     <route url="/V1/printformer/callbackOrderedStatus" method="POST">
-        <service class="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface" method="execute"/>
+        <service class="Rissc\Printformer\Model\Api\Webservice\Data\OrderedCallbackInterface" method="execute"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/printformer/api/acl" method="POST">
+        <service class="Rissc\Printformer\Model\Api\Webservice\Data\AclInterface" method="execute"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>

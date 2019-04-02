@@ -113,8 +113,7 @@ class Printformer extends AbstractView
         ApiHelper $apiHelper,
         LoggerInterface $logger,
         array $data = []
-    )
-    {
+    ) {
         $this->printformerProductHelper = $printformerProductHelper;
         $this->configHelper = $configHelper;
         $this->urlHelper = $urlHelper;
@@ -295,7 +294,7 @@ class Printformer extends AbstractView
             $product->getId(),
             $this->_storeManager->getStore()->getId()
         );
-        foreach($pfProducts as $printformerProduct) {
+        foreach ($pfProducts as $printformerProduct) {
             $draftId = $this->getDraftId($printformerProduct);
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);

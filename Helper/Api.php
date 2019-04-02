@@ -15,11 +15,10 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
-use DateTime;
-use DateInterval;
+use Magento\Customer\Model\CustomerFactory;
+use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 
-class Api
-    extends AbstractHelper
+class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
 
@@ -44,6 +43,12 @@ class Api
     /** @var Config */
     protected $_config;
 
+    /** @var CustomerFactory */
+    protected $_customerFactory;
+
+    /** @var CustomerResource */
+    protected $_customerResource;
+
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
@@ -51,15 +56,18 @@ class Api
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
-        Config $config
-    )
-    {
+        Config $config,
+        CustomerFactory $customerFactory,
+        CustomerResource $customerResource
+    ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
         $this->_config = $config;
+        $this->_customerFactory = $customerFactory;
+        $this->_customerResource = $customerResource;
 
         $this->apiUrl()->initVersionHelper($this->_config->isV2Enabled());
         $this->apiUrl()->setStoreManager($this->_storeManager);
@@ -76,12 +84,49 @@ class Api
     }
 
     /**
-     * @return string
+     * @return Client
      */
-    public function getUserIdentifier()
+    public function getHttpClient()
+    {
+        return $this->_httpClient;
+    }
+
+    /**
+     * @return StoreManagerInterface
+     */
+    public function getStoreManager()
+    {
+        return $this->_storeManager;
+    }
+
+    /**
+     * @param Customer|int $customer
+     *
+     * @return string
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
+    public function getUserIdentifier($customer = null)
     {
         if (!$this->_config->isV2Enabled()) {
             return null;
+        }
+
+        if (is_numeric($customer) && $customer === 0) {
+            return null;
+        }
+
+        $customerModel = null;
+        if (!empty($customer) && is_numeric($customer)) {
+
+            /** @var Customer $customerModel */
+            $customerModel = $this->_customerFactory->create();
+            $this->_customerResource->load($customerModel, $customer);
+
+            $customer = $customerModel;
+        }
+
+        if ($customer !== null) {
+            return $customer->getPrintformerIdentification();
         }
 
         if ($this->_customerSession->isLoggedIn()) {
@@ -616,5 +661,105 @@ class Api
         ];
 
         return $derivateDownloadLink . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return string
+     */
+    public function createReviewPdfUrl($reviewId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->createReviewPDF($reviewId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return string
+     */
+    public function getReviewPdfUrl($reviewId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->getReviewPdf($reviewId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $draftId
+     *
+     * @return string
+     */
+    public function getIdmlPackage($draftId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $getIdmlPackage = $this->apiUrl()->getIdmlPackage($draftId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $getIdmlPackage . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $draftId
+     *
+     * @return string
+     */
+    public function closePagePlanner()
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->getPagePlannerApproveUrl();
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
     }
 }

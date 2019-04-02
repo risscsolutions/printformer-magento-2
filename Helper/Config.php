@@ -1,11 +1,11 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\ScopeInterface;
-use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Store\Model\StoreManagerInterface;
 
 class Config extends AbstractHelper
 {
@@ -82,6 +82,7 @@ class Config extends AbstractHelper
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param CustomerSession $customerSession
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function __construct(
         Context $context,
@@ -176,8 +177,11 @@ class Config extends AbstractHelper
      */
     public function getRedirectProductOnCancel()
     {
-        return $this->scopeConfig->getValue(self::XML_PATH_CONFIG_REDIRECT_ON_CANCEL, ScopeInterface::SCOPE_STORE,
-            $this->getStoreId()) == '1';
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_REDIRECT_ON_CANCEL,
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreId()
+        ) == '1';
     }
 
     /**
@@ -201,8 +205,11 @@ class Config extends AbstractHelper
      */
     public function isAllowSkipConfig()
     {
-        return intval($this->scopeConfig->getValue(self::XML_PATH_CONFIG_SKIP_CONFIG, ScopeInterface::SCOPE_STORE,
-            $this->getStoreId()));
+        return intval($this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_SKIP_CONFIG,
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreId()
+        ));
     }
 
     /**
@@ -267,7 +274,7 @@ class Config extends AbstractHelper
     public function getExpireDate()
     {
         $days = $this->scopeConfig->getValue(self::XML_PATH_CONFIG_EXPIRE_DATE, ScopeInterface::SCOPE_STORE, $this->getStoreId());
-        return (new \DateTime())->add(\DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
+        return (new \DateTime())->add(\DateInterval::createFromDateString('+' . $days . ' days'))->getTimestamp();
     }
 
     /**
@@ -300,8 +307,7 @@ class Config extends AbstractHelper
     public function getCloseNoticeText()
     {
         $text = $this->scopeConfig->getValue(self::XML_PATH_CONFIG_CLOSE_NOTICE_TEXT, ScopeInterface::SCOPE_STORE, $this->getStoreId());
-        if($text == "")
-        {
+        if ($text == "") {
             $text = 'Are you sure?';
         }
 
@@ -446,13 +452,7 @@ class Config extends AbstractHelper
      */
     public function isV2Enabled($storeId = null)
     {
-        if($storeId === null)
-            $storeId = $this->getStoreId();
-
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_V2_ENABLED,
-            ScopeInterface::SCOPE_STORES, $storeId
-        );
+        return true;
     }
 
     /**
