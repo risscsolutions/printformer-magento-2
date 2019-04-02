@@ -357,7 +357,7 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraftId(string $oldDraftId)
+    public function getReplicateDraftId($oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::URI_REPLICATE_DRAFT);
     }
