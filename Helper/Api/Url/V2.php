@@ -45,6 +45,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_GET_IDML_PACKAGE          = '/api-ext/files/draft/{draftId}/idml-package';
 
     const API_PAGE_PLANNER_APPROVE      = '/api-ext/page-planner/approve';
+    const API_PAGE_PLANNER_DELETE       = '/api-ext/page-planner/delete';
     /** Pageplanning END */
 
     /** @var StoreManagerInterface */
@@ -524,5 +525,10 @@ class V2 extends AbstractHelper implements VersionInterface
             '{versionId}' => $versionId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_DELETE_USER, $replaceString);
+    }
+
+    public function getPagePlannerDeleteUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_DELETE;
     }
 }
