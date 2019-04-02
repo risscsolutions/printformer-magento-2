@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Controller\Editor;
 
+use Magento\Checkout\Helper\Cart;
 use Magento\Framework\App\Action\Context;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Session;
@@ -19,6 +20,8 @@ use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
+use Magento\Framework\Data\Form\FormKey;
+use Magento\Catalog\Block\Product\ListProduct;
 
 class Save extends Action
 {
@@ -60,6 +63,11 @@ class Save extends Action
     protected $_catalogSession;
 
     /**
+     * @var FormKey
+     */
+    protected $_formKey;
+
+    /**
      * Save constructor.
      * @param LoggerInterface $logger
      * @param Context $context
@@ -69,6 +77,7 @@ class Save extends Action
      * @param Config $configHelper
      * @param DraftFactory $draftFactory
      * @param Session $catalogSession
+     * @param FormKey $formKey
      */
     public function __construct(
         LoggerInterface $logger,
@@ -78,7 +87,8 @@ class Save extends Action
         Url $urlHelper,
         Config $configHelper,
         DraftFactory $draftFactory,
-        Session $catalogSession
+        Session $catalogSession,
+        FormKey $formKey
     ) {
         parent::__construct($context);
 
@@ -89,6 +99,7 @@ class Save extends Action
         $this->_configHelper = $configHelper;
         $this->_draftFactory = $draftFactory;
         $this->_catalogSession = $catalogSession;
+        $this->_formKey = $formKey;
     }
 
     public function execute()
@@ -154,6 +165,8 @@ class Save extends Action
             } elseif ($this->_configHelper->getConfigRedirect() // add to cart if true
                 != \Rissc\Printformer\Model\Config\Source\Redirect::CONFIG_REDIRECT_URL_PRODUCT
             ) {
+                $params['product'] = $product->getId();
+                $params['printformer_unique_session_id'] = $uniqueID;
                 $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
                     ->setParams($this->prepareAddToCartParams($params))
                     ->setModule('checkout')
@@ -229,15 +242,18 @@ class Save extends Action
     }
 
     /**
+     * @param ProductInterface $product
      * @param array $params
+     *
      * @return array
      */
-    protected function prepareAddToCartParams(array $params)
+    protected function prepareAddToCartParams(array $params = [])
     {
         $redirectUrl = $this->_urlHelper->getRedirect();
         if ($redirectUrl) {
             $params['redirect_url'] = $redirectUrl;
         }
+        $params['form_key'] = $this->_formKey->getFormKey();
 
         return $params;
     }
