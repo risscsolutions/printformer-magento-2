@@ -269,7 +269,7 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraftId(string $oldDraftId)
+    public function getReplicateDraftId($oldDraftId)
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
     }
