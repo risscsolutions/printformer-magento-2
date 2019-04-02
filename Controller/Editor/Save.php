@@ -2,7 +2,6 @@
 
 namespace Rissc\Printformer\Controller\Editor;
 
-use Magento\Checkout\Helper\Cart;
 use Magento\Framework\App\Action\Context;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Session;
@@ -21,7 +20,7 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
 use Magento\Framework\Data\Form\FormKey;
-use Magento\Catalog\Block\Product\ListProduct;
+use Rissc\Printformer\Model\Config\Source\Redirect;
 
 class Save extends Action
 {
@@ -149,6 +148,7 @@ class Save extends Action
             }
 
             $params = $this->initDraft($product, $draftId, $storeId, $extraParams);
+            $redirectAddToCart = $this->_configHelper->getConfigRedirect()!= Redirect::CONFIG_REDIRECT_URL_PRODUCT;
             if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
                 // update wishlist item options if true
                 $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
@@ -162,9 +162,7 @@ class Save extends Action
                     ->setModule('wishlist')
                     ->setController('index')
                     ->forward('add');
-            } elseif ($this->_configHelper->getConfigRedirect() // add to cart if true
-                != \Rissc\Printformer\Model\Config\Source\Redirect::CONFIG_REDIRECT_URL_PRODUCT
-            ) {
+            } elseif ($redirectAddToCart && $this->getRequest()->getParam('is_edit') != '1') {
                 $params['product'] = $product->getId();
                 $params['printformer_unique_session_id'] = $uniqueID;
                 $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
