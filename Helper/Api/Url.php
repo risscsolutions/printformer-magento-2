@@ -341,4 +341,9 @@ class Url extends AbstractHelper implements VersionInterface
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerDeleteUrl();
     }
+
+    public function getUserData($identifier)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUserData($identifier);
+    }
 }

@@ -99,6 +99,42 @@ class Api extends AbstractHelper
         return $this->_storeManager;
     }
 
+    public function checkUserData($customer)
+    {
+        if ($customer->getPrintformerIdentification() !== null) {
+            $userData = $this->_httpClient->get($this->apiUrl()->getUserData($customer->getPrintformerIdentification()));
+
+            if ($userData->getStatusCode() === 200) {
+                $resultData = json_decode($userData->getBody()->getContents(), true);
+                $profileData = $resultData['data']['profile'];
+
+                if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
+                    $options = [
+                        'json' => [
+                            'firstName' => $customer->getFirstname(),
+                            'lastName' => $customer->getLastname(),
+                            'email' => $customer->getEmail()
+                        ]
+                    ];
+
+                    $this->_httpClient->put($this->apiUrl()->getUserData($customer->getPrintformerIdentification()), $options);
+                }
+            }
+        } else {
+
+            $options = [
+                'json' => [
+                    'firstName' => $customer->getFirstname(),
+                    'lastName' => $customer->getLastname(),
+                    'email' => $customer->getEmail()
+                ]
+            ];
+
+            $this->createUser($options);
+        }
+
+    }
+
     /**
      * @param Customer|int $customer
      *
@@ -123,6 +159,7 @@ class Api extends AbstractHelper
             $this->_customerResource->load($customerModel, $customer);
 
             $customer = $customerModel;
+            $this->checkUserData($customer);
         }
 
         if ($customer !== null) {
@@ -132,6 +169,7 @@ class Api extends AbstractHelper
         if ($this->_customerSession->isLoggedIn()) {
             $customer = $this->_customerSession->getCustomer();
             $customer->getResource()->load($customer, $customer->getId());
+
             if (!$customer->getData('printformer_identification')) {
                 $customerUserIdentifier = $this->createUser();
                 $connection = $customer->getResource()->getConnection();
@@ -153,6 +191,9 @@ class Api extends AbstractHelper
                     );
                 }
             }
+
+            $this->checkUserData($customer);
+
         } else {
             if (!$this->_customerSession->getPrintformerIdentification()) {
                 $guestUserIdentifier = $this->createUser();
@@ -174,11 +215,11 @@ class Api extends AbstractHelper
     /**
      * @return string
      */
-    public function createUser()
+    public function createUser($userOptions = [])
     {
         $url = $this->apiUrl()->getUser();
 
-        $response = $this->_httpClient->post($url);
+        $response = $this->_httpClient->post($url, $userOptions);
         $response = json_decode($response->getBody(), true);
 
         return $response['data']['identifier'];
