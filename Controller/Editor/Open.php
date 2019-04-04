@@ -142,7 +142,7 @@ class Open extends Action
          * Load product and save intent to session data
          */
         /** @var Product $product */
-        $product = $this->_productFactory->create()->load($this->_request->getParam('product'));
+        $product = $this->_productFactory->create()->load($productId);
         $this->_sessionHelper->setCurrentIntent($intent);
 
         /**
