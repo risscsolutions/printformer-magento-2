@@ -92,6 +92,14 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @return Config
+     */
+    public function config()
+    {
+        return $this->_config;
+    }
+
+    /**
      * @return StoreManagerInterface
      */
     public function getStoreManager()

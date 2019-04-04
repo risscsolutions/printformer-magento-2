@@ -270,7 +270,7 @@ define([
         },
 
         editorMainOpen: function(editorUrl) {
-            if (this.options.editorFullscreenEnabled) {
+            if (this.options.displayMode !== 0) {
                 window.location.href = editorUrl;
                 return;
             }

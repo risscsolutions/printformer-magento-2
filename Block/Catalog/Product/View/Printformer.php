@@ -787,7 +787,7 @@ class Printformer extends AbstractView
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
-            'editorFullscreenEnabled' => $this->configHelper->isEditorFullscreenEnabled(),
+            'displayMode' => $this->configHelper->getDisplayMode(),
             'uniqueId' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
             'allowSkipConfig' => $this->configHelper->isAllowSkipConfig(), //@todo || $this->getDraftId(),

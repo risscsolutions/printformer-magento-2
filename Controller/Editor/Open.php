@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Controller\Editor;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\View\Result\PageFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -16,7 +17,6 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Editor\Preselect as PreselectHelper;
 use Rissc\Printformer\Helper\Api as ApiHelper;
-
 
 class Open extends Action
 {
@@ -61,6 +61,11 @@ class Open extends Action
     protected $_preselectHelper;
 
     /**
+     * @var PageFactory
+     */
+    protected $_pageFactory;
+
+    /**
      * Open constructor.
      * @param Context $context
      * @param DraftGateway $draftGateway
@@ -71,6 +76,7 @@ class Open extends Action
      * @param SessionHelper $sessionHelper
      * @param PreselectHelper $preselectHelper
      * @param ApiHelper $apiHelper
+     * @param PageFactory $pageFactory
      */
     public function __construct(
         Context $context,
@@ -81,7 +87,8 @@ class Open extends Action
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
         PreselectHelper $preselectHelper,
-        ApiHelper $apiHelper
+        ApiHelper $apiHelper,
+        PageFactory $pageFactory
     ) {
         $this->_draftGateway = $draftGateway;
         $this->_urlHelper = $urlHelper;
@@ -91,6 +98,7 @@ class Open extends Action
         $this->_sessionHelper = $sessionHelper;
         $this->_preselectHelper = $preselectHelper;
         $this->_apiHelper = $apiHelper;
+        $this->_pageFactory = $pageFactory;
 
         parent::__construct($context);
     }
@@ -110,12 +118,17 @@ class Open extends Action
         $printformerProductId = $this->getRequest()->getParam('printformer_product_id');
         $storeId              = $this->_storeManager->getStore()->getId();
         $customerSession      = $this->_sessionHelper->getCustomerSession();
+        $overrideFrameConfig  = $this->getRequest()->getParam('shopframe') != null;
 
         /**
          * Show an error if product id was not set
          */
         if (!$productId) {
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
+        }
+
+        if (!$overrideFrameConfig && $this->_apiHelper->config()->isFrameEnabled()) {
+            return $this->initShopFrame();
         }
 
         /**
@@ -414,5 +427,29 @@ class Open extends Action
         $editorUrl = $editorUrlBase . '?' . implode('&', $queryArray);
 
         return $editorUrl;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getFrameUrl()
+    {
+        $url = $this->_url->getCurrentUrl();
+        $urlParts = explode('?', $url);
+        $urlParts[0] .= 'shopframe/1/';
+
+        return implode('?', $urlParts);
+    }
+
+    /**
+     * @return \Magento\Framework\View\Result\Page
+     */
+    protected function initShopFrame()
+    {
+        $resultPage = $this->_pageFactory->create();
+        $iframeBlock = $resultPage->getLayout()->getBlock('printformer_editor_shopframe');
+        $iframeBlock->setFrameUrl($this->getFrameUrl());
+
+        return $resultPage;
     }
 }

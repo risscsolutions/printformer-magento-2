@@ -5,7 +5,7 @@
                 <enabled>1</enabled>
                 <locale>de_DE</locale>
                 <redirect_after_config>1</redirect_after_config>
-                <editor_fullscreen_enabled>0</editor_fullscreen_enabled>
+                <display_mode>0</display_mode>
                 <guest_wishlist_hint><![CDATA[You have to be registered to add this product to your Wishlist.]]></guest_wishlist_hint>
                 <cart_edit_text>Edit</cart_edit_text>
                 <expire_date>30</expire_date>
