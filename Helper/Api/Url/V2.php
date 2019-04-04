@@ -30,6 +30,8 @@ class V2 extends AbstractHelper implements VersionInterface
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
 
+    const API_GET_USER                  = '/api-ext/user/{userId}';
+
     /** Pageplanning START */
     const API_DRAFT_SETUP               = '/api-ext/draft-setup';
     const API_EDITOR_VIEW               = '/editor/{draftId}';
@@ -528,5 +530,11 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getPagePlannerDeleteUrl()
     {
         return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_DELETE;
+    }
+
+    public function getUserData($identifier)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{userId}', $identifier, self::API_GET_USER);
     }
 }
