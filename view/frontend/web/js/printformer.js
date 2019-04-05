@@ -270,23 +270,22 @@ define([
         },
 
         editorMainOpen: function(editorUrl) {
-            if (this.options.displayMode !== 0) {
-                window.location.href = editorUrl;
-                return;
-            }
-
             this.addToCartFormUrl = $(this.form).attr('action');
             $(this.form).attr('action', editorUrl);
-            $(this.form).attr('target', 'printformer-main-frame');
+            if (this.options.displayMode === 0) {
+                $(this.form).attr('target', 'printformer-main-frame');
+            }
 
             $('html, body').css({
                 'overflow': 'hidden',
                 'height': '100%',
                 'width': '100%'
             });
-            this.editorMain.modal('openModal');
-            this.editorMain
-                .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
+            if (this.options.displayMode === 0) {
+                this.editorMain.modal('openModal');
+                this.editorMain
+                    .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
+            }
 
             $(this.form).off().submit();
         },
