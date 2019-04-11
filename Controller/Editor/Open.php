@@ -127,15 +127,19 @@ class Open extends Action
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
-        if (!$overrideFrameConfig && $this->_apiHelper->config()->isFrameEnabled()) {
-            return $this->initShopFrame();
-        }
-
         /**
          * Save preselected data
          */
         if ($this->getRequest()->isPost()) {
             $this->_savePreselectedData($this->getRequest()->getParams());
+        }
+
+        /**
+         * Open Editor in a frame if the display mode is set to "Shop Frame"
+         * and we don't have a parameter set to override the config check
+         */
+        if (!$overrideFrameConfig && $this->_apiHelper->config()->isFrameEnabled()) {
+            return $this->initShopFrame();
         }
 
         /**
