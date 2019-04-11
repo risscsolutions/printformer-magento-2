@@ -107,6 +107,9 @@ class Api extends AbstractHelper
         return $this->_storeManager;
     }
 
+    /**
+     * @param $customer
+     */
     public function checkUserData($customer)
     {
         if ($customer->getPrintformerIdentification() !== null) {
@@ -138,7 +141,8 @@ class Api extends AbstractHelper
                 ]
             ];
 
-            $this->createUser($options);
+            $userIdentifier = $this->createUser($options);
+            $customer->setData('printformer_identification', $userIdentifier);
         }
 
     }
