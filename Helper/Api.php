@@ -108,12 +108,13 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param $customer
+     * @param $customer Customer
+     * @param $storeId int
      */
-    public function checkUserData($customer)
+    public function checkUserData($customer, $storeId = 0)
     {
         if ($customer->getPrintformerIdentification() !== null) {
-            $userData = $this->_httpClient->get($this->apiUrl()->getUserData($customer->getPrintformerIdentification()));
+            $userData = $this->_httpClient->get($this->apiUrl()->setStoreId($storeId)->getUserData($customer->getPrintformerIdentification()));
 
             if ($userData->getStatusCode() === 200) {
                 $resultData = json_decode($userData->getBody()->getContents(), true);
@@ -128,7 +129,7 @@ class Api extends AbstractHelper
                         ]
                     ];
 
-                    $this->_httpClient->put($this->apiUrl()->getUserData($customer->getPrintformerIdentification()), $options);
+                    $this->_httpClient->put($this->apiUrl()->setStoreId($storeId)->getUserData($customer->getPrintformerIdentification()), $options);
                 }
             }
         } else {
@@ -141,7 +142,7 @@ class Api extends AbstractHelper
                 ]
             ];
 
-            $userIdentifier = $this->createUser($options);
+            $userIdentifier = $this->createUser($options, $storeId);
             $customer->setData('printformer_identification', $userIdentifier);
         }
 
@@ -227,9 +228,9 @@ class Api extends AbstractHelper
     /**
      * @return string
      */
-    public function createUser($userOptions = [])
+    public function createUser($userOptions = [], $storeId = 0)
     {
-        $url = $this->apiUrl()->getUser();
+        $url = $this->apiUrl()->setStoreId($storeId)->getUser();
 
         $response = $this->_httpClient->post($url, $userOptions);
         $response = json_decode($response->getBody(), true);
@@ -365,12 +366,13 @@ class Api extends AbstractHelper
         $intent = null,
         $sessionUniqueId = null,
         $customerId = null,
-        $printformerProductId = null
+        $printformerProductId = null,
+        $checkOnly = false
     ) {
         $store = $this->_storeManager->getStore();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
-        if(!$process->getId()) {
+        if(!$process->getId() && !$checkOnly) {
             $dataParams = [
                 'intent' => $intent
             ];
@@ -618,7 +620,7 @@ class Api extends AbstractHelper
      *
      * @return array
      */
-    public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
+    public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false, $storeId = 0)
     {
         $postFields = [
             'json' => [
@@ -628,7 +630,7 @@ class Api extends AbstractHelper
             ]
         ];
 
-        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() .
+        return json_decode($this->_httpClient->post($this->apiUrl()->setStoreId($storeId)->getPrintformerBaseUrl() .
                 '/api-ext/draft/claim', $postFields)->getBody(), true);
     }
 
