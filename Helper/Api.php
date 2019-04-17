@@ -12,10 +12,10 @@ use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 
@@ -135,7 +135,11 @@ class Api extends AbstractHelper
         return $this->_storeManager;
     }
 
-    public function checkUserData($customer)
+    /**
+     * @param $customer Customer
+     * @param $storeId int
+     */
+    public function checkUserData($customer, $storeId = 0)
     {
         if ($customer->getPrintformerIdentification() !== null) {
             $userData = $this->getHttpClient()->get($this->apiUrl()->getUserData($customer->getPrintformerIdentification()));
@@ -166,7 +170,8 @@ class Api extends AbstractHelper
                 ]
             ];
 
-            $this->createUser($options);
+            $userIdentifier = $this->createUser($options, $storeId);
+            $customer->setData('printformer_identification', $userIdentifier);
         }
 
     }
@@ -390,12 +395,13 @@ class Api extends AbstractHelper
         $intent = null,
         $sessionUniqueId = null,
         $customerId = null,
-        $printformerProductId = null
+        $printformerProductId = null,
+        $checkOnly = false
     ) {
         $store = $this->_storeManager->getStore();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
-        if(!$process->getId()) {
+        if(!$process->getId() && !$checkOnly) {
             $dataParams = [
                 'intent' => $intent
             ];

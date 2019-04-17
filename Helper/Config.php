@@ -1,11 +1,11 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Customer\Model\Session as CustomerSession;
 
 class Config extends AbstractHelper
 {
@@ -136,7 +136,7 @@ class Config extends AbstractHelper
     {
         return intval($this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DISPLAY_MODE,
-            ScopeInterface::SCOPE_STORE,
+            ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         ));
     }
