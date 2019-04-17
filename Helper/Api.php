@@ -5,18 +5,16 @@ use GuzzleHttp\Exception\ServerException;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use GuzzleHttp\Client;
-use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
+use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
-use Rissc\Printformer\Helper\Session as SessionHelper;
-use DateTime;
-use DateInterval;
 
 class Api
     extends AbstractHelper
@@ -25,9 +23,6 @@ class Api
 
     /** @var UrlHelper */
     protected $_urlHelper;
-
-    /** @var Client */
-    protected $_httpClient;
 
     /** @var CustomerSession */
     protected $_customerSession;
@@ -44,6 +39,12 @@ class Api
     /** @var Config */
     protected $_config;
 
+    /** @var Client[] */
+    protected $_httpClients = [];
+
+    /** @var int */
+    protected $_storeId = Store::DEFAULT_STORE_ID;
+
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
@@ -52,8 +53,7 @@ class Api
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
         Config $config
-    )
-    {
+    ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
         $this->_storeManager = $storeManager;
@@ -61,18 +61,50 @@ class Api
         $this->_sessionHelper = $sessionHelper;
         $this->_config = $config;
 
-        $this->apiUrl()->initVersionHelper($this->_config->isV2Enabled());
-        $this->apiUrl()->setStoreManager($this->_storeManager);
+        $this->setStoreId($storeManager->getStore()->getId());
+
+        $this->apiUrl()->initVersionHelper($this->_config->setStoreId($this->getStoreId())->isV2Enabled());
+        $this->apiUrl()->setStoreManager($storeManager);
 
         parent::__construct($context);
+    }
 
-        $this->_httpClient = new Client([
-            'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
-            'headers' => [
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->_config->getClientApiKey(),
-            ]
-        ]);
+    /**
+     * @return int
+     */
+    public function getStoreId()
+    {
+        return $this->_storeId;
+    }
+
+    /**
+     * @param int $storeId
+     *
+     * @return $this
+     */
+    public function setStoreId(int $storeId)
+    {
+        $this->_storeId = $storeId;
+
+        return $this;
+    }
+
+    /**
+     * @return Client
+     */
+    public function getHttpClient()
+    {
+        if (!isset($this->_httpClients[$this->getStoreId()])) {
+            $this->_httpClients[$this->getStoreId()] = new Client([
+                'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->_config->setStoreId($this->getStoreId())->getClientApiKey(),
+                ]
+            ]);
+        }
+
+        return $this->_httpClients[$this->getStoreId()];
     }
 
     /**
@@ -98,7 +130,6 @@ class Api
                         `entity_id` = " . $customer->getId() . ";
                 ");
                 $customer->setData('printformer_identification', $customerUserIdentifier);
-                $customer->getResource()->save($customer);
                 $this->_customerSession->setPrintformerIdentification($customerUserIdentifier);
             } else {
                 if ($customer->getData('printformer_identification') !=
@@ -131,9 +162,9 @@ class Api
      */
     public function createUser()
     {
-        $url = $this->apiUrl()->getUser();
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
 
-        $response = $this->_httpClient->post($url);
+        $response = $this->getHttpClient()->post($url);
         $response = json_decode($response->getBody(), true);
 
         return $response['data']['identifier'];
@@ -148,7 +179,7 @@ class Api
      */
     public function createDraftHash($masterId, $userIdentifier, $params = [])
     {
-        $url = $this->apiUrl()->getDraft();
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft();
 
         $options = [
             'json' => [
@@ -161,7 +192,7 @@ class Api
             $options['json'][$key] = $value;
         }
 
-        $response = $this->_httpClient->post($url, $options);
+        $response = $this->getHttpClient()->post($url, $options);
         $response = json_decode($response->getBody(), true);
         if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
             $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
@@ -181,9 +212,9 @@ class Api
         if ($this->_sessionHelper->hasDraftInCache($oldDraftId)) {
             $this->_sessionHelper->removeDraftFromCache($oldDraftId);
         }
-        $url = $this->apiUrl()->getReplicateDraftId($oldDraftId);
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
 
-        $response = $this->_httpClient->get($url);
+        $response = $this->getHttpClient()->get($url);
         $draftInfo = json_decode($response->getBody(), true);
 
         $draftHash = $draftInfo['data']['draftHash'];
@@ -206,9 +237,9 @@ class Api
     public function getPrintformerDraft($draftHash, $forceUpdate = false)
     {
         if (!$this->_sessionHelper->hasDraftInCache($draftHash) || $forceUpdate) {
-            $url = $this->apiUrl()->getDraft($draftHash);
+            $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft($draftHash);
 
-            $response = $this->_httpClient->get($url);
+            $response = $this->getHttpClient()->get($url);
             $response = json_decode($response->getBody(), true);
 
             if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
@@ -364,7 +395,7 @@ class Api
      */
     public function setAsyncOrdered($draftIds)
     {
-        $draftProcessingUrl = $this->apiUrl()->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
+        $draftProcessingUrl = $this->apiUrl()->setStoreId($this->getStoreId())->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
         $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
 
         $postFields = [
@@ -374,7 +405,7 @@ class Api
             ]
         ];
 
-        $response = $this->_httpClient->post($draftProcessingUrl, $postFields);
+        $response = $this->getHttpClient()->post($draftProcessingUrl, $postFields);
 
         $responseArray = json_decode($response->getBody(), true);
         $processingHash = !empty($responseArray['processingId']) ? $responseArray['processingId'] : null;
@@ -420,14 +451,14 @@ class Api
         switch($stringStatus) {
             case 'processed':
                 return 1;
-            break;
+                break;
             case 'failed':
                 return 0;
-            break;
+                break;
             case 'pending':
             case 'in-process':
                 return 2;
-            break;
+                break;
         }
 
         return -1;
@@ -444,22 +475,22 @@ class Api
     public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
         $httpClient = new Client([
-            'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
+            'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
             'headers' => [
                 'Accept' => 'application/json'
             ]
         ]);
 
-        $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash);
+        $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->set('user', $userIdentifier)
-            ->setExpiration($this->_config->getExpireDate());
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
         $postFields = [
@@ -497,14 +528,14 @@ class Api
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
-        $pdfUrl = $this->apiUrl()->getPDF($draftHash);
+        $pdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPDF($draftHash);
 
         $postFields = [
             'jwt' => $JWT
@@ -530,8 +561,8 @@ class Api
             ]
         ];
 
-        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() .
-                '/api-ext/draft/claim', $postFields)->getBody(), true);
+        return json_decode($this->getHttpClient()->post($this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() .
+            '/api-ext/draft/claim', $postFields)->getBody(), true);
     }
 
     /**
@@ -548,8 +579,8 @@ class Api
             ]
         ];
 
-        return json_decode($this->_httpClient->post($this->apiUrl()->getPrintformerBaseUrl() . '/api-ext/user/' .
-                $userIdentifierOne . '/merge', $postFields)->getBody(), true);
+        return json_decode($this->getHttpClient()->post($this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() . '/api-ext/user/' .
+            $userIdentifierOne . '/merge', $postFields)->getBody(), true);
     }
 
     /**
@@ -560,9 +591,9 @@ class Api
      */
     public function updatePrintformerDraft($draftHash, $dataParams = [])
     {
-        $url = $this->apiUrl()->getDraft($draftHash);
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft($draftHash);
 
-        $response = $this->_httpClient->put($url, [
+        $response = $this->getHttpClient()->put($url, [
             'json' => $dataParams
         ]);
 
@@ -602,14 +633,14 @@ class Api
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
-        $derivateDownloadLink = $this->apiUrl()->getDerivat($fileId);
+        $derivateDownloadLink = $this->apiUrl()->setStoreId($this->getStoreId())->getDerivat($fileId);
 
         $postFields = [
             'jwt' => $JWT
