@@ -334,11 +334,11 @@ class V2
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
         $pdfUrl = $this->getPDF($draftHash);
@@ -357,11 +357,11 @@ class V2
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
         $pdfUrl = $this->getPreviewPDF($draftHash);
