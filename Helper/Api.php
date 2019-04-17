@@ -137,12 +137,15 @@ class Api extends AbstractHelper
 
     /**
      * @param $customer Customer
-     * @param $storeId int
      */
-    public function checkUserData($customer, $storeId = 0)
+    public function checkUserData($customer)
     {
         if ($customer->getPrintformerIdentification() !== null) {
-            $userData = $this->getHttpClient()->get($this->apiUrl()->getUserData($customer->getPrintformerIdentification()));
+            $userData = $this->getHttpClient()->get(
+                $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
+                    $customer->getPrintformerIdentification()
+                )
+            );
 
             if ($userData->getStatusCode() === 200) {
                 $resultData = json_decode($userData->getBody()->getContents(), true);
@@ -157,7 +160,11 @@ class Api extends AbstractHelper
                         ]
                     ];
 
-                    $this->getHttpClient()->put($this->apiUrl()->getUserData($customer->getPrintformerIdentification()), $options);
+                    $this->getHttpClient()->put(
+                        $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
+                            $customer->getPrintformerIdentification()
+                        ), $options
+                    );
                 }
             }
         } else {
@@ -170,7 +177,7 @@ class Api extends AbstractHelper
                 ]
             ];
 
-            $userIdentifier = $this->createUser($options, $storeId);
+            $userIdentifier = $this->createUser($options);
             $customer->setData('printformer_identification', $userIdentifier);
         }
 
