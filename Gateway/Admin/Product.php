@@ -5,7 +5,8 @@ use GuzzleHttp\Client as HttpClient;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Json\Decoder;
 use Magento\Store\Model\Store;
-use Magento\Store\Model\StoreManagerInterface;
+use Magento\Store\Model\Website;
+use Magento\Store\Model\WebsiteRepository;
 use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
@@ -20,9 +21,9 @@ class Product
     const PF_ATTRIBUTE_UPLOAD_PRODUCT = 'printformer_upload_product';
 
     /**
-     * @var StoreManagerInterface
+     * @var WebsiteRepository
      */
-    protected $storeManager;
+    protected $_websiteRepository;
 
     /**
      * @var Decoder
@@ -61,7 +62,7 @@ class Product
 
     /**
      * Product constructor.
-     * @param StoreManagerInterface $storeManager
+     * @param WebsiteRepository $websiteRepository
      * @param Decoder $jsonDecoder
      * @param Url $urlHelper
      * @param PrintformerProductFactory $printformerProductFactory
@@ -70,14 +71,14 @@ class Product
      * @throws \Zend_Db_Statement_Exception
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
+        WebsiteRepository $websiteRepository,
         Decoder $jsonDecoder,
         Url $urlHelper,
         PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
         Config $configHelper
     ) {
-        $this->storeManager = $storeManager;
+        $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
         $this->urlHelper = $urlHelper;
         $this->printformerProductFactory = $printformerProductFactory;
@@ -127,8 +128,16 @@ class Product
     {
         $storeIds = [];
         if ($storeId == Store::DEFAULT_STORE_ID) {
-            foreach ($this->storeManager->getStores(true) as $store) {
-                $storeIds[] = $store->getId();
+            $defaultApiSecret = $this->configHelper->setStoreId(Store::DEFAULT_STORE_ID)->getClientApiKey();
+            /** @var Website $website */
+            foreach ($this->_websiteRepository->getList() as $website) {
+                /** @var Store $store */
+                $store = $website->getDefaultStore();
+                $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
+
+                if ($defaultApiSecret === $apiSecret) {
+                    $storeIds[] = $store->getId();
+                }
             }
         } else {
             $storeIds[] = $storeId;
