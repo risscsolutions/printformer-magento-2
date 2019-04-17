@@ -2,15 +2,15 @@
 namespace Rissc\Printformer\Gateway\Admin;
 
 use Magento\Framework\Json\Decoder;
-use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Gateway\Exception;
 use Magento\Store\Model\Store;
+use Magento\Store\Model\Website;
+use Magento\Store\Model\WebsiteRepository;
+use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Magento\Catalog\Model\ProductFactory;
-use Magento\Catalog\Model\Product as CatalogProduct;
 use GuzzleHttp\Client as HttpClient;
 
 class Product
@@ -21,9 +21,9 @@ class Product
     const PF_ATTRIBUTE_UPLOAD_PRODUCT = 'printformer_upload_product';
 
     /**
-     * @var StoreManagerInterface
+     * @var WebsiteRepository
      */
-    protected $storeManager;
+    protected $_websiteRepository;
 
     /**
      * @var Decoder
@@ -62,7 +62,7 @@ class Product
 
     /**
      * Product constructor.
-     * @param StoreManagerInterface $storeManager
+     * @param WebsiteRepository $websiteRepository
      * @param Decoder $jsonDecoder
      * @param Url $urlHelper
      * @param PrintformerProductFactory $printformerProductFactory
@@ -71,14 +71,14 @@ class Product
      * @throws \Zend_Db_Statement_Exception
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
+        WebsiteRepository $websiteRepository,
         Decoder $jsonDecoder,
         Url $urlHelper,
         PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
         Config $configHelper
     ) {
-        $this->storeManager = $storeManager;
+        $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
         $this->urlHelper = $urlHelper;
         $this->printformerProductFactory = $printformerProductFactory;
@@ -99,8 +99,8 @@ class Product
             SELECT `attribute_id`, `attribute_code` FROM `eav_attribute` WHERE `attribute_code` IN ('" . implode("', '", $attributesArray) . "')
         ");
 
-        while($row = $result->fetch()) {
-            switch($row['attribute_code']) {
+        while ($row = $result->fetch()) {
+            switch ($row['attribute_code']) {
                 case self::PF_ATTRIBUTE_ENABLED:
                     $this->attributePfEnabled = $row['attribute_id'];
                     break;
@@ -123,13 +123,23 @@ class Product
      * @throws Exception
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @todo: Move to Api Helper!!!
      */
     public function syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
         $storeIds = [];
         if ($storeId == Store::DEFAULT_STORE_ID) {
-            foreach ($this->storeManager->getStores(true) as $store) {
-                $storeIds[] = $store->getId();
+            $defaultApiSecret = $this->configHelper->setStoreId(Store::DEFAULT_STORE_ID)->getClientApiKey();
+            /** @var Website $website */
+            foreach ($this->_websiteRepository->getList() as $website) {
+                /** @var Store $store */
+                $store = $website->getDefaultStore();
+                $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
+
+                if ($defaultApiSecret === $apiSecret) {
+                    $storeIds[] = $store->getId();
+                }
             }
         } else {
             $storeIds[] = $storeId;
@@ -191,10 +201,10 @@ class Product
 
         $masterIDs = [];
         $responseRealigned = [];
-        foreach($responseArray['data'] as $responseData) {
+        foreach ($responseArray['data'] as $responseData) {
             $masterID = ($this->configHelper->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
                 $responseData['rissc_w2p_master_id']);
-            if(!in_array($masterID, $masterIDs)) {
+            if (!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
                 $responseRealigned[$masterID] = $responseData;
             }
@@ -203,8 +213,8 @@ class Product
         $this->_deleteDeletedPrintformerProductReleations($masterIDs, $storeId);
 
         $updateMasterIds = [];
-        foreach($masterIDs as $masterID) {
-            foreach($responseRealigned[$masterID]['intents'] as $intent) {
+        foreach ($masterIDs as $masterID) {
+            foreach ($responseRealigned[$masterID]['intents'] as $intent) {
                 $resultProduct = $this->connection->fetchRow('
                     SELECT * FROM
                         `' . $this->connection->getTableName('printformer_product') . '`
@@ -253,7 +263,7 @@ class Product
         $resultRows = $this->connection->fetchAll($sqlQuery);
 
         if (!empty($resultRows)) {
-            foreach($resultRows as $row) {
+            foreach ($resultRows as $row) {
                 $this->connection->delete($tableName, ['id = ?' => $row['id']]);
             }
         }
@@ -268,7 +278,7 @@ class Product
         ';
         $resultRows = $this->connection->fetchAll($sqlQuery);
         if (!empty($resultRows)) {
-            foreach($resultRows as $row) {
+            foreach ($resultRows as $row) {
                 $this->connection->delete($tableName, ['id = ?' => $row['id']]);
             }
         }
@@ -284,7 +294,7 @@ class Product
     {
         $rowsToUpdate = count($masterIds);
         $tableName = $this->connection->getTableName('catalog_product_printformer_product');
-        foreach($masterIds as $pfProductId => $masterId) {
+        foreach ($masterIds as $pfProductId => $masterId) {
             $resultRows = $this->connection->fetchAll('
                 SELECT * FROM
                     `' . $tableName . '`
@@ -294,7 +304,7 @@ class Product
                     `intent` = \'' . $masterId['intent'] . '\';
             ');
 
-            foreach($resultRows as $row) {
+            foreach ($resultRows as $row) {
                 $this->connection->query('
                     UPDATE `' . $tableName . '`
                     SET

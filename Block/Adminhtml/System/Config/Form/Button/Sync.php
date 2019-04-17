@@ -2,6 +2,8 @@
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
 
 use Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
+use Magento\Store\Model\WebsiteRepository;
+use Magento\Backend\Block\Template\Context;
 
 class Sync extends Button
 {
@@ -16,13 +18,35 @@ class Sync extends Button
     protected $_buttonLabel = 'Synchronize templates';
 
     /**
-     * @return int|null
+     * @var WebsiteRepository
+     */
+    protected $_websiteRepository;
+
+    public function __construct(
+        Context $context,
+        WebsiteRepository $websiteRepository,
+        array $data = []
+    ) {
+        $this->_websiteRepository = $websiteRepository;
+
+        parent::__construct($context, $data);
+    }
+
+    /**
+     * @return int
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function getCurrentStoreId()
     {
+        if ($this->getRequest()->getParam('website')) {
+            $website = $this->_websiteRepository->getById($this->getRequest()->getParam('website'));
+            $this->setData('store_id', $website->getDefaultStore()->getId());
+        }
+
         if (!$this->hasData('store_id')) {
             $this->setData('store_id', (int)$this->getRequest()->getParam($this->getStoreVarName()));
         }
+
         return $this->getData('store_id');
     }
 
