@@ -98,7 +98,7 @@ class Link
      */
     public function getPdfUrl(DataObject $item, $draftHash)
     {
-        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
+        return $this->_urlHelper->setStoreId($item->getOrder()->getStoreId())
             ->getAdminPdf($draftHash, $item->getOrder()->getQuoteId());
     }
 
