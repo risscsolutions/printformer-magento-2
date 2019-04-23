@@ -75,6 +75,9 @@ class Api extends AbstractHelper
 
         $this->setStoreId($storeManager->getStore()->getId());
 
+        $this->_urlHelper->setStoreId($this->getStoreId());
+        $this->_config->setStoreId($this->getStoreId());
+
         $this->apiUrl()->initVersionHelper($this->_config->setStoreId($this->getStoreId())->isV2Enabled());
         $this->apiUrl()->setStoreManager($storeManager);
 
@@ -257,6 +260,8 @@ class Api extends AbstractHelper
      */
     public function apiUrl()
     {
+        $this->_urlHelper->setStoreId($this->getStoreId());
+
         return $this->_urlHelper;
     }
 
@@ -763,14 +768,14 @@ class Api extends AbstractHelper
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
-        $createReviewPdfUrl = $this->apiUrl()->createReviewPDF($reviewId);
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
 
         $postFields = [
             'jwt' => $JWT
@@ -788,14 +793,14 @@ class Api extends AbstractHelper
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
-        $createReviewPdfUrl = $this->apiUrl()->getReviewPdf($reviewId);
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
 
         $postFields = [
             'jwt' => $JWT
@@ -813,14 +818,14 @@ class Api extends AbstractHelper
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
-        $getIdmlPackage = $this->apiUrl()->getIdmlPackage($draftId);
+        $getIdmlPackage = $this->apiUrl()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
 
         $postFields = [
             'jwt' => $JWT
@@ -838,14 +843,14 @@ class Api extends AbstractHelper
     {
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
-            ->setExpiration($this->_config->getExpireDate());
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
             ->getToken();
 
-        $createReviewPdfUrl = $this->apiUrl()->getPagePlannerApproveUrl();
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
 
         $postFields = [
             'jwt' => $JWT
