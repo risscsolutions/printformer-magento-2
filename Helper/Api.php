@@ -78,7 +78,7 @@ class Api extends AbstractHelper
         $this->_urlHelper->setStoreId($this->getStoreId());
         $this->_config->setStoreId($this->getStoreId());
 
-        $this->apiUrl()->initVersionHelper($this->_config->setStoreId($this->getStoreId())->isV2Enabled());
+        $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
 
         parent::__construct($context);

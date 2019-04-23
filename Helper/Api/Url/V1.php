@@ -7,6 +7,11 @@ use Magento\Framework\App\Helper\Context;
 use Rissc\Printformer\Helper\Api\VersionInterface;
 use Rissc\Printformer\Helper\Config;
 
+/**
+ * Class V1
+ * @package Rissc\Printformer\Helper\Api\Url
+ * @deprecated
+ */
 class V1 extends AbstractHelper implements VersionInterface
 {
     const ROLE_USER  = '0';

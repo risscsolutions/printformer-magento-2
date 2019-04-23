@@ -6,7 +6,6 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Api\Url\V1 as V1Helper;
 use Rissc\Printformer\Helper\Api\Url\V2 as V2Helper;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Config\Source\Redirect;
@@ -15,7 +14,7 @@ class Url extends AbstractHelper implements VersionInterface
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
 
-    /** @var V1Helper|V2Helper */
+    /** @var V2Helper */
     protected $_versionHelper = null;
 
     /** @var StoreManagerInterface */
@@ -62,30 +61,18 @@ class Url extends AbstractHelper implements VersionInterface
      *
      * @return $this
      */
-    public function initVersionHelper($isV2Api = false)
+    public function initVersionHelper()
     {
         $objm = ObjectManager::getInstance();
-        if ($isV2Api) {
-            $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V2');
-        } else {
-            $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V1');
-        }
+        $this->_versionHelper = $objm->create(V2Helper::class);
 
         return $this;
     }
 
     public function getVersionHelper()
     {
-        if ($this->_versionHelper instanceof \Rissc\Printformer\Helper\Api\Url\V1 && $this->config->isV2Enabled()) {
-            $this->_versionHelper = null;
-        }
-
-        if ($this->_versionHelper instanceof \Rissc\Printformer\Helper\Api\Url\V2 && !$this->config->isV2Enabled()) {
-            $this->_versionHelper = null;
-        }
-
         if (!$this->_versionHelper) {
-            $this->initVersionHelper($this->config->isV2Enabled());
+            $this->initVersionHelper();
         }
 
         return $this->_versionHelper;
