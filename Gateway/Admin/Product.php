@@ -135,16 +135,24 @@ class Product
                 $store = $website->getDefaultStore();
                 $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
 
-                if ($defaultApiSecret === $apiSecret) {
+                if ($apiSecret === $defaultApiSecret) {
                     $storeIds[] = $store->getId();
                 }
             }
         } else {
             $storeIds[] = $storeId;
         }
+        $errors = [];
         foreach ($storeIds as $storeId) {
-            $this->_syncProducts($storeId);
+            try {
+                $this->_syncProducts($storeId);
+            } catch (\Exception $e) {
+                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
+                continue;
+            }
         }
+
+        // todo: log errors
 
         return $this;
     }
@@ -161,19 +169,13 @@ class Product
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
-        if ($this->configHelper->isV2Enabled($storeId) && !empty($apiKey)) {
-            $request = new HttpClient([
-                'base_url' => $url,
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $apiKey
-                ]
-            ]);
-        } else {
-            $request = new HttpClient([
-                'base_url' => $url,
-            ]);
-        }
+        $request = new HttpClient([
+            'base_url' => $url,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $apiKey
+            ]
+        ]);
 
         $response = $request->get($url);
 
