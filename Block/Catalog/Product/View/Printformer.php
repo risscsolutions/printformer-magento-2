@@ -17,6 +17,7 @@ use Rissc\Printformer\Controller\Editor\Save;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Model\Config\Source\Redirect;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
@@ -802,7 +803,8 @@ class Printformer extends AbstractView
             Save::PERSONALISATIONS_QUERY_PARAM => 0,
             Save::PERSONALISATIONS_QUERY_PARAM . '_conf' => false,
             'preselection' => [],
-            'openControllerPreselect' => true
+            'openControllerPreselect' => true,
+            'isAddToCartRedirect' => $this->configHelper->getConfigRedirect() != Redirect::CONFIG_REDIRECT_URL_PRODUCT
         ];
 
         if ($this->getPersonalisations()) {
