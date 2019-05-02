@@ -51,11 +51,13 @@ class QuoteModel
     }
 
     /**
-     * Set printformer data for new quote item
-     *
      * @param SubjectQuote $subject
-     * @param $result
-     * @return \Magento\Quote\Model\Quote\Item|string
+     * @param \Closure $proceed
+     * @param \Magento\Catalog\Model\Product $product
+     * @param null|float|\Magento\Framework\DataObject $buyRequest
+     * @param $processMode
+     * @return SubjectQuote\Item|mixed|string
+     * @throws \Exception
      */
     public function aroundAddProduct(
         SubjectQuote $subject,
@@ -63,8 +65,10 @@ class QuoteModel
         \Magento\Catalog\Model\Product $product,
         $buyRequest = null,
         $processMode = \Magento\Catalog\Model\Product\Type\AbstractType::PROCESS_MODE_FULL
-    )
-    {
+    ) {
+        if(!$buyRequest instanceof \Magento\Framework\DataObject)
+            return $proceed($product, $buyRequest, $processMode);
+
         $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
         if (!empty($draftIds)) {
             $draftHashArray = explode(',', $draftIds);
