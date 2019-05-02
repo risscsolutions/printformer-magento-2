@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Block\Custom\Editor;
 
 use Magento\Catalog\Model\Product;
@@ -13,6 +14,10 @@ use Rissc\Printformer\Model\Draft;
 use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\App\ObjectManager;
 
+/**
+ * Class Link
+ * @package Rissc\Printformer\Block\Custom\Editor
+ */
 class Link
     extends Template
 {
@@ -32,8 +37,8 @@ class Link
      * Link constructor.
      *
      * @param Template\Context $context
-     * @param Url              $urlHelper
-     * @param array            $data
+     * @param Url $urlHelper
+     * @param array $data
      */
     public function __construct(
         Template\Context $context,
@@ -41,8 +46,7 @@ class Link
         ApiHelper $apiHelper,
         AuthorizationInterface $authorization,
         array $data = []
-    )
-    {
+    ) {
         parent::__construct($context, $data);
         $this->_urlHelper = $urlHelper;
         $this->_apiHelper = $apiHelper;
@@ -87,8 +91,9 @@ class Link
      *
      * @return string
      */
-    public function getDraftURL($draftID) {
-        return $this->_urlBuilder->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id='.$draftID)]);
+    public function getDraftURL($draftID)
+    {
+        return $this->_urlBuilder->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id=' . $draftID)]);
     }
 
     /**
@@ -98,7 +103,7 @@ class Link
      */
     public function getPdfUrl(DataObject $item, $draftHash)
     {
-        return $this->_urlHelper->setStoreId($item->getOrder()->getStoreId())
+        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
             ->getAdminPdf($draftHash, $item->getOrder()->getQuoteId());
     }
 
@@ -125,27 +130,31 @@ class Link
     }
 
     /**
-     * @param OrderItem $orderItem
-     * @param string    $draftHash
+     * @param OrderItem|Item $item
+     * @param string $draftHash
      *
      * @return bool
      * @throws \Exception
      */
-    public function isOrdered(OrderItem $orderItem, $draftHash)
+    public function isOrdered($item, $draftHash)
     {
-        if($orderItem->getPrintformerOrdered()) {
+        if ($item instanceof Item) {
+            return false;
+        }
+
+        if ($item->getPrintformerOrdered()) {
             return true;
         }
 
         /** @var Draft $draftProcess */
         $draftProcess = $this->getDraftProcess($draftHash);
-        if(!$draftProcess->getId()) {
+        if (!$draftProcess->getId()) {
             return false;
         }
 
-        if($draftProcess->getProcessingStatus() == 1) {
-            $orderItem->setPrintformerOrdered(1);
-            $orderItem->getResource()->save($orderItem);
+        if ($draftProcess->getProcessingStatus() == 1) {
+            $item->setPrintformerOrdered(1);
+            $item->getResource()->save($item);
 
             return true;
         }
@@ -153,6 +162,11 @@ class Link
         return false;
     }
 
+    /**
+     * @return bool
+     *
+     * @throws \Exception
+     */
     public function canViewHighRes()
     {
         /** @var \Magento\Framework\App\State $appState */
