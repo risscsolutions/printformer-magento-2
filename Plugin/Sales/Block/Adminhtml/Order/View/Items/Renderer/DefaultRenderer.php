@@ -45,7 +45,7 @@ class DefaultRenderer
         if ($column == 'product' && $item->getPrintformerDraftid()) {
             $product = $item->getProduct();
             
-            if ($product === null){
+            if ($product !== null){
                 $product->getResource()->load($product, $product->getId());
                 $html .= $this->viewHelper->getEditorView($item, $product, $renderer);
             }
