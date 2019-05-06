@@ -44,9 +44,11 @@ class DefaultRenderer
         $html = $proceed($item, $column, $field);
         if ($column == 'product' && $item->getPrintformerDraftid()) {
             $product = $item->getProduct();
-            $product->getResource()->load($product, $product->getId());
-
-            $html .= $this->viewHelper->getEditorView($item, $product, $renderer);
+            
+            if ($product === null){
+                $product->getResource()->load($product, $product->getId());
+                $html .= $this->viewHelper->getEditorView($item, $product, $renderer);
+            }
         }
 
         return $html;
