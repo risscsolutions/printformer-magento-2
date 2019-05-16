@@ -18,6 +18,7 @@ use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
+use Magento\Backend\Model\Session as AdminSession;
 
 class Api extends AbstractHelper
 {
@@ -53,6 +54,9 @@ class Api extends AbstractHelper
     /** @var int */
     protected $_storeId = Store::DEFAULT_STORE_ID;
 
+    /** @var AdminSession */
+    protected $_adminSession;
+
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
@@ -62,7 +66,8 @@ class Api extends AbstractHelper
         SessionHelper $sessionHelper,
         Config $config,
         CustomerFactory $customerFactory,
-        CustomerResource $customerResource
+        CustomerResource $customerResource,
+        AdminSession $adminSession
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -72,6 +77,7 @@ class Api extends AbstractHelper
         $this->_config = $config;
         $this->_customerFactory = $customerFactory;
         $this->_customerResource = $customerResource;
+        $this->_adminSession = $adminSession;
 
         $this->setStoreId($storeManager->getStore()->getId());
 
@@ -188,12 +194,42 @@ class Api extends AbstractHelper
 
     /**
      * @param Customer|int $customer
+     * @param null $admin
      *
      * @return string
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
-    public function getUserIdentifier($customer = null)
+    public function getUserIdentifier($customer = null, $admin = null)
     {
+        $stores = $this->getStoreManager()->getStores(true, false);
+
+        foreach ($stores as $store) {
+            if ($store->getCode() == 'admin') {
+                if ($admin !== null) {
+                    if (!$admin->getData('printformer_identification')) {
+                        $adminUserIdentifier = $this->createUser();
+                        $connection = $admin->getResource()->getConnection();
+                        $connection->query("
+                        UPDATE " . $connection->getTableName('admin_user') . "
+                        SET
+                            `printformer_identification` = '" . $adminUserIdentifier . "'
+                        WHERE
+                            `user_id` = " . $admin->getId() . ";
+                    ");
+                        $this->_adminSession->setPrintformerIdentification($adminUserIdentifier);
+                    } else {
+                        if ($admin->getData('printformer_identification') != $this->_adminSession->getPrintformerIdentification()) {
+                            $this->_adminSession->setPrintformerIdentification($admin->getData('printformer_identification'));
+                        }
+                    }
+
+                    return $this->_adminSession->getPrintformerIdentification();
+                }
+            }
+
+            continue;
+        }
+
         if (!$this->_config->isV2Enabled()) {
             return null;
         }
@@ -375,14 +411,14 @@ class Api extends AbstractHelper
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
+            ->set('client', $this->_config->getClientIdentifier($this->getStoreId()))
             ->set('user', $userIdentifier)
             ->setId(bin2hex(random_bytes(16)), true)
             ->set('redirect', $editorOpenUrl)
             ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->getClientApiKey($this->getStoreId()))
             ->getToken();
 
         return $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);

@@ -664,12 +664,17 @@ class Config extends AbstractHelper
     /**
      * @return string
      */
-    public function getClientIdentifier()
+    public function getClientIdentifier($storeId = null)
     {
+        if ($storeId === null) {
+            $storeId = $this->getStoreId();
+        }
+
+
         return $this->scopeConfig->getValue(
             self::XML_PATH_V2_IDENTIFIER,
             ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
+            $storeId
         );
     }
 
