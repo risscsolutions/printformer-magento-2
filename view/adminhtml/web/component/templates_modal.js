@@ -5,12 +5,11 @@ define([
     'uiRegistry',
     'mage/translate',
     'Magento_Ui/js/modal/alert'
-], function ($, modal, registry, $t,alert) {
+], function ($, modal, registry, $t, alert) {
     'use strict';
 
     return modal.extend({
-        synchronizeTemplates:function()
-        {
+        synchronizeTemplates: function(){
             $.ajax({
                 url: this.syncUrl,
                 method: 'GET',
@@ -19,8 +18,8 @@ define([
                     'form_key': FORM_KEY
                 },
                 showLoader: true,
-            }).done(function(response) {
-                if (response && response.message ) {
+            }).done(function(response){
+                if (response && response.message){
                     alert({
                         title: '',
                         content: response.message,
@@ -29,12 +28,11 @@ define([
                         }
                     });
                 }
-                if (response.success == 'true') {
-                    var listing = registry.get("product_form.product_form.printformer_products.modal.printformer_product_listing");
+                if (response.success === 'true') {
+                    var listing = registry.get("product_form.product_form.pftemplates.printformer_templates.modal.printformer_templates_listing");
                     listing.reload();
                 }
             });
-
         }
     });
 });

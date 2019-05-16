@@ -18,10 +18,6 @@
         <plugin name="Rissc_Printformer_Product_Gallery" type="Rissc\Printformer\Plugin\Catalog\Product\View\Gallery"
                 sortOrder="100"/>
     </type>
-    <type name="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\CustomOptions">
-        <plugin name="Rissc_Printformer_Edit_PrintformerProduct"
-                type="Rissc\Printformer\Plugin\Product\Edit\Metadata\PrintformerProduct" sortOrder="9999"/>
-    </type>
     <type name="Magento\Checkout\Block\Cart\Item\Renderer\Actions\Edit">
         <plugin name="Rissc_Printformer_Checkout_Item_EditRenderer"
                 type="Rissc\Printformer\Plugin\Checkout\Cart\Item\Renderer\Actions\Edit" sortOrder="100"/>
@@ -92,16 +88,10 @@
                 sortOrder="100"
         />
     </type>
-
-    <virtualType name="PrintformerProductDataProvider"
-                 type="Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider"/>
-
     <type name="Magento\Customer\Controller\Section\Load">
         <plugin name="assign_customer_user_identifier_to_guest_cart"
                 type="Rissc\Printformer\Plugin\Customer\Section\Load\Plugin"
                 sortOrder="100"
         />
     </type>
-
-    <virtualType name="PrintformerProductDataProvider" type="Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider" />
 </config>

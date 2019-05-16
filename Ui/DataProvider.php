@@ -1,27 +1,32 @@
 <?php
 
-namespace Rissc\Printformer\Ui\DataProvider\Product;
+namespace Rissc\Printformer\Ui;
 
 use Magento\Framework\App\RequestInterface;
 use Magento\Ui\DataProvider\AbstractDataProvider;
+use Magento\Ui\DataProvider\AddFieldToCollectionInterface;
+use Magento\Ui\DataProvider\AddFilterToCollectionInterface;
+use Rissc\Printformer\Model\Product;
+use Rissc\Printformer\Model\ResourceModel\Product\Collection;
 use Rissc\Printformer\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Backend\Model\Session as BackendSession;
 
-class PrintformerProductDataProvider extends AbstractDataProvider
+class DataProvider extends AbstractDataProvider
 {
     /**
-     * Printformer Product collection
-     * @var \Rissc\Printformer\Model\ResourceModel\Product\Collection
+     * Printformer Templates collection
+     *
+     * @var Collection
      */
     protected $collection;
 
     /**
-     * @var \Magento\Ui\DataProvider\AddFieldToCollectionInterface[]
+     * @var AddFieldToCollectionInterface[]
      */
     protected $addFieldStrategies;
 
     /**
-     * @var \Magento\Ui\DataProvider\AddFilterToCollectionInterface[]
+     * @var AddFilterToCollectionInterface[]
      */
     protected $addFilterStrategies;
 
@@ -30,7 +35,9 @@ class PrintformerProductDataProvider extends AbstractDataProvider
      */
     protected $request;
 
-    /** @var BackendSession */
+    /**
+     * @var BackendSession
+     */
     protected $_session;
 
     /**
@@ -42,8 +49,8 @@ class PrintformerProductDataProvider extends AbstractDataProvider
      * @param CollectionFactory $collectionFactory
      * @param RequestInterface $request
      * @param BackendSession $session
-     * @param \Magento\Ui\DataProvider\AddFieldToCollectionInterface[] $addFieldStrategies
-     * @param \Magento\Ui\DataProvider\AddFilterToCollectionInterface[] $addFilterStrategies
+     * @param AddFieldToCollectionInterface[] $addFieldStrategies
+     * @param AddFilterToCollectionInterface[] $addFilterStrategies
      * @param array $meta
      * @param array $data
      */
@@ -60,6 +67,7 @@ class PrintformerProductDataProvider extends AbstractDataProvider
         array $data = []
     ) {
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
+
         $this->collection = $collectionFactory->create();
         $this->addFieldStrategies = $addFieldStrategies;
         $this->addFilterStrategies = $addFilterStrategies;
@@ -73,13 +81,29 @@ class PrintformerProductDataProvider extends AbstractDataProvider
     public function getData()
     {
         $collection = $this->getCollection();
+
         $collection->addFieldToSelect('*');
         $storeId = intval($this->request->getParam('store', 0));
-        if ($storeId > 0 || $this->_session->getPrintformerProductStoreId() === null) {
-            $this->_session->setPrintformerProductStoreId($storeId);
+        if ($storeId > 0 || $this->_session->getPrintformerTemplatesStoreId() === null) {
+            $this->_session->setPrintformerTemplatesStoreId($storeId);
         }
-        $storeId = intval($this->_session->getPrintformerProductStoreId());
+        $storeId = intval($this->_session->getPrintformerTemplatesStoreId());
+
         $collection->addFieldToFilter('store_id', $storeId);
-        return $collection->toArray();
+
+        $itemArray = [];
+        /** @var Product $item */
+        foreach ($collection->getItems() as $item) {
+            $item->setTemplateId($item->getId());
+
+            $itemArray[] = $item->toArray();
+        }
+
+        $returnArray = [
+            'totalRecords' => count($itemArray),
+            'items' => $itemArray
+        ];
+
+        return $returnArray;
     }
 }
