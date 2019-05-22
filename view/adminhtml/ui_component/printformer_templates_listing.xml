@@ -39,9 +39,6 @@
                     <item name="params" xsi:type="array">
                         <item name="filters_modifier" xsi:type="array"/>
                     </item>
-                    <item name="observers" xsi:type="array">
-                        <item name="filters" xsi:type="object">Magento\Catalog\Ui\Component\Listing\Filters</item>
-                    </item>
                 </item>
             </argument>
             <settings>
@@ -52,7 +49,7 @@
         </filters>
         <paging name="listing_paging"/>
     </listingToolbar>
-    <columns name="printformer_templates_columns" class="Magento\Catalog\Ui\Component\Listing\Columns">
+    <columns name="printformer_templates_columns">
         <settings>
             <childDefaults>
                 <param name="fieldAction" xsi:type="array">
