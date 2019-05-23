@@ -118,9 +118,9 @@ class Save extends Action
 
             $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
             $uniqueID = null;
-            if($sessionUniqueId) {
+            if ($sessionUniqueId) {
                 $uniqueExplode = explode(':', $sessionUniqueId);
-                if(isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
+                if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                     $uniqueID = $sessionUniqueId;
                 } else {
                     $uniqueID = md5(time() . '_' . $this->_sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
@@ -171,7 +171,7 @@ class Save extends Action
                     ->setController('cart')
                     ->forward('add');
             } else { // redirect to product page
-                if($this->getRequest()->getParam('is_edit') == '1') {
+                if ($this->getRequest()->getParam('is_edit') == '1') {
                     $configureUrl = $this->_url->getUrl('checkout/cart/configure', [
                         'id' => $this->getRequest()->getParam('quote_id'),
                         'product_id' => $this->getRequest()->getParam('edit_product')
@@ -211,7 +211,7 @@ class Save extends Action
 
         /** @var Session $session */
         $session = $this->_sessionHelper->getCatalogSession();
-        foreach($extra as $key => $value) {
+        foreach ($extra as $key => $value) {
             $session->setData($key, $value);
         }
 
@@ -227,7 +227,7 @@ class Save extends Action
         }
 
         $formatVariation = $this->_getFormatVariation();
-        $colorVariation  = $this->_getColorVariation();
+        $colorVariation = $this->_getColorVariation();
 
         if ($formatVariation) {
             $this->_addSelectedProducFormat($params, $product, $formatVariation);
@@ -252,6 +252,19 @@ class Save extends Action
             $params['redirect_url'] = $redirectUrl;
         }
         $params['form_key'] = $this->_formKey->getFormKey();
+
+        $preselectionData = $this->_catalogSession->getSavedPrintformerOptions();
+        foreach ($preselectionData['options'] as $key => $option) {
+            if (!empty($option['value']['date'])) {
+                $date = $option['value']['date'];
+                $timestamp = strtotime('+ 4 hours', strtotime($date));
+                $dateInternal = date('Y-m-d H:i:s', $timestamp);
+                $option['value'] = ['date' => $date, 'date_internal' => $dateInternal];
+            }
+            $value = $option['value'];
+            $params['options'][$key] = $value;
+        }
+        $params['qty'] = $preselectionData['qty']['value'];
 
         return $params;
     }

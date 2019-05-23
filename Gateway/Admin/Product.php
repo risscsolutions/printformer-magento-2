@@ -1,6 +1,8 @@
 <?php
 namespace Rissc\Printformer\Gateway\Admin;
 
+use GuzzleHttp\Client as HttpClient;
+use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Json\Decoder;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\Website;
@@ -10,8 +12,6 @@ use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
-use Magento\Catalog\Model\ProductFactory;
-use GuzzleHttp\Client as HttpClient;
 
 class Product
 {
@@ -123,8 +123,6 @@ class Product
      * @throws Exception
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\LocalizedException
-     *
-     * @todo: Move to Api Helper!!!
      */
     public function syncProducts($storeId = Store::DEFAULT_STORE_ID)
     {
@@ -137,15 +135,21 @@ class Product
                 $store = $website->getDefaultStore();
                 $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
 
-                if ($defaultApiSecret === $apiSecret) {
+                if ($apiSecret === $defaultApiSecret) {
                     $storeIds[] = $store->getId();
                 }
             }
         } else {
             $storeIds[] = $storeId;
         }
+        $errors = [];
         foreach ($storeIds as $storeId) {
-            $this->_syncProducts($storeId);
+            try {
+                $this->_syncProducts($storeId);
+            } catch (\Exception $e) {
+                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
+                continue;
+            }
         }
 
         return $this;
@@ -163,19 +167,13 @@ class Product
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
-        if ($this->configHelper->isV2Enabled($storeId) && !empty($apiKey)) {
-            $request = new HttpClient([
-                'base_url' => $url,
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $apiKey
-                ]
-            ]);
-        } else {
-            $request = new HttpClient([
-                'base_url' => $url,
-            ]);
-        }
+        $request = new HttpClient([
+            'base_url' => $url,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $apiKey
+            ]
+        ]);
 
         $response = $request->get($url);
 

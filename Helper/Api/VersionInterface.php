@@ -151,10 +151,11 @@ interface VersionInterface
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null);
 
     /**
-     * @param $oldDraftId
+     * @param string $oldDraftId
+     *
      * @return string
      */
-    public function getReplicateDraftId(string $oldDraftId);
+    public function getReplicateDraftId($oldDraftId);
 
     /**
      * @param $fileId

@@ -1,0 +1,21 @@
+<?php
+/**
+ * @var $block \Rissc\Printformer\Block\Editor\Shopframe
+ */
+
+/** @var \Rissc\Printformer\Helper\Config $config */
+$config = $this->helper(\Rissc\Printformer\Helper\Config::class);
+?>
+<script type="text/x-magento-init">
+    {
+        "body": {
+            "Rissc_Printformer/js/shopframe": {}
+        }
+    }
+</script>
+<?php if ($config->isFullscreenButtonEnabled()): ?>
+    <a href="#" class="printformer-fullscreen-toggle"></a>
+<?php endif; ?>
+<iframe src="<?php echo $block->getFrameUrl(); ?>" class="inner-frame" name="printformer-shopframe" id="printformer_shopframe_container">
+    <?php echo __('Your browser doesn\'t support inline frames.'); ?>
+</iframe>

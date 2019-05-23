@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Controller\Editor;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\View\Result\PageFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -16,7 +17,6 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Editor\Preselect as PreselectHelper;
 use Rissc\Printformer\Helper\Api as ApiHelper;
-
 
 class Open extends Action
 {
@@ -61,6 +61,11 @@ class Open extends Action
     protected $_preselectHelper;
 
     /**
+     * @var PageFactory
+     */
+    protected $_pageFactory;
+
+    /**
      * Open constructor.
      * @param Context $context
      * @param DraftGateway $draftGateway
@@ -70,6 +75,8 @@ class Open extends Action
      * @param DraftFactory $draftFactory
      * @param SessionHelper $sessionHelper
      * @param PreselectHelper $preselectHelper
+     * @param ApiHelper $apiHelper
+     * @param PageFactory $pageFactory
      */
     public function __construct(
         Context $context,
@@ -80,7 +87,8 @@ class Open extends Action
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
         PreselectHelper $preselectHelper,
-        ApiHelper $apiHelper
+        ApiHelper $apiHelper,
+        PageFactory $pageFactory
     ) {
         $this->_draftGateway = $draftGateway;
         $this->_urlHelper = $urlHelper;
@@ -90,6 +98,7 @@ class Open extends Action
         $this->_sessionHelper = $sessionHelper;
         $this->_preselectHelper = $preselectHelper;
         $this->_apiHelper = $apiHelper;
+        $this->_pageFactory = $pageFactory;
 
         parent::__construct($context);
     }
@@ -109,32 +118,41 @@ class Open extends Action
         $printformerProductId = $this->getRequest()->getParam('printformer_product_id');
         $storeId              = $this->_storeManager->getStore()->getId();
         $customerSession      = $this->_sessionHelper->getCustomerSession();
+        $overrideFrameConfig  = $this->getRequest()->getParam('shopframe') != null;
 
         /**
          * Show an error if product id was not set
          */
-        if(!$productId) {
+        if (!$productId) {
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
         /**
          * Save preselected data
          */
-        if($this->getRequest()->isPost()) {
+        if ($this->getRequest()->isPost()) {
             $this->_savePreselectedData($this->getRequest()->getParams());
+        }
+
+        /**
+         * Open Editor in a frame if the display mode is set to "Shop Frame"
+         * and we don't have a parameter set to override the config check
+         */
+        if (!$overrideFrameConfig && $this->_apiHelper->config()->isFrameEnabled()) {
+            return $this->initShopFrame();
         }
 
         /**
          * Load product and save intent to session data
          */
         /** @var Product $product */
-        $product = $this->_productFactory->create()->load($this->_request->getParam('product'));
+        $product = $this->_productFactory->create()->load($productId);
         $this->_sessionHelper->setCurrentIntent($intent);
 
         /**
          * Try to load draft from database
          */
-         $draftProcess = $this->_apiHelper->draftProcess(
+        $draftProcess = $this->_apiHelper->draftProcess(
              $printformerDraft,
              $masterId,
              $product->getId(),
@@ -147,7 +165,7 @@ class Open extends Action
         /**
          * If draft could not be created or loaded, show an error
          */
-        if(!$draftProcess->getId()) {
+        if (!$draftProcess->getId()) {
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
@@ -164,11 +182,11 @@ class Open extends Action
             ]
         ];
 
-        if(!empty($params['quote_id']) && !empty($productId)) {
+        if (!empty($params['quote_id']) && !empty($productId)) {
             $editorParams['data']['quote_id'] = $params['quote_id'];
         }
 
-        if($this->_draftGateway->isV2Enabled()) {
+        if ($this->_draftGateway->isV2Enabled()) {
             $editorUrl = $this->_apiHelper->getEditorWebtokenUrl(
                 $draftProcess->getDraftId(),
                 $draftProcess->getUserIdentifier(),
@@ -239,8 +257,8 @@ class Open extends Action
     {
         $draftId = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
 
-        $userIdentifier = NULL;
-        if($this->_draftGateway->isV2Enabled()) {
+        $userIdentifier = null;
+        if ($this->_draftGateway->isV2Enabled()) {
             $userIdentifier = $this->_draftGateway->getUserIdentifier();
         }
 
@@ -281,11 +299,11 @@ class Open extends Action
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
 
-        if($sessionUniqueId == null) {
+        if ($sessionUniqueId == null) {
             $sessionUniqueId = $customerSession->getSessionUniqueID();
         }
 
-        if($sessionUniqueId) {
+        if ($sessionUniqueId) {
             $uniqueExplode = explode(':', $sessionUniqueId);
             if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                 $draftCollection = $draftProcess->getCollection()
@@ -295,7 +313,7 @@ class Open extends Action
                     $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
                 }
                 if ($draftCollection->count() == 1) {
-                    if($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
+                    if ($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
                         || $this->_sessionHelper->getCustomerId() == null) {
                         /** @var Draft $draft */
                         $draftProcess = $draftCollection->getFirstItem();
@@ -308,8 +326,7 @@ class Open extends Action
                 }
             }
         } else {
-            if(!empty($printformerDraft)) {
-
+            if (!empty($printformerDraft)) {
             }
         }
 
@@ -327,7 +344,7 @@ class Open extends Action
      */
     protected function _getCallbackUrl($requestReferrer, Draft $draftProcess, $storeId = 0, $params = [], $encodeUrl = true)
     {
-        if($requestReferrer != null) {
+        if ($requestReferrer != null) {
             $referrer = urldecode($requestReferrer);
         } else {
             $referrerParams = array_merge($params, [
@@ -335,7 +352,7 @@ class Open extends Action
                 'draft_process' => $draftProcess->getId()
             ]);
 
-            if(isset($params['quote_id']) && isset($params['product_id'])) {
+            if (isset($params['quote_id']) && isset($params['product_id'])) {
                 $referrerParams['quote_id'] = $params['quote_id'];
                 $referrerParams['edit_product'] = $params['product_id'];
                 $referrerParams['is_edit'] = 1;
@@ -344,7 +361,7 @@ class Open extends Action
             $referrer = $this->_url->getUrl('printformer/editor/save', $referrerParams);
         }
 
-        if($encodeUrl) {
+        if ($encodeUrl) {
             $referrer = urlencode(base64_encode($referrer));
         }
 
@@ -369,7 +386,7 @@ class Open extends Action
 
         $editorUrlBase = $editorUrlparts[0];
         $editorUrlParams = '';
-        if(isset($editorUrlparts[1])) {
+        if (isset($editorUrlparts[1])) {
             $editorUrlParams = $editorUrlparts[1];
         }
 
@@ -384,7 +401,7 @@ class Open extends Action
         /**
          * Add customer id to params
          */
-        if($customerSession->isLoggedIn()) {
+        if ($customerSession->isLoggedIn()) {
             $editorUrlParamsArray['user'] = $customerSession->getCustomerId();
         }
 
@@ -399,7 +416,7 @@ class Open extends Action
         /**
          * Override editor params with current action params
          */
-        foreach($paramsObject->getData() as $key => $param) {
+        foreach ($paramsObject->getData() as $key => $param) {
             $editorUrlParamsArray[$key] = $param;
         }
 
@@ -407,12 +424,36 @@ class Open extends Action
          * Assemble url with params and return it
          */
         $queryArray = [];
-        foreach($editorUrlParamsArray as $key => $value) {
+        foreach ($editorUrlParamsArray as $key => $value) {
             $queryArray[] = $key . '=' . $value;
         }
 
         $editorUrl = $editorUrlBase . '?' . implode('&', $queryArray);
 
         return $editorUrl;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getFrameUrl()
+    {
+        $url = $this->_url->getCurrentUrl();
+        $urlParts = explode('?', $url);
+        $urlParts[0] .= 'shopframe/1/';
+
+        return implode('?', $urlParts);
+    }
+
+    /**
+     * @return \Magento\Framework\View\Result\Page
+     */
+    protected function initShopFrame()
+    {
+        $resultPage = $this->_pageFactory->create();
+        $iframeBlock = $resultPage->getLayout()->getBlock('printformer_editor_shopframe');
+        $iframeBlock->setFrameUrl($this->getFrameUrl());
+
+        return $resultPage;
     }
 }

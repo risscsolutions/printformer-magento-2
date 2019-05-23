@@ -5,19 +5,22 @@ use GuzzleHttp\Exception\ServerException;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use GuzzleHttp\Client;
+use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use GuzzleHttp\Psr7\Stream as Psr7Stream;
+use Rissc\Printformer\Helper\Session as SessionHelper;
+use Magento\Customer\Model\CustomerFactory;
+use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
+use Magento\Backend\Model\Session as AdminSession;
 
-class Api
-    extends AbstractHelper
+class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
 
@@ -39,11 +42,20 @@ class Api
     /** @var Config */
     protected $_config;
 
+    /** @var CustomerFactory */
+    protected $_customerFactory;
+
+    /** @var CustomerResource */
+    protected $_customerResource;
+
     /** @var Client[] */
     protected $_httpClients = [];
 
     /** @var int */
     protected $_storeId = Store::DEFAULT_STORE_ID;
+
+    /** @var AdminSession */
+    protected $_adminSession;
 
     public function __construct(
         Context $context,
@@ -52,7 +64,10 @@ class Api
         StoreManagerInterface $storeManager,
         DraftFactory $draftFactory,
         SessionHelper $sessionHelper,
-        Config $config
+        Config $config,
+        CustomerFactory $customerFactory,
+        CustomerResource $customerResource,
+        AdminSession $adminSession
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -60,10 +75,16 @@ class Api
         $this->_draftFactory = $draftFactory;
         $this->_sessionHelper = $sessionHelper;
         $this->_config = $config;
+        $this->_customerFactory = $customerFactory;
+        $this->_customerResource = $customerResource;
+        $this->_adminSession = $adminSession;
 
         $this->setStoreId($storeManager->getStore()->getId());
 
-        $this->apiUrl()->initVersionHelper($this->_config->setStoreId($this->getStoreId())->isV2Enabled());
+        $this->_urlHelper->setStoreId($this->getStoreId());
+        $this->_config->setStoreId($this->getStoreId());
+
+        $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
 
         parent::__construct($context);
@@ -108,17 +129,134 @@ class Api
     }
 
     /**
-     * @return string
+     * @return Config
      */
-    public function getUserIdentifier()
+    public function config()
     {
+        return $this->_config;
+    }
+
+    /**
+     * @return StoreManagerInterface
+     */
+    public function getStoreManager()
+    {
+        return $this->_storeManager;
+    }
+
+    /**
+     * @param $customer Customer
+     */
+    public function checkUserData($customer)
+    {
+        if ($customer->getPrintformerIdentification() !== null) {
+            $userData = $this->getHttpClient()->get(
+                $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
+                    $customer->getPrintformerIdentification()
+                )
+            );
+
+            if ($userData->getStatusCode() === 200) {
+                $resultData = json_decode($userData->getBody()->getContents(), true);
+                $profileData = $resultData['data']['profile'];
+
+                if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
+                    $options = [
+                        'json' => [
+                            'firstName' => $customer->getFirstname(),
+                            'lastName' => $customer->getLastname(),
+                            'email' => $customer->getEmail()
+                        ]
+                    ];
+
+                    $this->getHttpClient()->put(
+                        $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
+                            $customer->getPrintformerIdentification()
+                        ), $options
+                    );
+                }
+            }
+        } else {
+
+            $options = [
+                'json' => [
+                    'firstName' => $customer->getFirstname(),
+                    'lastName' => $customer->getLastname(),
+                    'email' => $customer->getEmail()
+                ]
+            ];
+
+            $userIdentifier = $this->createUser($options);
+            $customer->setData('printformer_identification', $userIdentifier);
+        }
+
+    }
+
+    /**
+     * @param Customer|int $customer
+     * @param null $admin
+     *
+     * @return string
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
+    public function getUserIdentifier($customer = null, $admin = null)
+    {
+        $stores = $this->getStoreManager()->getStores(true, false);
+
+        foreach ($stores as $store) {
+            if ($store->getCode() == 'admin') {
+                if ($admin !== null) {
+                    if (!$admin->getData('printformer_identification')) {
+                        $adminUserIdentifier = $this->createUser();
+                        $connection = $admin->getResource()->getConnection();
+                        $connection->query("
+                        UPDATE " . $connection->getTableName('admin_user') . "
+                        SET
+                            `printformer_identification` = '" . $adminUserIdentifier . "'
+                        WHERE
+                            `user_id` = " . $admin->getId() . ";
+                    ");
+                        $this->_adminSession->setPrintformerIdentification($adminUserIdentifier);
+                    } else {
+                        if ($admin->getData('printformer_identification') != $this->_adminSession->getPrintformerIdentification()) {
+                            $this->_adminSession->setPrintformerIdentification($admin->getData('printformer_identification'));
+                        }
+                    }
+
+                    return $this->_adminSession->getPrintformerIdentification();
+                }
+            }
+
+            continue;
+        }
+
         if (!$this->_config->isV2Enabled()) {
             return null;
+        }
+
+        if (is_numeric($customer) && $customer === 0) {
+            return null;
+        }
+
+        $customerModel = null;
+        if (!empty($customer) && is_numeric($customer)) {
+
+            /** @var Customer $customerModel */
+            $customerModel = $this->_customerFactory->create();
+            $this->_customerResource->load($customerModel, $customer);
+
+            $customer = $customerModel;
+            $this->checkUserData($customer);
+        }
+
+        if ($customer !== null) {
+            return $customer->getPrintformerIdentification();
         }
 
         if ($this->_customerSession->isLoggedIn()) {
             $customer = $this->_customerSession->getCustomer();
             $customer->getResource()->load($customer, $customer->getId());
+
             if (!$customer->getData('printformer_identification')) {
                 $customerUserIdentifier = $this->createUser();
                 $connection = $customer->getResource()->getConnection();
@@ -130,6 +268,7 @@ class Api
                         `entity_id` = " . $customer->getId() . ";
                 ");
                 $customer->setData('printformer_identification', $customerUserIdentifier);
+                $customer->getResource()->save($customer);
                 $this->_customerSession->setPrintformerIdentification($customerUserIdentifier);
             } else {
                 if ($customer->getData('printformer_identification') !=
@@ -139,6 +278,9 @@ class Api
                     );
                 }
             }
+
+            $this->checkUserData($customer);
+
         } else {
             if (!$this->_customerSession->getPrintformerIdentification()) {
                 $guestUserIdentifier = $this->createUser();
@@ -154,17 +296,20 @@ class Api
      */
     public function apiUrl()
     {
+        $this->_urlHelper->setStoreId($this->getStoreId());
+
         return $this->_urlHelper;
     }
 
     /**
+     * @param array $userOptions
      * @return string
      */
-    public function createUser()
+    public function createUser($userOptions = [])
     {
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
 
-        $response = $this->getHttpClient()->post($url);
+        $response = $this->getHttpClient()->post($url, $userOptions);
         $response = json_decode($response->getBody(), true);
 
         return $response['data']['identifier'];
@@ -266,14 +411,14 @@ class Api
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
+            ->set('client', $this->_config->getClientIdentifier($this->getStoreId()))
             ->set('user', $userIdentifier)
             ->setId(bin2hex(random_bytes(16)), true)
             ->set('redirect', $editorOpenUrl)
             ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->getClientApiKey($this->getStoreId()))
             ->getToken();
 
         return $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
@@ -298,12 +443,13 @@ class Api
         $intent = null,
         $sessionUniqueId = null,
         $customerId = null,
-        $printformerProductId = null
+        $printformerProductId = null,
+        $checkOnly = false
     ) {
         $store = $this->_storeManager->getStore();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
-        if(!$process->getId()) {
+        if(!$process->getId() && !$checkOnly) {
             $dataParams = [
                 'intent' => $intent
             ];
@@ -647,5 +793,105 @@ class Api
         ];
 
         return $derivateDownloadLink . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return string
+     */
+    public function createReviewPdfUrl($reviewId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return string
+     */
+    public function getReviewPdfUrl($reviewId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $draftId
+     *
+     * @return string
+     */
+    public function getIdmlPackage($draftId)
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
+            ->getToken();
+
+        $getIdmlPackage = $this->apiUrl()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $getIdmlPackage . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * @param $draftId
+     *
+     * @return string
+     */
+    public function closePagePlanner()
+    {
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
+            ->getToken();
+
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $createReviewPdfUrl . '?' . http_build_query($postFields);
     }
 }

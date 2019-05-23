@@ -3,9 +3,17 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!-- Declarations -->
     <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface"
-                type="Magento\Framework\Api\SearchResults" />
-    <preference for="Rissc\Printformer\Model\Api\Webservice\OrderedCallback\ServiceInterface"
+                type="Magento\Framework\Api\SearchResults"/>
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\OrderedCallbackInterface"
                 type="Rissc\Printformer\Model\Api\Webservice\Service\OrderedCallback"/>
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\AclInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\Acl"/>
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\AclDataInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\AclData"/>
+    <preference for="Rissc\Printformer\Api\Data\AclDataInterface" type="Rissc\Printformer\Model\AclData"/>
+    <preference for="Magento\Checkout\Block\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
+    <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface"
+                type="Magento\Framework\Api\SearchResults" />
     <preference for="Magento\Checkout\Block\Cart\Item\Renderer"
                 type="Rissc\Printformer\Block\Checkout\Cart\Renderer" />
 
@@ -76,6 +84,12 @@
         <plugin name="printformer_delete_session_after_configure"
                 type="Rissc\Printformer\Plugin\Block\Printformer\Plugin"
                 sortOrder="1000"
+        />
+    </type>
+    <type name="Magento\Framework\Reflection\FieldNamer">
+        <plugin name="field_namer_method_plugin"
+                type="Rissc\Printformer\Plugin\FieldNamerPlugin"
+                sortOrder="100"
         />
     </type>
     <type name="Magento\Customer\Controller\Section\Load">

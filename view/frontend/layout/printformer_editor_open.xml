@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      layout="1column"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Rissc_Printformer/css/shopframe.css"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block name="printformer_editor_shopframe"
+                   class="Rissc\Printformer\Block\Editor\Shopframe"
+                   template="Rissc_Printformer::editor/shopframe.phtml"
+                   cacheable="false"
+            />
+        </referenceContainer>
+        <referenceContainer name="page.bottom.container" remove="true"/>
+        <referenceContainer name="before.body.end" remove="true"/>
+        <referenceContainer name="footer-container" remove="true"/>
+    </body>
+</page>

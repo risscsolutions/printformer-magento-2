@@ -6,18 +6,15 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Api\Url\V1 as V1Helper;
 use Rissc\Printformer\Helper\Api\Url\V2 as V2Helper;
-use Rissc\Printformer\Model\Config\Source\Redirect;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Model\Config\Source\Redirect;
 
-class Url
-    extends AbstractHelper
-    implements VersionInterface
+class Url extends AbstractHelper implements VersionInterface
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
 
-    /** @var V1Helper|V2Helper */
+    /** @var V2Helper */
     protected $_versionHelper = null;
 
     /** @var StoreManagerInterface */
@@ -32,8 +29,7 @@ class Url
         Context $context,
         StoreManagerInterface $storeManager,
         Config $config
-    )
-    {
+    ) {
         $this->_storeManager = $storeManager;
         $this->config = $config;
 
@@ -65,30 +61,18 @@ class Url
      *
      * @return $this
      */
-    public function initVersionHelper($isV2Api = false)
+    public function initVersionHelper()
     {
         $objm = ObjectManager::getInstance();
-        if($isV2Api) {
-            $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V2');
-        } else {
-            $this->_versionHelper = $objm->create('Rissc\Printformer\Helper\Api\Url\V1');
-        }
+        $this->_versionHelper = $objm->create(V2Helper::class);
 
         return $this;
     }
 
     public function getVersionHelper()
     {
-        if ($this->_versionHelper instanceof \Rissc\Printformer\Helper\Api\Url\V1 && $this->config->isV2Enabled()) {
-            $this->_versionHelper = null;
-        }
-
-        if ($this->_versionHelper instanceof \Rissc\Printformer\Helper\Api\Url\V2 && !$this->config->isV2Enabled()) {
-            $this->_versionHelper = null;
-        }
-
-        if(!$this->_versionHelper) {
-            $this->initVersionHelper($this->config->isV2Enabled());
+        if (!$this->_versionHelper) {
+            $this->initVersionHelper();
         }
 
         return $this->_versionHelper;
@@ -254,7 +238,7 @@ class Url
      */
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
     {
-        if (!$redirectParams){
+        if (!$redirectParams) {
             switch ($this->config->getConfigRedirect()) {
                 case Redirect::CONFIG_REDIRECT_URL_ALT:
                     return $this->config->getRedirectAlt();
@@ -272,7 +256,7 @@ class Url
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraftId(string $oldDraftId)
+    public function getReplicateDraftId($oldDraftId)
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
     }
@@ -283,5 +267,70 @@ class Url
     public function getDerivat($fileId)
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDerivat($fileId);
+    }
+
+    public function createReviewPDF($reviewId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
+    }
+
+    public function getReviewPdf($reviewId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
+    }
+
+    public function getPagePlannerUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerUrl();
+    }
+
+    public function getReviewStartUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewStartUrl();
+    }
+
+    public function getReviewEditUrl($reviewId, $versionId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditUrl($reviewId, $versionId);
+    }
+
+    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl);
+    }
+
+    public function createIdmlPackage($draftId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->createIdmlPackage($draftId);
+    }
+
+    public function getIdmlPackage($draftId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
+    }
+
+    public function getPagePlannerApproveUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
+    }
+
+    public function getReviewUserAddUrl($reviewId, $versionId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserAddUrl($reviewId, $versionId);
+    }
+
+    public function getReviewUserDeleteUrl($reviewId, $versionId)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserDeleteUrl($reviewId, $versionId);
+    }
+
+    public function getPagePlannerDeleteUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerDeleteUrl();
+    }
+
+    public function getUserData($identifier)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUserData($identifier);
     }
 }

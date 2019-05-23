@@ -7,9 +7,12 @@ use Magento\Framework\App\Helper\Context;
 use Rissc\Printformer\Helper\Api\VersionInterface;
 use Rissc\Printformer\Helper\Config;
 
-class V1
-    extends AbstractHelper
-    implements VersionInterface
+/**
+ * Class V1
+ * @package Rissc\Printformer\Helper\Api\Url
+ * @deprecated
+ */
+class V1 extends AbstractHelper implements VersionInterface
 {
     const ROLE_USER  = '0';
     const ROLE_ADMIN = '1';
@@ -37,8 +40,7 @@ class V1
     public function __construct(
         Context $context,
         Config $config
-    )
-    {
+    ) {
         $this->config = $config;
 
         parent::__construct($context);
@@ -122,7 +124,7 @@ class V1
             'intent' => $intent,
             'user' => $user
         ];
-        if($draftHash !== null) {
+        if ($draftHash !== null) {
             $baseParams = array_merge($baseParams, [
                 'draft_id' => $draftHash
             ]);
@@ -153,11 +155,11 @@ class V1
      */
     public function getDraft($draftHash = null, $quoteId = null)
     {
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_CUSTOMER_DRAFT,
             !$draftHash ? '' : $draftHash
-        );
+        ];
 
         $authParams = [
             $this->getApikeyParamName() . '=' . $this->getApikey(),
@@ -173,11 +175,11 @@ class V1
     public function getEditor($draftHash, $user = null, $params = [])
     {
         $params = $params['data'];
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_USER_DRAFTEDITOR,
             $draftHash
-        );
+        ];
 
         $this->authRole = self::ROLE_ADMIN;
         $authParams = [
@@ -187,7 +189,7 @@ class V1
         $this->authRole = self::ROLE_USER;
 
         $urlParams = [];
-        foreach($params as $key => $value) {
+        foreach ($params as $key => $value) {
             $urlParams[] = $key . '=' . $value;
         }
 
@@ -210,11 +212,11 @@ class V1
     public function getDraftProcessing($draftHashes = null, $quoteId = null)
     {
         $this->authRole = self::ROLE_ADMIN;
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_CUSTOMER_ORDERED,
             $this->getPrintformerAuth()
-        );
+        ];
         $this->authRole = self::ROLE_USER;
 
         $data = [
@@ -230,13 +232,13 @@ class V1
      */
     public function getThumbnail($draftHash)
     {
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_CUSTOMER_DRAFTIMG,
             $this->getPrintformerAuth(),
             'risscw2pdraftid',
             $draftHash
-        );
+        ];
         return implode('/', $urlParts);
     }
 
@@ -270,11 +272,11 @@ class V1
     public function getAdminProducts()
     {
         $this->authRole = self::ROLE_ADMIN;
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_ADMIN_PRODUCTS,
             $this->getPrintformerAuth()
-        );
+        ];
         $this->authRole = self::ROLE_USER;
 
         return implode('/', $urlParts);
@@ -286,13 +288,13 @@ class V1
     public function getAdminPDF($draftHash, $quoteId)
     {
         $this->authRole = self::ROLE_ADMIN;
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_ADMIN_GETPDF,
             $this->getPrintformerAuth(),
             'risscw2pdraft',
-            md5($quoteId).$draftHash
-        );
+            md5($quoteId) . $draftHash
+        ];
         $this->authRole = self::ROLE_USER;
 
         return implode('/', $urlParts);
@@ -337,13 +339,13 @@ class V1
     public function getDraftDelete($draftHash)
     {
         $this->authRole = self::ROLE_ADMIN;
-        $urlParts = array(
+        $urlParts = [
             $this->getPrintformerBaseUrl(),
             self::URI_CUSTOMER_DELETE,
             $this->getPrintformerAuth(),
             'risscw2pdraftid',
             $draftHash
-        );
+        ];
         $this->authRole = self::ROLE_USER;
 
         return implode('/', $urlParts);
@@ -360,7 +362,7 @@ class V1
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraftId(string $oldDraftId)
+    public function getReplicateDraftId($oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::URI_REPLICATE_DRAFT);
     }
@@ -373,5 +375,15 @@ class V1
     public function getDerivat($fileId)
     {
         // TODO: Implement getDerivat() method.
+    }
+
+    /**
+     * @param $reviewId
+     *
+     * @return mixed
+     */
+    public function getReviewPDF($reviewId)
+    {
+        // TODO: Implement getReviewPDF() method.
     }
 }

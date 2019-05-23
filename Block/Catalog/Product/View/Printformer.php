@@ -17,6 +17,7 @@ use Rissc\Printformer\Controller\Editor\Save;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Model\Config\Source\Redirect;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
@@ -113,8 +114,7 @@ class Printformer extends AbstractView
         ApiHelper $apiHelper,
         LoggerInterface $logger,
         array $data = []
-    )
-    {
+    ) {
         $this->printformerProductHelper = $printformerProductHelper;
         $this->configHelper = $configHelper;
         $this->urlHelper = $urlHelper;
@@ -295,7 +295,7 @@ class Printformer extends AbstractView
             $product->getId(),
             $this->_storeManager->getStore()->getId()
         );
-        foreach($pfProducts as $printformerProduct) {
+        foreach ($pfProducts as $printformerProduct) {
             $draftId = $this->getDraftId($printformerProduct);
             $printformerProducts[$i] = $printformerProduct->getData();
             $printformerProducts[$i]['url'] = $this->getEditorUrl($printformerProduct, $product);
@@ -788,7 +788,7 @@ class Printformer extends AbstractView
             'editorMainSelector' => '#printformer-editor-main',
             'editorCloseSelector' => '#printformer-editor-close',
             'editorNoticeSelector' => '#printformer-editor-notice',
-            'editorFullscreenEnabled' => $this->configHelper->isEditorFullscreenEnabled(),
+            'displayMode' => $this->configHelper->getDisplayMode(),
             'uniqueId' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
             'allowSkipConfig' => $this->configHelper->isAllowSkipConfig(), //@todo || $this->getDraftId(),
@@ -803,7 +803,8 @@ class Printformer extends AbstractView
             Save::PERSONALISATIONS_QUERY_PARAM => 0,
             Save::PERSONALISATIONS_QUERY_PARAM . '_conf' => false,
             'preselection' => [],
-            'openControllerPreselect' => true
+            'openControllerPreselect' => true,
+            'isAddToCartRedirect' => $this->configHelper->getConfigRedirect() != Redirect::CONFIG_REDIRECT_URL_PRODUCT
         ];
 
         if ($this->getPersonalisations()) {

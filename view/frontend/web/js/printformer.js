@@ -270,25 +270,27 @@ define([
         },
 
         editorMainOpen: function(editorUrl) {
-            if (this.options.editorFullscreenEnabled) {
-                window.location.href = editorUrl;
-                return;
-            }
-
             this.addToCartFormUrl = $(this.form).attr('action');
             $(this.form).attr('action', editorUrl);
-            $(this.form).attr('target', 'printformer-main-frame');
+            if (this.options.displayMode === 0) {
+                $(this.form).attr('target', 'printformer-main-frame');
+            }
 
-            $('html, body').css({
-                'overflow': 'hidden',
-                'height': '100%',
-                'width': '100%'
-            });
-            this.editorMain.modal('openModal');
-            this.editorMain
-                .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
+            if (this.options.displayMode === 0) {
+                $('html, body').css({
+                    'overflow': 'hidden',
+                    'height': '100%',
+                    'width': '100%'
+                });
+                this.editorMain.modal('openModal');
+                this.editorMain
+                    .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
+            }
 
-            $(this.form).off().submit();
+            if (!this.options.isAddToCartRedirect) {
+                $(this.form).off();
+            }
+            $(this.form).submit();
         },
 
         resetForm: function() {
@@ -610,7 +612,13 @@ define([
                             var regex = new RegExp(/options_([0-9]+)_.*/i);
                             inputId = $(opt).attr('id').replace(regex, '$1');
                             if (that.isDefined(selectedOptions['options'][inputId])) {
-                                $(opt).val(selectedOptions['options'][inputId].value);
+                                var value = null;
+                                if (that.isDefined(selectedOptions['options'][inputId]['value'].date)) {
+                                    value = selectedOptions['options'][inputId]['value'].date;
+                                } else {
+                                    value = selectedOptions['options'][inputId].value;
+                                }
+                                $(opt).val(value);
                             }
                         }
                         if (

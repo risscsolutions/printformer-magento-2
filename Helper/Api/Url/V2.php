@@ -1,21 +1,19 @@
 <?php
 namespace Rissc\Printformer\Helper\Api\Url;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Framework\App\Helper\Context;
-use Magento\Store\Model\ScopeInterface;
-use Rissc\Printformer\Helper\Api\VersionInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Config;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Rissc\Printformer\Helper\Api\VersionInterface;
 use Rissc\Printformer\Helper\Catalog as CatalogHelper;
+use Rissc\Printformer\Helper\Config;
 
-class V2
-    extends AbstractHelper
-    implements VersionInterface
+class V2 extends AbstractHelper implements VersionInterface
 {
     const API_CREATE_USER               = '/api-ext/user';
     const API_CREATE_DRAFT              = '/api-ext/draft';
@@ -31,6 +29,26 @@ class V2
 
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
+
+    const API_GET_USER                  = '/api-ext/user/{userId}';
+
+    /** Pageplanning START */
+    const API_DRAFT_SETUP               = '/api-ext/draft-setup';
+    const API_EDITOR_VIEW               = '/editor/{draftId}';
+
+    const API_REVIEW_START              = '/api-ext/review';
+    const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}/';
+    const API_REVIEW_CREATE_REVIEW_PDF  = '/api-ext/review/{reviewId}/{versionId}/create-review-pdf';
+    const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/files/review/{reviewId}/{versionId}/pdf';
+    const API_REVIEW_ADD_USER           = '/api-ext/review/{reviewId}/{versionId}/add-user';
+    const API_REVIEW_DELETE_USER        = '/api-ext/review/{reviewId}/{versionId}/delete-user';
+
+    const API_REQUEST_IDML_PACKAGE      = '/api-ext/draft/{draftId}/request-idml-package';
+    const API_GET_IDML_PACKAGE          = '/api-ext/files/draft/{draftId}/idml-package';
+
+    const API_PAGE_PLANNER_APPROVE      = '/api-ext/page-planner/approve';
+    const API_PAGE_PLANNER_DELETE       = '/api-ext/page-planner/delete';
+    /** Pageplanning END */
 
     /** @var StoreManagerInterface */
     protected $_storeManager;
@@ -48,6 +66,7 @@ class V2
 
     /**
      * V2 constructor.
+     *
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param Config $config
@@ -97,7 +116,7 @@ class V2
             'product_id' => $productId,
             'intent' => $intent
         ];
-        if($draftHash !== null) {
+        if ($draftHash !== null) {
             $baseParams = array_merge($baseParams, [
                 'draft_id' => $draftHash
             ]);
@@ -141,7 +160,7 @@ class V2
         $draftUrl = $this->getPrintformerBaseUrl() .
             self::API_CREATE_DRAFT;
 
-        if($draftHash) {
+        if ($draftHash) {
             return $draftUrl . '/' . $draftHash;
         }
 
@@ -151,7 +170,7 @@ class V2
     /**
      * {@inheritdoc}
      */
-    public function getReplicateDraftId(string $oldDraftId)
+    public function getReplicateDraftId($oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::API_REPLICATE_DRAFT);
     }
@@ -169,18 +188,21 @@ class V2
             'draft_process' => $params['data']['draft_process']
         ];
 
-        if(!empty($params['data']['quote_id'])) {
+        if (!empty($params['data']['quote_id'])) {
             $dataParams['quote_id'] = $params['data']['quote_id'];
         }
 
         $customCallbackUrl = null;
-        if(!empty($params['data']['callback_url'])) {
+        if (!empty($params['data']['callback_url'])) {
             $customCallbackUrl = $params['data']['callback_url'];
         }
 
         $queryParams = [];
-        $queryParams['callback'] = $this->_getCallbackUrl($customCallbackUrl, $this->_storeManager->getStore()->getId(),
-            $dataParams);
+        $queryParams['callback'] = $this->_getCallbackUrl(
+            $customCallbackUrl,
+            $this->_storeManager->getStore()->getId(),
+            $dataParams
+        );
 
         if ($this->_config->getRedirectProductOnCancel()) {
             $queryParams['callback_cancel'] = $this->_getProductCallbackUrl(intval($params['product_id']), $params['data'], $this->_storeManager->getStore()->getId());
@@ -208,14 +230,14 @@ class V2
      */
     protected function _getCallbackUrl($requestReferrer, $storeId = 0, $params = [], $encodeUrl = true)
     {
-        if($requestReferrer != null) {
+        if ($requestReferrer != null) {
             $referrer = urldecode($requestReferrer);
         } else {
             $referrerParams = array_merge($params, [
                 'store_id'      => $storeId,
             ]);
 
-            if(isset($params['quote_id']) && isset($params['product_id'])) {
+            if (isset($params['quote_id']) && isset($params['product_id'])) {
                 $referrerParams['quote_id'] = $params['quote_id'];
                 $referrerParams['edit_product'] = $params['product_id'];
                 $referrerParams['is_edit'] = 1;
@@ -224,7 +246,7 @@ class V2
             $referrer = $this->_urlBuilder->getUrl('printformer/editor/save', $referrerParams);
         }
 
-        if($encodeUrl) {
+        if ($encodeUrl) {
             $referrer = base64_encode($referrer);
         }
 
@@ -275,13 +297,14 @@ class V2
      */
     public function getThumbnail($draftHash) {
         $draftHash = explode(',', $draftHash)[0];
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PNG);;
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PNG);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPDF($draftHash, $quoteid = null) {
+    public function getPDF($draftHash, $quoteid = null)
+    {
         return $this->getPrintformerBaseUrl() .
             str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PDF);
     }
@@ -289,9 +312,43 @@ class V2
     /**
      * {@inheritdoc}
      */
-    public function getPreviewPDF($draftHash, $quoteid = null) {
+    public function getPreviewPDF($draftHash, $quoteid = null)
+    {
         return $this->getPrintformerBaseUrl() .
             str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PREVIEW);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createReviewPDF($reviewId, $versionId = 1)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_CREATE_REVIEW_PDF, $replaceString);
+    }
+
+    public function getReviewPdf($reviewId, $versionId = 1)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_GET_REVIEW_PDF, $replaceString);
+    }
+
+    public function createIdmlPackage($draftId)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{draftId}', $draftId, self::API_REQUEST_IDML_PACKAGE);
+    }
+
+    public function getIdmlPackage($draftId)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{draftId}', $draftId, self::API_GET_IDML_PACKAGE);
     }
 
     /**
@@ -373,6 +430,36 @@ class V2
         return $pdfUrl . '?' . http_build_query($postFields);
     }
 
+    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl)
+    {
+
+        $calbackUrls = [
+            'redirect-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'customer/account/'),
+            'submit-callback-url' => base64_encode(rtrim($this->_storeManager->getStore()->getBaseUrl(), '/') . '/' . $callbackUrl)
+        ];
+
+        $reviewEditUrl = $this->getReviewEditUrl($reviewId, $versionId) . '?' . http_build_query($calbackUrls);
+
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt(time())
+            ->set('client', $this->_config->getClientIdentifier())
+            ->set('user', $userIdentifier)
+            ->setId(bin2hex(random_bytes(16)), true)
+            ->set('redirect', $reviewEditUrl)
+            ->setExpiration($this->_config->getExpireDate());
+
+        $JWT = (string)$JWTBuilder
+            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->getToken();
+
+
+        $postFields = [
+            'jwt' => $JWT
+        ];
+
+        return $this->getAuth() . '?' . http_build_query($postFields);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -389,8 +476,65 @@ class V2
     /**
      * {@inheritdoc}
      */
-    public function getDerivat($fileId) {
+    public function getDerivat($fileId)
+    {
         return $this->getPrintformerBaseUrl() .
             str_replace('{fileId}', $fileId, self::API_FILES_DERIVATE_FILE);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPagePlannerUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_DRAFT_SETUP;
+    }
+
+    public function getReviewStartUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_REVIEW_START;
+    }
+
+    public function getReviewEditUrl($reviewId, $versionId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_EDIT, $replaceString);
+    }
+
+    public function getPagePlannerApproveUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_APPROVE;
+    }
+
+    public function getReviewUserAddUrl($reviewId, $versionId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_ADD_USER, $replaceString);
+    }
+
+    public function getReviewUserDeleteUrl($reviewId, $versionId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+            '{versionId}' => $versionId
+        ];
+        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_DELETE_USER, $replaceString);
+    }
+
+    public function getPagePlannerDeleteUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_DELETE;
+    }
+
+    public function getUserData($identifier)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{userId}', $identifier, self::API_GET_USER);
     }
 }
