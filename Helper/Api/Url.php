@@ -289,14 +289,14 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewStartUrl();
     }
 
-    public function getReviewEditUrl($reviewId, $versionId)
+    public function getReviewEditUrl($reviewId)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditUrl($reviewId, $versionId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditUrl($reviewId);
     }
 
-    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl)
+    public function getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl);
     }
 
     public function createIdmlPackage($draftId)
@@ -314,14 +314,14 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
     }
 
-    public function getReviewUserAddUrl($reviewId, $versionId)
+    public function getReviewUserAddUrl($reviewId)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserAddUrl($reviewId, $versionId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserAddUrl($reviewId);
     }
 
-    public function getReviewUserDeleteUrl($reviewId, $versionId)
+    public function getReviewUserDeleteUrl($reviewId)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserDeleteUrl($reviewId, $versionId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserDeleteUrl($reviewId);
     }
 
     public function getPagePlannerDeleteUrl()
