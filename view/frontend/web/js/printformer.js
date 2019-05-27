@@ -287,7 +287,7 @@ define([
                     .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
             }
 
-            if (!this.options.isAddToCartRedirect) {
+            if (this.options.isAddToCartRedirect && $(this.form).valid()) {
                 $(this.form).off();
             }
             $(this.form).submit();
