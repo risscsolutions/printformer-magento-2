@@ -287,7 +287,11 @@ define([
                     .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
             }
 
-            if (this.options.isAddToCartRedirect && $(this.form).valid()) {
+            if (!$(this.form).valid()) {
+                return;
+            }
+
+            if (!this.options.isAddToCartRedirect) {
                 $(this.form).off();
             }
             $(this.form).submit();

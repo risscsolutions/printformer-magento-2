@@ -12,11 +12,14 @@
 .printformer-editor-open .page-main {
   margin: 0 !important;
   padding: 0 !important;
-  max-width: 100%;
-  min-height: 100%;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
 }
 .printformer-editor-open .page-main .columns {
   height: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
   min-height: 100% !important;
 }
 .printformer-editor-open .page-main .columns .column.main {
@@ -27,6 +30,8 @@
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
   height: 100% !important;
   border: 0;
 }

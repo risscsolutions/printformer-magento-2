@@ -37,8 +37,21 @@ define([
         },
 
         handleResize: function(){
+            var instance = this;
+
+            var viewportHeight = $(window).innerHeight();
+            var headerHeight = 0;
+            var wrapperChilds = this._mainContentContainer.parent().children();
+            $.each(wrapperChilds, function(i, elem){
+                if ($(elem).attr('id') === $(instance._mainContentContainer).attr('id')) {
+                    return true;
+                }
+
+                headerHeight += $(elem).height();
+            });
+
             this._wrapperContainer.css({
-                'height': this._mainContentContainer.outerHeight() + 'px'
+                'height': (viewportHeight - headerHeight) + 'px'
             });
         },
 
