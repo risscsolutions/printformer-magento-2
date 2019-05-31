@@ -2,7 +2,6 @@
 namespace Rissc\Printformer\Ui\Modifiers;
 
 use Magento\Catalog\Model\Locator\LocatorInterface;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Phrase;
 use Magento\Ui\Component\DynamicRows;
 use Magento\Ui\Component\Form\Element\DataType\Number;
@@ -15,6 +14,7 @@ use Magento\Ui\DataProvider\Modifier\ModifierInterface;
 use Magento\Framework\UrlInterface;
 use Rissc\Printformer\Helper\Product as ProductHelper;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Magento\Backend\Model\Session as BackendSession;
 
 /**
  * Class Templates
@@ -59,6 +59,11 @@ class Templates implements ModifierInterface
     protected $productHelper;
 
     /**
+     * @var BackendSession
+     */
+    protected $_session;
+
+    /**
      * @param LocatorInterface $locator
      * @param UrlInterface $urlBuilder
      * @param ProductHelper $productHelper
@@ -71,6 +76,7 @@ class Templates implements ModifierInterface
         UrlInterface $urlBuilder,
         ProductHelper $productHelper,
         ConfigHelper $config,
+        BackendSession $session,
         $scopeName = '',
         $scopePrefix = ''
     ) {
@@ -80,6 +86,7 @@ class Templates implements ModifierInterface
         $this->scopePrefix = $scopePrefix;
         $this->configHelper = $config;
         $this->productHelper = $productHelper;
+        $this->_session = $session;
     }
 
     /**
@@ -97,6 +104,7 @@ class Templates implements ModifierInterface
         $storeId = $this->locator->getProduct()->getStoreId();
 
         $data[$productId]['printformer'][self::DATA_SCOPE] = [];
+        $this->_session->setPrintformerTemplatesStoreId($storeId);
         foreach ($this->productHelper->getCatalogProductPrintformerProductsArray($productId, $storeId) as $template) {
             $data[$productId]['printformer'][self::DATA_SCOPE][] = $this->fillData($template);
         }

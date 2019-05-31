@@ -89,7 +89,9 @@ class DataProvider extends AbstractDataProvider
         }
         $storeId = intval($this->_session->getPrintformerTemplatesStoreId());
 
-        $collection->addFieldToFilter('store_id', $storeId);
+        if ($storeId > 0) {
+            $collection->addFieldToFilter('store_id', $storeId);
+        }
 
         $itemArray = [];
         /** @var Product $item */
