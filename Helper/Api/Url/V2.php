@@ -37,11 +37,11 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_EDITOR_VIEW               = '/editor/{draftId}';
 
     const API_REVIEW_START              = '/api-ext/review';
-    const API_REVIEW_EDIT               = '/review/{reviewId}/{versionId}/';
-    const API_REVIEW_CREATE_REVIEW_PDF  = '/api-ext/review/{reviewId}/{versionId}/create-review-pdf';
-    const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/files/review/{reviewId}/{versionId}/pdf';
-    const API_REVIEW_ADD_USER           = '/api-ext/review/{reviewId}/{versionId}/add-user';
-    const API_REVIEW_DELETE_USER        = '/api-ext/review/{reviewId}/{versionId}/delete-user';
+    const API_REVIEW_EDIT               = '/review/{reviewId}/';
+    const API_REVIEW_CREATE_REVIEW_PDF  = '/api-ext/review/{reviewId}/create-review-pdf';
+    const API_REVIEW_GET_REVIEW_PDF     = '/api-ext/files/review/{reviewId}/pdf';
+    const API_REVIEW_ADD_USER           = '/api-ext/review/{reviewId}/add-user';
+    const API_REVIEW_DELETE_USER        = '/api-ext/review/{reviewId}/delete-user';
 
     const API_REQUEST_IDML_PACKAGE      = '/api-ext/draft/{draftId}/request-idml-package';
     const API_GET_IDML_PACKAGE          = '/api-ext/files/draft/{draftId}/idml-package';
@@ -321,20 +321,18 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function createReviewPDF($reviewId, $versionId = 1)
+    public function createReviewPDF($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId,
-            '{versionId}' => $versionId
+            '{reviewId}' => $reviewId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_CREATE_REVIEW_PDF, $replaceString);
     }
 
-    public function getReviewPdf($reviewId, $versionId = 1)
+    public function getReviewPdf($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId,
-            '{versionId}' => $versionId
+            '{reviewId}' => $reviewId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_GET_REVIEW_PDF, $replaceString);
     }
@@ -430,7 +428,7 @@ class V2 extends AbstractHelper implements VersionInterface
         return $pdfUrl . '?' . http_build_query($postFields);
     }
 
-    public function getReviewEditAuth($reviewId, $versionId, $userIdentifier, $callbackUrl)
+    public function getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl)
     {
 
         $calbackUrls = [
@@ -438,7 +436,7 @@ class V2 extends AbstractHelper implements VersionInterface
             'submit-callback-url' => base64_encode(rtrim($this->_storeManager->getStore()->getBaseUrl(), '/') . '/' . $callbackUrl)
         ];
 
-        $reviewEditUrl = $this->getReviewEditUrl($reviewId, $versionId) . '?' . http_build_query($calbackUrls);
+        $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
@@ -495,11 +493,10 @@ class V2 extends AbstractHelper implements VersionInterface
         return $this->getPrintformerBaseUrl() . self::API_REVIEW_START;
     }
 
-    public function getReviewEditUrl($reviewId, $versionId)
+    public function getReviewEditUrl($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId,
-            '{versionId}' => $versionId
+            '{reviewId}' => $reviewId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_EDIT, $replaceString);
     }
@@ -509,20 +506,18 @@ class V2 extends AbstractHelper implements VersionInterface
         return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_APPROVE;
     }
 
-    public function getReviewUserAddUrl($reviewId, $versionId)
+    public function getReviewUserAddUrl($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId,
-            '{versionId}' => $versionId
+            '{reviewId}' => $reviewId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_ADD_USER, $replaceString);
     }
 
-    public function getReviewUserDeleteUrl($reviewId, $versionId)
+    public function getReviewUserDeleteUrl($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId,
-            '{versionId}' => $versionId
+            '{reviewId}' => $reviewId
         ];
         return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_DELETE_USER, $replaceString);
     }
