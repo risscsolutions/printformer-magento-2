@@ -50,6 +50,12 @@ class DraftStatus extends AbstractRenderer
             $item->getResource()->load($item, $orderItemId);
             if($item->getId()) {
                 $itemOrdered = (bool)$item->getPrintformerOrdered();
+                if ($row->getProcessingStatus() == 1 && !$itemOrdered) {
+                    $item->setPrintformerOrdered(1);
+                    $item->getResource()->save($item);
+
+                    $itemOrdered = (bool)$item->getPrintformerOrdered();
+                }
             }
         }
 
