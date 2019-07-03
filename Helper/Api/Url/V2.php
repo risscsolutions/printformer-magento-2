@@ -7,6 +7,7 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Api\VersionInterface;
@@ -430,24 +431,35 @@ class V2 extends AbstractHelper implements VersionInterface
 
     public function getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl)
     {
-
         $calbackUrls = [
             'redirect-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'customer/account/'),
             'submit-callback-url' => base64_encode(rtrim($this->_storeManager->getStore()->getBaseUrl(), '/') . '/' . $callbackUrl)
         ];
 
-        $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
+        // temporary fix for getting the correct review edit url with printformer_base_url for correct storeview
+        if (class_exists('\Mgo\WebService\Helper\ExternalReviewUser')) {
+            $obj = ObjectManager::getInstance();
+            $externalReviewUserHelper = $obj->create('\Mgo\WebService\Helper\ExternalReviewUser');
+            $storeId = $externalReviewUserHelper->getStoreIdFromReviewByReviewHash($reviewId);
+            $reviewEditUrl = $this->setStoreId($storeId)->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
+        } else {
+            // not an mgo project
+            $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
+            $storeId = $this->_storeId;
+        }
+
+        $this->_config->setStoreId($storeId);
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier())
+            ->set('client', $this->_config->getClientIdentifier($storeId))
             ->set('user', $userIdentifier)
             ->setId(bin2hex(random_bytes(16)), true)
             ->set('redirect', $reviewEditUrl)
             ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey())
+            ->sign(new Sha256(), $this->_config->getClientApiKey($storeId))
             ->getToken();
 
 
