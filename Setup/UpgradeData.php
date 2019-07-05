@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Setup;
 
 use Magento\Customer\Model\Customer;
+use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\UpgradeDataInterface;
@@ -52,7 +53,7 @@ class UpgradeData implements UpgradeDataInterface
                     'input' => 'select',
                     'class' => '',
                     'source' => 'Rissc\Printformer\Model\Product\Source',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'global' => ScopedAttributeInterface::SCOPE_STORE,
                     'visible' => true,
                     'required' => false,
                     'user_defined' => false,
@@ -79,7 +80,7 @@ class UpgradeData implements UpgradeDataInterface
                     'input' => 'select',
                     'class' => '',
                     'source' => 'Magento\Eav\Model\Entity\Attribute\Source\Boolean',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'global' => ScopedAttributeInterface::SCOPE_STORE,
                     'visible' => true,
                     'required' => false,
                     'user_defined' => false,
@@ -152,7 +153,7 @@ class UpgradeData implements UpgradeDataInterface
                     'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
                     'label' => 'Printformer Capabilities',
                     'input' => 'multiselect',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'global' => ScopedAttributeInterface::SCOPE_STORE,
                     'visible' => true,
                     'required' => false,
                     'user_defined' => false,
@@ -189,7 +190,7 @@ class UpgradeData implements UpgradeDataInterface
                     'backend' => 'Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend',
                     'label' => 'Printformer Capabilities',
                     'input' => 'multiselect',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                    'global' => ScopedAttributeInterface::SCOPE_STORE,
                     'visible' => true,
                     'required' => false,
                     'user_defined' => false,
@@ -215,31 +216,7 @@ class UpgradeData implements UpgradeDataInterface
 
         if(version_compare($context->getVersion(), '100.2.30', '<')) {
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
-            $eavSetup->addAttribute(
-                'customer',
-                'printformer_identification',
-                [
-                    'group' => 'general',
-                    'type' => 'varchar',
-                    'backend' => '',
-                    'frontend' => '',
-                    'label' => 'Printformer Identification',
-                    'input' => 'text',
-                    'class' => '',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
-                    'visible' => true,
-                    'required' => false,
-                    'user_defined' => false,
-                    'default' => 0,
-                    'searchable' => false,
-                    'filterable' => false,
-                    'comparable' => false,
-                    'visible_on_front' => false,
-                    'used_in_product_listing' => true,
-                    'unique' => true,
-                    'apply_to' => ''
-                ]
-            );
+            $this->addPrintformerIdentificationAttribute($eavSetup);
         }
 
         if(version_compare($context->getVersion(), '100.3.8', '<')) {
@@ -285,9 +262,46 @@ class UpgradeData implements UpgradeDataInterface
 
         if(version_compare($context->getVersion(), '100.6.11', '<')) {
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+
+            if (!$eavSetup->getAttribute(Customer::ENTITY, 'printformer_identification')) {
+                $this->addPrintformerIdentificationAttribute($eavSetup);
+            }
+
             $eavSetup->updateAttribute(Customer::ENTITY, 'printformer_identification', 'is_visible', false);
         }
 
         $setup->endSetup();
+    }
+
+    /**
+     * @param EavSetup $eavSetup
+     */
+    protected function addPrintformerIdentificationAttribute(EavSetup $eavSetup)
+    {
+        $eavSetup->addAttribute(
+            'customer',
+            'printformer_identification',
+            [
+                'group' => 'general',
+                'type' => 'varchar',
+                'backend' => '',
+                'frontend' => '',
+                'label' => 'Printformer Identification',
+                'input' => 'text',
+                'class' => '',
+                'global' => ScopedAttributeInterface::SCOPE_STORE,
+                'visible' => true,
+                'required' => false,
+                'user_defined' => false,
+                'default' => 0,
+                'searchable' => false,
+                'filterable' => false,
+                'comparable' => false,
+                'visible_on_front' => false,
+                'used_in_product_listing' => true,
+                'unique' => true,
+                'apply_to' => ''
+            ]
+        );
     }
 }
