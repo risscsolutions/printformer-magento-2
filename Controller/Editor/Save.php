@@ -245,7 +245,7 @@ class Save extends Action
      *
      * @return array
      */
-    protected function prepareAddToCartParams(array $params = [])
+    public function prepareAddToCartParams(array $params = [])
     {
         $redirectUrl = $this->_urlHelper->getRedirect();
         if ($redirectUrl) {
@@ -253,20 +253,36 @@ class Save extends Action
         }
         $params['form_key'] = $this->_formKey->getFormKey();
 
-        $preselectionData = $this->_catalogSession->getSavedPrintformerOptions();
-        foreach ($preselectionData['options'] as $key => $option) {
-            if (!empty($option['value']['date'])) {
-                $date = $option['value']['date'];
-                $timestamp = strtotime('+ 4 hours', strtotime($date));
-                $dateInternal = date('Y-m-d H:i:s', $timestamp);
-                $option['value'] = ['date' => $date, 'date_internal' => $dateInternal];
-            }
-            $value = $option['value'];
-            $params['options'][$key] = $value;
+        $formData = $this->prepareFormData($this->_catalogSession->getSavedPrintformerOptions());
+        if (!empty($formData)) {
+            $params = array_merge($formData, $params);
         }
-        $params['qty'] = $preselectionData['qty']['value'];
 
         return $params;
+    }
+
+    /**
+     * @param array $formData
+     *
+     * @return array
+     */
+    public function prepareFormData(array $formData)
+    {
+        $preparedFormData = [];
+
+        foreach ($formData as $key => $value) {
+            if ($key == 'options' || $key == 'super_attribute') {
+                foreach ($value as $k => $v) {
+                    $preparedFormData[$key][$k] = $v['value'];
+                }
+            }
+
+            if ($key == 'qty') {
+                $preparedFormData[$key] = $value['value'];
+            }
+        }
+
+        return $preparedFormData;
     }
 
     /**
