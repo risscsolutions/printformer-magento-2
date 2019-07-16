@@ -21,6 +21,7 @@ use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
 use Magento\Framework\Data\Form\FormKey;
 use Rissc\Printformer\Model\Config\Source\Redirect;
+use Rissc\Printformer\Helper\Media as MediaHelper;
 
 class Save extends Action
 {
@@ -67,6 +68,11 @@ class Save extends Action
     protected $_formKey;
 
     /**
+     * @var MediaHelper
+     */
+    protected $_mediaHelper;
+
+    /**
      * Save constructor.
      * @param LoggerInterface $logger
      * @param Context $context
@@ -87,7 +93,8 @@ class Save extends Action
         Config $configHelper,
         DraftFactory $draftFactory,
         Session $catalogSession,
-        FormKey $formKey
+        FormKey $formKey,
+        MediaHelper $mediaHelper
     ) {
         parent::__construct($context);
 
@@ -99,6 +106,7 @@ class Save extends Action
         $this->_draftFactory = $draftFactory;
         $this->_catalogSession = $catalogSession;
         $this->_formKey = $formKey;
+        $this->_mediaHelper = $mediaHelper;
     }
 
     public function execute()
@@ -138,6 +146,12 @@ class Save extends Action
 
             /** @var Api $apiHelper */
             $apiHelper = ObjectManager::getInstance()->get(Api::class);
+
+            if ($apiHelper->config()->isUseImagePreview()) {
+                $this->_mediaHelper->createPreview($draft->getData('draft_id'), 1);
+                $this->_mediaHelper->createThumbnail($draft->getData('draft_id'), 1);
+            }
+
             $draftData = $apiHelper->getPrintformerDraft($draft->getDraftId(), true);
 
             if (
