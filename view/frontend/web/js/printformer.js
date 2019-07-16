@@ -269,7 +269,19 @@ define([
             this._initEditorNotice();
         },
 
-        editorMainOpen: function(editorUrl) {
+        editorMainOpen: function(editorUrl, beforeHtml, afterHtml) {
+            if (beforeHtml === undefined || beforeHtml === null) {
+                beforeHtml = '';
+            }
+
+            if (afterHtml === undefined || afterHtml === null) {
+                afterHtml = '';
+            }
+
+            if (!$(this.form).valid()) {
+                return;
+            }
+
             this.addToCartFormUrl = $(this.form).attr('action');
             $(this.form).attr('action', editorUrl);
             if (this.options.displayMode === 0) {
@@ -284,11 +296,7 @@ define([
                 });
                 this.editorMain.modal('openModal');
                 this.editorMain
-                    .html($('<iframe width="100%" height="100%" name="printformer-main-frame"/>'));
-            }
-
-            if (!$(this.form).valid()) {
-                return;
+                    .html($(beforeHtml + '<iframe width="100%" height="100%" name="printformer-main-frame"/>' + afterHtml));
             }
 
             if (!this.options.isAddToCartRedirect) {

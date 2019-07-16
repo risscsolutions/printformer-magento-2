@@ -3,8 +3,9 @@ define([
     'jquery/ui',
     'jquery/jquery.parsequery',
     'Magento_Ui/js/modal/modal',
-    'mage/translate'
-], function ($, $ui, $pq, $modal, $t) {
+    'mage/translate',
+    'Rissc_Printformer/js/printformer'
+], function ($, $ui, $pq, $modal, $t, printformer) {
     'use strict';
 
     $.widget('mage.customPrintformer', {
@@ -32,17 +33,12 @@ define([
             this._initEditorNotice();
         },
 
-        editorMainOpen: function(editorUrl) {
-            $('html, body').css({
-                'overflow': 'hidden',
-                'height': '100%',
-                'width': '100%'
-            });
-            this.editorMain.modal('openModal');
-            this.editorMain.css({
+        editorMainOpen: function(editorUrl, beforeHtml, afterHtml) {
+            printformer.editorMain.css({
                 'width': '100% !important',
                 'height': '100% !important'
-            }).html($('<iframe width="100%" height="100%" src="' + editorUrl + '" name="printformer-main-frame"/>'));
+            });
+            printformer.editorMainOpen(editorUrl, beforeHtml, afterHtml);
         },
 
         _initEditorClose: function () {
