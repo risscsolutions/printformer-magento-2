@@ -4,6 +4,11 @@ namespace Rissc\Printformer\Controller\Editor;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
@@ -67,6 +72,7 @@ class Open extends Action
 
     /**
      * Open constructor.
+     *
      * @param Context $context
      * @param DraftGateway $draftGateway
      * @param UrlHelper $urlHelper
@@ -103,35 +109,109 @@ class Open extends Action
         parent::__construct($context);
     }
 
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
+    protected function _getParam(string $key)
+    {
+        /** @var DataObject $sessionParams */
+        if ($sessionParams = $this->_sessionHelper->getCatalogSession()->getPrintformerRedirectParameters()) {
+            $paramValue = $sessionParams->getData($key);
+        } else {
+            $paramValue = $this->getRequest()->getParam($key);
+        }
+
+        return $paramValue;
+    }
+
+    /**
+     * @return array
+     */
+    protected function _getParams()
+    {
+        /** @var DataObject $sessionParams */
+        if ($sessionParams = $this->_sessionHelper->getCatalogSession()->getPrintformerRedirectParameters()) {
+            $paramValues = $sessionParams->toArray();
+        } else {
+            $paramValues = $this->getRequest()->getParams();
+        }
+
+        return $paramValues;
+    }
+
+    /**
+     * @return Redirect|null
+     */
+    protected function _niceUrl()
+    {
+        if ($this->_sessionHelper->getCatalogSession()->getPrintformerRedirectParameters()) {
+            return null;
+        }
+
+        $params = $this->_getParams();
+        if ($this->getRequest()->isPost()) {
+            $this->_savePreselectedData($params);
+        }
+
+        $dataParams = new DataObject($params);
+        $this->_sessionHelper->getCatalogSession()->setPrintformerRedirectParameters($dataParams);
+
+        $redirect = $this->resultRedirectFactory->create();
+        $redirect->setUrl($this->_url->getUrl('*/*/*'));
+
+        return $redirect;
+    }
+
+    /**
+     * @return void
+     */
+    protected function _clearSession()
+    {
+        if (!$this->_sessionHelper->getCatalogSession()->getPrintformerRedirectParameters()) {
+            return;
+        }
+
+        $this->_sessionHelper->getCatalogSession()->setPrintformerRedirectParameters(null);
+    }
+
+    /**
+     * @return ResponseInterface|Redirect|ResultInterface|Page
+     *
+     * @throws NoSuchEntityException
+     */
     public function execute()
     {
+        if (!$this->_getParam('shopframe')) {
+            if ($redirect = $this->_niceUrl()) {
+                return $redirect;
+            }
+        }
+
+        $this->getRequest()->setParams($this->_getParams());
+        $this->_clearSession();
+
         /**
          * Get all params and variables needed
          */
-        $params               = $this->getRequest()->getParams();
-        $productId            = $this->getRequest()->getParam('product_id');
-        $masterId             = $this->getRequest()->getParam('master_id');
-        $intent               = $this->getRequest()->getParam('intent');
-        $printformerDraft     = $this->getRequest()->getParam('draft_id');
-        $sessionUniqueId      = $this->getRequest()->getParam('session_id');
-        $requestReferrer      = $this->getRequest()->getParam('custom_referrer');
-        $printformerProductId = $this->getRequest()->getParam('printformer_product_id');
+        $params               = $this->_getParams();
+        $productId            = $this->_getParam('product_id');
+        $masterId             = $this->_getParam('master_id');
+        $intent               = $this->_getParam('intent');
+        $printformerDraft     = $this->_getParam('draft_id');
+        $sessionUniqueId      = $this->_getParam('session_id');
+        $requestReferrer      = $this->_getParam('custom_referrer');
+        $printformerProductId = $this->_getParam('printformer_product_id');
         $storeId              = $this->_storeManager->getStore()->getId();
         $customerSession      = $this->_sessionHelper->getCustomerSession();
-        $overrideFrameConfig  = $this->getRequest()->getParam('shopframe') != null;
+        $overrideFrameConfig  = $this->_getParam('shopframe') != null;
 
         /**
          * Show an error if product id was not set
          */
         if (!$productId) {
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
-        }
-
-        /**
-         * Save preselected data
-         */
-        if ($this->getRequest()->isPost()) {
-            $this->_savePreselectedData($this->getRequest()->getParams());
         }
 
         /**
@@ -438,15 +518,14 @@ class Open extends Action
      */
     protected function getFrameUrl()
     {
-        $url = $this->_url->getCurrentUrl();
-        $urlParts = explode('?', $url);
-        $urlParts[0] .= 'shopframe/1/';
+        $params = $this->getRequest()->getParams();
+        $params['shopframe'] = 1;
 
-        return implode('?', $urlParts);
+        return $this->_url->getUrl('*/*/*', $params);
     }
 
     /**
-     * @return \Magento\Framework\View\Result\Page
+     * @return Page
      */
     protected function initShopFrame()
     {
