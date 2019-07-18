@@ -286,17 +286,20 @@ define([
             $(this.form).attr('action', editorUrl);
             if (this.options.displayMode === 0) {
                 $(this.form).attr('target', 'printformer-main-frame');
-            }
 
-            if (this.options.displayMode === 0) {
                 $('html, body').css({
                     'overflow': 'hidden',
                     'height': '100%',
                     'width': '100%'
                 });
                 this.editorMain.modal('openModal');
-                this.editorMain
-                    .html($(beforeHtml + '<iframe width="100%" height="100%" name="printformer-main-frame"/>' + afterHtml));
+                this.editorMain.html(
+                    $(beforeHtml +
+                        '<iframe width="100%" height="100%" name="printformer-main-frame"/>' +
+                        afterHtml)
+                );
+
+                return;
             }
 
             if (!this.options.isAddToCartRedirect) {
@@ -315,16 +318,18 @@ define([
             this.editorClose.modal({
                 modalClass: "printformer-editor-close-modal",
                 modalCloseBtnHandler: this.editorCloseCancel.bind(this),
-                buttons: [{
-                    'text': $t('Yes'),
-                    'class': 'ok-btn',
-                    'click': this.editorCloseOk.bind(this)
-                },
+                buttons: [
+                    {
+                        'text': $t('Yes'),
+                        'class': 'ok-btn',
+                        'click': this.editorCloseOk.bind(this)
+                    },
                     {
                         'text': $t('No'),
                         'class': 'cancel-btn',
                         'click': this.editorCloseCancel.bind(this)
-                    }]
+                    }
+                ]
             });
         },
 
@@ -358,16 +363,18 @@ define([
             this.editorNotice.modal({
                 modalClass: "printformer-editor-notice-modal",
                 modalCloseBtnHandler: this.editorNoticeCancel.bind(this),
-                buttons: [{
-                    'text': 'OK',
-                    'class': 'ok-btn',
-                    'click': this.editorNoticeOk.bind(this)
-                },
+                buttons: [
+                    {
+                        'text': 'OK',
+                        'class': 'ok-btn',
+                        'click': this.editorNoticeOk.bind(this)
+                    },
                     {
                         'text': 'Cancel',
                         'class': 'cancel-btn',
                         'click': this.editorNoticeCancel.bind(this)
-                    }]
+                    }
+                ]
             });
         },
 
@@ -597,7 +604,6 @@ define([
                 }
             }
         },
-
 
         preselectOptions: function(selectedOptions) {
             var that = this;
