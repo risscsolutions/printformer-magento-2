@@ -293,18 +293,23 @@ define([
                     'width': '100%'
                 });
                 this.editorMain.modal('openModal');
-                this.editorMain.html(
-                    $(beforeHtml +
-                        '<iframe width="100%" height="100%" name="printformer-main-frame"/>' +
-                        afterHtml)
-                );
 
-                return;
+                var frameHtml = '';
+                frameHtml += beforeHtml;
+                frameHtml += '<iframe width="100%"' +
+                             '  height="100%"' +
+                             '  name="printformer-main-frame"' +
+                             '/>';
+                frameHtml += afterHtml;
+
+                this.editorMain.html(frameHtml);
+                $(this.form).off();
             }
 
             if (!this.options.isAddToCartRedirect) {
                 $(this.form).off();
             }
+
             $(this.form).submit();
         },
 
