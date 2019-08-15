@@ -562,6 +562,7 @@ class Api extends AbstractHelper
                 $process = $this->getDraftProcess($draftHash);
                 if ($process->getId()) {
                     $process->setProcessingId($processingHash);
+                    $process->setProcessingStatus(1);
                     $process->getResource()->save($process);
                 }
             }
