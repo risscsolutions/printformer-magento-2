@@ -18,6 +18,7 @@ class V2 extends AbstractHelper implements VersionInterface
 {
     const API_CREATE_USER               = '/api-ext/user';
     const API_CREATE_DRAFT              = '/api-ext/draft';
+    const API_DELETE_DRAFT              = '/api-ext/draft/{draftId}';
     const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
@@ -475,7 +476,7 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getDraftDelete($draftHash)
     {
-        // TODO: Implement getDraftDelete() method.
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_DELETE_DRAFT);
     }
 
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
