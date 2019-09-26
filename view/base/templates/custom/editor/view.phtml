@@ -25,7 +25,7 @@ max-content">
     <?php if ($isOrdered): ?>
         <?php if($block->canViewHighRes()): ?>
             <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl
-            ($quoteItem, $draftHash); ?>" target="_blank">
+            ($quoteItem, $draftHash); ?>" download target="_blank">
                 <?php echo __('Save print-file'); ?>
             </a>
         <?php else: ?>
