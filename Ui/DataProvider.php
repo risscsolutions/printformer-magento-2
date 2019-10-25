@@ -102,7 +102,7 @@ class DataProvider extends AbstractDataProvider
         }
 
         $returnArray = [
-            'totalRecords' => count($itemArray),
+            'totalRecords' => $collection->getSize(),
             'items' => $itemArray
         ];
 
