@@ -220,15 +220,15 @@ class Config extends AbstractHelper
     }
 
     /**
-     * @return string
+     * @return array
      */
     public function getOrderStatus()
     {
-        return $this->scopeConfig->getValue(
+        return explode(',', $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_STATUS,
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
-        );
+        ));
     }
 
     /**

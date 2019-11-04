@@ -14,9 +14,10 @@
                     <label>Enabled</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="order_status" translate="label" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Status for Payed Order</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status</source_model>
+                    <can_be_empty>0</can_be_empty>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>

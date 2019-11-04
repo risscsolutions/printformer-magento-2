@@ -61,6 +61,10 @@
         <plugin name="Rissc_Printformer_Sales_OrderModel" type="Rissc\Printformer\Plugin\Sales\OrderModel"
                 sortOrder="100"/>
     </type>
+    <type name="Magento\Sales\Model\ResourceModel\Order">
+        <plugin name="Rissc_Printformer_Sales_OrderResourceModel" type="Rissc\Printformer\Plugin\Sales\OrderResourceModel"
+                sortOrder="100"/>
+    </type>
     <type name="Magento\Wishlist\Block\Customer\Wishlist\Item\Column">
         <plugin name="Rissc_Printformer_Wishlist_ItemColumn"
                 type="Rissc\Printformer\Plugin\Wishlist\Customer\Wishlist\Item\Column" sortOrder="100"/>

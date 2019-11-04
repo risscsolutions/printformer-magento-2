@@ -2,60 +2,21 @@
 
 namespace Rissc\Printformer\Plugin\Sales;
 
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Gateway\Admin\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
-use Rissc\Printformer\Helper\Config;
-use Rissc\Printformer\Helper\Api as ApiHelper;
-use Rissc\Printformer\Model\DraftFactory;
-use Magento\Quote\Api\CartRepositoryInterface;
 
 class OrderModel
 {
-    /**
-     * @var ApiHelper
-     */
-    protected $apiHelper;
-
-    /**
-     * @var Config
-     */
-    protected $config;
-
-    /**
-     * @var CartRepositoryInterface
-     */
     protected $cartRepository;
-
-    /**
-     * @var Draft
-     */
-    protected $draft;
-
-    /**
-     * @var DraftFactory
-     */
-    protected $draftFactory;
-
-    /**
-     * @var LoggerInterface
-     */
     protected $logger;
 
     public function __construct(
-        ApiHelper $apiHelper,
-        Config $config,
         CartRepositoryInterface $cartRepository,
-        Draft $draft,
-        DraftFactory $draftFactory,
         LoggerInterface $logger
     ) {
-        $this->apiHelper = $apiHelper;
-        $this->config = $config;
         $this->cartRepository = $cartRepository;
-        $this->draftFactory = $draftFactory;
-        $this->draft = $draft;
         $this->logger = $logger;
     }
 
@@ -64,7 +25,7 @@ class OrderModel
      *
      * @param Order $subject
      */
-    public function beforePlace(Order $subject)
+    public function beforePlace(Order $subject) : void
     {
         try {
             if(!$subject->getQuote()) {
@@ -91,50 +52,5 @@ class OrderModel
         } catch (\Exception $e) {
             $this->logger->critical($e);
         }
-    }
-
-    /**
-     * Check status for payed order
-     *
-     * @param Order $subject
-     * @return Order
-     */
-    public function afterPlace(Order $subject)
-    {
-        try {
-            $draftIds = [];
-            foreach ($subject->getAllItems() as $item) {
-                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
-                    continue;
-                }
-
-                $itemDraftIds = explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID));
-                foreach ($itemDraftIds as $draftId) {
-                    $this->draftFactory
-                        ->create()
-                        ->load($draftId, 'draft_id')
-                        ->setOrderItemId($item->getId())
-                        ->save();
-
-                    $draftIds[] = $draftId;
-                }
-            }
-
-            if (empty($draftIds)) {
-                return $subject;
-            }
-
-            if ($subject->getStatus() == $this->config->getOrderStatus()) {
-                if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
-                    $this->draft->setDraftOrdered($subject);
-                } else {
-                    $this->apiHelper->setAsyncOrdered($draftIds);
-                }
-            }
-        } catch (\Exception $e) {
-            $this->logger->critical($e);
-        }
-
-        return $subject;
     }
 }
