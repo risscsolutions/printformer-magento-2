@@ -25,7 +25,7 @@ class OrderModel
      *
      * @param Order $subject
      */
-    public function beforePlace(Order $subject) : void
+    public function beforePlace(Order $subject)
     {
         try {
             if(!$subject->getQuote()) {
