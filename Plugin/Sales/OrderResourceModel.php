@@ -57,6 +57,8 @@ class OrderResourceModel
 
             if (empty($draftIds)) {
                 return;
+            } else {
+                $draftIds = array_unique($draftIds);
             }
 
             if (in_array($orderModel->getStatus(), $this->config->getOrderStatus())) {
