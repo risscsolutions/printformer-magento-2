@@ -152,7 +152,7 @@
                     </depends>
                 </field>
                 <field id="delete_feed_identifier" translate="label" type="select" sortOrder="200" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Show Product Feed Identifier</label>
+                    <label>Activate Product Feed for Products</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
                         <field id="enabled">1</field>
