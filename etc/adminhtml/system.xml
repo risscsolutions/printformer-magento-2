@@ -151,6 +151,13 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="delete_feed_identifier" translate="label" type="select" sortOrder="200" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Show Product Feed Identifier</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
                 <field id="sync_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="0">
                     <button_label>Synchronize templates</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync</frontend_model>

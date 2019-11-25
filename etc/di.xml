@@ -102,4 +102,10 @@
                 sortOrder="100"
         />
     </type>
+    <type name="Magento\Config\Model\Config">
+        <plugin name="admin_system_config_save_plugin"
+                type="Rissc\Printformer\Plugin\Admin\ConfigPlugin"
+                sortOrder="1"
+        />
+    </type>
 </config>
