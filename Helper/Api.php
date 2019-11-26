@@ -337,6 +337,10 @@ class Api extends AbstractHelper
             $options['json'][$key] = $value;
         }
 
+        if (array_key_exists('feedIdentifier',$params)){
+            $options['json']['feedIdentifier'] = $params['feedIdentifier'];
+        }
+
         $response = $this->getHttpClient()->post($url, $options);
         $response = json_decode($response->getBody(), true);
         if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
