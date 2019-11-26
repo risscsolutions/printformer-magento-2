@@ -69,7 +69,9 @@ class Plugin
 
         if($optionAttribute == 1){
             $feedIdentifier = $productAttribute->getFrontend()->getValue($simpleProduct);
-            return $oCreateDraftHash($masterId, $userIdentifier, array_merge($params, ['feedIdentifier' => $feedIdentifier]));
+            if(!empty($feedIdentifier)){
+                return $oCreateDraftHash($masterId, $userIdentifier, array_merge($params, ['feedIdentifier' => $feedIdentifier]));
+            }
         }
 
         return $oCreateDraftHash($masterId, $userIdentifier, $params);
