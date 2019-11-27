@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Setup;
 
+use Magento\Catalog\Setup\CategorySetupFactory;
 use Magento\Customer\Model\Customer;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Setup\EavSetup;
@@ -19,13 +20,23 @@ class UpgradeData implements UpgradeDataInterface
     private $eavSetupFactory;
 
     /**
+     * Category setup factory
+     *
+     * @var CategorySetupFactory
+     */
+    private $categorySetupFactory;
+
+    /**
      * UpgradeData constructor.
      * @param EavSetupFactory $eavSetupFactory
+     * @param CategorySetupFactory $categorySetupFactory
      */
     public function __construct(
-        EavSetupFactory $eavSetupFactory
+        EavSetupFactory $eavSetupFactory,
+        CategorySetupFactory $categorySetupFactory
     ) {
         $this->eavSetupFactory = $eavSetupFactory;
+        $this->categorySetupFactory = $categorySetupFactory;
     }
 
     /**
@@ -268,6 +279,61 @@ class UpgradeData implements UpgradeDataInterface
             }
 
             $eavSetup->updateAttribute(Customer::ENTITY, 'printformer_identification', 'is_visible', false);
+        }
+
+        if(version_compare($context->getVersion(), '100.8.20', '<')) {
+            /** @var EavSetup $eavSetup */
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'feed_identifier');
+            $categorySetup = $this->categorySetupFactory->create(['setup' => $setup]);
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'feed_identifier',
+                [
+                    'type' => 'varchar',
+                    'backend' => '',
+                    'frontend' => '',
+                    'label' => 'Feed Identifier',
+                    'input' => 'text',
+                    'class' => '',
+                    'global' => ScopedAttributeInterface::SCOPE_STORE,
+                    'visible' => true,
+                    'required' => false,
+                    'user_defined' => false,
+                    'default' => '',
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'used_in_product_listing' => false,
+                    'unique' => false,
+                    'apply_to' => 'simple,configurable,virtual,bundle,downloadable'
+                ]
+            );
+
+            // get default attribute set id
+            $attributeSetId = $categorySetup->getDefaultAttributeSetId(\Magento\Catalog\Model\Product::ENTITY);
+            $attributeGroupName = 'Printformer Product Feed';
+
+            // your custom attribute group/tab
+            $categorySetup->addAttributeGroup(
+                \Magento\Catalog\Model\Product::ENTITY,
+                $attributeSetId,
+                $attributeGroupName, // attribute group name
+                999 // sort order
+            );
+
+            // add attribute to group
+            $categorySetup->addAttributeToGroup(
+                \Magento\Catalog\Model\Product::ENTITY,
+                $attributeSetId,
+                $attributeGroupName, // attribute group
+                'feed_identifier', // attribute code
+                10 // sort order
+            );
+
+            $eavSetup->updateAttribute(\Magento\Catalog\Model\Product::ENTITY, 'feed_identifier', 'is_visible', '0');
+
         }
 
         $setup->endSetup();
