@@ -9,6 +9,7 @@ use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem;
 use Magento\Store\Model\StoreManagerInterface;
+use Rissc\Printformer\Helper\Api\Url;
 
 /**
  * Class Media
@@ -27,6 +28,9 @@ class Media extends AbstractHelper
     /** @var Api */
     protected $_apiHelper;
 
+    /** @var Url */
+    protected $_urlHelper;
+
     /** @var Config */
     protected $_config;
 
@@ -35,18 +39,23 @@ class Media extends AbstractHelper
      * @param Context $context
      * @param Filesystem $filesystem
      * @param StoreManagerInterface $storeManager
+     * @param Api $apiHelper
+     * @param Config $config
+     * @param Url $urlHelper
      */
     public function __construct(
         Context $context,
         Filesystem $filesystem,
         StoreManagerInterface $storeManager,
         Api $apiHelper,
-        Config $config
+        Config $config,
+        Url $urlHelper
     ) {
         $this->filesystem = $filesystem;
         $this->storeManager = $storeManager;
         $this->_apiHelper = $apiHelper;
         $this->_config = $config;
+        $this->_urlHelper = $urlHelper;
 
         parent::__construct($context);
     }
@@ -109,18 +118,38 @@ class Media extends AbstractHelper
     }
 
     /**
-     * @param string $draftId
-     * @param int $page
-     *
+     * @param $draftHash
+     * @param int $uniqueGetParam
      * @return string
-     *
+     */
+    public function getThumbnail($draftHash, $uniqueGetParam = 0)
+    {
+        $thumbnailUrl = $this->getVersionHelper()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
+        if ($uniqueGetParam) {
+            $thumbnailUrl = $this->_urlHelper->appendUniqueGetParam($thumbnailUrl);
+        }
+        return $thumbnailUrl;
+    }
+
+    /**
+     * @param $draftId
+     * @param int $page
+     * @param bool $isThumbnail
+     * @param int $uniqueGetParam
+     * @return string
      * @throws NoSuchEntityException
      */
-    public function getImageUrl($draftId, $page = 1, $isThumbnail = false)
+    public function getImageUrl($draftId, $page = 1, $isThumbnail = false, $uniqueGetParam = 1)
     {
         $imagePath = $this->getImagePath($isThumbnail);
-
-        return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . sprintf($imagePath, $draftId, $page);
+        
+        $thumbnailUrl = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . sprintf($imagePath, $draftId, $page);
+        
+        if ($uniqueGetParam) {
+            $thumbnailUrl = $this->_urlHelper->appendUniqueGetParam($thumbnailUrl);
+        }
+        
+        return $thumbnailUrl;
     }
 
     /**

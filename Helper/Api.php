@@ -632,7 +632,7 @@ class Api extends AbstractHelper
             ]
         ]);
 
-        $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
+        $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash, 0);
 
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())

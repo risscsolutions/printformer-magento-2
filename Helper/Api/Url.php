@@ -154,11 +154,29 @@ class Url extends AbstractHelper implements VersionInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @param $url
+     * @return string
      */
-    public function getThumbnail($draftHash)
+    public function appendUniqueGetParam($url)
     {
-        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
+        $permittedChars = '0123456789abcdefghijklmnopqrstuvwxyz';
+        $randomGetParam = substr(str_shuffle($permittedChars), 0, 20);
+        $url = $url.'?CacheId='.$randomGetParam;
+        return $url;
+    }
+
+    /**
+     * @param string $draftHash
+     * @param int $uniqueGetParam
+     * @return string
+     */
+    public function getThumbnail($draftHash, $uniqueGetParam = 1)
+    {
+        $thumbnailUrl = $this->getVersionHelper()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
+        if ($uniqueGetParam) {
+            $thumbnailUrl = $this->appendUniqueGetParam($thumbnailUrl);
+        }
+        return $thumbnailUrl;
     }
 
     /**
