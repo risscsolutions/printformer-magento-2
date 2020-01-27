@@ -44,8 +44,10 @@ class ConfigPlugin
         // your custom logic
         if($section == 'printformer')
         {
-            $feedIdentifier = $subject->getGroups()['general']['fields']['delete_feed_identifier']['value'];
-            $this->apply($feedIdentifier);
+            if(isset($subject->getGroups()['general']['fields']['delete_feed_identifier']['value'])) {
+                $feedIdentifier = $subject->getGroups()['general']['fields']['delete_feed_identifier']['value'];
+                $this->apply($feedIdentifier);
+            };
         }
         return $proceed();
     }
