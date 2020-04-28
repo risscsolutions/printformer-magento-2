@@ -208,6 +208,13 @@ class Open extends Action
         $overrideFrameConfig  = $this->_getParam('shopframe') != null;
 
         /**
+         * Stop process if page reload
+         */
+        if (!$params) {
+            $this->_die('');
+        }
+
+        /**
          * Show an error if product id was not set
          */
         if (!$productId) {
@@ -314,7 +321,9 @@ class Open extends Action
      */
     protected function _die($notice)
     {
-        $this->messageManager->addNoticeMessage($notice);
+        if ($notice) {
+            $this->messageManager->addNoticeMessage($notice);
+        }
         echo '
                 <script type="text/javascript">
                     window.top.location.href = \'' . $this->_redirect->getRefererUrl() . '\'
