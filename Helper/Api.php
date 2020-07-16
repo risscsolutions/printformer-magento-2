@@ -19,10 +19,13 @@ use Rissc\Printformer\Helper\Session as SessionHelper;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 use Magento\Backend\Model\Session as AdminSession;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem;
 
 class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
+    const API_UPLOAD_INTENT = 'upload';
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -57,6 +60,31 @@ class Api extends AbstractHelper
     /** @var AdminSession */
     protected $_adminSession;
 
+    /**
+     * @var PrintformerProductAttributes
+     */
+    protected $printformerProductAttributes;
+
+    /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
+     * Api constructor.
+     * @param Context $context
+     * @param CustomerSession $customerSession
+     * @param UrlHelper $urlHelper
+     * @param StoreManagerInterface $storeManager
+     * @param DraftFactory $draftFactory
+     * @param Session $sessionHelper
+     * @param Config $config
+     * @param CustomerFactory $customerFactory
+     * @param CustomerResource $customerResource
+     * @param AdminSession $adminSession
+     * @param PrintformerProductAttributes $printformerProductAttributes
+     * @param Filesystem $filesystem
+     */
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
@@ -67,7 +95,9 @@ class Api extends AbstractHelper
         Config $config,
         CustomerFactory $customerFactory,
         CustomerResource $customerResource,
-        AdminSession $adminSession
+        AdminSession $adminSession,
+        PrintformerProductAttributes $printformerProductAttributes,
+        Filesystem $filesystem
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -78,6 +108,8 @@ class Api extends AbstractHelper
         $this->_customerFactory = $customerFactory;
         $this->_customerResource = $customerResource;
         $this->_adminSession = $adminSession;
+        $this->printformerProductAttributes = $printformerProductAttributes;
+        $this->filesystem = $filesystem;
 
         $this->setStoreId($storeManager->getStore()->getId());
 
@@ -258,17 +290,7 @@ class Api extends AbstractHelper
             $customer->getResource()->load($customer, $customer->getId());
 
             if (!$customer->getData('printformer_identification')) {
-                $customerUserIdentifier = $this->createUser();
-                $connection = $customer->getResource()->getConnection();
-                $connection->query("
-                    UPDATE " . $connection->getTableName('customer_entity') . "
-                    SET
-                        `printformer_identification` = '" . $customerUserIdentifier . "'
-                    WHERE
-                        `entity_id` = " . $customer->getId() . ";
-                ");
-                $customer->setData('printformer_identification', $customerUserIdentifier);
-                $customer->getResource()->save($customer);
+                $customerUserIdentifier = $this->loadPrintformerIdentifierOnCustomer($customer);
                 $this->_customerSession->setPrintformerIdentification($customerUserIdentifier);
             } else {
                 if ($customer->getData('printformer_identification') !=
@@ -328,17 +350,19 @@ class Api extends AbstractHelper
 
         $options = [
             'json' => [
-                'master_id' => $masterId,
                 'user_identifier' => $userIdentifier
             ]
         ];
 
-        foreach($params as $key => $value) {
-            $options['json'][$key] = $value;
+        if(!empty($masterId)){
+            $options['json']['master_id'] = $masterId;
         }
 
-        if (array_key_exists('feedIdentifier',$params)){
-            $options['json']['feedIdentifier'] = $params['feedIdentifier'];
+        // merge function-params, options and additional draft-fields for the api-call
+        $params = $this->mergeAdditionalParamsForApiCall($params);
+
+        foreach($params as $key => $value) {
+            $options['json'][$key] = $value;
         }
 
         $response = $this->getHttpClient()->post($url, $options);
@@ -350,6 +374,58 @@ class Api extends AbstractHelper
         }
 
         return $response['data']['draftHash'];
+    }
+
+    /**
+     * @param $draft
+     * @param $downloadableLinkFilePath
+     * @return bool
+     */
+    public function uploadPdf($draft, $downloadableLinkFilePath)
+    {
+        $absoluteMediaPath = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath();
+        $absoluteDownloadableMediaMediaPath = $absoluteMediaPath.'downloadable/files/links';
+        $absoluteLinkFilePath = $absoluteDownloadableMediaMediaPath.$downloadableLinkFilePath;
+
+        if (file_exists($absoluteLinkFilePath) && is_readable($absoluteLinkFilePath)){
+            //Create write instance on tmp file-location
+            $directoryWriteInstance = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+
+            //copy file to media tmp directory
+            $downloadableTempLinkFilePath = DirectoryList::TMP.$downloadableLinkFilePath;
+            $directoryWriteInstance->copyFile($absoluteLinkFilePath, $downloadableTempLinkFilePath);
+
+            //generate temporary pdf-url for temporary file to upload into printformer api
+            $baseUrl = $this->getStoreManager()->getStore()->getBaseUrl();
+            $filePathUrl = $baseUrl.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
+            $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUploadDraftId($draft);
+
+            if (isset($filePathUrl) && isset($apiUrl)){
+                //upload temporary file-url
+                $options = [
+                    'json' => [
+                        'fileURL' => $filePathUrl
+                    ]
+                ];
+                $response = $this->getHttpClient()->post($apiUrl, $options);
+
+                $absoluteTmpLinkFilePath = $absoluteMediaPath.$downloadableTempLinkFilePath;
+                //delete temporary file
+                if (file_exists($absoluteTmpLinkFilePath)){
+                    $directoryWriteInstance->delete($downloadableTempLinkFilePath);
+                }
+
+                if ($response->getStatusCode() === 204){
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -474,6 +550,68 @@ class Api extends AbstractHelper
                 'printformer_product_id' => $printformerProductId
             ]);
             $process->getResource()->save($process);
+        }
+
+        return $process;
+    }
+
+    /**
+     * @param null $draftHash
+     * @param int $masterId
+     * @param null $productId
+     * @param null $sessionUniqueId
+     * @param null $customerId
+     * @param null $printformerProductId
+     * @param bool $checkOnly
+     * @param null $printformerUserIdentifier
+     * @param null $templateIdentifier
+     * @param null $orderId
+     * @param null $storeId
+     * @return \Magento\Framework\DataObject|Draft
+     */
+    public function uploadDraftProcess(
+        $draftHash = null,
+        $masterId = 0,
+        $productId = null,
+        $sessionUniqueId = null,
+        $customerId = null,
+        $printformerProductId = null,
+        $checkOnly = false,
+        $printformerUserIdentifier = null,
+        $templateIdentifier = null,
+        $orderId = null,
+        $storeId = null
+    ) {
+        $process = $this->getDraftProcess($draftHash, $productId, self::API_UPLOAD_INTENT, $sessionUniqueId);
+        if(!$process->getId() && !$checkOnly) {
+            if (!$draftHash) {
+                $dataParams = [
+                    'intent' => self::API_UPLOAD_INTENT
+                ];
+
+                $additionalUploadDataParams = [
+                    'customerAttributes' => [
+                        'pf-ca-orderid' => $orderId
+                    ],
+                    'templateIdentifier' => $templateIdentifier,
+                    'user_identifier' => $printformerUserIdentifier
+                ];
+                $dataParams = array_merge($dataParams, $additionalUploadDataParams);
+                $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $dataParams);
+
+                $process->addData([
+                    'draft_id' => $draftHash,
+                    'store_id' => $storeId,
+                    'intent' => self::API_UPLOAD_INTENT,
+                    'session_unique_id' => $sessionUniqueId,
+                    'product_id' => $productId,
+                    'customer_id' => $customerId,
+                    'user_identifier' => $printformerUserIdentifier,
+                    'created_at' => time(),
+                    'printformer_product_id' => $printformerProductId
+                ]);
+                $process->getResource()->save($process);
+            }
         }
 
         return $process;
@@ -898,5 +1036,34 @@ class Api extends AbstractHelper
         ];
 
         return $createReviewPdfUrl . '?' . http_build_query($postFields);
+    }
+
+    /**
+     * Get printformer identifier from api call and save it to the db
+     *
+     * @param $customer
+     * @return string
+     */
+    protected function loadPrintformerIdentifierOnCustomer($customer)
+    {
+        $customerUserIdentifier = $this->createUser();
+        $connection = $customer->getResource()->getConnection();
+        $connection->query("
+                    UPDATE " . $connection->getTableName('customer_entity') . "
+                    SET
+                        `printformer_identification` = '" . $customerUserIdentifier . "'
+                    WHERE
+                        `entity_id` = " . $customer->getId() . ";
+                ");
+        $customer->setData('printformer_identification', $customerUserIdentifier);
+        $customer->getResource()->save($customer);
+        return $customerUserIdentifier;
+    }
+
+    private function mergeAdditionalParamsForApiCall($params)
+    {
+        $params = $this->printformerProductAttributes->mergeFeedIdentifier($params);
+
+        return $params;
     }
 }
