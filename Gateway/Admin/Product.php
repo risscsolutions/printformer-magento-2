@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Gateway\Admin;
 use GuzzleHttp\Client as HttpClient;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Json\Decoder;
+use Magento\Framework\Stdlib\DateTime;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\Website;
 use Magento\Store\Model\WebsiteRepository;
@@ -129,13 +130,15 @@ class Product
         $storeIds = [];
         if ($storeId == Store::DEFAULT_STORE_ID) {
             $defaultApiSecret = $this->configHelper->setStoreId(Store::DEFAULT_STORE_ID)->getClientApiKey();
+            $defaultRemoteHost = $this->urlHelper->setStoreId(Store::DEFAULT_STORE_ID)->getAdminProducts();
             /** @var Website $website */
             foreach ($this->_websiteRepository->getList() as $website) {
                 /** @var Store $store */
                 $store = $website->getDefaultStore();
                 $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
+                $remoteHost = $this->urlHelper->setStoreId($store->getId())->getAdminProducts();
 
-                if ($apiSecret === $defaultApiSecret) {
+                if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost) {
                     $storeIds[] = $store->getId();
                 }
             }
@@ -143,30 +146,9 @@ class Product
             $storeIds[] = $storeId;
         }
         $errors = [];
-        foreach ($storeIds as $storeId) {
-            try {
-                $this->_syncProducts($storeId);
-            } catch (\Exception $e) {
-                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
-                continue;
-            }
-        }
 
-        return $this;
-    }
-
-    /**
-     * @param int $storeId
-     * @return $this
-     * @throws Exception
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Magento\Framework\Exception\LocalizedException
-     */
-    protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID)
-    {
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
         $apiKey = $this->configHelper->getClientApiKey($storeId);
-
         $request = new HttpClient([
             'base_url' => $url,
             'headers' => [
@@ -197,9 +179,32 @@ class Product
             throw new Exception(__('Empty products data.'));
         }
 
+        foreach ($storeIds as $storeId) {
+            try {
+                $this->_syncProducts($storeId, $responseArray['data']);
+            } catch (\Exception $e) {
+                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
+                continue;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param int $storeId
+     * @param array $responseArray
+     * @return $this
+     * @throws Exception
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID, $responseArray)
+    {
+
         $masterIDs = [];
         $responseRealigned = [];
-        foreach ($responseArray['data'] as $responseData) {
+        foreach ($responseArray as $responseData) {
             $masterID = ($this->configHelper->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
                 $responseData['rissc_w2p_master_id']);
             if (!in_array($masterID, $masterIDs)) {
@@ -213,6 +218,7 @@ class Product
         $updateMasterIds = [];
         foreach ($masterIDs as $masterID) {
             foreach ($responseRealigned[$masterID]['intents'] as $intent) {
+                $dateUpdate = $this->convertDate($responseRealigned[$masterID]['updatedAt']);
                 $resultProduct = $this->connection->fetchRow('
                     SELECT * FROM
                         `' . $this->connection->getTableName('printformer_product') . '`
@@ -227,14 +233,16 @@ class Product
                     $pfProduct = $this->addPrintformerProduct($responseRealigned[$masterID], $intent, $storeId);
                     $pfProduct->getResource()->save($pfProduct);
                 } else {
-                    /** @var PrintformerProduct $pfProduct */
-                    $pfProduct = $this->printformerProductFactory->create();
-                    $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
+                    if($resultProduct['updated_at'] < '2019-02-11 12:49:50') {
+                        /** @var PrintformerProduct $pfProduct */
+                        $pfProduct = $this->printformerProductFactory->create();
+                        $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
 
-                    $pfProduct = $this->updatePrintformerProduct($pfProduct, $responseRealigned[$masterID], $intent, $storeId);
+                        $pfProduct = $this->updatePrintformerProduct($pfProduct, $responseRealigned[$masterID], $intent, $storeId);
 
-                    $pfProduct->getResource()->save($pfProduct);
-                    $updateMasterIds[$pfProduct->getId()] = ['id' => $pfProduct->getMasterId(), 'intent' => $intent];
+                        $pfProduct->getResource()->save($pfProduct);
+                        $updateMasterIds[$pfProduct->getId()] = ['id' => $pfProduct->getMasterId(), 'intent' => $intent];
+                    }
                 }
             }
         }
@@ -242,6 +250,23 @@ class Product
         $this->_updateProductRelations($updateMasterIds, (int)$storeId);
 
         return $this;
+    }
+
+
+    /**
+     * Convert date
+     *
+     * @param $date
+     * @return string|null
+     */
+    public function convertDate($date)
+    {
+        if ($date) {
+            $convertDate = (new \DateTime())->setTimestamp(strtotime($date));
+
+            return $convertDate->format(DateTime::DATETIME_PHP_FORMAT);
+        }
+        return null;
     }
 
     /**
@@ -339,7 +364,7 @@ class Product
             ->setMd5($this->configHelper->isV2Enabled($storeId) ? null : $data['rissc_w2p_md5'])
             ->setIntent($intent)
             ->setCreatedAt(time())
-            ->setUpdatedAt(time());
+            ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
 
         return $pfProduct;
     }
@@ -362,7 +387,7 @@ class Product
             ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
             ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
             ->setIntent($intent)
-            ->setUpdatedAt(time());
+            ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
 
         return $pfProduct;
     }
