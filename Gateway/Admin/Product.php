@@ -233,7 +233,7 @@ class Product
                     $pfProduct = $this->addPrintformerProduct($responseRealigned[$masterID], $intent, $storeId);
                     $pfProduct->getResource()->save($pfProduct);
                 } else {
-                    if($resultProduct['updated_at'] < '2019-02-11 12:49:50') {
+                    if($resultProduct['updated_at'] < $dateUpdate) {
                         /** @var PrintformerProduct $pfProduct */
                         $pfProduct = $this->printformerProductFactory->create();
                         $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
