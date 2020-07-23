@@ -205,20 +205,27 @@ class Order extends Api
 
             $printformerProductId = $this->getPrintformerProduct($productId);
             $templateIdentifier = $this->getTemplateIdentifier($order);
+
             //start upload process and get draft from process
-            $draftProcess = $this->uploadDraftProcess(
-                null,
-                0,
-                $productId,
-                null,
-                $customerId,
-                $printformerProductId,
-                false,
-                $printformerUserIdentifier,
-                $templateIdentifier,
-                $orderId,
-                $order->getStoreId()
-            );
+            try {
+                $draftProcess = $this->uploadDraftProcess(
+                    null,
+                    0,
+                    $productId,
+                    null,
+                    $customerId,
+                    $printformerProductId,
+                    false,
+                    $printformerUserIdentifier,
+                    $templateIdentifier,
+                    $orderId,
+                    $order->getStoreId()
+                );
+            } catch (\Exception $e) {
+                $this->_logger->error('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
+                $this->_logger->error($e->getMessage());
+            }
+
             $draftHash = $draftProcess->getDraftId();
 
             if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE && isset($draftHash)) {

@@ -51,7 +51,6 @@
                 </field>
                 <field id="printformer_upload_template_id" translate="label" type="text" sortOrder="82" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Printformer Upload-Template-Id</label>
-                    <comment>Please enter a valid template-upload-id.</comment>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
