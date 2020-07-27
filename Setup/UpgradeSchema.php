@@ -500,6 +500,23 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if(version_compare($context->getVersion(), '100.8.21', '<')) {
+            $printformerProductTable = $setup->getTable(self::TABLE_NAME_PRODUCT);
+            $connection->addColumn(
+                $printformerProductTable,
+                'updated_at',
+                [
+                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'size' => null,
+                    [
+                        'nullable' => false,
+                        'default' => DdlTable::TIMESTAMP_INIT
+                    ],
+                    'comment' => 'Update At'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }
