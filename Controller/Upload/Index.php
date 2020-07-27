@@ -3,9 +3,10 @@ namespace Rissc\Printformer\Controller\Upload;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\State;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Rissc\Printformer\Cron\Process;
+use Rissc\Printformer\Cron\Processing\Cron;
 
 /**
  * Test class for cron
@@ -21,36 +22,44 @@ class Index extends Action
     private $jsonFactory;
 
     /**
-     * @var Process
+     * @var Cron
      */
-    private $process;
+    private $cron;
+    /**
+     * @var State
+     */
+    private $state;
 
     /**
      * Index constructor.
      * @param Context $context
      * @param JsonFactory $jsonFactory
-     * @param Process $process
+     * @param Cron $cron
      */
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
-        Process $process
+        Cron $cron,
+        State $state
     )
     {
         parent::__construct($context);
         $this->jsonFactory = $jsonFactory;
-        $this->process = $process;
+        $this->cron = $cron;
+        $this->state = $state;
     }
 
     /**
-     * Test class to simulate cron
+     * Test class to simulate cron (async process to test will run only in developer mode)
      *
      * @return Json $result
      */
     public function execute()
     {
-        $this->process->execute();
-//        $data = $this->_request->getParams();
+        if($this->state->getMode() == $this->state::MODE_DEVELOPER){
+            $this->cron->execute();
+            //todo: possible to implement test-values
+        }
         $data = array();
         $result = $this->jsonFactory->create();
         $result->setData($data);
