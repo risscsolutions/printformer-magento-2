@@ -336,6 +336,35 @@ class UpgradeData implements UpgradeDataInterface
 
         }
 
+        if(version_compare($context->getVersion(), '100.8.28', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'files_transfer_to_printformer',
+                [
+                    'type' => 'int',
+                    'backend' => '',
+                    'frontend' => '',
+                    'label' => 'Transfer Downloadable Files to printformer',
+                    'input' => 'text',
+                    'class' => '',
+                    'source' => '',
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'visible' => false,
+                    'required' => true,
+                    'user_defined' => false,
+                    'default' => '',
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'unique' => false,
+                    'apply_to' => 'downloadable',
+                    'used_in_product_listing' => true
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 

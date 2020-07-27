@@ -3,6 +3,7 @@
     <module name="Rissc_Printformer" setup_version="100.8.28">
         <sequence>
             <module name="Magento_Catalog"/>
+            <module name="Magento_Downloadable"/>
         </sequence>
     </module>
 </config>

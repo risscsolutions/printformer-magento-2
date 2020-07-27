@@ -18,4 +18,13 @@
             <argument name="scopeName" xsi:type="string">product_form.product_form</argument>
         </arguments>
     </type>
+
+    <type name="Magento\Downloadable\Ui\DataProvider\Product\Form\Modifier\Composite">
+        <arguments>
+            <argument name="modifiers" xsi:type="array">
+                <item name="downloadablePanel" xsi:type="string">Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier\DownloadablePanel</item>
+                <item name="printformer" xsi:type="string">Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier\Printformer</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

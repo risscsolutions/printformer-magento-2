@@ -20,6 +20,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_CREATE_DRAFT              = '/api-ext/draft';
     const API_DELETE_DRAFT              = '/api-ext/draft/{draftId}';
     const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
+    const API_UPLOAD_DRAFT              = '/api-ext/draft/{draftId}/upload';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
     const API_GET_PRODUCTS              = '/api-ext/template';
@@ -175,6 +176,15 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getReplicateDraftId($oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::API_REPLICATE_DRAFT);
+    }
+
+    /**
+     * @param $draftId
+     * @return string
+     */
+    public function getUploadDraftId($draftId)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftId, self::API_UPLOAD_DRAFT);
     }
 
     /**

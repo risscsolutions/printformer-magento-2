@@ -108,10 +108,4 @@
                 sortOrder="1"
         />
     </type>
-    <type name="Rissc\Printformer\Helper\Api">
-        <plugin name="printformer_api_helper_plugin_before"
-                type="Rissc\Printformer\Plugin\Helper\Api\Plugin"
-                sortOrder="99"
-        />
-    </type>
 </config>

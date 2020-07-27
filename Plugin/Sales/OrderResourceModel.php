@@ -64,8 +64,6 @@ class OrderResourceModel
             if (in_array($orderModel->getStatus(), $this->config->getOrderStatus())) {
                 if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
                     $this->draft->setDraftOrdered($orderModel);
-                } else {
-                    $this->api->setAsyncOrdered($draftIds);
                 }
             }
         } catch (\Exception $e) {
