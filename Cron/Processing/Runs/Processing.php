@@ -13,6 +13,12 @@ use Magento\Sales\Model\ResourceModel\Order\Item\Collection as ItemCollection;
 abstract class Processing
 {
     /**
+     * Default format necessary to work with created_at db-field in magento-2
+     * (most important is the 24-hour format – leading zeroes)
+     */
+    const DEFAULT_DB_FORMAT = "Y-m-d H:i:s";
+
+    /**
      * @var LoggerInterface
      */
     protected $logger;

@@ -13,9 +13,9 @@ class First extends Processing
      */
     protected function setFromToFilters()
     {
-        $this->toDateTime = date("Y-m-d h:i:s"); // current date
+        $this->toDateTime = date(self::DEFAULT_DB_FORMAT);
         $fromDateTime = strtotime('-3 minutes', strtotime($this->toDateTime));
-        $this->fromDateTime = date('Y-m-d h:i:s', $fromDateTime); // 2 days before
+        $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
 
         return true;
     }
