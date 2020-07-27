@@ -13,12 +13,13 @@ class Second extends Processing
      */
     protected function setFromToFilters()
     {
-        $currentDateTime = date("Y-m-d h:i:s"); // current date
+        $currentDateTime = date(self::DEFAULT_DB_FORMAT);
+
         $toDateTime = strtotime('-15 minutes', strtotime($currentDateTime));
-        $this->toDateTime = date('Y-m-d h:i:s', $toDateTime);
+        $this->toDateTime = date(self::DEFAULT_DB_FORMAT, $toDateTime);
 
         $fromDateTime = strtotime('-18 minutes', strtotime($currentDateTime));
-        $this->fromDateTime = date('Y-m-d h:i:s', $fromDateTime); // 2 days before
+        $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
 
         return true;
     }
