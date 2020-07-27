@@ -500,7 +500,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
-        if(version_compare($context->getVersion(), '100.8.21', '<')) {
+        if(version_compare($context->getVersion(), '100.8.28', '<')) {
             $printformerProductTable = $setup->getTable(self::TABLE_NAME_PRODUCT);
             $connection->addColumn(
                 $printformerProductTable,
