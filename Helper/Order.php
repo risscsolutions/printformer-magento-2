@@ -84,7 +84,6 @@ class Order extends Api
      * @param ProductRepositoryInterface $productRepository
      * @param Product $product
      * @param Config $printformerConfig
-     * @param State $state
      * @param UrlInterface $urlBuilder
      */
     public function __construct(
@@ -106,11 +105,10 @@ class Order extends Api
         ProductRepositoryInterface $productRepository,
         Product $product,
         PrintformerConfig $printformerConfig,
-        State $state,
         UrlInterface $urlBuilder
     )
     {
-        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $state, $urlBuilder);
+        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder);
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->orderRepository = $orderRepository;
         $this->orderItemRepository = $orderItemRepository;
