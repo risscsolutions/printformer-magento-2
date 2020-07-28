@@ -2,7 +2,9 @@
 namespace Rissc\Printformer\Helper;
 
 use Magento\Downloadable\Model\Link;
+use Magento\Framework\App\State;
 use Magento\Framework\Filesystem;
+use Magento\Framework\UrlInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
@@ -82,6 +84,8 @@ class Order extends Api
      * @param ProductRepositoryInterface $productRepository
      * @param Product $product
      * @param Config $printformerConfig
+     * @param State $state
+     * @param UrlInterface $urlBuilder
      */
     public function __construct(
         Context $context,
@@ -101,10 +105,12 @@ class Order extends Api
         OrderItemRepositoryInterface $orderItemRepository,
         ProductRepositoryInterface $productRepository,
         Product $product,
-        PrintformerConfig $printformerConfig
+        PrintformerConfig $printformerConfig,
+        State $state,
+        UrlInterface $urlBuilder
     )
     {
-        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem);
+        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $state, $urlBuilder);
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->orderRepository = $orderRepository;
         $this->orderItemRepository = $orderItemRepository;
@@ -185,7 +191,7 @@ class Order extends Api
      * @param $orderItemId
      * @return array|mixed|null
      */
-    public function loadPayLoadInformationByOrderId($orderId, $orderItemId)
+    public function loadPayLoadInformationByOrderIdAndUploadFile($orderId, $orderItemId)
     {
         $resultDraftHash = null;
         $orderItem = $this->getOrderItemById($orderItemId);
@@ -222,8 +228,8 @@ class Order extends Api
                     $order->getStoreId()
                 );
             } catch (\Exception $e) {
-                $this->_logger->error('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
-                $this->_logger->error($e->getMessage());
+                $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
+                $this->_logger->debug($e->getMessage());
             }
 
             $draftHash = $draftProcess->getDraftId();

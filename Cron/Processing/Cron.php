@@ -57,10 +57,10 @@ class Cron
      */
     public function execute()
     {
-        $this->logger->notice('--------------------------------Cron started--------------------------------');
+        $this->logger->debug('--------------------------------Cron started--------------------------------');
         $this->first->execute();
         $this->second->execute();
         $this->third->execute();
-        $this->logger->notice('--------------------------------Cron finished-------------------------------');
+        $this->logger->debug('--------------------------------Cron finished-------------------------------');
     }
 }

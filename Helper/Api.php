@@ -21,11 +21,14 @@ use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 use Magento\Backend\Model\Session as AdminSession;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
+use Magento\Framework\UrlInterface;
+use Exception;
 
 class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
     const API_UPLOAD_INTENT = 'upload';
+    const CALLBACK_UPLOAD_ENDPOINT = 'printformer/process/draft';
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -71,6 +74,11 @@ class Api extends AbstractHelper
     private $filesystem;
 
     /**
+     * @var UrlInterface
+     */
+    private $urlBuilder;
+
+    /**
      * Api constructor.
      * @param Context $context
      * @param CustomerSession $customerSession
@@ -84,6 +92,7 @@ class Api extends AbstractHelper
      * @param AdminSession $adminSession
      * @param PrintformerProductAttributes $printformerProductAttributes
      * @param Filesystem $filesystem
+     * @param UrlInterface $urlBuilder
      */
     public function __construct(
         Context $context,
@@ -97,7 +106,8 @@ class Api extends AbstractHelper
         CustomerResource $customerResource,
         AdminSession $adminSession,
         PrintformerProductAttributes $printformerProductAttributes,
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        UrlInterface $urlBuilder
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -110,6 +120,7 @@ class Api extends AbstractHelper
         $this->_adminSession = $adminSession;
         $this->printformerProductAttributes = $printformerProductAttributes;
         $this->filesystem = $filesystem;
+        $this->urlBuilder = $urlBuilder;
 
         $this->setStoreId($storeManager->getStore()->getId());
 
@@ -357,8 +368,6 @@ class Api extends AbstractHelper
         if(!empty($masterId)){
             $options['json']['master_id'] = $masterId;
         }
-
-        // merge function-params, options and additional draft-fields for the api-call
         $params = $this->mergeAdditionalParamsForApiCall($params);
 
         foreach($params as $key => $value) {
@@ -377,11 +386,11 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param $draft
+     * @param $draftId
      * @param $downloadableLinkFilePath
      * @return bool
      */
-    public function uploadPdf($draft, $downloadableLinkFilePath)
+    public function uploadPdf($draftId, $downloadableLinkFilePath)
     {
         $absoluteMediaPath = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath();
         $absoluteDownloadableMediaMediaPath = $absoluteMediaPath.'downloadable/files/links';
@@ -397,14 +406,19 @@ class Api extends AbstractHelper
 
             //generate temporary pdf-url for temporary file to upload into printformer api
             $baseUrl = $this->getStoreManager()->getStore()->getBaseUrl();
-            $filePathUrl = $baseUrl.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
-            $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUploadDraftId($draft);
+            $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUploadDraftId($draftId);
 
-            if (isset($filePathUrl) && isset($apiUrl)){
+            $filePathUrl = $baseUrl.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
+            $callBackUrl = $this->getUploadCallbackUrl($draftId);
+
+            if (isset($filePathUrl) && isset($apiUrl) && isset($callBackUrl)){
+                $this->_logger->notice('Used callbackUrl='.$callBackUrl);
+
                 //upload temporary file-url
                 $options = [
                     'json' => [
-                        'fileURL' => $filePathUrl
+                        'fileURL' => $filePathUrl,
+                        'callbackURL' => $callBackUrl
                     ]
                 ];
                 $response = $this->getHttpClient()->post($apiUrl, $options);
@@ -426,6 +440,16 @@ class Api extends AbstractHelper
         } else {
             return false;
         }
+    }
+
+    /**
+     * @param $draftId
+     * @return string
+     */
+    public function getUploadCallbackUrl($draftId)
+    {
+        $params['draft_id'] = $draftId;
+        return $this->urlBuilder->getUrl(self::CALLBACK_UPLOAD_ENDPOINT, $params);
     }
 
     /**
@@ -483,7 +507,7 @@ class Api extends AbstractHelper
      * @param array  $params
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
@@ -514,7 +538,7 @@ class Api extends AbstractHelper
      * @param int    $printformerProductId
      *
      * @return Draft
-     * @throws \Exception
+     * @throws Exception
      */
     public function draftProcess(
         $draftHash = null,
@@ -625,7 +649,7 @@ class Api extends AbstractHelper
      * @param int    $printformerProductId
      *
      * @return \Magento\Framework\DataObject|Draft
-     * @throws \Exception
+     * @throws Exception
      */
     protected function getDraftProcess(
         $draftHash = null,
@@ -678,35 +702,47 @@ class Api extends AbstractHelper
 
     /**
      * @param $draftIds
-     *
-     * @throws \Exception
      */
     public function setAsyncOrdered($draftIds)
     {
-        $draftProcessingUrl = $this->apiUrl()->setStoreId($this->getStoreId())->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
-        $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
+        try {
+            $draftProcessingUrl = $this->apiUrl()->setStoreId($this->getStoreId())->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
+            $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
+            $postFields = [
+                'json' => [
+                    'draftIds' => $draftIds,
+                    'stateChangedNotifyUrl' => $stateChangedNotifyUrl
+                ]
+            ];
+            $response = $this->getHttpClient()->post($draftProcessingUrl, $postFields);
+        } catch (Exception $e) {
+        }
 
-        $postFields = [
-            'json' => [
-                'draftIds' => $draftIds,
-                'stateChangedNotifyUrl' => $stateChangedNotifyUrl
-            ]
-        ];
+        if(!empty($response)) {
+            $responseArray = json_decode($response->getBody(), true);
+            $processingHash = !empty($responseArray['processingId']) ? $responseArray['processingId'] : null;
+            if($processingHash !== null) {
+                $draftIdsToProcessSuccess = [];
+                $draftIdsToProcessFailed = [];
 
-        $response = $this->getHttpClient()->post($draftProcessingUrl, $postFields);
-
-        $responseArray = json_decode($response->getBody(), true);
-        $processingHash = !empty($responseArray['processingId']) ? $responseArray['processingId'] : null;
-
-        if($processingHash !== null) {
-            foreach ($draftIds as $draftHash) {
-                /** @var Draft $process */
-                $process = $this->getDraftProcess($draftHash);
-                if ($process->getId()) {
-                    $process->setProcessingId($processingHash);
-                    $process->setProcessingStatus(1);
-                    $process->getResource()->save($process);
+                foreach ($draftIds as $draftHash) {
+                    try {
+                        /** @var Draft $process */
+                        $process = $this->getDraftProcess($draftHash);
+                        if ($process->getId()) {
+                            $process->setProcessingId($processingHash);
+                            $process->setProcessingStatus(1);
+                            $process->getResource()->save($process);
+                        }
+                        array_push($draftIdsToProcessSuccess, $draftHash);
+                    } catch (Exception $e) {
+                        array_push($draftIdsToProcessFailed, $draftHash);
+                        $this->_logger->debug('Error on draft processing for draft: '.$draftHash.PHP_EOL.'Status-code: '.$e->getCode().PHP_EOL.$e->getMessage().'Line: '.$e->getLine().PHP_EOL.'File: '.$e->getFile());
+                    }
                 }
+
+                $this->_logger->debug('Drafts processing failed: '.implode(",", $draftIdsToProcessFailed));
+                $this->_logger->debug('Drafts processing successfully processed: '.implode(",", $draftIdsToProcessSuccess));
             }
         }
     }
@@ -811,7 +847,7 @@ class Api extends AbstractHelper
      * @param $draftHash
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function getPdfLink($draftHash)
     {
@@ -1060,6 +1096,12 @@ class Api extends AbstractHelper
         return $customerUserIdentifier;
     }
 
+    /**
+     * Merge function-params, options and additional draft-fields for the api-call
+     *
+     * @param $params
+     * @return array
+     */
     private function mergeAdditionalParamsForApiCall($params)
     {
         $params = $this->printformerProductAttributes->mergeFeedIdentifier($params);
