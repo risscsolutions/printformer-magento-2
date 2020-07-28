@@ -56,13 +56,15 @@ class Index extends Action
      */
     public function execute()
     {
+        $result = $this->jsonFactory->create();
+
         if($this->state->getMode() == $this->state::MODE_DEVELOPER){
             $this->cron->execute();
-            //todo: possible to implement test-values
         }
-        $data = array();
-        $result = $this->jsonFactory->create();
-        $result->setData($data);
+
+        http_response_code(200);
+        header('Content-Type: application/json');
+
         return $result;
     }
 }

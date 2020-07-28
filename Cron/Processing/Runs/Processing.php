@@ -65,30 +65,27 @@ abstract class Processing
      */
     public function execute()
     {
-        $this->logger->notice('--------------------------------Execution started--------------------------------');
+        $this->logger->debug('--------------------------------Execution started--------------------------------');
         $this->resetProcessingFilters();
         $this->setFromToFilters();
 
         if (isset($this->fromDateTime, $this->toDateTime)){
-            $this->logger->notice('--------------------------------with filters from:'.$this->fromDateTime.' to '.$this->toDateTime.'--------------------------------');
+            $this->logger->debug('--------------------------------with filters from:'.$this->fromDateTime.' to '.$this->toDateTime.'--------------------------------');
         }
 
         $unprocessedOrderItemsCollection = $this->getUnprocessedPrintformerOrderUploadItemsCollection();
-        $uploadedItemsDrafts = $this->loadUnprocessedPrintformerOrderUploadItems($unprocessedOrderItemsCollection);
+        $this->uploadPrintformerOrderUploadItems($unprocessedOrderItemsCollection);
 
         $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsCollection();
-        $unprocessedPrintformerOrderItemDrafts = $this->loadUnprocessedPrintformerOrderItemDrafts($unprocessedPrintformerOrderItemDraftsCollection);
-
-        $draftIdsToProcess = array_merge($uploadedItemsDrafts, $unprocessedPrintformerOrderItemDrafts);
-        $draftIdsToProcess = array_unique($draftIdsToProcess);
+        $draftIdsToProcess = $this->loadUnprocessedPrintformerOrderItemDrafts($unprocessedPrintformerOrderItemDraftsCollection);
 
         if (!empty($draftIdsToProcess)){
-            $this->startProcessing($draftIdsToProcess);
+            $this->api->setAsyncOrdered($draftIdsToProcess);
         } else {
-            $this->logger->notice('--------------------------------no items with draft to process found-------------------------------');
+            $this->logger->debug('--------------------------------no items with draft to process found-------------------------------');
         }
 
-        $this->logger->notice('--------------------------------Execution finished-------------------------------');
+        $this->logger->debug('--------------------------------Execution finished-------------------------------');
     }
 
     /**
@@ -145,7 +142,7 @@ abstract class Processing
      * @param $unprocessedOrderItemsCollection
      * @return array
      */
-    private function loadUnprocessedPrintformerOrderUploadItems($unprocessedOrderItemsCollection)
+    private function uploadPrintformerOrderUploadItems($unprocessedOrderItemsCollection)
     {
         $uploadedItemsDrafts = [];
         if (isset($unprocessedOrderItemsCollection)){
@@ -155,40 +152,16 @@ abstract class Processing
                 $itemId = $unprocessedOrderItem->getitemId();
                 $orderId = $unprocessedOrderItem->getOrderId();
                 try {
-                    $resultDraftHash = $this->orderHelper->loadPayLoadInformationByOrderId($orderId, $itemId);
+                    $resultDraftHash = $this->orderHelper->loadPayLoadInformationByOrderIdAndUploadFile($orderId, $itemId);
                     if ($resultDraftHash) {
                         array_push($uploadedItemsDrafts, $resultDraftHash);
                     }
                 } catch (\Exception $e) {
-                    $this->logger->error('Loading payload-information failed for item with item-id: '.$itemId.' and order-id'.$orderId);
+                    $this->logger->debug('Loading payload-information failed for item with item-id: '.$itemId.' and order-id'.$orderId);
                 }
             }
         }
         return $uploadedItemsDrafts;
-    }
-
-    /**
-     * @param array $draftIdsToProcess
-     */
-    private function startProcessing(array $draftIdsToProcess)
-    {
-        $draftIdsToProcessSuccess = [];
-        $draftIdsToProcessFailed = [];
-        foreach ($draftIdsToProcess as $draftId) {
-            $idToProcess = [];
-            array_push($idToProcess, $draftId);
-            if (!empty($draftIdsToProcess)){
-                try {
-                    $this->api->setAsyncOrdered($draftIdsToProcess);
-                    array_push($draftIdsToProcessSuccess, $draftId);
-                } catch (\Exception $e) {
-                    array_push($draftIdsToProcessFailed, $draftId);
-                    $this->logger->error('Error on draft processing for draft: '.$draftId.PHP_EOL.'Status-code: '.$e->getCode().PHP_EOL.$e->getMessage().'Line: '.$e->getLine().PHP_EOL.'File: '.$e->getFile());
-                }
-            }
-        }
-        $this->logger->notice('Drafts processing failed: '.implode(",", $draftIdsToProcessFailed));
-        $this->logger->notice('Drafts processing successfully processed: '.implode(",", $draftIdsToProcessSuccess));
     }
 
     /**
