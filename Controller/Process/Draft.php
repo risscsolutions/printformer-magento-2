@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Controller\Process;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Api;
 
 /**
@@ -23,26 +24,34 @@ class Draft extends Action
      * @var Api
      */
     private $api;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * Draft constructor.
      * @param Context $context
      * @param JsonFactory $jsonFactory
      * @param Api $api
+     * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
-        Api $api
+        Api $api,
+        LoggerInterface $logger
     )
     {
         parent::__construct($context);
         $this->jsonFactory = $jsonFactory;
         $this->api = $api;
+        $this->logger = $logger;
     }
 
     public function execute()
     {
+        $this->logger->debug('draft-process callback started');
         $result = $this->jsonFactory->create();
 
         $param = $this->getRequest()->getParam('draft_id');
@@ -53,6 +62,7 @@ class Draft extends Action
         http_response_code(200);
         header('Content-Type: application/json');
 
+        $this->logger->debug('draft-process callback finished');
         return $result->setData($draftToSync);
     }
 }

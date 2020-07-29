@@ -5,7 +5,7 @@ use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Cron\Processing\Runs\First;
 use Rissc\Printformer\Cron\Processing\Runs\Second;
 use Rissc\Printformer\Cron\Processing\Runs\Third;
-
+use Rissc\Printformer\Cron\Processing\Runs\Test;
 /**
  * Class Processing
  * @package Rissc\Printformer\Cron
@@ -33,6 +33,11 @@ class Cron
     private $third;
 
     /**
+     * @var Test
+     */
+    private $test;
+
+    /**
      * Cron constructor.
      * @param LoggerInterface $logger
      * @param First $first
@@ -43,13 +48,15 @@ class Cron
         LoggerInterface $logger,
         First $first,
         Second $second,
-        Third $third
+        Third $third,
+        Test $test
     )
     {
         $this->logger = $logger;
         $this->first = $first;
         $this->second = $second;
         $this->third = $third;
+        $this->test = $test;
     }
 
     /**
@@ -58,9 +65,10 @@ class Cron
     public function execute()
     {
         $this->logger->debug('--------------------------------Cron started--------------------------------');
-        $this->first->execute();
-        $this->second->execute();
-        $this->third->execute();
+        $this->test->execute();
+        //$this->first->execute();
+        //$this->second->execute();
+        //$this->third->execute();
         $this->logger->debug('--------------------------------Cron finished-------------------------------');
     }
 }

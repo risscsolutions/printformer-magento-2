@@ -744,6 +744,8 @@ class Api extends AbstractHelper
                 $this->_logger->debug('Drafts processing failed: '.implode(",", $draftIdsToProcessFailed));
                 $this->_logger->debug('Drafts processing successfully processed: '.implode(",", $draftIdsToProcessSuccess));
             }
+        } else {
+            $this->_logger->debug('Cant get response for draft-ids:'.implode(",", $draftIds));
         }
     }
 
