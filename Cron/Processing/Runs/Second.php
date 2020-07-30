@@ -18,7 +18,7 @@ class Second extends Processing
         $toDateTime = strtotime('-15 minutes', strtotime($currentDateTime));
         $this->toDateTime = date(self::DEFAULT_DB_FORMAT, $toDateTime);
 
-        $fromDateTime = strtotime('-18 minutes', strtotime($currentDateTime));
+        $fromDateTime = strtotime('-16 minutes', strtotime($currentDateTime));
         $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
 
         return true;

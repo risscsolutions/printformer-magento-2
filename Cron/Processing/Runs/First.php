@@ -14,7 +14,7 @@ class First extends Processing
     protected function setFromToFilters()
     {
         $this->toDateTime = date(self::DEFAULT_DB_FORMAT);
-        $fromDateTime = strtotime('-3 minutes', strtotime($this->toDateTime));
+        $fromDateTime = strtotime('-1 minutes', strtotime($this->toDateTime));
         $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
 
         return true;

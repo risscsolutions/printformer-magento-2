@@ -18,7 +18,7 @@ class Third extends Processing
         $toDateTime = strtotime('-60 minutes', strtotime($currentDateTime));
         $this->toDateTime = date(self::DEFAULT_DB_FORMAT, $toDateTime);
 
-        $fromDateTime = strtotime('-63 minutes', strtotime($currentDateTime));
+        $fromDateTime = strtotime('-61 minutes', strtotime($currentDateTime));
         $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
 
         return true;

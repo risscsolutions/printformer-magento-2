@@ -1,6 +1,7 @@
 <?php
 namespace Rissc\Printformer\Controller\Process;
 
+use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
@@ -55,14 +56,15 @@ class Draft extends Action
         $result = $this->jsonFactory->create();
 
         $param = $this->getRequest()->getParam('draft_id');
-        $draftToSync = [];
-        array_push($draftToSync, $param);
-        $this->api->setAsyncOrdered($draftToSync);
+        $requestParams = ['draft_id' => $param];
+        $responseInfo = ['success' => true];
+        $resultResponse = array_merge($responseInfo, $requestParams);
+        $this->api->setAsyncOrdered($responseInfo);
 
         http_response_code(200);
         header('Content-Type: application/json');
 
         $this->logger->debug('draft-process callback finished');
-        return $result->setData($draftToSync);
+        return $result->setData($resultResponse);
     }
 }
