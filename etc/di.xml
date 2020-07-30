@@ -108,4 +108,7 @@
                 sortOrder="1"
         />
     </type>
+    <type name="Magento\Framework\App\Request\CsrfValidator">
+        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\CsrfValidatorSkip" />
+    </type>
 </config>

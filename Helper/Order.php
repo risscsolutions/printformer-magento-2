@@ -225,12 +225,11 @@ class Order extends Api
                     $orderId,
                     $order->getStoreId()
                 );
+                $draftHash = $draftProcess->getDraftId();
             } catch (\Exception $e) {
                 $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
                 $this->_logger->debug($e->getMessage());
             }
-
-            $draftHash = $draftProcess->getDraftId();
 
             if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE && isset($draftHash)) {
                 $links = $product->getTypeInstance()->getLinks($product);
