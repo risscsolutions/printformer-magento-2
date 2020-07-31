@@ -204,7 +204,7 @@ class Order extends Api
             $customer = $this->getCustomerById($customerId);
             $printformerUserIdentifier = $customer->getData('printformer_identification');
             if (!isset($printformerUserIdentifier)){
-                $this->loadPrintformerIdentifierOnCustomer($customer);
+                $printformerUserIdentifier = $this->loadPrintformerIdentifierOnCustomer($customer);
             }
 
             $printformerProductId = $this->getPrintformerProduct($productId);
@@ -226,6 +226,7 @@ class Order extends Api
                     $order->getStoreId()
                 );
                 $draftHash = $draftProcess->getDraftId();
+                $draftProcess->getResource()->save($draftProcess);
             } catch (\Exception $e) {
                 $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
                 $this->_logger->debug($e->getMessage());
