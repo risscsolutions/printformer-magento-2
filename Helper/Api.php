@@ -714,6 +714,7 @@ class Api extends AbstractHelper
             ];
             $response = $this->getHttpClient()->post($draftProcessingUrl, $postFields);
         } catch (Exception $e) {
+            $this->_logger->debug('Process for draft ids failed. Error-message: '.$e->getMessage());
         }
 
         if(!empty($response)) {
