@@ -91,7 +91,10 @@ class Draft extends Action
 
         $responseInfo = ['success' => true];
         $resultResponse = array_merge($responseInfo, $requestParams);
-        $this->api->setAsyncOrdered($responseInfo);
+
+        $draftToSync = [];
+        array_push($draftToSync, $draftId);
+        $this->api->setAsyncOrdered($draftToSync);
 
         http_response_code(200);
         header('Content-Type: application/json');
