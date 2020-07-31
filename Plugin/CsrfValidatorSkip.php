@@ -46,6 +46,9 @@ class CsrfValidatorSkip
             $this->logger->debug('Callback post-request for draft processing registered: '.$request->getUriString());
             return; // Skip CSRF check
         }
+        if (strpos($request->getPathInfo(), 'printformer/upload') != false) {
+            return; // Skip CSRF check
+        }
         $proceed($request, $action); // Proceed Magento 2 core functionalities
     }
 }
