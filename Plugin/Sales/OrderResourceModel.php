@@ -64,6 +64,9 @@ class OrderResourceModel
             if (in_array($orderModel->getStatus(), $this->config->getOrderStatus())) {
                 if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
                     $this->draft->setDraftOrdered($orderModel);
+                } else {
+                    //todo adjust logic for loadUnprocessedPrintformerOrderItemDrafts in processing-cron (respecting pending status can be changed any time), then remove this else-clause again
+                    $this->api->setAsyncOrdered($draftIds);
                 }
             }
         } catch (\Exception $e) {
