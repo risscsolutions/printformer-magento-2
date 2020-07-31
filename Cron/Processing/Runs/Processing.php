@@ -80,7 +80,11 @@ abstract class Processing
         $draftIdsToProcess = $this->loadUnprocessedPrintformerOrderItemDrafts($unprocessedPrintformerOrderItemDraftsCollection);
 
         if (!empty($draftIdsToProcess)){
-            $this->api->setAsyncOrdered($draftIdsToProcess);
+            foreach ($draftIdsToProcess as $draftId) {
+                $draftToSync = [];
+                array_push($draftToSync, $draftId);
+                $this->api->setAsyncOrdered($draftToSync);
+            }
         } else {
             $this->logger->debug('--------------------------------no items with draft to process found-------------------------------');
         }
