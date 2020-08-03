@@ -602,7 +602,8 @@ class Api extends AbstractHelper
         $printformerUserIdentifier = null,
         $templateIdentifier = null,
         $orderId = null,
-        $storeId = null
+        $storeId = null,
+        $orderItemId = null
     ) {
         $process = $this->getDraftProcess($draftHash, $productId, self::API_UPLOAD_INTENT, $sessionUniqueId);
         if(!$process->getId() && !$checkOnly) {
@@ -630,7 +631,8 @@ class Api extends AbstractHelper
                     'customer_id' => $customerId,
                     'user_identifier' => $printformerUserIdentifier,
                     'created_at' => time(),
-                    'printformer_product_id' => $printformerProductId
+                    'printformer_product_id' => $printformerProductId,
+                    'order_item_id' => $orderItemId
                 ]);
                 $process->getResource()->save($process);
             }

@@ -192,6 +192,7 @@ class Order extends Api
     public function loadPayLoadInformationByOrderIdAndUploadFile($orderId, $orderItemId)
     {
         $resultDraftHash = null;
+        $currentDraftHash = null;
         $orderItem = $this->getOrderItemById($orderItemId);
         $productId = $orderItem->getProductId();
         $product = $this->getProductById($productId);
@@ -210,10 +211,24 @@ class Order extends Api
             $printformerProductId = $this->getPrintformerProduct($productId);
             $templateIdentifier = $this->getTemplateIdentifier($order);
 
+            $draftProcess = $this->_draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('store_id', ['eq' => $order->getStoreId()])
+                ->addFieldToFilter('product_id', ['eq' => $productId])
+                ->addFieldToFilter('customer_id', ['eq' => $customerId])
+                ->addFieldToFilter('order_item_id', ['eq' => $orderItemId])
+                ->addFieldToFilter('intent', ['eq' => self::API_UPLOAD_INTENT])
+                ->addFieldToFilter('printformer_product_id', ['eq' => $printformerProductId])
+                ->addFieldToFilter('user_identifier', ['eq' => $printformerUserIdentifier]);
+            $currentDraft = $draftCollection->getFirstItem();
+            if (!empty($currentDraft->getData())){
+                $currentDraftHash = $currentDraft['draft_id'];
+            }
+
             //start upload process and get draft from process
             try {
                 $draftProcess = $this->uploadDraftProcess(
-                    null,
+                    $currentDraftHash,
                     0,
                     $productId,
                     null,
@@ -223,7 +238,8 @@ class Order extends Api
                     $printformerUserIdentifier,
                     $templateIdentifier,
                     $orderId,
-                    $order->getStoreId()
+                    $order->getStoreId(),
+                    $orderItemId
                 );
                 $draftHash = $draftProcess->getDraftId();
                 if ($draftProcess->getProcessingStatus() == 1) {
