@@ -393,16 +393,19 @@ class Api extends AbstractHelper
     public function uploadPdf($draftId, $downloadableLinkFilePath)
     {
         $absoluteMediaPath = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath();
-        $absoluteDownloadableMediaMediaPath = $absoluteMediaPath.'downloadable/files/links';
-        $absoluteLinkFilePath = $absoluteDownloadableMediaMediaPath.$downloadableLinkFilePath;
+        $absoluteDownloadableMediaPath = $absoluteMediaPath.'downloadable/files/links';
+        $absoluteLinkFilePath = $absoluteDownloadableMediaPath.$downloadableLinkFilePath;
 
         if (file_exists($absoluteLinkFilePath) && is_readable($absoluteLinkFilePath)){
             //Create write instance on tmp file-location
             $directoryWriteInstance = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
 
             //copy file to media tmp directory
-            $downloadableTempLinkFilePath = DirectoryList::TMP.$downloadableLinkFilePath;
-            $directoryWriteInstance->copyFile($absoluteLinkFilePath, $downloadableTempLinkFilePath);
+            $downloadableTempLinkFilePath = DirectoryList::TMP.DIRECTORY_SEPARATOR.self::API_UPLOAD_INTENT.DIRECTORY_SEPARATOR.$draftId.DIRECTORY_SEPARATOR.basename($downloadableLinkFilePath);
+            $fullDownloadableTempLinkFilePath = $absoluteMediaPath.$downloadableTempLinkFilePath;
+            if (!file_exists($fullDownloadableTempLinkFilePath)){
+                $directoryWriteInstance->copyFile($absoluteLinkFilePath, $downloadableTempLinkFilePath);
+            }
 
             //generate temporary pdf-url for temporary file to upload into printformer api
             $baseUrl = $this->getStoreManager()->getStore()->getBaseUrl();
@@ -410,24 +413,19 @@ class Api extends AbstractHelper
 
             $filePathUrl = $baseUrl.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
             $callBackUrl = $this->getUploadCallbackUrl($draftId);
+            $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
 
-            if (isset($filePathUrl) && isset($apiUrl) && isset($callBackUrl)){
-                $this->_logger->notice('Used callbackUrl='.$callBackUrl);
+            if (isset($filePathUrl) && isset($apiUrl) && isset($callBackUrlWithQueryString)){
+                $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
 
                 //upload temporary file-url
                 $options = [
                     'json' => [
                         'fileURL' => $filePathUrl,
-                        'callbackURL' => $callBackUrl
+                        'callbackURL' => $callBackUrlWithQueryString
                     ]
                 ];
                 $response = $this->getHttpClient()->post($apiUrl, $options);
-
-                $absoluteTmpLinkFilePath = $absoluteMediaPath.$downloadableTempLinkFilePath;
-                //delete temporary file
-                if (file_exists($absoluteTmpLinkFilePath)){
-                    $directoryWriteInstance->delete($downloadableTempLinkFilePath);
-                }
 
                 if ($response->getStatusCode() === 204){
                     return true;
@@ -604,7 +602,8 @@ class Api extends AbstractHelper
         $printformerUserIdentifier = null,
         $templateIdentifier = null,
         $orderId = null,
-        $storeId = null
+        $storeId = null,
+        $orderItemId = null
     ) {
         $process = $this->getDraftProcess($draftHash, $productId, self::API_UPLOAD_INTENT, $sessionUniqueId);
         if(!$process->getId() && !$checkOnly) {
@@ -632,7 +631,8 @@ class Api extends AbstractHelper
                     'customer_id' => $customerId,
                     'user_identifier' => $printformerUserIdentifier,
                     'created_at' => time(),
-                    'printformer_product_id' => $printformerProductId
+                    'printformer_product_id' => $printformerProductId,
+                    'order_item_id' => $orderItemId
                 ]);
                 $process->getResource()->save($process);
             }
@@ -716,6 +716,7 @@ class Api extends AbstractHelper
             ];
             $response = $this->getHttpClient()->post($draftProcessingUrl, $postFields);
         } catch (Exception $e) {
+            $this->_logger->debug('Process for draft ids failed. Error-message: '.$e->getMessage());
         }
 
         if(!empty($response)) {
