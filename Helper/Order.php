@@ -225,12 +225,10 @@ class Order extends Api
                     $orderId,
                     $order->getStoreId()
                 );
-                if (!$draftProcess->getId()) {
-                    $draftHash = $draftProcess->getDraftId();
-                    if ($draftProcess->getProcessingStatus() == 1) {
-                        $orderItem->setPrintformerOrdered(1);
-                        $orderItem->getResource()->save($orderItem);
-                    }
+                $draftHash = $draftProcess->getDraftId();
+                if ($draftProcess->getProcessingStatus() == 1) {
+                    $orderItem->setPrintformerOrdered(1);
+                    $orderItem->getResource()->save($orderItem);
                 }
             } catch (\Exception $e) {
                 $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
