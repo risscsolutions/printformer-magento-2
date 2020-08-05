@@ -83,6 +83,7 @@ abstract class Processing
             foreach ($draftIdsToProcess as $draftId) {
                 $draftToSync = [];
                 array_push($draftToSync, $draftId);
+                $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
                 $this->api->setAsyncOrdered($draftToSync);
             }
         } else {
@@ -108,6 +109,8 @@ abstract class Processing
             $collection->addFieldToFilter('main_table.created_at', array('from'=>$this->fromDateTime, 'to'=>$this->toDateTime));
         }
 
+        $this->logger->debug('getUnprocessedPrintformerOrderUploadItemsCollection[sql]: '.$collection->getSelect()->assemble());
+
         return $collection;
     }
 
@@ -121,6 +124,8 @@ abstract class Processing
         if (isset($this->toDateTime, $this->fromDateTime)) {
             $collection->addFieldToFilter('main_table.created_at', array('from' => $this->fromDateTime, 'to' => $this->toDateTime));
         }
+
+        $this->logger->debug('getUnprocessedPrintformerOrderItemsCollection[sql]: '.$collection->getSelect()->assemble());
 
         return $collection;
     }

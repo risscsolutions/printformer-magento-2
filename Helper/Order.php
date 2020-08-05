@@ -117,6 +117,35 @@ class Order extends Api
         $this->printformerConfig = $printformerConfig;
     }
 
+    /**
+     * Check with draft id if order-item has required config-status
+     *
+     * @param $draftHash
+     * @return bool
+     */
+    public function checkItemByDraftHash($draftHash)
+    {
+        $process = $this->getDraftProcess($draftHash);
+        $orderItemId = $process->getOrderItemId();
+        if (!empty($orderItemId)) {
+            $collection = $this->itemCollectionFactory->create();
+            $collection
+                ->addFieldToFilter('main_table.item_id', ['eq' => $orderItemId]);
+
+            $orderItem = $collection->getFirstItem();
+            if (isset($orderItem['order_id'])){
+                $order = $this->getOrderById($orderItem['order_id']);
+                $orderStatus = $order->getStatus();
+                if (!empty($orderStatus)){
+                    if ($orderStatus == $this->getPfOrderStatus()){
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 
     /**
      * @return ItemCollection
@@ -128,12 +157,10 @@ class Order extends Api
          */
         $collection = $this->itemCollectionFactory->create();
 
-        $requiredOrderStatus = $this->getPfOrderStatus();
         $collection
             ->addAttributeToSelect('*')
             ->addFieldToFilter('main_table.printformer_ordered', 'eq' == '0')
             ->addFieldToFilter('main_table.product_type', ['eq' => 'downloadable'])
-            ->addFieldToFilter('order.status', ['eq' => $requiredOrderStatus])
             ->join(
                 ['order' => $collection->getTable('sales_order')],
                 'order.entity_id = main_table.order_id',
