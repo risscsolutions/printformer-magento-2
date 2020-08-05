@@ -7,7 +7,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Helper\Api;
+use Rissc\Printformer\Helper\Order;
 use Magento\Framework\Filesystem;
 
 /**
@@ -24,11 +24,6 @@ class Draft extends Action
     private $jsonFactory;
 
     /**
-     * @var Api
-     */
-    private $api;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -39,26 +34,31 @@ class Draft extends Action
     private $filesystem;
 
     /**
+     * @var Order
+     */
+    private $order;
+
+    /**
      * Draft constructor.
      * @param Context $context
      * @param JsonFactory $jsonFactory
-     * @param Api $api
      * @param LoggerInterface $logger
      * @param Filesystem $filesystem
+     * @param Order $order
      */
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
-        Api $api,
         LoggerInterface $logger,
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        Order $order
     )
     {
         parent::__construct($context);
         $this->jsonFactory = $jsonFactory;
-        $this->api = $api;
         $this->logger = $logger;
         $this->filesystem = $filesystem;
+        $this->order = $order;
     }
 
     public function execute()
@@ -66,8 +66,8 @@ class Draft extends Action
         $this->logger->debug('draft-process callback started');
         $result = $this->jsonFactory->create();
 
-        $draftId = $this->getRequest()->getParam('draft_id');
-        $requestParams = ['draft_id' => $draftId];
+        $draftHash = $this->getRequest()->getParam('draft_id');
+        $requestParams = ['draft_id' => $draftHash];
 
         $directoryWriteInstance = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
         $filePath = $this->getRequest()->getParam('filepath');
@@ -76,14 +76,14 @@ class Draft extends Action
             $fullAbsoluteFilePath = $absoluteMediaPath.$filePath;
             if (file_exists($fullAbsoluteFilePath)){
                 $directoryWriteInstance->delete($filePath);
-                $folders = DirectoryList::TMP.DIRECTORY_SEPARATOR.$this->api::API_UPLOAD_INTENT.DIRECTORY_SEPARATOR;
-                $oldParentTmpDraftDir = $absoluteMediaPath.$folders.$draftId;
+                $folders = DirectoryList::TMP.DIRECTORY_SEPARATOR.$this->order::API_UPLOAD_INTENT.DIRECTORY_SEPARATOR;
+                $oldParentTmpDraftDir = $absoluteMediaPath.$folders.$draftHash;
                 if (file_exists($oldParentTmpDraftDir)){
                     $scan = scandir($oldParentTmpDraftDir);
                     $scan = array_diff($scan, array('.'));
                     $scan = array_diff($scan, array('..'));
                     if (empty($scan)){
-                        $directoryWriteInstance->delete($folders.$draftId);
+                        $directoryWriteInstance->delete($folders.$draftHash);
                     }
                 }
             }
@@ -93,8 +93,12 @@ class Draft extends Action
         $resultResponse = array_merge($responseInfo, $requestParams);
 
         $draftToSync = [];
-        array_push($draftToSync, $draftId);
-        $this->api->setAsyncOrdered($draftToSync);
+        array_push($draftToSync, $draftHash);
+        $this->logger->debug('upload drafts to process found:'.implode(",", $draftToSync));
+
+        if ($this->order->checkItemByDraftHash($draftHash)) {
+            $this->order->setAsyncOrdered($draftToSync);
+        }
 
         http_response_code(200);
         header('Content-Type: application/json');
