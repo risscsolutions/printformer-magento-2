@@ -271,33 +271,33 @@ class Order extends Api
                 $draftHash = $draftProcess->getDraftId();
                 if ($draftProcess->getProcessingStatus() == 1) {
                     $orderItem->setPrintformerOrdered(1);
-                    $orderItem->getResource()->save($orderItem);
+                    if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE && isset($draftHash)) {
+                        $links = $product->getTypeInstance()->getLinks($product);
+
+                        /**
+                         * Upload all link-files of product, if some product upload failes, clear result to not process the
+                         * corresponding draft
+                         *
+                         * @var Link $link
+                         */
+                        foreach ($links as $link) {
+                            $linkFile = $link->getLinkFile();
+                            if ($link->getId() && $linkFile) {
+                                if ($this->uploadPdf($draftHash, $linkFile)){
+                                    $resultDraftHash = $draftHash;
+                                } else {
+                                    $resultDraftHash = null;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
                 }
             } catch (\Exception $e) {
                 $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
                 $this->_logger->debug($e->getMessage());
-            }
-
-            if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE && isset($draftHash)) {
-                $links = $product->getTypeInstance()->getLinks($product);
-
-                /**
-                 * Upload all link-files of product, if some product upload failes, clear result to not process the
-                 * corresponding draft
-                 *
-                 * @var Link $link
-                 */
-                foreach ($links as $link) {
-                    $linkFile = $link->getLinkFile();
-                    if ($link->getId() && $linkFile) {
-                        if ($this->uploadPdf($draftHash, $linkFile)){
-                            $resultDraftHash = $draftHash;
-                        } else {
-                            $resultDraftHash = null;
-                            break;
-                        }
-                    }
-                }
             }
         } else {
             $draftHash = $orderItem->getPrintformerDraftid();
@@ -305,6 +305,7 @@ class Order extends Api
                 $resultDraftHash = $draftHash;
             }
         }
+        $this->updateProcessingCountByOrderItem($orderItem);
 
         return $resultDraftHash;
     }
@@ -325,6 +326,32 @@ class Order extends Api
     public function getOrderItemById($orderItemId)
     {
         return $this->orderItemRepository->get($orderItemId);
+    }
+
+    /**
+     * @param $draftHash
+     * @return false|OrderItemInterface
+     */
+    public function getOrderItemByDraftId($draftHash)
+    {
+        $orderItem = false;
+        $process = $this->_draftFactory->create();
+
+        $draftCollection = $process->getCollection();
+        if($draftHash !== null) {
+            $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftHash]);
+            $process = $draftCollection->getFirstItem();
+
+            if ($process->getId()) {
+                $process = $draftCollection->getLastItem();
+                $orderItemId = $process->getOrderItemId();
+                if(!empty($orderItemId)){
+                    $orderItem = $this->orderItemRepository->get($orderItemId);
+                }
+            }
+        }
+
+        return $orderItem;
     }
 
     /**
@@ -394,5 +421,17 @@ class Order extends Api
             $pfRequiredOrderStatus = array_values($pfRequiredOrderStatus)[0];;
         }
         return $pfRequiredOrderStatus;
+    }
+
+    /**
+     * Save processed order by order-item
+     *
+     * @param OrderItemInterface $orderItem
+     */
+    public function updateProcessingCountByOrderItem(OrderItemInterface $orderItem)
+    {
+        $printformerUploadProcessingCount = $orderItem->getPrintformerUploadProcessingCount();
+        $orderItem->setPrintformerUploadProcessingCount($printformerUploadProcessingCount+1);
+        $orderItem->getResource()->save($orderItem);
     }
 }

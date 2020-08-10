@@ -44,6 +44,11 @@ abstract class Processing
     protected $fromDateTime = null;
 
     /**
+     * @var int
+     */
+    protected $validUploadProcessingCountSmallerThen = 0;
+
+    /**
      * Processing constructor.
      * @param LoggerInterface $logger
      * @param Order $orderHelper
@@ -81,6 +86,9 @@ abstract class Processing
 
         if (!empty($draftIdsToProcess)){
             foreach ($draftIdsToProcess as $draftId) {
+                $orderItem = $this->orderHelper->getOrderItemByDraftId($draftId);
+                $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
+
                 $draftToSync = [];
                 array_push($draftToSync, $draftId);
                 $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
@@ -107,6 +115,7 @@ abstract class Processing
 
         if (isset($this->toDateTime, $this->fromDateTime)){
             $collection->addFieldToFilter('main_table.created_at', array('from'=>$this->fromDateTime, 'to'=>$this->toDateTime));
+            $collection->addFieldToFilter('main_table.printformer_upload_processing_count', ['lt' => $this->validUploadProcessingCountSmallerThen]);
         }
 
         $this->logger->debug('getUnprocessedPrintformerOrderUploadItemsCollection[sql]: '.$collection->getSelect()->assemble());
@@ -123,6 +132,7 @@ abstract class Processing
 
         if (isset($this->toDateTime, $this->fromDateTime)) {
             $collection->addFieldToFilter('main_table.created_at', array('from' => $this->fromDateTime, 'to' => $this->toDateTime));
+            $collection->addFieldToFilter('main_table.printformer_upload_processing_count', ['lt' => $this->validUploadProcessingCountSmallerThen]);
         }
 
         $this->logger->debug('getUnprocessedPrintformerOrderItemsCollection[sql]: '.$collection->getSelect()->assemble());

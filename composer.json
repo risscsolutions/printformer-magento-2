@@ -2,7 +2,7 @@
     "name": "rissc/module-printformer",
     "description": "Rissc Printformer Magento 2 module",
     "type": "magento2-module",
-    "version": "100.8.39",
+    "version": "100.8.40",
     "require": {
         "magento/magento-composer-installer": "*",
         "magento/module-catalog": "*",

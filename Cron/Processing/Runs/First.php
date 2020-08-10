@@ -14,8 +14,9 @@ class First extends Processing
     protected function setFromToFilters()
     {
         $this->toDateTime = date(self::DEFAULT_DB_FORMAT);
-        $fromDateTime = strtotime('-1 minutes', strtotime($this->toDateTime));
+        $fromDateTime = strtotime('-30 minutes', strtotime($this->toDateTime));
         $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
+        $this->validUploadProcessingCountSmallerThen = 1;
 
         return true;
     }
