@@ -16,6 +16,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
     const TABLE_NAME_HISTORY              = 'printformer_async_history';
     const TABLE_NAME_CUSTOMER_GROUP_RIGHT = 'printformer_customer_group_right';
     const TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT = 'catalog_product_printformer_product';
+    const COLUMN_NAME_UPLOAD_PROCESSING_COUNT            = 'printformer_upload_processing_count';
 
     /**
      * @param SchemaSetupInterface $setup
@@ -496,6 +497,37 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     'type' => Table::TYPE_TEXT,
                     'length' => 255,
                     'comment' => 'Printformer Draft Id Copy for Reorder'
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.8.28', '<')) {
+            $printformerProductTable = $setup->getTable(self::TABLE_NAME_PRODUCT);
+            $connection->addColumn(
+                $printformerProductTable,
+                'updated_at',
+                [
+                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'size' => null,
+                    [
+                        'nullable' => false,
+                        'default' => DdlTable::TIMESTAMP_INIT
+                    ],
+                    'comment' => 'Update At'
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.8.40', '<')) {
+            $setup->getConnection()->addColumn(
+                $setup->getTable('sales_order_item'),
+                self::COLUMN_NAME_UPLOAD_PROCESSING_COUNT,
+                [
+                    'type' => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default' => '0',
+                    'comment' => 'Printformer Upload Processing Count'
                 ]
             );
         }
