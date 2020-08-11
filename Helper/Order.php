@@ -136,8 +136,9 @@ class Order extends Api
             if (isset($orderItem['order_id'])){
                 $order = $this->getOrderById($orderItem['order_id']);
                 $orderStatus = $order->getStatus();
-                if (!empty($orderStatus)){
-                    if ($orderStatus == $this->getPfOrderStatus()){
+                $validOrderStatus = $this->printformerConfig->getOrderStatus();
+                if (!empty($orderStatus) && !empty($validOrderStatus)){
+                    if (in_array($orderStatus, $validOrderStatus)){
                         return true;
                     }
                 }
@@ -148,106 +149,44 @@ class Order extends Api
     }
 
     /**
-     * @return ItemCollection
+     * @param $unprocessedOrderItem
+     * @return string|null
      */
-    public function getUnprocessedPrintformerOrderUploadItems()
+    public function loadPayLoadInformationByOrderIdAndUploadFile($unprocessedOrderItem)
     {
-        /**
-         * @var $collection ItemCollection
-         */
-        $collection = $this->itemCollectionFactory->create();
+        $orderItemId = $unprocessedOrderItem->getItemId();
+        $orderItem = $this->getOrderItemById($orderItemId);
+        $this->updateProcessingCountByOrderItem($orderItem);
 
-        $collection
-            ->addAttributeToSelect('*')
-            ->addFieldToFilter('main_table.printformer_ordered', 'eq' == '0')
-            ->addFieldToFilter('main_table.product_type', ['eq' => 'downloadable'])
-            ->join(
-                ['order' => $collection->getTable('sales_order')],
-                'order.entity_id = main_table.order_id',
-                []
-            )
-            ->setOrder(
-                'main_table.Updated_at',
-                'DESC'
-            );
-
-        return $collection;
-    }
-
-    /**
-     * @return ItemCollection
-     */
-    public function getUnprocessedPrintformerOrderItemDrafts()
-    {
-        /**
-         * @var $collection ItemCollection
-         */
-        $collection = $this->itemCollectionFactory->create();
-
-        $requiredOrderStatus = $this->getPfOrderStatus();
-
-        $collection
-            ->addAttributeToSelect('printformer_draftid')
-            ->addFieldToFilter('main_table.printformer_ordered', 'eq' == '0')
-            ->addFieldToFilter('main_table.printformer_draftid', ['neq' => 'NULL'])
-            ->addFieldToFilter('main_table.product_type', ['neq' => 'downloadable'])
-            ->addFieldToFilter('order.status', ['eq' => $requiredOrderStatus])
-            ->addFieldToFilter('pfdrafts.intent', ['neq' => 'upload'])
-            ->join(
-                ['order' => $collection->getTable('sales_order')],
-                'order.entity_id = main_table.order_id',
-                []
-            )
-            ->join(
-                ['pfdrafts' => $collection->getTable('printformer_draft')],
-                'pfdrafts.draft_id = main_table.printformer_draftid',
-                []
-            )
-            ->setOrder(
-                'main_table.updated_at',
-                'desc'
-            );
-
-        return $collection;
-    }
-
-    /**
-     * @param $orderId
-     * @param $orderItemId
-     * @return array|mixed|null
-     */
-    public function loadPayLoadInformationByOrderIdAndUploadFile($orderId, $orderItemId)
-    {
         $resultDraftHash = null;
         $currentDraftHash = null;
-        $orderItem = $this->getOrderItemById($orderItemId);
-        $productId = $orderItem->getProductId();
-        $product = $this->getProductById($productId);
+        $orderId = $unprocessedOrderItem->getOrderId();
+        $customerId = $unprocessedOrderItem->getCustomerId();
+        $storeId = $unprocessedOrderItem->getStoreId();
+        $printformerUserIdentifier = $unprocessedOrderItem->getData('printformer_identification');
+        $productId = $unprocessedOrderItem->getProductId();
+        $product = $this->productRepository->getById($productId);
         $filesTransferToPrintformer = $product->getCustomAttribute('files_transfer_to_printformer');
 
         if ($filesTransferToPrintformer) {
             //check if user has printformer_identifier and create one if not
-            $order = $this->getOrderById($orderId);
-            $customerId = $order->getCustomerId();
-            $customer = $this->getCustomerById($customerId);
-            $printformerUserIdentifier = $customer->getData('printformer_identification');
             if (!isset($printformerUserIdentifier)){
+                $customer = $this->getCustomerById($unprocessedOrderItem->getCustomerId());
                 $printformerUserIdentifier = $this->loadPrintformerIdentifierOnCustomer($customer);
             }
 
-            $printformerProductId = $this->getPrintformerProduct($productId);
-            $templateIdentifier = $this->getTemplateIdentifier($order);
+            $templateIdentifier = $this->getTemplateIdentifier($storeId); //$order->getStoreId()
 
             $draftProcess = $this->_draftFactory->create();
             $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('store_id', ['eq' => $order->getStoreId()])
+                ->addFieldToFilter('store_id', ['eq' => $storeId])
                 ->addFieldToFilter('product_id', ['eq' => $productId])
                 ->addFieldToFilter('customer_id', ['eq' => $customerId])
                 ->addFieldToFilter('order_item_id', ['eq' => $orderItemId])
                 ->addFieldToFilter('intent', ['eq' => self::API_UPLOAD_INTENT])
-                ->addFieldToFilter('printformer_product_id', ['eq' => $printformerProductId])
                 ->addFieldToFilter('user_identifier', ['eq' => $printformerUserIdentifier]);
             $currentDraft = $draftCollection->getFirstItem();
+
             if (!empty($currentDraft->getData())){
                 $currentDraftHash = $currentDraft['draft_id'];
             }
@@ -260,12 +199,12 @@ class Order extends Api
                     $productId,
                     null,
                     $customerId,
-                    $printformerProductId,
+                    null,
                     false,
                     $printformerUserIdentifier,
                     $templateIdentifier,
                     $orderId,
-                    $order->getStoreId(),
+                    $storeId,
                     $orderItemId
                 );
                 $draftHash = $draftProcess->getDraftId();
@@ -305,7 +244,6 @@ class Order extends Api
                 $resultDraftHash = $draftHash;
             }
         }
-        $this->updateProcessingCountByOrderItem($orderItem);
 
         return $resultDraftHash;
     }
@@ -355,16 +293,6 @@ class Order extends Api
     }
 
     /**
-     * @param $productId
-     * @return ProductInterface
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
-     */
-    public function getProductById($productId)
-    {
-        return $this->productRepository->getById($productId);
-    }
-
-    /**
      * @param $customerId
      * @return Customer
      */
@@ -374,32 +302,12 @@ class Order extends Api
     }
 
     /**
-     * @param $productId
-     * @return int|mixed
-     */
-    public function getPrintformerProduct($productId)
-    {
-        $printformerProductId = 0;
-        $connection = $this->product->getResource()->getConnection();
-        $select = $connection->select()
-            ->from('catalog_product_printformer_product')
-            ->where('product_id = ?', intval($productId));
-
-        $check = $connection->fetchAll($select);
-        if (!empty($check)){
-            $printformerProductId = $check[0]['printformer_product_id'];
-        }
-
-        return $printformerProductId;
-    }
-
-    /**
      * @param OrderInterface $order
      * @return int|mixed
      */
-    public function getTemplateIdentifier($order)
+    public function getTemplateIdentifier($storeId)
     {
-        $templateIdentifier = $this->scopeConfig->getValue('printformer/general/printformer_upload_template_id', ScopeInterface::SCOPE_STORES, $order->getStoreId());
+        $templateIdentifier = $this->scopeConfig->getValue('printformer/general/printformer_upload_template_id', ScopeInterface::SCOPE_STORES, $storeId);
         $defaultTemplateIdentifier = $this->scopeConfig->getValue('printformer/general/printformer_upload_template_id', ScopeInterface::SCOPE_STORES, 0);
         if (!isset($templateIdentifier) && isset($defaultTemplateIdentifier)){
             $templateIdentifier = $defaultTemplateIdentifier;
@@ -407,20 +315,6 @@ class Order extends Api
             $templateIdentifier = 0;
         }
         return $templateIdentifier;
-    }
-
-    /**
-     * @return string
-     */
-    private function getPfOrderStatus()
-    {
-        $pfRequiredOrderStatus = $this->printformerConfig->getOrderStatus();
-        if(!isset($pfRequiredOrderStatus)){
-            $pfRequiredOrderStatus = 'pending';
-        } else {
-            $pfRequiredOrderStatus = array_values($pfRequiredOrderStatus)[0];;
-        }
-        return $pfRequiredOrderStatus;
     }
 
     /**

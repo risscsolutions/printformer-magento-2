@@ -15,11 +15,13 @@ class Test extends Processing
     {
         $currentDateTime = date(self::DEFAULT_DB_FORMAT);
 
-        $toDateTime = strtotime('+120 minutes', strtotime($currentDateTime));
+        $toDateTime = strtotime('+300 minutes', strtotime($currentDateTime));
         $this->toDateTime = date(self::DEFAULT_DB_FORMAT, $toDateTime);
 
-        $fromDateTime = strtotime('+117 minutes', strtotime($currentDateTime));
+        $fromDateTime = strtotime('-300 minutes', strtotime($currentDateTime));
         $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
+
+        $this->validUploadProcessingCountSmallerThen = 1;
 
         return true;
     }
