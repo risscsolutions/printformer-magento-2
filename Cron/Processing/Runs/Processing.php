@@ -5,6 +5,9 @@ use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Order;
 use Rissc\Printformer\Helper\Api;
 use Magento\Sales\Model\ResourceModel\Order\Item\Collection as ItemCollection;
+use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollectionFactory;
+use Rissc\Printformer\Helper\Config as PrintformerConfig;
+
 
 /**
  * Class Processing
@@ -49,20 +52,36 @@ abstract class Processing
     protected $validUploadProcessingCountSmallerThen = 0;
 
     /**
+     * @var ItemCollection
+     */
+    private $itemCollectionFactory;
+
+    /**
+     * @var PrintformerConfig
+     */
+    private $printformerConfig;
+
+    /**
      * Processing constructor.
      * @param LoggerInterface $logger
      * @param Order $orderHelper
      * @param Api $api
+     * @param ItemCollectionFactory $itemCollectionFactory
+     * @param PrintformerConfig $printformerConfig
      */
     public function __construct(
         LoggerInterface $logger,
         Order $orderHelper,
-        Api $api
+        Api $api,
+        ItemCollectionFactory $itemCollectionFactory,
+        PrintformerConfig $printformerConfig
     )
     {
         $this->logger = $logger;
         $this->orderHelper = $orderHelper;
         $this->api = $api;
+        $this->itemCollectionFactory = $itemCollectionFactory;
+        $this->printformerConfig = $printformerConfig;
     }
 
     /**
@@ -78,21 +97,19 @@ abstract class Processing
             $this->logger->debug('--------------------------------with filters from:'.$this->fromDateTime.' to '.$this->toDateTime.'--------------------------------');
         }
 
-        $unprocessedOrderItemsCollection = $this->getUnprocessedPrintformerOrderUploadItemsCollection();
-        $this->uploadPrintformerOrderUploadItems($unprocessedOrderItemsCollection);
+        $this->uploadPrintformerOrderUploadItems();
+        $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsDrafts();
 
-        $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsCollection();
-        $draftIdsToProcess = $this->loadUnprocessedPrintformerOrderItemDrafts($unprocessedPrintformerOrderItemDraftsCollection);
-
-        if (!empty($draftIdsToProcess)){
-            foreach ($draftIdsToProcess as $draftId) {
-                $orderItem = $this->orderHelper->getOrderItemByDraftId($draftId);
-                $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
-
-                $draftToSync = [];
-                array_push($draftToSync, $draftId);
-                $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
-                $this->api->setAsyncOrdered($draftToSync);
+        if (!empty($unprocessedPrintformerOrderItemDraftsCollection)){
+            foreach ($unprocessedPrintformerOrderItemDraftsCollection as $orderItem) {
+                if(!empty($orderItem['draft_id'])){
+                    $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
+                    $draftId = $orderItem['draft_id'];
+                    $draftToSync = [];
+                    array_push($draftToSync, $draftId);
+                    $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
+                    $this->api->setAsyncOrdered($draftToSync);
+                }
             }
         } else {
             $this->logger->debug('--------------------------------no items with draft to process found-------------------------------');
@@ -111,72 +128,104 @@ abstract class Processing
      * @return ItemCollection
      */
     private function getUnprocessedPrintformerOrderUploadItemsCollection(){
-        $collection = $this->orderHelper->getUnprocessedPrintformerOrderUploadItems();
+        /**
+         * @var $collection ItemCollection
+         */
+        $collection = $this->itemCollectionFactory->create();
+
+        $collection
+            ->addAttributeToSelect('*')
+            ->addFieldToFilter('main_table.printformer_ordered', 'eq' == '0')
+            ->addFieldToFilter('main_table.product_type', ['eq' => 'downloadable'])
+            ->setOrder(
+                'main_table.Updated_at',
+                'DESC'
+            );
 
         if (isset($this->toDateTime, $this->fromDateTime)){
             $collection->addFieldToFilter('main_table.created_at', array('from'=>$this->fromDateTime, 'to'=>$this->toDateTime));
             $collection->addFieldToFilter('main_table.printformer_upload_processing_count', ['lt' => $this->validUploadProcessingCountSmallerThen]);
         }
 
-        $this->logger->debug('getUnprocessedPrintformerOrderUploadItemsCollection[sql]: '.$collection->getSelect()->assemble());
+        $collection->join(
+            ['order' => $collection->getTable('sales_order')],
+            'order.entity_id = main_table.order_id',
+            ['*']
+        );
+
+        $collection->getSelect()
+            ->joinLeft(
+                ['customer' => $collection->getTable('customer_entity')],
+                'customer.entity_id = order.customer_id',
+                ['*']
+            );
 
         return $collection;
     }
 
     /**
-     * Get unprocessed Printformer-Order-items with cron specific filter
+     * Get unprocessed Printformer-Upload-items with cron specific filter
      * @return ItemCollection
      */
-    protected function getUnprocessedPrintformerOrderItemsCollection(){
-        $collection = $this->orderHelper->getUnprocessedPrintformerOrderItemDrafts();
+    private function getUnprocessedPrintformerOrderItemsDrafts(){
+        /**
+         * @var $collection ItemCollection
+         */
+        $collection = $this->itemCollectionFactory->create();
+
+        $validOrderStatus = $this->printformerConfig->getOrderStatus();
+
+        $collection
+            ->addFieldToSelect('*')
+            ->addFieldToFilter('main_table.printformer_ordered', 'eq' == '0')
+            ->addFieldToFilter('main_table.product_type', ['neq' => 'downloadable'])
+            ->addFieldToFilter('pfdrafts.processing_id', ['null' => true])
+            ->addFieldToFilter('order.status', ['in' => $validOrderStatus])
+            ->setOrder(
+                'main_table.updated_at',
+                'desc'
+            );
 
         if (isset($this->toDateTime, $this->fromDateTime)) {
             $collection->addFieldToFilter('main_table.created_at', array('from' => $this->fromDateTime, 'to' => $this->toDateTime));
             $collection->addFieldToFilter('main_table.printformer_upload_processing_count', ['lt' => $this->validUploadProcessingCountSmallerThen]);
         }
 
-        $this->logger->debug('getUnprocessedPrintformerOrderItemsCollection[sql]: '.$collection->getSelect()->assemble());
+        $collection->getSelect()
+            ->join(
+            ['order' => $collection->getTable('sales_order')],
+            'order.entity_id = main_table.order_id',
+            ['*']
+        );
+
+        $collection->getSelect()
+            ->joinLeft(
+                ['pfdrafts' => $collection->getTable('printformer_draft')],
+                'pfdrafts.draft_id = main_table.printformer_draftid',
+                []
+            );
 
         return $collection;
-    }
-
-    /**
-     * @param $unprocessedPrintformerOrderItemDraftsCollection
-     * @return array
-     */
-    private function loadUnprocessedPrintformerOrderItemDrafts($unprocessedPrintformerOrderItemDraftsCollection)
-    {
-        $unprocessedPrintformerOrderItemDrafts = [];
-        if (isset($unprocessedPrintformerOrderItemDraftsCollection)){
-            $unprocessedPrintformerOrderItemDrafts = $unprocessedPrintformerOrderItemDraftsCollection->getData();
-            if (!empty($unprocessedPrintformerOrderItemDrafts)){
-                $unprocessedPrintformerOrderItemDrafts = array_map('current', $unprocessedPrintformerOrderItemDrafts);
-            }
-        }
-
-        return $unprocessedPrintformerOrderItemDrafts;
     }
 
     /**
      * @param $unprocessedOrderItemsCollection
      * @return array
      */
-    private function uploadPrintformerOrderUploadItems($unprocessedOrderItemsCollection)
+    private function uploadPrintformerOrderUploadItems()
     {
+        $unprocessedOrderItemsCollection = $this->getUnprocessedPrintformerOrderUploadItemsCollection();
+
         $uploadedItemsDrafts = [];
         if (isset($unprocessedOrderItemsCollection)){
-            $unprocessedOrderItemsCollectionItems = $unprocessedOrderItemsCollection->getItems();
-
-            foreach ($unprocessedOrderItemsCollectionItems as $unprocessedOrderItem) {
-                $itemId = $unprocessedOrderItem->getitemId();
-                $orderId = $unprocessedOrderItem->getOrderId();
+            foreach ($unprocessedOrderItemsCollection->getItems() as $unprocessedOrderItem) {
                 try {
-                    $resultDraftHash = $this->orderHelper->loadPayLoadInformationByOrderIdAndUploadFile($orderId, $itemId);
+                    $resultDraftHash = $this->orderHelper->loadPayLoadInformationByOrderIdAndUploadFile($unprocessedOrderItem);
                     if ($resultDraftHash) {
                         array_push($uploadedItemsDrafts, $resultDraftHash);
                     }
                 } catch (\Exception $e) {
-                    $this->logger->debug('Loading payload-information failed for item with item-id: '.$itemId.' and order-id'.$orderId);
+                    $this->logger->debug('Loading payload-information failed for item with item-id: '.$unprocessedOrderItem->getItemId().' and order-id'.$unprocessedOrderItem->getOrderId());
                 }
             }
         }
