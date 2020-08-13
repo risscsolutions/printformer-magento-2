@@ -96,9 +96,6 @@ class OrderResourceModel
                 }
             }
 
-            //todo: check if this setting is here required: (important for other shops)
-            //$this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()
-            //todo: other question, is it needed to check this option then also to install this specific crons or not?
             if (!empty($orderItems)){
                 $orderItemIds = implode(',', $orderItems);
                 $this->external->setOrderItemIdsToFilter($orderItemIds);
