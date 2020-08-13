@@ -208,7 +208,7 @@ class Order extends Api
                     $orderItemId
                 );
                 $draftHash = $draftProcess->getDraftId();
-                if ($draftProcess->getProcessingStatus() == 1) {
+                if (isset($draftHash)) {
                     $orderItem->setPrintformerOrdered(1);
                     if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE && isset($draftHash)) {
                         $links = $product->getTypeInstance()->getLinks($product);
