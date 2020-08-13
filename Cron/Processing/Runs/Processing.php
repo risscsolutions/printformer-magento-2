@@ -37,14 +37,19 @@ abstract class Processing
     protected $api;
 
     /**
-     * @var false|string
+     * @var null|string
      */
     protected $toDateTime = null;
 
     /**
-     * @var false|int
+     * @var null|int
      */
     protected $fromDateTime = null;
+
+    /**
+     * @var null|int
+     */
+    protected $orderItemIdsToFilter = null;
 
     /**
      * @var int
@@ -98,12 +103,14 @@ abstract class Processing
         }
 
         $this->uploadPrintformerOrderUploadItems();
-        $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsDrafts();
 
+        $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsDrafts();
         if (!empty($unprocessedPrintformerOrderItemDraftsCollection)){
             foreach ($unprocessedPrintformerOrderItemDraftsCollection as $orderItem) {
                 if(!empty($orderItem['draft_id'])){
-                    $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
+                    if (empty($this->orderItemIdsToFilter)){
+                        $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
+                    }
                     $draftId = $orderItem['draft_id'];
                     $draftToSync = [];
                     array_push($draftToSync, $draftId);
@@ -145,6 +152,10 @@ abstract class Processing
         if (isset($this->toDateTime, $this->fromDateTime)){
             $collection->addFieldToFilter('main_table.created_at', array('from'=>$this->fromDateTime, 'to'=>$this->toDateTime));
             $collection->addFieldToFilter('main_table.printformer_upload_processing_count', ['lt' => $this->validUploadProcessingCountSmallerThen]);
+        }
+
+        if (isset($this->orderItemIdsToFilter)){
+            $collection->addFieldToFilter('main_table.item_id', ['in' => $this->orderItemIdsToFilter]);
         }
 
         $collection->join(
@@ -212,7 +223,7 @@ abstract class Processing
      * @param $unprocessedOrderItemsCollection
      * @return array
      */
-    private function uploadPrintformerOrderUploadItems()
+    protected function uploadPrintformerOrderUploadItems()
     {
         $unprocessedOrderItemsCollection = $this->getUnprocessedPrintformerOrderUploadItemsCollection();
 
@@ -235,7 +246,7 @@ abstract class Processing
     /**
      * Reset all previous used filters
      */
-    private function resetProcessingFilters()
+    protected function resetProcessingFilters()
     {
         $this->toDateTime = null;
         $this->fromDateTime = null;

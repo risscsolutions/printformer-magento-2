@@ -425,12 +425,19 @@ class Api extends AbstractHelper
                         'callbackURL' => $callBackUrlWithQueryString
                     ]
                 ];
-                $response = $this->getHttpClient()->post($apiUrl, $options);
 
-                if ($response->getStatusCode() === 204){
-                    return true;
-                } else {
-                    return false;
+                try {
+                    $response = $this->getHttpClient()->post($apiUrl, $options);
+                    if ($response->getStatusCode() === 204){
+                        $this->_logger->debug('Upload status code: 204'.'for upload with draft id: '.$draftId);
+                        return true;
+                    } else {
+                        $this->_logger->debug('Upload status code: '.$response->getStatusCode().'for upload with draft id: '.$draftId);
+                        return false;
+                    }
+                } catch (\Exception $e) {
+                    $this->_logger->debug('Upload failed for draft with draft-id: '.$draftId.' on file path order-id'.$filePathUrl.' for callback url: '.$callBackUrlWithQueryString);
+                    $this->_logger->debug('Upload error message: '.$e->getMessage());
                 }
             } else {
                 return false;
