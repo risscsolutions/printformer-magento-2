@@ -77,7 +77,7 @@ class OrderResourceModel
         try {
             $draftIds = [];
             $orderItems = [];
-            $orderId = $orderModel->getId();
+            $incrementOrderId = $orderModel->getIncrementId();
             foreach ($orderModel->getAllItems() as $item) {
                 if($item->getProductType() == 'downloadable'){
                     array_push($orderItems, $item->getId());
@@ -96,7 +96,7 @@ class OrderResourceModel
                         ->save();
 
                     if ($this->config->getOrderDraftUpdate() && $orderModel->getStatus() == $this::STATE_PENDING){
-                        $this->api->updateDraftHash($draftId, $orderId);
+                        $this->api->updateDraftHash($draftId, $incrementOrderId);
                     }
 
                     $draftIds[] = $draftId;
