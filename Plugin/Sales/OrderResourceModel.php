@@ -15,7 +15,7 @@ use Rissc\Printformer\Cron\Processing\Runs\External;
 
 class OrderResourceModel
 {
-    const STATE_PENDING = 'Pending';
+    const STATE_PENDING = 'pending';
 
     /**
      * @var Api
