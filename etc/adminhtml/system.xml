@@ -30,7 +30,7 @@
                     </depends>
                 </field>
                 <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Please enter update-order-identifier</label>
+                    <label>Please enter update-order-identifier (for order-increment-id)</label>
                     <can_be_empty>0</can_be_empty>
                     <validate>required-entry</validate>
                     <depends>
