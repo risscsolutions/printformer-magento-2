@@ -16,6 +16,8 @@
                 <product_image_thumbnail_width>150</product_image_thumbnail_width>
                 <product_image_thumbnail_height>150</product_image_thumbnail_height>
                 <order_status>pending</order_status>
+                <draft_update>0</draft_update>
+                <draft_update_order_id>pf-ca-orderid</draft_update_order_id>
                 <delete_confirm_text><![CDATA[Should the draft get deleted?]]></delete_confirm_text>
                 <redirect_on_cancel>1</redirect_on_cancel>
             </general>

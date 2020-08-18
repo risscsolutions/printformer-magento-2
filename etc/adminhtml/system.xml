@@ -22,6 +22,21 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="draft_update" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Update draft after order save</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Please enter update-order-identifier</label>
+                    <can_be_empty>0</can_be_empty>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="draft_update">1</field>
+                    </depends>
+                </field>
                 <field id="redirect_after_config" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Redirect After Configuration</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\Redirect</source_model>

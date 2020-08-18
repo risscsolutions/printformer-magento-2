@@ -15,6 +15,8 @@ use Rissc\Printformer\Cron\Processing\Runs\External;
 
 class OrderResourceModel
 {
+    const STATE_PENDING = 'Pending';
+
     /**
      * @var Api
      */
@@ -75,6 +77,7 @@ class OrderResourceModel
         try {
             $draftIds = [];
             $orderItems = [];
+            $orderId = $orderModel->getId();
             foreach ($orderModel->getAllItems() as $item) {
                 if($item->getProductType() == 'downloadable'){
                     array_push($orderItems, $item->getId());
@@ -91,6 +94,10 @@ class OrderResourceModel
                         ->load($draftId, 'draft_id')
                         ->setOrderItemId($item->getId())
                         ->save();
+
+                    if ($this->config->getOrderDraftUpdate() && $orderModel->getStatus() == $this::STATE_PENDING){
+                        $this->api->updateDraftHash($draftId, $orderId);
+                    }
 
                     $draftIds[] = $draftId;
                 }

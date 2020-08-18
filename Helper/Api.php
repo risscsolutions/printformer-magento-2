@@ -386,6 +386,36 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @param $draftHash
+     * @param $orderId
+     * @return mixed
+     */
+    public function updateDraftHash($draftHash, $orderId)
+    {
+        $url = $this->_urlHelper
+            ->setStoreId($this->_storeManager->getStore()->getId())
+            ->getDraftUpdate($draftHash);
+
+        $options = [
+            'json' => [
+                'customAttributes' => [
+                    $this->_config->getOrderDraftUpdateOrderId() => $orderId
+                ]
+            ]
+        ];
+
+        $response = $this->getHttpClient()->put($url, $options);
+        $response = json_decode($response->getBody(), true);
+        if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
+            $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+        } else {
+            $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+        }
+
+        return $response['data']['draftHash'];
+    }
+
+    /**
      * @param $draftId
      * @param $downloadableLinkFilePath
      * @return bool

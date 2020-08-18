@@ -19,6 +19,8 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_SECRET                    = 'printformer/general/secret_word';
     const XML_PATH_CONFIG_LOCALE                    = 'printformer/general/locale';
     const XML_PATH_CONFIG_STATUS                    = 'printformer/general/order_status';
+    const XML_PATH_CONFIG_DRAFT_UPDATE              = 'printformer/general/draft_update';
+    const XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID     = 'printformer/general/draft_update_order_id';
     const XML_PATH_CONFIG_DISPLAY_MODE              = 'printformer/general/display_mode';
     const XML_PATH_CONFIG_FRAME_FULLSCREEN          = 'printformer/general/frame_fullscreen';
 
@@ -229,6 +231,30 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         ));
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrderDraftUpdate()
+    {
+        return intval($this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_DRAFT_UPDATE,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        ));
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOrderDraftUpdateOrderId()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        );
     }
 
     /**

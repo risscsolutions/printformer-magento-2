@@ -31,7 +31,6 @@ class V1 extends AbstractHelper implements VersionInterface
     const URI_CUSTOMER_CREATE_DRAFT     = 'some/path/on/server';
     const URI_CUSTOMER_AUTH             = 'auth';
     const URI_REPLICATE_DRAFT           = 'api-ext/draft/{draftId}/replicate';
-    const URI_UPLOAD_DRAFT              = 'api-ext/draft/{draftId}/upload';
 
     /** @var Config*/
     protected $config;
@@ -366,15 +365,6 @@ class V1 extends AbstractHelper implements VersionInterface
     public function getReplicateDraftId($oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::URI_REPLICATE_DRAFT);
-    }
-
-    /**
-     * @param $draftId
-     * @return string
-     */
-    public function getUploadDraftId($draftId)
-    {
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftId, self::URI_UPLOAD_DRAFT);
     }
 
     /**
