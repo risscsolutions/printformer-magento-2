@@ -166,57 +166,65 @@ class Order extends Api
         $printformerUserIdentifier = $unprocessedOrderItem->getData('printformer_identification');
         $productId = $unprocessedOrderItem->getProductId();
         $product = $this->productRepository->getById($productId);
-        $filesTransferToPrintformer = $product->getCustomAttribute('files_transfer_to_printformer');
+        $filesTransferToPrintformer = $product->getCustomAttribute('files_transfer_to_printformer')->getValue();
 
-        if ($filesTransferToPrintformer) {
+        if ($filesTransferToPrintformer == 1) {
             //check if user has printformer_identifier and create one if not
-            if (!isset($printformerUserIdentifier)){
-                $customer = $this->getCustomerById($unprocessedOrderItem->getCustomerId());
-                $printformerUserIdentifier = $this->loadPrintformerIdentifierOnCustomer($customer);
+            if (!isset($printformerUserIdentifier) && !empty($customerId)){
+                $customer = $this->getCustomerById($customerId);
+                if (!empty($customer)){
+                    $printformerUserIdentifier = $this->loadPrintformerIdentifierOnCustomer($customer);
+                }
             }
 
-            $templateIdentifier = $this->getTemplateIdentifier($storeId); //$order->getStoreId()
+            if (isset($printformerUserIdentifier)) {
+                $templateIdentifier = $this->getTemplateIdentifier($storeId); //$order->getStoreId()
 
-            //start upload process and get draft from process
-            try {
-                if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE) {
-                    $links = $product->getTypeInstance()->getLinks($product);
+                //start upload process and get draft from process
+                try {
+                    if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE) {
+                        $links = $product->getTypeInstance()->getLinks($product);
 
-                    /**
-                     * Upload all link-files of product, if some product upload failes, clear result to not process the
-                     * corresponding draft
-                     *
-                     * @var Link $link
-                     */
-                    foreach ($links as $link) {
-                        $linkFile = $link->getLinkFile();
-                        if ($link->getId() && $linkFile) {
-                            $draftProcess = $this->uploadDraftProcess(
-                                null,
-                                0,
-                                $productId,
-                                null,
-                                $customerId,
-                                null,
-                                false,
-                                $printformerUserIdentifier,
-                                $templateIdentifier,
-                                $orderId,
-                                $storeId,
-                                $orderItemId
-                            );
-                            $draftHash = $draftProcess->getDraftId();
+                        /**
+                         * Upload all link-files of product, if some product upload failes, clear result to not process the
+                         * corresponding draft
+                         *
+                         * @var Link $link
+                         */
+                        foreach ($links as $link) {
+                            $linkFile = $link->getLinkFile();
+                            if ($link->getId() && $linkFile) {
+                                $draftProcess = $this->uploadDraftProcess(
+                                    null,
+                                    0,
+                                    $productId,
+                                    null,
+                                    $customerId,
+                                    null,
+                                    false,
+                                    $printformerUserIdentifier,
+                                    $templateIdentifier,
+                                    $orderId,
+                                    $storeId,
+                                    $orderItemId
+                                );
+                                $draftHash = $draftProcess->getDraftId();
 
-                            if (isset($draftHash)) {
-                                $this->uploadPdf($draftHash, $linkFile);
+                                if (isset($draftHash)) {
+                                    $this->uploadPdf($draftHash, $linkFile);
+                                }
                             }
                         }
                     }
+                } catch (\Exception $e) {
+                    $this->_logger->debug('Upload failed for item with item-id: ' . $orderItemId . ' and order-id' . $orderId . ' with template identifier: ' . $templateIdentifier);
+                    $this->_logger->debug($e->getMessage());
                 }
-            } catch (\Exception $e) {
-                $this->_logger->debug('Upload failed for item with item-id: '.$orderItemId.' and order-id'.$orderId.' with template identifier: '.$templateIdentifier);
-                $this->_logger->debug($e->getMessage());
+            } else {
+                $this->_logger->debug('user identifier not found');
             }
+        } else {
+            $this->_logger->debug('cannot upload item cause of files_transfer_to_printformer-config-value on item');
         }
 
         return $resultDraftHash;
