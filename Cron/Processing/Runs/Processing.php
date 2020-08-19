@@ -168,7 +168,7 @@ abstract class Processing
             ->joinLeft(
                 ['customer' => $collection->getTable('customer_entity')],
                 'customer.entity_id = order.customer_id',
-                ['*']
+                ['customer.entity_id', 'customer.printformer_identification']
             );
 
         return $collection;

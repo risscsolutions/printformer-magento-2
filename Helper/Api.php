@@ -610,7 +610,8 @@ class Api extends AbstractHelper
         $templateIdentifier = null,
         $orderId = null,
         $storeId = null,
-        $orderItemId = null
+        $orderItemId = null,
+        $orderIncrementId = null
     ) {
         $process = $this->getDraftProcess($draftHash, $productId, self::API_UPLOAD_INTENT, $sessionUniqueId);
         if(!$process->getId() && !$checkOnly) {
@@ -619,13 +620,17 @@ class Api extends AbstractHelper
                     'intent' => self::API_UPLOAD_INTENT
                 ];
 
+                if ($this->_config->getOrderDraftUpdate() && !empty($orderIncrementId)) {
+                    $dataParams['customAttributes'] = [
+                        $this->_config->getOrderDraftUpdateOrderId() => $orderIncrementId
+                    ];
+                }
+
                 $additionalUploadDataParams = [
-                    'customerAttributes' => [
-                        'pf-ca-orderid' => $orderId
-                    ],
                     'templateIdentifier' => $templateIdentifier,
                     'user_identifier' => $printformerUserIdentifier
                 ];
+
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
                 $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $dataParams);
 
