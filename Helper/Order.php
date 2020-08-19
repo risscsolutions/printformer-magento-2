@@ -161,6 +161,7 @@ class Order extends Api
         $resultDraftHash = null;
         $currentDraftHash = null;
         $orderId = $unprocessedOrderItem->getOrderId();
+        $orderIncrementId = $unprocessedOrderItem->getIncrementId();
         $customerId = $unprocessedOrderItem->getCustomerId();
         $storeId = $unprocessedOrderItem->getStoreId();
         $printformerUserIdentifier = $unprocessedOrderItem->getData('printformer_identification');
@@ -206,7 +207,8 @@ class Order extends Api
                                     $templateIdentifier,
                                     $orderId,
                                     $storeId,
-                                    $orderItemId
+                                    $orderItemId,
+                                    $orderIncrementId
                                 );
                                 $draftHash = $draftProcess->getDraftId();
 
