@@ -17,9 +17,9 @@ class External extends Processing
     }
 
     /**
-     * @param int|null $orderItemIdsToFilter
+     * @param string $orderItemIdsToFilter
      */
-    public function setOrderItemIdsToFilter(?int $orderItemIdsToFilter): void
+    public function setOrderItemIdsToFilter($orderItemIdsToFilter)
     {
         $this->orderItemIdsToFilter = $orderItemIdsToFilter;
     }
