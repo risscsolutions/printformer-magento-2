@@ -188,9 +188,8 @@ abstract class Processing
 
         $collection
             ->addFieldToSelect('*')
-            ->addFieldToFilter('main_table.printformer_ordered', 'eq' == '0')
-            ->addFieldToFilter('main_table.product_type', ['neq' => 'downloadable'])
-            ->addFieldToFilter('pfdrafts.processing_id', ['null' => true])
+            ->addFieldToFilter('pfdrafts.intent', ['neq' => 'upload'])
+            ->addFieldToFilter('pfdrafts.processing_id', 'eq' == '')
             ->addFieldToFilter('order.status', ['in' => $validOrderStatus])
             ->setOrder(
                 'main_table.updated_at',
