@@ -764,7 +764,7 @@ class Api extends AbstractHelper
         if(!empty($response)) {
             $responseArray = json_decode($response->getBody(), true);
             $processingHash = !empty($responseArray['processingId']) ? $responseArray['processingId'] : null;
-            if($processingHash !== null) {
+            if(!empty($processingHash)) {
                 $draftIdsToProcessSuccess = [];
                 $draftIdsToProcessFailed = [];
 
