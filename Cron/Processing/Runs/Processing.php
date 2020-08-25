@@ -105,15 +105,15 @@ abstract class Processing
         $this->uploadPrintformerOrderUploadItems();
 
         $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsDrafts();
-        if (!empty($unprocessedPrintformerOrderItemDraftsCollection)){
-            foreach ($unprocessedPrintformerOrderItemDraftsCollection as $orderItem) {
-                if(!empty($orderItem['draft_id'])){
+        if (!empty($unprocessedPrintformerOrderItemDraftsCollection->getItems())){
+            foreach ($unprocessedPrintformerOrderItemDraftsCollection->getItems() as $orderItem) {
+                if(!empty($orderItem['printformer_draftid'])){
+                    $draftId = $orderItem['printformer_draftid'];
+                    $draftToSync = [];
+                    array_push($draftToSync, $draftId);
                     if (empty($this->orderItemIdsToFilter)){
                         $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
                     }
-                    $draftId = $orderItem['draft_id'];
-                    $draftToSync = [];
-                    array_push($draftToSync, $draftId);
                     $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
                     $this->api->setAsyncOrdered($draftToSync);
                 }
