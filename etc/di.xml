@@ -16,6 +16,8 @@
                 type="Magento\Framework\Api\SearchResults" />
     <preference for="Magento\Checkout\Block\Cart\Item\Renderer"
                 type="Rissc\Printformer\Block\Checkout\Cart\Renderer" />
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\TemplateInterface"
+                type="Rissc\Printformer\Model\Api\Webservice\Service\Template"/>
 
     <!-- Plugins -->
     <type name="Magento\Catalog\Block\Product\View\Gallery">
