@@ -74,33 +74,35 @@ class Plugin
     {
         if ($this->_registry->registry('printformer_is_reorder')) {
             $this->_registry->unregister('printformer_is_reorder');
-            $oldDraftId = $buyRequest['printformer_draftid'];
-            $newDraftId = $this->_apiHelper->getReplicateDraftId($oldDraftId);
-            $draftProcess = null;
+            if (!empty($buyRequest['printformer_draftid'])) {
+                $oldDraftId = $buyRequest['printformer_draftid'];
+                $newDraftId = $this->_apiHelper->getReplicateDraftId($oldDraftId);
+                $draftProcess = null;
 
-            /** @var Draft $draftProcess */
-            $draftProcess = $this->_apiHelper->draftProcess($oldDraftId);
-            if ($draftProcess->getId()) {
-                /** @var Draft $newDraftProcess */
-                $newDraftProcess = $this->_draftFactory->create();
-                $draftData = $draftProcess->getData();
-                unset($draftData['id']);
-                unset($draftData['created_at']);
-                unset($draftData['order_item_id']);
-                unset($draftData['processing_id']);
-                $draftData['processing_status'] = 0;
-                $newDraftProcess->addData($draftData);
+                /** @var Draft $draftProcess */
+                $draftProcess = $this->_apiHelper->draftProcess($oldDraftId);
+                if ($draftProcess->getId()) {
+                    /** @var Draft $newDraftProcess */
+                    $newDraftProcess = $this->_draftFactory->create();
+                    $draftData = $draftProcess->getData();
+                    unset($draftData['id']);
+                    unset($draftData['created_at']);
+                    unset($draftData['order_item_id']);
+                    unset($draftData['processing_id']);
+                    $draftData['processing_status'] = 0;
+                    $newDraftProcess->addData($draftData);
 
-                $newDraftProcess->setDraftId($newDraftId);
-                $newDraftProcess->setCopyFrom($oldDraftId);
+                    $newDraftProcess->setDraftId($newDraftId);
+                    $newDraftProcess->setCopyFrom($oldDraftId);
 
-                $this->_draftResource->save($newDraftProcess);
+                    $this->_draftResource->save($newDraftProcess);
 
-                $buyRequest->setData('printformer_draftid', $newDraftId);
-                $relations = $buyRequest->getData('draft_hash_relations');
-                if (!empty($relations[$draftProcess->getPrintformerProductId()])) {
-                    $relations[$draftProcess->getPrintformerProductId()] = $newDraftId;
-                    $buyRequest->setData('draft_hash_relations', $relations);
+                    $buyRequest->setData('printformer_draftid', $newDraftId);
+                    $relations = $buyRequest->getData('draft_hash_relations');
+                    if (!empty($relations[$draftProcess->getPrintformerProductId()])) {
+                        $relations[$draftProcess->getPrintformerProductId()] = $newDraftId;
+                        $buyRequest->setData('draft_hash_relations', $relations);
+                    }
                 }
             }
         }
