@@ -45,7 +45,7 @@
                 <settings>
                     <options class="Magento\Store\Ui\Component\Listing\Column\Store\Options"/>
                     <caption translate="true">All Store Views</caption>
-                    <label translate="true">Purchase Point</label>
+                    <label translate="true">Store</label>
                     <dataScope>store_id</dataScope>
                     <imports>
                         <link name="visible">ns = ${ $.ns }, componentType = column, index = ${ $.index }:visible</link>
@@ -87,7 +87,7 @@
         </column>
         <column name="store_id" class="Magento\Store\Ui\Component\Listing\Column\Store">
             <settings>
-                <label translate="true">Purchase Point</label>
+                <label translate="true">Store</label>
                 <bodyTmpl>ui/grid/cells/html</bodyTmpl>
                 <sortable>false</sortable>
             </settings>
