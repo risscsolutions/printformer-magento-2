@@ -10,7 +10,6 @@
             <block name="printformer_editor_shopframe"
                    class="Rissc\Printformer\Block\Editor\Shopframe"
                    template="Rissc_Printformer::editor/shopframe.phtml"
-                   cacheable="false"
             />
         </referenceContainer>
         <referenceContainer name="page.bottom.container" remove="true"/>
