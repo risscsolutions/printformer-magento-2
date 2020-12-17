@@ -1,5 +1,5 @@
 # Rissc_Printformer
-Magento 2 and Rissc-Printformer
+Magento 2 and Rissc Printformer
 
 Installation
 
