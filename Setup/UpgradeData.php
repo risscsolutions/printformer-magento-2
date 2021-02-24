@@ -7,9 +7,9 @@ use Magento\Customer\Model\Customer;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
-use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\UpgradeDataInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
 
 class UpgradeData implements UpgradeDataInterface
@@ -354,6 +354,36 @@ class UpgradeData implements UpgradeDataInterface
                     'required' => true,
                     'user_defined' => false,
                     'default' => '',
+                    'searchable' => false,
+                    'filterable' => false,
+                    'comparable' => false,
+                    'visible_on_front' => false,
+                    'unique' => false,
+                    'apply_to' => 'downloadable',
+                    'used_in_product_listing' => true
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.8.54', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->removeAttribute(\Magento\Catalog\Model\Product::ENTITY, 'files_transfer_to_printformer');
+            $eavSetup->addAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'files_transfer_to_printformer',
+                [
+                    'type' => 'int',
+                    'backend' => '',
+                    'frontend' => '',
+                    'label' => 'Transfer Downloadable Files to printformer',
+                    'input' => 'text',
+                    'class' => '',
+                    'source' => '',
+                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'visible' => false,
+                    'required' => true,
+                    'user_defined' => false,
+                    'default' => 0,
                     'searchable' => false,
                     'filterable' => false,
                     'comparable' => false,
