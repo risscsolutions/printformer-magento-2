@@ -160,12 +160,12 @@ class Api extends AbstractHelper
     {
         if (!isset($this->_httpClients[$this->getStoreId()])) {
             $this->_httpClients[$this->getStoreId()] = new Client([
-                'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->_config->setStoreId($this->getStoreId())->getClientApiKey(),
-                ]
-            ]);
+                                                                      'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
+                                                                      'headers' => [
+                                                                          'Accept' => 'application/json',
+                                                                          'Authorization' => 'Bearer ' . $this->_config->setStoreId($this->getStoreId())->getClientApiKey(),
+                                                                      ]
+                                                                  ]);
         }
 
         return $this->_httpClients[$this->getStoreId()];
@@ -441,7 +441,7 @@ class Api extends AbstractHelper
             $baseUrl = $this->getStoreManager()->getStore()->getBaseUrl();
             $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUploadDraftId($draftId);
 
-            $filePathUrl = $baseUrl.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
+            $filePathUrl = $baseUrl.DirectoryList::PUB.DIRECTORY_SEPARATOR.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
             $callBackUrl = $this->getUploadCallbackUrl($draftId);
             $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
 
@@ -598,16 +598,16 @@ class Api extends AbstractHelper
             }
 
             $process->addData([
-                'draft_id' => $draftHash,
-                'store_id' => $store->getId(),
-                'intent' => $intent,
-                'session_unique_id' => $sessionUniqueId,
-                'product_id' => $productId,
-                'customer_id' => $customerId,
-                'user_identifier' => $this->getUserIdentifier(),
-                'created_at' => time(),
-                'printformer_product_id' => $printformerProductId
-            ]);
+                                  'draft_id' => $draftHash,
+                                  'store_id' => $store->getId(),
+                                  'intent' => $intent,
+                                  'session_unique_id' => $sessionUniqueId,
+                                  'product_id' => $productId,
+                                  'customer_id' => $customerId,
+                                  'user_identifier' => $this->getUserIdentifier(),
+                                  'created_at' => time(),
+                                  'printformer_product_id' => $printformerProductId
+                              ]);
             $process->getResource()->save($process);
         }
 
@@ -665,17 +665,17 @@ class Api extends AbstractHelper
                 $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $dataParams);
 
                 $process->addData([
-                    'draft_id' => $draftHash,
-                    'store_id' => $storeId,
-                    'intent' => self::API_UPLOAD_INTENT,
-                    'session_unique_id' => $sessionUniqueId,
-                    'product_id' => $productId,
-                    'customer_id' => $customerId,
-                    'user_identifier' => $printformerUserIdentifier,
-                    'created_at' => time(),
-                    'printformer_product_id' => $printformerProductId,
-                    'order_item_id' => $orderItemId
-                ]);
+                                      'draft_id' => $draftHash,
+                                      'store_id' => $storeId,
+                                      'intent' => self::API_UPLOAD_INTENT,
+                                      'session_unique_id' => $sessionUniqueId,
+                                      'product_id' => $productId,
+                                      'customer_id' => $customerId,
+                                      'user_identifier' => $printformerUserIdentifier,
+                                      'created_at' => time(),
+                                      'printformer_product_id' => $printformerProductId,
+                                      'order_item_id' => $orderItemId
+                                  ]);
                 $process->getResource()->save($process);
             }
         }
@@ -845,11 +845,11 @@ class Api extends AbstractHelper
     public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
         $httpClient = new Client([
-            'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
-            'headers' => [
-                'Accept' => 'application/json'
-            ]
-        ]);
+                                     'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
+                                     'headers' => [
+                                         'Accept' => 'application/json'
+                                     ]
+                                 ]);
 
         $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash, 0);
 
@@ -932,7 +932,7 @@ class Api extends AbstractHelper
         ];
 
         return json_decode($this->getHttpClient()->post($this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() .
-            '/api-ext/draft/claim', $postFields)->getBody(), true);
+                                                        '/api-ext/draft/claim', $postFields)->getBody(), true);
     }
 
     /**
@@ -950,7 +950,7 @@ class Api extends AbstractHelper
         ];
 
         return json_decode($this->getHttpClient()->post($this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() . '/api-ext/user/' .
-            $userIdentifierOne . '/merge', $postFields)->getBody(), true);
+                                                        $userIdentifierOne . '/merge', $postFields)->getBody(), true);
     }
 
     /**
