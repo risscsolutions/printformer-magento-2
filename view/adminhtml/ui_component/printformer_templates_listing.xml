@@ -33,6 +33,11 @@
         </dataProvider>
     </dataSource>
     <listingToolbar name="listing_top">
+        <settings>
+            <statefull>
+                <property name="applied" xsi:type="boolean">false</property>
+            </statefull>
+        </settings>
         <filters name="listing_filters">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
@@ -52,11 +57,6 @@
                     </imports>
                 </settings>
             </filterSelect>
-            <settings>
-                <statefull>
-                    <property name="applied" xsi:type="boolean">false</property>
-                </statefull>
-            </settings>
         </filters>
         <paging name="listing_paging"/>
     </listingToolbar>
