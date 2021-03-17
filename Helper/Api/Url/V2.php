@@ -30,11 +30,15 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_FILES_DRAFT_PDF           = '/api-ext/files/draft/{draftId}/print';
     const API_FILES_DRAFT_PREVIEW       = '/api-ext/files/draft/{draftId}/low-res';
     const API_FILES_DERIVATE_FILE       = '/api-ext/files/derivative/{fileId}/file';
+    const API_FILE                      = '/api-ext/file';
 
     const EXT_EDITOR_PATH               = '/editor';
     const EXT_AUTH_PATH                 = '/auth';
 
     const API_GET_USER                  = '/api-ext/user/{userId}';
+
+    const API_PRODUCT_FEED              = '/api-ext/product-feed';
+
 
     /** Pageplanning START */
     const API_DRAFT_SETUP               = '/api-ext/draft-setup';
@@ -564,4 +568,21 @@ class V2 extends AbstractHelper implements VersionInterface
         return $this->getPrintformerBaseUrl() .
             str_replace('{userId}', $identifier, self::API_GET_USER);
     }
+
+    /**
+     * @return string
+     */
+    public function getUploadFileUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_FILE;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProductFeedUrl()
+    {
+        return $this->getPrintformerBaseUrl() . self::API_PRODUCT_FEED;
+    }
+
 }

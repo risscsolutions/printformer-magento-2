@@ -367,4 +367,15 @@ class Url extends AbstractHelper implements VersionInterface
     {
         return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUserData($identifier);
     }
+
+    public function getUploadFileUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUploadFileUrl();
+    }
+
+    public function getProductFeedUrl()
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getProductFeedUrl();
+    }
+
 }
