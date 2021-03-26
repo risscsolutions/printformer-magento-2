@@ -10,6 +10,7 @@ use Magento\Checkout\Model\Cart;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Quote\Model\Quote;
 use Magento\Wishlist\Model\Item;
@@ -268,15 +269,30 @@ class Printformer extends AbstractView
     }
 
     /**
+     * @param null $productId
+     * @param null $storeId
      * @return array
      */
-    public function getCatalogProductPrintformerProducts()
+    public function getCatalogProductPrintformerProducts($productId = null, $storeId = null): array
     {
-        return $this->printformerProductHelper
-            ->getCatalogProductPrintformerProducts(
-                $this->getProduct()->getId(),
-                $this->_storeManager->getStore()->getId()
-            );
+        $result = [];
+        if (!isset($productId, $storeId)){
+            $result = $this->printformerProductHelper
+                ->getCatalogProductPrintformerProducts(
+                    $productId,
+                    $storeId
+                );
+        } else {
+            try {
+                $result = $this->printformerProductHelper
+                    ->getCatalogProductPrintformerProducts(
+                        $this->getProduct()->getId(),
+                        $this->_storeManager->getStore()->getId()
+                    );
+            } catch (NoSuchEntityException $e) {
+            }
+        }
+        return $result;
     }
 
     /**

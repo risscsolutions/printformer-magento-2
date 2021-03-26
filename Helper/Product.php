@@ -137,12 +137,11 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param     $productId
+     * @param $productId
      * @param int $storeId
-     *
      * @return array
      */
-    public function getCatalogProductPrintformerProducts($productId, $storeId = 0)
+    public function getCatalogProductPrintformerProducts($productId, $storeId = 0): array
     {
         $catalogProductPrintformerProducts = [];
 
