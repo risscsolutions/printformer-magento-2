@@ -4,9 +4,9 @@ $block->cleanupDraftSession();
 ?>
 
 <?php if($block->getProduct()->isSalable()): ?>
-    <?php foreach($block->getCatalogProductPrintformerProducts() as $_catalogProductPrintformerProduct): ?>
+    <div class="printformer-actions box-tocart">
+    <?php foreach($block->getCatalogProductPrintformerProducts($block->getProduct()->getId(), $block->getProduct()->getStoreId()) as $_catalogProductPrintformerProduct): ?>
         <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
-        <div class="printformer-actions box-tocart">
             <button id="printformer-button-<?php echo $_printformerProduct->getId() ?>"
                     type="button"
                     data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
@@ -14,11 +14,7 @@ $block->cleanupDraftSession();
                     data-pf-intent="<?php echo $_printformerProduct->getIntent(); ?>"
                     class="printformer-preselect action primary tocart printformer-button <?php echo $block->getButtonCss($_catalogProductPrintformerProduct) ?>"
                     disabled="disabled">
-                <?php if($_printformerProduct->getIntent() == 'upload' || $_printformerProduct->getIntent() == 'upload-and-editor'): ?>
-                    <span><?php echo __('Upload') ?></span>
-                <?php else: ?>
                     <span><?php echo __($block->getButtonText()) ?></span>
-                <?php endif; ?>
             </button>
             <?php if ($block->canShowDeleteButton()): ?>
                 <button id="printformer-delete-<?php echo $_printformerProduct->getId() ?>"
@@ -31,8 +27,8 @@ $block->cleanupDraftSession();
                     <p><?php echo __($block->getDeleteConfirmText()); ?></p>
                 </div>
             <?php endif; ?>
-        </div>
     <?php endforeach; ?>
+    </div>
 
     <div id="printformer-editor-main" title="<?php echo $block->getProduct()->getName() ?>">
     </div>
