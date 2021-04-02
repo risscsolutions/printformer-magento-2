@@ -149,6 +149,11 @@ class Product
 
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
         $apiKey = $this->configHelper->getClientApiKey($storeId);
+
+        if (empty($apiKey) || empty($this->configHelper->isV2Enabled($storeId))) {
+            throw new Exception(__('You need to select a website to synchronize your templates.'));
+        }
+
         $request = new HttpClient([
             'base_url' => $url,
             'headers' => [
