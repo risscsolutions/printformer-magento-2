@@ -99,43 +99,45 @@ class View
      */
     public function _getEditorUrl($quoteItem)
     {
+        $editorUrls = [];
         $buyRequest = $quoteItem->getBuyRequest();
         $product = $quoteItem->getProduct();
         $product->getResource()->load($product, $product->getId());
 
-        $draftHashes = explode(',', $buyRequest->getData('printformer_draftid'));
+        if (!empty($buyRequest->getData('printformer_draftid'))){
+            $draftHashes = explode(',', $buyRequest->getData('printformer_draftid'));
 
-        $editorUrls = [];
-        foreach($draftHashes as $draftHash) {
-            $draftProcess = $this->_apiHelper->draftProcess($draftHash);
-            $editorUrl = $this->_urlHelper->getEditorEntry(
-                $draftProcess->getProductId(),
-                $product->getPrintformerProduct(),
-                $draftProcess->getDraftId(),
-                null,
-                $draftProcess->getIntent()
-            );
-
-            $request = $this->_request;
-            $route = $request->getModuleName() . '/' .
-                $request->getControllerName() . '/' .
-                $request->getActionName();
-
-            if ($this->_appState->getAreaCode() == Area::AREA_ADMINHTML) {
-                $referrerUrl = $this->_backendUrl->getUrl(
-                    $route,
-                    ['order_id' => $request->getParam('order_id')]
+            foreach($draftHashes as $draftHash) {
+                $draftProcess = $this->_apiHelper->draftProcess($draftHash);
+                $editorUrl = $this->_urlHelper->getEditorEntry(
+                    $draftProcess->getProductId(),
+                    $product->getPrintformerProduct(),
+                    $draftProcess->getDraftId(),
+                    null,
+                    $draftProcess->getIntent()
                 );
-            } else {
-                $referrerUrl = $this->_urlBuilder->getUrl(
-                    $route,
-                    ['quote_id' => $request->getParam('quote_id')]
-                );
+
+                $request = $this->_request;
+                $route = $request->getModuleName() . '/' .
+                    $request->getControllerName() . '/' .
+                    $request->getActionName();
+
+                if ($this->_appState->getAreaCode() == Area::AREA_ADMINHTML) {
+                    $referrerUrl = $this->_backendUrl->getUrl(
+                        $route,
+                        ['order_id' => $request->getParam('order_id')]
+                    );
+                } else {
+                    $referrerUrl = $this->_urlBuilder->getUrl(
+                        $route,
+                        ['quote_id' => $request->getParam('quote_id')]
+                    );
+                }
+
+                $editorUrls[] = ['url' => $editorUrl .
+                    (strpos($editorUrl, '?') ? '&amp;' : '?') .
+                    'custom_referrer=' . urlencode($referrerUrl), 'hash' => $draftProcess->getDraftId()];
             }
-
-            $editorUrls[] = ['url' => $editorUrl .
-                (strpos($editorUrl, '?') ? '&amp;' : '?') .
-                'custom_referrer=' . urlencode($referrerUrl), 'hash' => $draftProcess->getDraftId()];
         }
 
         return $editorUrls;

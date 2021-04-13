@@ -202,7 +202,6 @@ class Save extends Action
         } catch (\Exception $e) {
             $this->_logger->critical($e);
             //@todo show some message to customer?
-            throw new Exception(__($e->getMessage()));
         }
 
         return $result;
