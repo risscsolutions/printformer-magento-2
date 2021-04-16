@@ -9,6 +9,8 @@ use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\DataObject;
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
@@ -565,15 +567,17 @@ class Api extends AbstractHelper
 
     /**
      * @param string $draftHash
-     * @param int    $masterId
-     * @param int    $productId
+     * @param int $masterId
+     * @param int $productId
      * @param string $intent
      * @param string $sessionUniqueId
-     * @param int    $customerId
-     * @param int    $printformerProductId
-     *
-     * @return Draft
-     * @throws Exception
+     * @param int $customerId
+     * @param int $printformerProductId
+     * @param false $checkOnly
+     * @param string $colorVariation
+     * @param array $availableVariants
+     * @return DataObject|Draft
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function draftProcess(
         $draftHash = null,
@@ -583,7 +587,9 @@ class Api extends AbstractHelper
         $sessionUniqueId = null,
         $customerId = null,
         $printformerProductId = null,
-        $checkOnly = false
+        $checkOnly = false,
+        $colorVariation = null,
+        $availableVariants = []
     ) {
         $store = $this->_storeManager->getStore();
 
@@ -593,22 +599,69 @@ class Api extends AbstractHelper
                 'intent' => $intent
             ];
 
-            if (!$draftHash) {
-                $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+            if (!empty($availableVariants)){
+                $dataParams['availableVariantVersions'] = $availableVariants;
+                $process->addData([
+                    'available_variants' => implode(",", $availableVariants)
+                ]);
             }
 
-            $process->addData([
-                                  'draft_id' => $draftHash,
-                                  'store_id' => $store->getId(),
-                                  'intent' => $intent,
-                                  'session_unique_id' => $sessionUniqueId,
-                                  'product_id' => $productId,
-                                  'customer_id' => $customerId,
-                                  'user_identifier' => $this->getUserIdentifier(),
-                                  'created_at' => time(),
-                                  'printformer_product_id' => $printformerProductId
-                              ]);
-            $process->getResource()->save($process);
+            if (!$draftHash) {
+                try {
+                    $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+                } catch (AlreadyExistsException $e) {
+                    $this->_logger->critical('Failed to create draft');
+                }
+            }
+
+            try {
+                $process->addData([
+                    'draft_id' => $draftHash,
+                    'store_id' => $store->getId(),
+                    'intent' => $intent,
+                    'session_unique_id' => $sessionUniqueId,
+                    'product_id' => $productId,
+                    'customer_id' => $customerId,
+                    'user_identifier' => $this->getUserIdentifier(),
+                    'created_at' => time(),
+                    'printformer_product_id' => $printformerProductId,
+                    'color_variation' => $colorVariation
+                ]);
+                $process->getResource()->save($process);
+            } catch (AlreadyExistsException $e) {
+                $this->_logger->critical('Failed to save draft');
+            }
+        }
+
+        return $process;
+    }
+
+    /**
+     * @param null $draftHash
+     * @param null $productId
+     * @param null $intent
+     * @param null $sessionUniqueId
+     * @param null $colorVariation
+     * @return DataObject|Draft|null
+     */
+    public function updateColorVariationOnProcess(
+        $draftHash = null,
+        $productId = null,
+        $intent = null,
+        $sessionUniqueId = null,
+        $colorVariation = null
+    ) {
+        $process = null;
+        try {
+            $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
+            if($process->getId()) {
+                $process->addData([
+                    'color_variation' => $colorVariation
+                ]);
+                $process->getResource()->save($process);
+            }
+        } catch (Exception $e) {
+            $this->_logger->critical('Failed to update current colorVariation');
         }
 
         return $process;
@@ -626,7 +679,7 @@ class Api extends AbstractHelper
      * @param null $templateIdentifier
      * @param null $orderId
      * @param null $storeId
-     * @return \Magento\Framework\DataObject|Draft
+     * @return DataObject|Draft
      */
     public function uploadDraftProcess(
         $draftHash = null,
@@ -690,7 +743,7 @@ class Api extends AbstractHelper
      * @param string $sessionUniqueId
      * @param int    $printformerProductId
      *
-     * @return \Magento\Framework\DataObject|Draft
+     * @return DataObject|Draft
      * @throws Exception
      */
     protected function getDraftProcess(

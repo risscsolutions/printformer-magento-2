@@ -532,6 +532,39 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if(version_compare($context->getVersion(), '100.8.58', '<')) {
+            $printformerProductTable = $setup->getTable(self::TABLE_NAME_DRAFT);
+            $connection->addColumn(
+                $printformerProductTable,
+                'updated_at',
+                [
+                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'size' => null,
+                    [
+                        'nullable' => false,
+                        'default' => DdlTable::TIMESTAMP_INIT_UPDATE
+                    ],
+                    'comment' => 'Update At'
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.8.59', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_DRAFT);
+            $columnName = 'available_variants';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_TEXT,
+                        'length' => 255,
+                        'comment' => 'Available variant-versions shown in printformer color-selection'
+                    ]
+                );
+            }
+        }
+
         $setup->endSetup();
     }
 }
