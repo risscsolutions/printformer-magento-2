@@ -276,7 +276,7 @@ class Printformer extends AbstractView
     public function getCatalogProductPrintformerProducts($productId = null, $storeId = null): array
     {
         $result = [];
-        if (!isset($productId, $storeId)){
+        if (isset($productId, $storeId)){
             $result = $this->printformerProductHelper
                 ->getCatalogProductPrintformerProducts(
                     $productId,
