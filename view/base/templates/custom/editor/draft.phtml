@@ -1,0 +1,18 @@
+<?php
+/** @var $block \Rissc\Printformer\Block\Custom\Editor\Link */
+
+$quoteItem = $block->getQuoteItem();
+$product = $block->getProduct();
+$editorLink = $block->getEditorOpenLink();
+$printformerBlock = $block->getPrintformerBlock();
+$draftHash = $block->getDraftHash();
+$isOrdered = $block->isOrdered($quoteItem, $draftHash);
+
+$quoteItemId = $quoteItem->getId();
+?>
+<br />
+
+<dl class="item-options">
+    <dt>Draft Id:</dt>
+    <dd><?= /* @escapeNotVerified */ $block->getData('draft_hash'); ?></dd>
+</dl>

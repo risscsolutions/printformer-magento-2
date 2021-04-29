@@ -64,7 +64,13 @@ class View
         /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $printFormerBlock */
         $printFormerBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Catalog\Product\View\Printformer');
 
-        $editors = $this->_getEditorUrl($quoteItem);
+        $buyRequest = $quoteItem->getBuyRequest();
+        $quoteProduct = $quoteItem->getProduct();
+        $quoteProduct->getResource()->load($quoteProduct, $product->getId());
+
+        $editors = $this->_getEditorUrl($quoteProduct, $buyRequest);
+        $draftHashes = explode(',', $quoteItem->getData('printformer_draftid'));
+
         $viewHtml = '';
         if (is_array($editors)) {
             $counter = 0;
@@ -87,6 +93,26 @@ class View
             }
         }
 
+        if (!empty($draftHashes)){
+            $counter = 0;
+            foreach($draftHashes as $draftHash) {
+                /** @var \Rissc\Printformer\Block\Custom\Editor\Link $viewBlock */
+                $viewBlock = $block->getLayout()->createBlock('Rissc\Printformer\Block\Custom\Editor\Link');
+                $viewBlock->setTemplate('Rissc_Printformer::custom/editor/draft.phtml');
+                $viewBlock->setName('editor.data.item_' . $counter);
+                $viewBlock->addData([
+                    'quote_item' => $quoteItem,
+                    'product' => $product,
+                    'printformer_block' => $printFormerBlock,
+                    'draft_hash' => $draftHash,
+                    'pos_counter' => $counter + 1
+                ]);
+
+                $viewHtml .= $viewBlock->toHtml();
+                $counter++;
+            }
+        }
+
         return $viewHtml;
     }
 
@@ -97,12 +123,9 @@ class View
      * @throws \Exception
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function _getEditorUrl($quoteItem)
+    public function _getEditorUrl($product, $buyRequest)
     {
         $editorUrls = [];
-        $buyRequest = $quoteItem->getBuyRequest();
-        $product = $quoteItem->getProduct();
-        $product->getResource()->load($product, $product->getId());
 
         if (!empty($buyRequest->getData('printformer_draftid'))){
             $draftHashes = explode(',', $buyRequest->getData('printformer_draftid'));
