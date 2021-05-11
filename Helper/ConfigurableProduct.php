@@ -141,10 +141,13 @@ class ConfigurableProduct extends AbstractHelper
     /**
      * Get all available children of configurable product with attributesInfo(preselection), excluding color-attribute
      * and applying all required filters
+     *
+     * if products are available without printformer_color_variation id then return true to simply exlude the return
+     * array in implemented method
      * @param $attributesInfo
      * @param $product
      * @param $storeId
-     * @return array
+     * @return array | boolean
      */
     public function getAllAvailableChildrenByConfigurable($attributesInfo, $product, $storeId): array
     {
@@ -159,7 +162,6 @@ class ConfigurableProduct extends AbstractHelper
         }
 
         $productCollection->addAttributeToSelect('*');
-        $productCollection->addFieldToFilter('printformer_color_variation', ['neq' => '']);
         $productCollection->addAttributeToFilter('status',\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED);
 
         $productCollection->getSelect()->joinLeft(
@@ -223,12 +225,28 @@ class ConfigurableProduct extends AbstractHelper
         }
 
         //prepare printformer_color_variation-ids of collection
-        $availableVariants = [];
-        $productsData = $productCollection->getData();
-        foreach ($productsData as $productData){
-            $availableVariants[] = $productData['printformer_color_variation'];
+        $productsDataWithoutVariationIdFilter = $productCollection->getData();
+        $resultAvailableVariants = [];
+
+        if (!empty($productsDataWithoutVariationIdFilter)) {
+            $productCollection->addFieldToFilter('printformer_color_variation', ['neq' => '']);
+            //overwrite with filter if products are available *current $productsData not empty
+            //Todo:reset collection data????
+            $productCollection->resetData();
+            $productsDataWithVariationIdFilter = $productCollection->getData();
+
+
+            foreach ($productsDataWithVariationIdFilter as $productData){
+                $resultAvailableVariants[] = $productData['printformer_color_variation'];
+            }
+
+            if(empty($resultAvailableVariants)){
+                $resultAvailableVariants = true;
+            }
+        } else {
+            $resultAvailableVariants = false;
         }
 
-        return $availableVariants;
+        return $resultAvailableVariants;
     }
 }
