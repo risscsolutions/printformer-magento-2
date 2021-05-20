@@ -149,7 +149,7 @@ class ConfigurableProduct extends AbstractHelper
      * @param $storeId
      * @return array | boolean
      */
-    public function getAllAvailableChildrenByConfigurable($attributesInfo, $product, $storeId): array
+    public function getAllAvailableChildrenByConfigurable($attributesInfo, $product, $storeId)
     {
         $this->configurable->getProductByAttributes($attributesInfo, $product);
 

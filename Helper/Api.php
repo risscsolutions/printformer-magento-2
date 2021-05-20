@@ -599,7 +599,7 @@ class Api extends AbstractHelper
                 'intent' => $intent
             ];
 
-            if (!empty($availableVariants)){
+            if (!empty($availableVariants) && is_array($availableVariants)){
                 $dataParams['availableVariantVersions'] = $availableVariants;
                 $process->addData([
                     'available_variants' => implode(",", $availableVariants)
