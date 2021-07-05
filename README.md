@@ -3,22 +3,14 @@ Magento 2 and Rissc Printformer
 
 Installation
 
-1. Add module repository to composer.json in magento root
+1. Add module into app/code with corresponding namespace
 
-    ```PHP
-    "repositories": [
-        {
-            "type": "git",
-            "url": "git@bitbucket.org:risscstuttgart/rissc_printformer.git"
-        }
-    ],
+2. Make sure to require dependencies into composer.json: (compare composer.json's) 
+    ```
+      "guzzlehttp/guzzle": "6.4.1",
+      "lcobucci/jwt": "3.3.1"
     ```
 
-2. Execute in Terminal:
-    ```PHP
-    ./composer.phar require rissc/module-printformer -o
-    ```
+(you can verify it in the vendor-folder or in the composer.lock file)
 
-4. Run `php bin/magento module:enable Rissc_Printformer`
-5. Run `php bin/magento setup:upgrade`
-6. Run `php bin/magento cache:flush`
+3. Enable module "Rissc_Printformer" and run magento compilation steps / deployments
