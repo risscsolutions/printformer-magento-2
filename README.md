@@ -1,3 +1,10 @@
+# Git Tags für Composer
+Composer braucht ein v als Versionsprefix, ansonsten sieht er das Package als unstable an
+
+Bad: 100.8.99
+Good: v100.8.99
+
+
 # Rissc_Printformer
 Magento 2 and Rissc Printformer
 
