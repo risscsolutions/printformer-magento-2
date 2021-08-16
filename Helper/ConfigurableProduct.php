@@ -168,7 +168,6 @@ class ConfigurableProduct extends AbstractHelper
             array('_store' => $productCollection->getResource()->getTable('catalog_product_website')),
             "_store.product_id = e.entity_id and _store.website_id=$storeId"
         );
-        $productCollection->getSelect()->where('_store.website_id='.$storeId);
 
         //outcomment next line to test without individual stock entry's (cataloginventory_stock_status.website_id != 0)
         $defaultInventoryId = 0;
