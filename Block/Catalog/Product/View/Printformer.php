@@ -832,7 +832,7 @@ class Printformer extends AbstractView
 
         $catalogSession = $this->sessionHelper->getCatalogSession();
         $preselectData = $catalogSession->getSavedPrintformerOptions();
-        if ($product->getId() != $preselectData['product']) {
+        if (!isset($preselectData['product']) || $product->getId() != $preselectData['product']) {
             $preselectData = [];
         }
         if (!empty($preselectData) || $this->isOnConfigurePDS()) {
