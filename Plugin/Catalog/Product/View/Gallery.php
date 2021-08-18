@@ -115,26 +115,22 @@ class Gallery
                 if ($this->config->isV2Enabled()) {
                     $printformerDraft = $this->getPrintformerDraft($draftId);
                     $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
-
+                    $result->removeAllItems();
                     for ($i = 0; $i < $pages; $i++) {
                         try {
                             $imagePreviewUrl = $this->getImagePreviewUrl(($i + 1), $draftId);
                             $imagePreviewFilePath = $this->getImagePreviewFilePath(($i + 1), $draftId);
-                            $itemExists = $result->getItemById($i + $j);
-                            if ($itemExists){
-                                $result->removeItemByKey($i + $j);
-                            }
                             $result->addItem(new \Magento\Framework\DataObject([
-                                'id' => $i + $j,
-                                'small_image_url' => $imagePreviewUrl,
-                                'medium_image_url' => $imagePreviewUrl,
-                                'large_image_url' => $imagePreviewUrl,
-                                'is_main_image' => ($i + $j == 0),
-                                'file' => $imagePreviewFilePath,
-                                'position' => 1,
-                                'label' => 'Image Printformer',
-                                'disabled' => 0,
-                                'media_type' => 'image'
+                               'id' => $i + $j,
+                               'small_image_url' => $imagePreviewUrl,
+                               'medium_image_url' => $imagePreviewUrl,
+                               'large_image_url' => $imagePreviewUrl,
+                               'is_main_image' => ($i + $j == 0),
+                               'file' => $imagePreviewFilePath,
+                               'position' => 1,
+                               'label' => 'Image Printformer',
+                               'disabled' => 0,
+                               'media_type' => 'image'
                             ]));
                         } catch (\Exception $e) {
                             $this->logger->error($e->getMessage());
@@ -145,6 +141,7 @@ class Gallery
                     try {
                         $imagePreviewUrl = $this->getImagePreviewUrl(($i + 1), $draftId);
                         $imagePreviewFilePath = $this->getImagePreviewFilePath(($i + 1), $draftId);
+                        $result->removeAllItems();
                         $result->addItem(new \Magento\Framework\DataObject([
                             'id' => 0,
                             'small_image_url' => $imagePreviewUrl,
