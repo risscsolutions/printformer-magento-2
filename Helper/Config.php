@@ -60,8 +60,6 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_COLOR_OPTION_NAME         = 'printformer/color/option_name';
     const XML_PATH_CONFIG_COLOR_OPTION_VALUES       = 'printformer/color/option_values';
 
-    const XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE     = 'printformer/general/processing_type';
-
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
 
     /**
