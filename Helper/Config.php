@@ -9,7 +9,6 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Config extends AbstractHelper
 {
-    const XML_PATH_V2_ENABLED                       = 'printformer/version2group/version2';
     const XML_PATH_V2_API_KEY                       = 'printformer/version2group/v2apiKey';
     const XML_PATH_V2_IDENTIFIER                    = 'printformer/version2group/v2identifier';
 
@@ -60,8 +59,6 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_COLOR_OPTION_ENABLED      = 'printformer/color/option_enabled';
     const XML_PATH_CONFIG_COLOR_OPTION_NAME         = 'printformer/color/option_name';
     const XML_PATH_CONFIG_COLOR_OPTION_VALUES       = 'printformer/color/option_values';
-
-    const XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE     = 'printformer/general/processing_type';
 
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
 
@@ -639,35 +636,6 @@ class Config extends AbstractHelper
             $this->getStoreId()
         );
         return unserialize($value);
-    }
-
-    /**
-     * @return string
-     */
-    public function getProcessingType()
-    {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
-    }
-
-    /**
-     * @param int $storeId
-     * @return bool
-     */
-    public function isV2Enabled($storeId = null)
-    {
-        if ($storeId === null) {
-            $storeId = $this->getStoreId();
-        }
-
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_V2_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $storeId
-        );
     }
 
     /**

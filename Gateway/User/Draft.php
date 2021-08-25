@@ -81,11 +81,6 @@ class Draft
      */
     protected $userIdentifier = null;
 
-    /**
-     * @var
-     */
-    protected $v2enabled = null;
-
     protected $mediaHelper;
 
     /**
@@ -132,19 +127,8 @@ class Draft
         $this->_httpClient = $this->getGuzzleClient();
         $this->mediaHelper = $mediaHelper;
 
-        $this->_urlHelper->initVersionHelper($this->isV2Enabled());
+        $this->_urlHelper->initVersionHelper();
         $this->_config = $config;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isV2Enabled()
-    {
-        if ($this->v2enabled === null) {
-            $this->v2enabled = ($this->_scopeConfig->getValue('printformer/version2group/version2', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) == 1);
-        }
-        return $this->v2enabled;
     }
 
     /**
@@ -268,9 +252,8 @@ class Draft
             'Content-Type:' => 'application/json',
             'Accept' => 'application/json'
         ];
-        if ($this->isV2Enabled()) {
-            $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
-        }
+        $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
+
         return new Client([
             'base_uri' => $url,
             'headers' => $header,
@@ -325,16 +308,8 @@ class Draft
      */
     public function createDraft($masterId, $intent = null, $userIdentifier = null)
     {
-        $url      = null;
-        $response = null;
-
         $historyData = [
             'direction' => 'outgoing'
-        ];
-
-        $headers = [
-            "X-Magento-Tags-Pattern: .*",
-            "Content-Type: application/json"
         ];
 
         $postFields = [
@@ -343,9 +318,7 @@ class Draft
             ]
         ];
 
-        if ($this->isV2Enabled()) {
-            $postFields['json']['user_identifier'] = $this->getUserIdentifier();
-        }
+        $postFields['json']['user_identifier'] = $this->getUserIdentifier();
 
         if ($intent !== null) {
             $postFields['intent'] = $this->getIntent($intent);
@@ -357,10 +330,6 @@ class Draft
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraft();
-
-        if ($this->isV2Enabled()) {
-            $header['Authorization'] = 'Bearer' . $this->getClientApiKey();
-        }
 
         $response = $this->_httpClient->post($url, $postFields);
         $response = json_decode($response->getBody(), true);

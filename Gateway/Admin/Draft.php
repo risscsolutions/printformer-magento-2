@@ -16,9 +16,6 @@ class Draft
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
 
-    const DRAFT_PROCESSING_TYPE_SYNC    = 'sync';
-    const DRAFT_PROCESSING_TYPE_ASYNC   = 'async';
-
     /**
      * @var LoggerInterface
      */
@@ -75,22 +72,6 @@ class Draft
     }
 
     /**
-     * @return array
-     */
-    public function toOptionArray()
-    {
-        return [['value' => 'sync', 'label' => __('Synchron')], ['value' => 'async', 'label' => __('Asynchron')]];
-    }
-
-    /**
-     * @return array
-     */
-    public function toArray()
-    {
-        return ['sync' => __('Synchron'), 'async' => __('Asynchron')];
-    }
-
-    /**
      * @param \Magento\Sales\Api\Data\OrderInterface $order
      * @return $this
      * @throws \Rissc\Printformer\Gateway\Exception
@@ -121,9 +102,9 @@ class Draft
                 ->getDraftProcessing($draftIds, $order->getQuoteId());
 
             $historyData['request_data'] = json_encode([
-                $draftIds,
-                md5($order->getQuoteId())
-            ]);
+                                                           $draftIds,
+                                                           md5($order->getQuoteId())
+                                                       ]);
             $historyData['api_url'] = $url;
             $historyData['draft_id'] = implode(', ', $draftIds);
 

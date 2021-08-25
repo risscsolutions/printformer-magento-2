@@ -112,48 +112,25 @@ class Gallery
         $j = 0;
         foreach($draftIds as $draftId) {
             if ($this->getImagePreviewUrl(1, $draftId)) {
-                if ($this->config->isV2Enabled()) {
-                    $printformerDraft = $this->getPrintformerDraft($draftId);
-                    $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
-                    $result->removeAllItems();
-                    for ($i = 0; $i < $pages; $i++) {
-                        try {
-                            $imagePreviewUrl = $this->getImagePreviewUrl(($i + 1), $draftId);
-                            $imagePreviewFilePath = $this->getImagePreviewFilePath(($i + 1), $draftId);
-                            $result->addItem(new \Magento\Framework\DataObject([
-                               'id' => $i + $j,
-                               'small_image_url' => $imagePreviewUrl,
-                               'medium_image_url' => $imagePreviewUrl,
-                               'large_image_url' => $imagePreviewUrl,
-                               'is_main_image' => ($i + $j == 0),
-                               'file' => $imagePreviewFilePath,
-                               'position' => 1,
-                               'label' => 'Image Printformer',
-                               'disabled' => 0,
-                               'media_type' => 'image'
-                            ]));
-                        } catch (\Exception $e) {
-                            $this->logger->error($e->getMessage());
-                            $this->logger->error($e->getTraceAsString());
-                        }
-                    }
-                } else {
+                $printformerDraft = $this->getPrintformerDraft($draftId);
+                $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
+                $result->removeAllItems();
+                for ($i = 0; $i < $pages; $i++) {
                     try {
                         $imagePreviewUrl = $this->getImagePreviewUrl(($i + 1), $draftId);
                         $imagePreviewFilePath = $this->getImagePreviewFilePath(($i + 1), $draftId);
-                        $result->removeAllItems();
                         $result->addItem(new \Magento\Framework\DataObject([
-                            'id' => 0,
-                            'small_image_url' => $imagePreviewUrl,
-                            'medium_image_url' => $imagePreviewUrl,
-                            'large_image_url' => $imagePreviewUrl,
-                            'is_main_image' => true,
-                            'file' => $imagePreviewFilePath,
-                            'position' => 1,
-                            'label' => 'Image Printformer',
-                            'disabled' => 0,
-                            'media_type' => 'image'
-                        ]));
+                                                                               'id' => $i + $j,
+                                                                               'small_image_url' => $imagePreviewUrl,
+                                                                               'medium_image_url' => $imagePreviewUrl,
+                                                                               'large_image_url' => $imagePreviewUrl,
+                                                                               'is_main_image' => ($i + $j == 0),
+                                                                               'file' => $imagePreviewFilePath,
+                                                                               'position' => 1,
+                                                                               'label' => 'Image Printformer',
+                                                                               'disabled' => 0,
+                                                                               'media_type' => 'image'
+                                                                           ]));
                     } catch (\Exception $e) {
                         $this->logger->error($e->getMessage());
                         $this->logger->error($e->getTraceAsString());
@@ -205,56 +182,52 @@ class Gallery
     {
         $url = null;
         if ($this->config->isUseImagePreview() && $draftId) {
-            if($this->config->isV2Enabled()) {
-                try {
-                    if (!isset($this->draftImageCreated[$draftId.$page])) {
-                        $jpgImg = $this->printformerApi->getThumbnail(
-                            $draftId,
-                            $this->printformerApi->getUserIdentifier(),
-                            $this->config->getImagePreviewWidth(),
-                            $this->config->getImagePreviewHeight(),
-                            $page
-                        );
+            try {
+                if (!isset($this->draftImageCreated[$draftId.$page])) {
+                    $jpgImg = $this->printformerApi->getThumbnail(
+                        $draftId,
+                        $this->printformerApi->getUserIdentifier(),
+                        $this->config->getImagePreviewWidth(),
+                        $this->config->getImagePreviewHeight(),
+                        $page
+                    );
 
-                        $printformerImage = $jpgImg['content'];
+                    $printformerImage = $jpgImg['content'];
 
-                        $imageFilePath = $this->mediaHelper->getImageFilePath($draftId, $page);
+                    $imageFilePath = $this->mediaHelper->getImageFilePath($draftId, $page);
 
-                        $image = imagecreatefromstring($printformerImage);
+                    $image = imagecreatefromstring($printformerImage);
 
-                        $width = imagesx($image);
-                        $height = imagesy($image);
+                    $width = imagesx($image);
+                    $height = imagesy($image);
 
-                        $out = imagecreatetruecolor($width, $height);
-                        imagealphablending($out, false);
-                        $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
-                        imagefill($out, 0, 0, $transparentindex);
-                        imagesavealpha($out, true);
+                    $out = imagecreatetruecolor($width, $height);
+                    imagealphablending($out, false);
+                    $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
+                    imagefill($out, 0, 0, $transparentindex);
+                    imagesavealpha($out, true);
 
-                        imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
-                        imagepng($out, $imageFilePath);
+                    imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
+                    imagepng($out, $imageFilePath);
 
-                        $this->eventManager->dispatch('printformer_image_preview_create', [
-                            'printformer_image' => $printformerImage,
-                            'original_image' => $image,
-                            'width' => $width,
-                            'height' => $height,
-                            'final_image' => $out,
-                            'image_path' => $imageFilePath
-                        ]);
+                    $this->eventManager->dispatch('printformer_image_preview_create', [
+                        'printformer_image' => $printformerImage,
+                        'original_image' => $image,
+                        'width' => $width,
+                        'height' => $height,
+                        'final_image' => $out,
+                        'image_path' => $imageFilePath
+                    ]);
 
-                        imagedestroy($image);
+                    imagedestroy($image);
 
-                        $this->draftImageCreated[$draftId.$page] = true;
-                    }
-
-                    $url = $this->mediaHelper->getImageUrl($draftId, $page,false, 0);
-                } catch (\Exception $e) {
-                    $this->logger->error($e->getMessage());
-                    $this->logger->error($e->getTraceAsString());
+                    $this->draftImageCreated[$draftId.$page] = true;
                 }
-            } else {
-                $url = $this->urlHelper->getThumbnail($draftId, 0);
+
+                $url = $this->mediaHelper->getImageUrl($draftId, $page,false, 0);
+            } catch (\Exception $e) {
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
             }
         }
         return $url;

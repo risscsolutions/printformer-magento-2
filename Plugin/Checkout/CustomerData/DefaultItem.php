@@ -52,14 +52,10 @@ class DefaultItem
         $result = $proceed($item);
         $draftId = explode(',', $item->getPrintformerDraftid())[0];
         if ($draftId && $this->configHelper->isUseImagePreview()) {
-            if($this->configHelper->isV2Enabled()) {
-                if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
-                    $this->mediaHelper->createThumbnail($draftId);
-                }
-                $result['product_image']['src'] = $this->mediaHelper->getImageUrl($draftId, 1, true);
-            } else {
-                $result['product_image']['src'] = $this->urlHelper->getThumbnail($draftId);
+            if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
+                $this->mediaHelper->createThumbnail($draftId);
             }
+            $result['product_image']['src'] = $this->mediaHelper->getImageUrl($draftId, 1, true);
         }
         return $result;
     }
