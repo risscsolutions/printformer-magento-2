@@ -197,26 +197,14 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->_getUrl('printformer/editor/open', $paramsArray);
     }
 
-    public function getDraftEditorUrl($draftId, $v2 = false)
+    public function getDraftEditorUrl($draftId)
     {
-        if($v2) {
-            $urlParts = array(
-                $this->getPrintformerUrl(),
-                self::URI_USER_DRAFTEDITOR,
-                $draftId
-            );
-        } else {
-            $urlParts = array(
-                $this->getHost(),
-                self::URI_USER_DRAFTEDITOR,
-                $draftId
-            );
+        $urlParts = array(
+            $this->getPrintformerUrl(),
+            self::URI_USER_DRAFTEDITOR,
+            $draftId
+        );
 
-            $authParams = [
-                $this->getApikeyParamName() . '=' . $this->getApikey(),
-                $this->getAuthkeyParamName() . '=' . $this->getAuthkey(self::ROLE_ADMIN),
-            ];
-        }
         return implode('/', $urlParts) . (!empty($authParams) ? '?' . implode('&', $authParams) : '');
     }
 

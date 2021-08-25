@@ -108,12 +108,7 @@ class MassResend extends AbstractController
                 return $this->_redirect('*/*/index');
             }
 
-            if ($this->_config->getProcessingType() == GatewayDraft::DRAFT_PROCESSING_TYPE_SYNC &&
-                !$this->_config->isV2Enabled()) {
-                $this->_printformerDraft->setDraftOrdered($order);
-            } else {
-                $this->_apiHelper->setAsyncOrdered(array_unique($draftIds));
-            }
+            $this->_apiHelper->setAsyncOrdered(array_unique($draftIds));
 
             $this->messageManager->addSuccessMessage(__('Drafts have been resend to processing.'));
             return $this->_redirect('*/*/index');

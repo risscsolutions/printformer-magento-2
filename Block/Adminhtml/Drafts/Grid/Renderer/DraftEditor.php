@@ -102,14 +102,7 @@ class DraftEditor extends AbstractRenderer
                 'callback_url' => $referrerUrl
             ]
         ];
-        if(!$referrerUrl) {
-            $referrerUrl = $this->_url->getUrl('printformer/drafts/index');
-        }
-        if ($this->_config->isV2Enabled()) {
-            return $this->_apiHelper->getEditorWebtokenUrl($row->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
-        } else {
-            return $this->_apiHelper->apiUrl()->setStoreId($row->getStoreid())
-                ->getAdminEditor($row->getDraftId(), $editorParams, $referrerUrl);
-        }
+
+        return $this->_apiHelper->getEditorWebtokenUrl($row->getDraftId(), $draftProcess->getUserIdentifier(), $editorParams);
     }
 }

@@ -150,7 +150,7 @@ class Product
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
-        if (empty($apiKey) || empty($this->configHelper->isV2Enabled($storeId))) {
+        if (empty($apiKey)) {
             throw new Exception(__('You need to select a website to synchronize your templates.'));
         }
 
@@ -210,7 +210,7 @@ class Product
         $masterIDs = [];
         $responseRealigned = [];
         foreach ($responseArray as $responseData) {
-            $masterID = ($this->configHelper->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
+            $masterID = (isset($responseData['id']) ? $responseData['id'] :
                 $responseData['rissc_w2p_master_id']);
             if (!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
@@ -360,13 +360,13 @@ class Product
         /** @var PrintformerProduct $pfProduct */
         $pfProduct = $this->printformerProductFactory->create();
         $pfProduct->setStoreId($storeId)
-            ->setSku($this->configHelper->isV2Enabled($storeId) ? null : $data['sku'])
+            ->setSku(null)
             ->setName($data['name'])
-            ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['description'])
-            ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
-            ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
-            ->setMasterId($this->configHelper->isV2Enabled($storeId) ? $data['id'] : $data['rissc_w2p_master_id'])
-            ->setMd5($this->configHelper->isV2Enabled($storeId) ? null : $data['rissc_w2p_md5'])
+            ->setDescription(null)
+            ->setShortDescription(null)
+            ->setStatus(1)
+            ->setMasterId($data['id'])
+            ->setMd5(null)
             ->setIntent($intent)
             ->setCreatedAt(time())
             ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
@@ -386,11 +386,11 @@ class Product
      */
     public function updatePrintformerProduct(PrintformerProduct $pfProduct, array $data, string $intent, int $storeId)
     {
-        $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $data['sku'])
+        $pfProduct->setSku(null)
             ->setName($data['name'])
-            ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['description'])
-            ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
-            ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
+            ->setDescription(null)
+            ->setShortDescription(null)
+            ->setStatus(1)
             ->setIntent($intent)
             ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
 

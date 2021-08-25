@@ -273,23 +273,11 @@ class Open extends Action
             $editorParams['data']['quote_id'] = $params['quote_id'];
         }
 
-        if ($this->_draftGateway->isV2Enabled()) {
-            $editorUrl = $this->_apiHelper->getEditorWebtokenUrl(
-                $draftProcess->getDraftId(),
-                $draftProcess->getUserIdentifier(),
-                $editorParams
-            );
-        } else {
-            $editorUrl = $this->_urlHelper->getEditor($draftProcess->getDraftId(), null, $editorParams);
-            $editorUrl = $this->_buildRedirectUrl(
-                $editorUrl,
-                $requestReferrer,
-                $draftProcess,
-                $customerSession,
-                $storeId,
-                $params
-            );
-        }
+        $editorUrl = $this->_apiHelper->getEditorWebtokenUrl(
+            $draftProcess->getDraftId(),
+            $draftProcess->getUserIdentifier(),
+            $editorParams
+        );
 
         /**
          * Build redirect url
@@ -345,11 +333,7 @@ class Open extends Action
     protected function _createDraftProcess(Product $product, $storeId, $intent, $customerId, $sessionUniqueId = null)
     {
         $draftId = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
-
-        $userIdentifier = null;
-        if ($this->_draftGateway->isV2Enabled()) {
-            $userIdentifier = $this->_draftGateway->getUserIdentifier();
-        }
+        $userIdentifier = $this->_draftGateway->getUserIdentifier();
 
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
