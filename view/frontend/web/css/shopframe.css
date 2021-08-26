@@ -33,6 +33,7 @@
   max-width: 100% !important;
   min-width: 100% !important;
   height: 100% !important;
+  min-height: 85vh;
   border: 0;
 }
 .printformer-editor-open .frame-fullscreen {
