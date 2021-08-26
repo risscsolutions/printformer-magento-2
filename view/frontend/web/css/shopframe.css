@@ -33,8 +33,13 @@
   max-width: 100% !important;
   min-width: 100% !important;
   height: 100% !important;
-  min-height: 85vh;
+  min-height: 75vh;
   border: 0;
+}
+@media only screen and (orientation: landscape) {
+  .printformer-editor-open .page-main .columns .inner-frame {
+    min-height: 35vh;
+  }
 }
 .printformer-editor-open .frame-fullscreen {
   position: absolute;
