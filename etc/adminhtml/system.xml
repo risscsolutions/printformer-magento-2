@@ -22,26 +22,19 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="draft_update" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Update draft after order save</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Please enter update-order-identifier (for order-increment-id)</label>
-                    <can_be_empty>0</can_be_empty>
-                    <validate>required-entry</validate>
-                    <depends>
-                        <field id="draft_update">1</field>
-                    </depends>
-                </field>
                 <field id="redirect_after_config" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Redirect After Configuration</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\Redirect</source_model>
                     <depends>
                         <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="delete_draft_button" translate="label" type="select" sortOrder="55" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Show delete Draft Button</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="redirect_after_config">1</field>
                     </depends>
                 </field>
                 <field id="redirect_on_cancel" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -113,24 +106,28 @@
                 <field id="product_image_preview_width" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Preview image width</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="product_image_preview_height" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Preview image height</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="product_image_thumbnail_width" translate="label" type="text" sortOrder="135" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Thumbnail image width</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="product_image_thumbnail_height" translate="label" type="text" sortOrder="136" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Thumbnail image height</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
@@ -159,13 +156,6 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="delete_draft_button" translate="label" type="select" sortOrder="180" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Show delete Draft Button</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
                 <field id="delete_confirm_text" translate="label" type="text" sortOrder="190" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Delete confirm text</label>
                     <depends>
@@ -183,6 +173,25 @@
                     <button_label>Synchronize templates</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync</frontend_model>
                     <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+            <group id="draft" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Additional Draft Configuration</label>
+                <field id="draft_update" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Update draft after order save</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Please enter update-order-identifier (for order-increment-id)</label>
+                    <can_be_empty>0</can_be_empty>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="draft_update">1</field>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
