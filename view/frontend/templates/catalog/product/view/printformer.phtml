@@ -26,7 +26,8 @@ $block->cleanupDraftSession();
                         data-printformer-master="<?php echo $_printformerProduct->getMasterId(); ?>"
                         data-product-id="<?php echo $block->getProduct()->getId(); ?>"
                         class="action primary tocart printformer-delete"
-                        disabled="disabled"></button>
+                        disabled="disabled"
+                        style="display: none"></button>
                 <div id="printformer-delete-confirm-<?php echo $_printformerProduct->getId() ?>">
                     <p><?php echo __($block->getDeleteConfirmText()); ?></p>
                 </div>

@@ -490,8 +490,11 @@ define([
                     this.setButtonText($(button), $t('View draft'));
                 }
 
-                this.initDraftPersonalizations(printformerProduct);
+                button.siblings('.printformer-delete').css('display', '');
+            } else {
+                button.siblings('.printformer-delete').hide()
             }
+
             this.initDeleteButton(printformerProduct);
         },
 
