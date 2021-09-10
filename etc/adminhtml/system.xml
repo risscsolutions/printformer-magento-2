@@ -15,7 +15,7 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="order_status" translate="label" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Status for Payed Order</label>
+                    <label>Status when the print data should be generated</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status</source_model>
                     <can_be_empty>0</can_be_empty>
                     <depends>
@@ -23,7 +23,7 @@
                     </depends>
                 </field>
                 <field id="redirect_after_config" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Redirect After Configuration</label>
+                    <label>Redirect the user after the editor</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\Redirect</source_model>
                     <depends>
                         <field id="enabled">1</field>
@@ -51,17 +51,18 @@
                     </depends>
                 </field>
                 <field id="allow_skip_config" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Allow Add to Cart without Configuration</label>
+                    <label>Allow add to cart without printformer design</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\YesNoPartitial</source_model>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
                 <field id="printformer_upload_template_id" translate="label" type="text" sortOrder="82" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Printformer Upload-Template-Id</label>
+                    <label>Upload Template Identifier</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
+                    <comment>Add a upload template identifier if you want to create printformer design based on downloadable product files</comment>
                 </field>
                 <field id="display_mode" translate="label" type="select" sortOrder="85" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Open editor in ...</label>
@@ -132,13 +133,13 @@
                     </depends>
                 </field>
                 <field id="config_button_text" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>"Configure" Button Text</label>
+                    <label>Design Button Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
                 <field id="config_button_css" translate="label" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>"Configure" Button CSS</label>
+                    <label>Design Button CSS Class</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
@@ -187,7 +188,7 @@
                     </depends>
                 </field>
                 <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Please enter update-order-identifier (for order-increment-id)</label>
+                    <label>Printformer attribute for the Magento order number</label>
                     <can_be_empty>0</can_be_empty>
                     <validate>required-entry</validate>
                     <depends>
