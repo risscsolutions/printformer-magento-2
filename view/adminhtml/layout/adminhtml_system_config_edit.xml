@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <script src="Rissc_Printformer::js/rissc-logo.js"/>
+        <css src="Rissc_Printformer::css/admin/styles.css"/>
+    </head>
+</page>
