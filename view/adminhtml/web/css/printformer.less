@@ -11,10 +11,6 @@
         width: 100% !important;
     }
 
-    .modal-header {
-        padding-top: 1.5rem;
-    }
-
     .modal-title {
         border-bottom: none;
         padding-bottom: none;
@@ -22,8 +18,25 @@
         text-align: center;
     }
 
-    .modal-content {
-        height: 88% !important;
+    @media screen and (min-width: 768px) {
+        .modal-header {
+            padding-top: 1.5rem;
+        }
+
+        .modal-content {
+            height: 88% !important;
+        }
+    }
+
+    @media screen and (max-width: 767px) {
+        .modal-header {
+            display: none;
+        }
+
+        .modal-content {
+            height: 100% !important;
+            padding: 0;
+        }
     }
 }
 

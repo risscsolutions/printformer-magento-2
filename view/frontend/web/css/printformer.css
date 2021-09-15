@@ -8,17 +8,28 @@
   height: 100% !important;
   width: 100% !important;
 }
-.printformer-editor-main-modal .modal-header {
-  padding-top: 1.5rem;
-}
 .printformer-editor-main-modal .modal-title {
   border-bottom: none;
   padding-bottom: none;
   font-size: 20px;
   text-align: center;
 }
-.printformer-editor-main-modal .modal-content {
-  height: 88% !important;
+@media screen and (min-width: 768px) {
+  .printformer-editor-main-modal .modal-header {
+    padding-top: 1.5rem;
+  }
+  .printformer-editor-main-modal .modal-content {
+    height: 88% !important;
+  }
+}
+@media screen and (max-width: 767px) {
+  .printformer-editor-main-modal .modal-header {
+    display: none;
+  }
+  .printformer-editor-main-modal .modal-content {
+    height: 100% !important;
+    padding: 0;
+  }
 }
 #printformer-editor-notice,
 #printformer-editor-close {
