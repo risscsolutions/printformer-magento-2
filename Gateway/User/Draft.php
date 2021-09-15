@@ -2,22 +2,23 @@
 
 namespace Rissc\Printformer\Gateway\User;
 
-use Rissc\Printformer\Gateway\Exception;
-use Psr\Log\LoggerInterface;
-use Magento\Framework\HTTP\ZendClientFactory;
-use Magento\Framework\Json\Decoder;
-use Magento\Customer\Model\Session as CustomerSession;
-use Rissc\Printformer\Helper\Api\Url as UrlHelper;
-use Magento\Store\Model\StoreManagerInterface;
-use Rissc\Printformer\Helper\Log as LogHelper;
-use Magento\Framework\UrlInterface;
 use GuzzleHttp\Client;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Rissc\Printformer\Helper\Api\Url;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
-use Rissc\Printformer\Helper\Media;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\HTTP\ZendClientFactory;
+use Magento\Framework\Json\Decoder;
+use Magento\Framework\UrlInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Gateway\Exception;
+use Rissc\Printformer\Helper\Api\Url;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Log as LogHelper;
+use Rissc\Printformer\Helper\Media;
 
 class Draft
 {
@@ -74,7 +75,7 @@ class Draft
     /**
      * @var
      */
-    protected $apiKey = null;
+    private $apiKey = null;
 
     /**
      * @var
@@ -94,6 +95,11 @@ class Draft
     private $_config;
 
     /**
+     * @var EncryptorInterface
+     */
+    private $encryptor;
+
+    /**
      * Draft constructor.
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
@@ -106,6 +112,7 @@ class Draft
      * @param UrlInterface $url
      * @param Media $mediaHelper
      * @param Config $config
+     * @param EncryptorInterface $encryptor
      */
     public function __construct(
         LoggerInterface $logger,
@@ -118,7 +125,8 @@ class Draft
         LogHelper $logHelper,
         UrlInterface $url,
         Media $mediaHelper,
-        Config $config
+        Config $config,
+        EncryptorInterface $encryptor
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -129,11 +137,11 @@ class Draft
         $this->_url = $url;
         $this->_customerSession = $session;
         $this->_scopeConfig = $scopeConfig;
-        $this->_httpClient = $this->getGuzzleClient();
         $this->mediaHelper = $mediaHelper;
-
-        $this->_urlHelper->initVersionHelper($this->isV2Enabled());
+        $this->encryptor = $encryptor;
         $this->_config = $config;
+        $this->_urlHelper->initVersionHelper($this->isV2Enabled());
+        $this->_httpClient = $this->getGuzzleClient();
     }
 
     /**
@@ -153,8 +161,16 @@ class Draft
     public function getClientApiKey()
     {
         if ($this->apiKey === null) {
-            $this->apiKey = $this->_scopeConfig->getValue('printformer/version2group/v2apiKey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+            $encryptedKey = $this->_scopeConfig->getValue(Config::XML_PATH_V2_API_KEY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+
+            if (!empty($encryptedKey)){
+                $decryptedKey = $this->encryptor->decrypt($encryptedKey);
+                if (!empty($decryptedKey)){
+                    $this->apiKey = $decryptedKey;
+                }
+            }
         }
+
         return $this->apiKey;
     }
 
