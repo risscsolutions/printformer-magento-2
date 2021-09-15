@@ -275,10 +275,6 @@ class Api extends AbstractHelper
             continue;
         }
 
-        if (!$this->_config->isV2Enabled()) {
-            return null;
-        }
-
         if (is_numeric($customer) && $customer === 0) {
             return null;
         }

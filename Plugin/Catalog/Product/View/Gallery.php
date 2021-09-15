@@ -112,32 +112,17 @@ class Gallery
         $j = 0;
         foreach($draftIds as $draftId) {
             if ($this->getImagePreviewUrl(1, $draftId)) {
-                if ($this->config->isV2Enabled()) {
-                    $printformerDraft = $this->getPrintformerDraft($draftId);
-                    $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
+                $printformerDraft = $this->getPrintformerDraft($draftId);
+                $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
 
-                    for ($i = 0; $i < $pages; $i++) {
-                        try {
-                            $result->addItem(new \Magento\Framework\DataObject([
-                                'id' => $i + $j,
-                                'small_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
-                                'medium_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
-                                'large_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
-                                'is_main_image' => ($i + $j == 0)
-                            ]));
-                        } catch (\Exception $e) {
-                            $this->logger->error($e->getMessage());
-                            $this->logger->error($e->getTraceAsString());
-                        }
-                    }
-                } else {
+                for ($i = 0; $i < $pages; $i++) {
                     try {
                         $result->addItem(new \Magento\Framework\DataObject([
-                            'id' => 0,
-                            'small_image_url' => $this->getImagePreviewUrl(1, $draftId),
-                            'medium_image_url' => $this->getImagePreviewUrl(1, $draftId),
-                            'large_image_url' => $this->getImagePreviewUrl(1, $draftId),
-                            'is_main_image' => true
+                            'id' => $i + $j,
+                            'small_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
+                            'medium_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
+                            'large_image_url' => $this->getImagePreviewUrl(($i + 1), $draftId),
+                            'is_main_image' => ($i + $j == 0)
                         ]));
                     } catch (\Exception $e) {
                         $this->logger->error($e->getMessage());

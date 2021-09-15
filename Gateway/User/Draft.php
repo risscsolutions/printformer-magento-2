@@ -2,23 +2,23 @@
 
 namespace Rissc\Printformer\Gateway\User;
 
-use GuzzleHttp\Client;
-use Lcobucci\JWT\Builder;
-use Lcobucci\JWT\Signer\Hmac\Sha256;
-use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Encryption\EncryptorInterface;
+use Rissc\Printformer\Gateway\Exception;
+use Psr\Log\LoggerInterface;
 use Magento\Framework\HTTP\ZendClientFactory;
 use Magento\Framework\Json\Decoder;
-use Magento\Framework\UrlInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Gateway\Exception;
-use Rissc\Printformer\Helper\Api\Url;
+use Magento\Customer\Model\Session as CustomerSession;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
-use Rissc\Printformer\Helper\Config;
+use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
+use Magento\Framework\UrlInterface;
+use GuzzleHttp\Client;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Rissc\Printformer\Helper\Api\Url;
+use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
+use Rissc\Printformer\Helper\Config;
+use Magento\Framework\Encryption\EncryptorInterface;
 
 class Draft
 {
@@ -75,17 +75,12 @@ class Draft
     /**
      * @var
      */
-    private $apiKey = null;
+    protected $apiKey = null;
 
     /**
      * @var
      */
     protected $userIdentifier = null;
-
-    /**
-     * @var
-     */
-    protected $v2enabled = null;
 
     protected $mediaHelper;
 
@@ -100,7 +95,6 @@ class Draft
     private $encryptor;
 
     /**
-     * Draft constructor.
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
      * @param Decoder $jsonDecoder
@@ -140,19 +134,8 @@ class Draft
         $this->mediaHelper = $mediaHelper;
         $this->encryptor = $encryptor;
         $this->_config = $config;
-        $this->_urlHelper->initVersionHelper($this->isV2Enabled());
+        $this->_urlHelper->initVersionHelper();
         $this->_httpClient = $this->getGuzzleClient();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isV2Enabled()
-    {
-        if ($this->v2enabled === null) {
-            $this->v2enabled = ($this->_scopeConfig->getValue('printformer/version2group/version2', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) == 1);
-        }
-        return $this->v2enabled;
     }
 
     /**
@@ -284,9 +267,8 @@ class Draft
             'Content-Type:' => 'application/json',
             'Accept' => 'application/json'
         ];
-        if ($this->isV2Enabled()) {
-            $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
-        }
+        $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
+
         return new Client([
             'base_uri' => $url,
             'headers' => $header,
@@ -341,16 +323,8 @@ class Draft
      */
     public function createDraft($masterId, $intent = null, $userIdentifier = null)
     {
-        $url      = null;
-        $response = null;
-
         $historyData = [
             'direction' => 'outgoing'
-        ];
-
-        $headers = [
-            "X-Magento-Tags-Pattern: .*",
-            "Content-Type: application/json"
         ];
 
         $postFields = [
@@ -359,9 +333,8 @@ class Draft
             ]
         ];
 
-        if ($this->isV2Enabled()) {
             $postFields['json']['user_identifier'] = $this->getUserIdentifier();
-        }
+        $postFields['json']['user_identifier'] = $this->getUserIdentifier();
 
         if ($intent !== null) {
             $postFields['intent'] = $this->getIntent($intent);
@@ -373,10 +346,6 @@ class Draft
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraft();
-
-        if ($this->isV2Enabled()) {
-            $header['Authorization'] = 'Bearer' . $this->getClientApiKey();
-        }
 
         $response = $this->_httpClient->post($url, $postFields);
         $response = json_decode($response->getBody(), true);

@@ -56,11 +56,7 @@ class Column
             if($option) {
                 $draftId = $option->getValue();
                 if ($draftId) {
-                    if($this->config->isV2Enabled()) {
-                        $imageUrl = $this->mediaHelper->getImageUrl($draftId);
-                    } else {
-                        $imageUrl = $this->urlHelper->getThumbnail($draftId);
-                    }
+                    $imageUrl = $this->mediaHelper->getImageUrl($draftId);
                     $result->setData('image_url', $imageUrl);
                 }
             }
