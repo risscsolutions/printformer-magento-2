@@ -1,73 +1,73 @@
-#printformer-editor-main, .printformer-editor-main {
-    height: 100% !important;
-    width: 100% !important;
+#printformer-editor-main,
+.printformer-editor-main {
+  height: 100% !important;
+  width: 100% !important;
 }
 .printformer-editor-main-modal .modal-inner-wrap {
-    margin: 0;
-    height: 100% !important;
-    width: 100% !important;
+  margin: 0;
+  height: 100% !important;
+  width: 100% !important;
 }
 .printformer-editor-main-modal .modal-header {
-    padding-top: 1.5rem;
+  padding-top: 1.5rem;
 }
 .printformer-editor-main-modal .modal-title {
-    border-bottom: none;
-    padding-bottom: none;
-    font-size: 20px;
-    text-align: center;
+  border-bottom: none;
+  padding-bottom: none;
+  font-size: 20px;
+  text-align: center;
 }
 .printformer-editor-main-modal .modal-content {
-    height: 88% !important;
+  height: 88% !important;
 }
 #printformer-editor-notice,
 #printformer-editor-close {
-    text-align: center;
+  text-align: center;
 }
 .printformer-editor-notice-modal .modal-inner-wrap,
 .printformer-editor-close-modal .modal-inner-wrap {
-    width: 20% !important;
-    min-width: 400px !important;
+  width: 20% !important;
+  min-width: 400px !important;
 }
 .printformer-editor-notice-modal .modal-footer,
 .printformer-editor-close-modal .modal-footer {
-    margin: 0 auto;
+  margin: 0 auto;
 }
 .printformer-editor-notice-modal .ok-btn,
 .printformer-editor-notice-modal .cancel-btn,
 .printformer-editor-close-modal .ok-btn,
 .printformer-editor-close-modal .cancel-btn {
-    min-width: 160px; background-color: #c2c1c1; border: 0; border-radius: 0; box-shadow: 0;
+  min-width: 160px;
+  background-color: #c2c1c1;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0;
 }
-
 .modal-popup.printformer-editor-main-modal .action-close {
-    padding: 15px;
+  padding: 15px;
 }
-
 #info {
-    display: none;
-    position: absolute;
-    background-color: white;
+  display: none;
+  position: absolute;
+  background-color: white;
 }
-
 #openEditor {
-    width: max-content;
+  width: max-content;
 }
-
-#openEditor:hover + #info, #info:hover {
-    display: block;
-    position: absolute;
- }
-
+#openEditor:hover + #info,
+#info:hover {
+  display: block;
+  position: absolute;
+}
 #copy {
-    margin-top: 10px;
-    background-color: whitesmoke;
-    font-size: 0.9em;
+  margin-top: 10px;
+  background-color: whitesmoke;
+  font-size: 0.9em;
 }
-
-#copy:hover {
-    background-color: gainsboro;
+#copy :hover {
+  background-color: gainsboro;
 }
-
-#copy:focus {
-    background-color: grey;
+#copy :focus {
+  background-color: grey;
 }
+/*# sourceMappingURL=printformer.css.map */
