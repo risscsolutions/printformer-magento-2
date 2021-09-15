@@ -210,12 +210,13 @@
                     </depends>
                     <validate>validate-url</validate>
                 </field>
-                <field id="v2apiKey" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="v2apiKey" translate="label" type='obscure' sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>API Key</label>
                     <depends>
                         <field id="version2">1</field>
                     </depends>
                     <validate>validate-length minimum-length-32 maximum-length-32</validate>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
                 <field id="v2identifier" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Identifier</label>
