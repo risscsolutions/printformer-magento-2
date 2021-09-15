@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Helper;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -78,21 +79,29 @@ class Config extends AbstractHelper
     protected $_customerSession;
 
     /**
+     * @var EncryptorInterface
+     */
+    private $encryptor;
+
+    /**
      * Config constructor.
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param CustomerSession $customerSession
+     * @param EncryptorInterface $encryptor
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
-        CustomerSession $customerSession
+        CustomerSession $customerSession,
+        EncryptorInterface $encryptor
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
         $this->storeId = $this->storeManager->getStore()->getId();
         $this->_customerSession = $customerSession;
+        $this->encryptor = $encryptor;
     }
 
     /**
@@ -648,11 +657,17 @@ class Config extends AbstractHelper
             $storeId = $this->getStoreId();
         }
 
-        return $this->scopeConfig->getValue(
+        $encryptedKey = $this->scopeConfig->getValue(
             self::XML_PATH_V2_API_KEY,
             ScopeInterface::SCOPE_STORES,
             $storeId
         );
+
+        if (!empty($encryptedKey)){
+            $decryptedKey = $this->encryptor->decrypt($encryptedKey);
+        }
+
+        return $decryptedKey;
     }
 
     /**

@@ -18,6 +18,7 @@ use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Config;
+use Magento\Framework\Encryption\EncryptorInterface;
 
 class Draft
 {
@@ -89,7 +90,11 @@ class Draft
     private $_config;
 
     /**
-     * Draft constructor.
+     * @var EncryptorInterface
+     */
+    private $encryptor;
+
+    /**
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
      * @param Decoder $jsonDecoder
@@ -101,6 +106,7 @@ class Draft
      * @param UrlInterface $url
      * @param Media $mediaHelper
      * @param Config $config
+     * @param EncryptorInterface $encryptor
      */
     public function __construct(
         LoggerInterface $logger,
@@ -113,7 +119,8 @@ class Draft
         LogHelper $logHelper,
         UrlInterface $url,
         Media $mediaHelper,
-        Config $config
+        Config $config,
+        EncryptorInterface $encryptor
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -124,11 +131,11 @@ class Draft
         $this->_url = $url;
         $this->_customerSession = $session;
         $this->_scopeConfig = $scopeConfig;
-        $this->_httpClient = $this->getGuzzleClient();
         $this->mediaHelper = $mediaHelper;
-
-        $this->_urlHelper->initVersionHelper();
+        $this->encryptor = $encryptor;
         $this->_config = $config;
+        $this->_urlHelper->initVersionHelper();
+        $this->_httpClient = $this->getGuzzleClient();
     }
 
     /**
@@ -137,8 +144,16 @@ class Draft
     public function getClientApiKey()
     {
         if ($this->apiKey === null) {
-            $this->apiKey = $this->_scopeConfig->getValue('printformer/version2group/v2apiKey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+            $encryptedKey = $this->_scopeConfig->getValue(Config::XML_PATH_V2_API_KEY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+
+            if (!empty($encryptedKey)){
+                $decryptedKey = $this->encryptor->decrypt($encryptedKey);
+                if (!empty($decryptedKey)){
+                    $this->apiKey = $decryptedKey;
+                }
+            }
         }
+
         return $this->apiKey;
     }
 
@@ -318,6 +333,7 @@ class Draft
             ]
         ];
 
+            $postFields['json']['user_identifier'] = $this->getUserIdentifier();
         $postFields['json']['user_identifier'] = $this->getUserIdentifier();
 
         if ($intent !== null) {
