@@ -3,13 +3,13 @@
 namespace Rissc\Printformer\Plugin\Catalog\Product\View;
 
 use Magento\Catalog\Block\Product\View\Gallery as SubjectGallery;
-use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Helper\Config as ConfigHelper;
-use Rissc\Printformer\Helper\Api as PrintformerApi;
-use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
-use Rissc\Printformer\Helper\Media;
-use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Framework\Event\ManagerInterface;
+use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
+use Rissc\Printformer\Helper\Api as PrintformerApi;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Media;
 
 class Gallery
 {
@@ -169,58 +169,55 @@ class Gallery
     {
         $url = null;
         if ($this->config->isUseImagePreview() && $draftId) {
-            if($this->config->isV2Enabled()) {
-                try {
-                    if (!isset($this->draftImageCreated[$draftId.$page])) {
-                        $jpgImg = $this->printformerApi->getThumbnail(
-                            $draftId,
-                            $this->printformerApi->getUserIdentifier(),
-                            $this->config->getImagePreviewWidth(),
-                            $this->config->getImagePreviewHeight(),
-                            $page
-                        );
+            try {
+                if (!isset($this->draftImageCreated[$draftId.$page])) {
+                    $jpgImg = $this->printformerApi->getThumbnail(
+                        $draftId,
+                        $this->printformerApi->getUserIdentifier(),
+                        $this->config->getImagePreviewWidth(),
+                        $this->config->getImagePreviewHeight(),
+                        $page
+                    );
 
-                        $printformerImage = $jpgImg['content'];
+                    $printformerImage = $jpgImg['content'];
 
-                        $imageFilePath = $this->mediaHelper->getImageFilePath($draftId, $page);
+                    $imageFilePath = $this->mediaHelper->getImageFilePath($draftId, $page);
 
-                        $image = imagecreatefromstring($printformerImage);
+                    $image = imagecreatefromstring($printformerImage);
 
-                        $width = imagesx($image);
-                        $height = imagesy($image);
+                    $width = imagesx($image);
+                    $height = imagesy($image);
 
-                        $out = imagecreatetruecolor($width, $height);
-                        imagealphablending($out, false);
-                        $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
-                        imagefill($out, 0, 0, $transparentindex);
-                        imagesavealpha($out, true);
+                    $out = imagecreatetruecolor($width, $height);
+                    imagealphablending($out, false);
+                    $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
+                    imagefill($out, 0, 0, $transparentindex);
+                    imagesavealpha($out, true);
 
-                        imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
-                        imagepng($out, $imageFilePath);
+                    imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
+                    imagepng($out, $imageFilePath);
 
-                        $this->eventManager->dispatch('printformer_image_preview_create', [
-                            'printformer_image' => $printformerImage,
-                            'original_image' => $image,
-                            'width' => $width,
-                            'height' => $height,
-                            'final_image' => $out,
-                            'image_path' => $imageFilePath
-                        ]);
+                    $this->eventManager->dispatch('printformer_image_preview_create', [
+                        'printformer_image' => $printformerImage,
+                        'original_image' => $image,
+                        'width' => $width,
+                        'height' => $height,
+                        'final_image' => $out,
+                        'image_path' => $imageFilePath
+                    ]);
 
-                        imagedestroy($image);
+                    imagedestroy($image);
 
-                        $this->draftImageCreated[$draftId.$page] = true;
-                    }
-
-                    $url = $this->mediaHelper->getImageUrl($draftId, $page);
-                } catch (\Exception $e) {
-                    $this->logger->error($e->getMessage());
-                    $this->logger->error($e->getTraceAsString());
+                    $this->draftImageCreated[$draftId.$page] = true;
                 }
-            } else {
-                $url = $this->urlHelper->getThumbnail($draftId);
+
+                $url = $this->mediaHelper->getImageUrl($draftId, $page);
+            } catch (\Exception $e) {
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
             }
         }
+
         return $url;
     }
 }
