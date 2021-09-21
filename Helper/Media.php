@@ -18,6 +18,7 @@ use Rissc\Printformer\Helper\Api\Url;
 class Media extends AbstractHelper
 {
     const IMAGE_PATH = 'printformer/{type}/%s_%d.png';
+    const IMAGE_PARENT_PATH = 'printformer/{type}';
 
     /** @var Filesystem */
     protected $filesystem;
@@ -71,10 +72,12 @@ class Media extends AbstractHelper
      */
     public function getImageFilePath($draftId, $page = 1, $isThumbnail = false)
     {
-        $imagePath = $this->getImagePath($isThumbnail);
+        $imagePathDefaultString = $this->getImagePath($isThumbnail);
+        $imagePath = sprintf($imagePathDefaultString, $draftId, $page);
 
+        $imageParentFolderPath = $this->getImageParentFolderPath($isThumbnail);
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-        $mediaDir->create($imagePath);
+        $mediaDir->create($imageParentFolderPath);
         return $mediaDir->getAbsolutePath(sprintf($imagePath, $draftId, $page));
     }
 
@@ -160,6 +163,16 @@ class Media extends AbstractHelper
     public function getImagePath($isThumbnail = false)
     {
         return str_replace('{type}', ($isThumbnail ? 'thumbs' : 'preview'), self::IMAGE_PATH);
+    }
+
+    /**
+     * @param bool $isThumbnail
+     *
+     * @return string
+     */
+    public function getImageParentFolderPath($isThumbnail = false)
+    {
+        return str_replace('{type}', ($isThumbnail ? 'thumbs' : 'preview'), self::IMAGE_PARENT_PATH);
     }
 
     /**
