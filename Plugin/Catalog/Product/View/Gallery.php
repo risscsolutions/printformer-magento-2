@@ -3,13 +3,13 @@
 namespace Rissc\Printformer\Plugin\Catalog\Product\View;
 
 use Magento\Catalog\Block\Product\View\Gallery as SubjectGallery;
-use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Helper\Config as ConfigHelper;
-use Rissc\Printformer\Helper\Api as PrintformerApi;
-use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
-use Rissc\Printformer\Helper\Media;
-use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Framework\Event\ManagerInterface;
+use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
+use Rissc\Printformer\Helper\Api as PrintformerApi;
+use Rissc\Printformer\Helper\Api\Url as UrlHelper;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Media;
 
 class Gallery
 {
@@ -101,6 +101,11 @@ class Gallery
         return $proceed($image);
     }
 
+    public function getImagePreviewFilePath($draftId, $page = 1)
+    {
+        return $this->mediaHelper->getImageFilePath($draftId, $page);
+    }
+
     /**
      * @param SubjectGallery $gallery
      * @param \Magento\Framework\Data\Collection $result
@@ -117,20 +122,22 @@ class Gallery
                 $result->removeAllItems();
                 for ($i = 0; $i < $pages; $i++) {
                     try {
+                        $imagePreviewFilePath = $this->getImagePreviewFilePath($draftId, ($i + 1));
+                        $additionalHash = '?hash='.filemtime($imagePreviewFilePath);
                         $imagePreviewUrl = $this->getImagePreviewUrl(($i + 1), $draftId);
-                        $imagePreviewFilePath = $this->getImagePreviewFilePath(($i + 1), $draftId);
+                        $fullImagePreviewUrl = $imagePreviewUrl.$additionalHash;
                         $result->addItem(new \Magento\Framework\DataObject([
-                                                                               'id' => $i + $j,
-                                                                               'small_image_url' => $imagePreviewUrl,
-                                                                               'medium_image_url' => $imagePreviewUrl,
-                                                                               'large_image_url' => $imagePreviewUrl,
-                                                                               'is_main_image' => ($i + $j == 0),
-                                                                               'file' => $imagePreviewFilePath,
-                                                                               'position' => 1,
-                                                                               'label' => 'Image Printformer',
-                                                                               'disabled' => 0,
-                                                                               'media_type' => 'image'
-                                                                           ]));
+                           'id' => $i + $j,
+                            'small_image_url' => $fullImagePreviewUrl,
+                            'medium_image_url' => $fullImagePreviewUrl,
+                            'large_image_url' => $fullImagePreviewUrl,
+                           'is_main_image' => ($i + $j == 0),
+                           'file' => $imagePreviewFilePath,
+                           'position' => 1,
+                           'label' => 'Image Printformer',
+                           'disabled' => 0,
+                           'media_type' => 'image'
+                        ]));
                     } catch (\Exception $e) {
                         $this->logger->error($e->getMessage());
                         $this->logger->error($e->getTraceAsString());
@@ -165,12 +172,6 @@ class Gallery
             $this->printformerDraft[$draftId] = $this->printformerApi->getPrintformerDraft($draftId);
         }
         return $this->printformerDraft[$draftId];
-    }
-
-    public function getImagePreviewFilePath($page = 1, $draftId)
-    {
-        $imageFilePath = $this->mediaHelper->getImageFilePath($draftId, $page);
-        return $imageFilePath;
     }
 
     /**
@@ -224,12 +225,13 @@ class Gallery
                     $this->draftImageCreated[$draftId.$page] = true;
                 }
 
-                $url = $this->mediaHelper->getImageUrl($draftId, $page,false, 0);
+                    $url = $this->mediaHelper->getImageUrl($draftId, $page,false, 0);
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
             }
         }
+
         return $url;
     }
 }
