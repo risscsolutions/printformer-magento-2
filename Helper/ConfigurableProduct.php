@@ -149,7 +149,7 @@ class ConfigurableProduct extends AbstractHelper
      * @param $storeId
      * @return array | boolean
      */
-    public function getAllAvailableChildrenByConfigurable($attributesInfo, $product, $storeId)
+    public function getAllAvailableChildrenByConfigurable($attributesInfo, $product, $storeId, $selectedQty)
     {
         $this->configurable->getProductByAttributes($attributesInfo, $product);
 
@@ -193,6 +193,7 @@ class ConfigurableProduct extends AbstractHelper
                 AND _inv_item.manage_stock = 1
                 AND _inv_item.is_in_stock = 1
                 AND _inv_item.qty >= _inv_item.min_sale_qty
+                AND _inv_item.qty >= '.$selectedQty.'
                 AND _inv_item.qty > 0
             ');
 
@@ -210,6 +211,7 @@ class ConfigurableProduct extends AbstractHelper
                 AND _inv_item.manage_stock = 1
                 AND _inv_item.is_in_stock = 1
                 AND _inv_item.qty >= _inv_item.min_sale_qty
+                AND _inv_item.qty >= '.$selectedQty.'
                 AND _inv_item.qty > 0
             ');
 
