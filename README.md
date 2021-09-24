@@ -1,23 +1,21 @@
-# Git Tags für Composer
-Composer braucht ein v als Versionsprefix, ansonsten sieht er das Package als unstable an
+## Rissc Printformer Extension and Magento 2
 
-Bad: 100.8.99
-Good: v100.8.99
+### Installation
 
+- 1: Add module into app/code with corresponding namespace
 
-# Rissc_Printformer
-Magento 2 and Rissc Printformer
+- 2: Make sure to require dependencies into composer.json: (compare composer.json's)
+  - "lcobucci/jwt": "3.3.1" (you can verify it in the vendor-folder or in the composer.lock file)
+  - "guzzlehttp/guzzle": "6.4.1",
+  - "erusev/parsedown": "1.7.4" (you can verify it in the vendor-folder or in the composer.lock file)
 
-Installation
+- 3: Enable module "Rissc_Printformer" and run magento compilation steps / deployments
 
-1. Add module into app/code with corresponding namespace
+<br>
 
-2. Make sure to require dependencies into composer.json: (compare composer.json's) 
-    ```
-      "guzzlehttp/guzzle": "6.4.1",
-      "lcobucci/jwt": "3.3.1"
-    ```
+## Git Tags for Composer
 
-(you can verify it in the vendor-folder or in the composer.lock file)
+### Composer needs a v as a version prefix, otherwise it sees the package as unstable
 
-3. Enable module "Rissc_Printformer" and run magento compilation steps / deployments
+- Bad: 100.8.99
+- Good: v100.8.99
