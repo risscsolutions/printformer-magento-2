@@ -227,7 +227,7 @@
                     </depends>
                 </field>
             </group>
-            <group id="information" translate="label" type="text" sortOrder="9998" showInDefault="1" showInWebsite="0"
+            <group id="information" translate="label" type="text" sortOrder="9998" showInDefault="0" showInWebsite="0"
                    showInStore="0">
                 <comment><![CDATA[]]></comment>
                 <label>Information</label>
