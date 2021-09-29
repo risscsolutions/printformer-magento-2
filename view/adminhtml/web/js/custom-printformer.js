@@ -53,7 +53,7 @@ define([
             this.editorMain.css({
                 'width': '100% !important',
                 'height': '100% !important'
-            }).html($('<iframe width="100%" height="100%" src="' + editorUrl + '" name="printformer-main-frame"/>'));
+            }).html($('<iframe width="100%" height="100%" src="' + editorUrl + '" name="printformer-main-frame" id="printformer-main-frame"/>'));
         },
 
         initEditorClose: function () {

@@ -299,6 +299,7 @@ define([
                 frameHtml += '<iframe width="100%"' +
                              '  height="100%"' +
                              '  name="printformer-main-frame"' +
+                             '  id="printformer-main-frame"' +
                              '/>';
                 frameHtml += afterHtml;
 
