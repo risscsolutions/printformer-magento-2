@@ -60,7 +60,7 @@
   top: auto;
   width: auto !important;
 }
-.printformer-delete :before {
+.printformer-delete:before {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 18px;
