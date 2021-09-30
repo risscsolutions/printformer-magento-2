@@ -12,4 +12,7 @@
 .config-nav .admin__page-rissc-tab strong {
   margin-left: 40px;
 }
+fieldset#printformer_changelog li {
+  list-style-position: inside;
+}
 /*# sourceMappingURL=styles.css.map */
