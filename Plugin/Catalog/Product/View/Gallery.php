@@ -123,7 +123,10 @@ class Gallery
                 for ($i = 0; $i < $pages; $i++) {
                     try {
                         $imagePreviewFilePath = $this->getImagePreviewFilePath($draftId, ($i + 1));
-                        $additionalHash = '?hash='.filemtime($imagePreviewFilePath);
+                        $additionalHash = '';
+                        if (file_exists($imagePreviewFilePath)){
+                            $additionalHash = '?hash='.filemtime($imagePreviewFilePath);
+                        }
                         $imagePreviewUrl = $this->getImagePreviewUrl(($i + 1), $draftId);
                         $fullImagePreviewUrl = $imagePreviewUrl.$additionalHash;
                         $result->addItem(new \Magento\Framework\DataObject([
