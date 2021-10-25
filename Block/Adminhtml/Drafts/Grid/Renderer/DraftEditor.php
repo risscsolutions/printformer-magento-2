@@ -83,6 +83,9 @@ class DraftEditor extends AbstractRenderer
     {
         /** @var Draft $row */
         $referrerUrl = null;
+        $storeId = $row->getStoreId();
+        $this->_apiHelper->setStoreId($storeId);
+
         if($orderItemId = $row->getOrderItemId()) {
             /** @var OrderItem $orderItem */
             $orderItem = $this->_itemFactory->create();
