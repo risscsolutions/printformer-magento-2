@@ -30,6 +30,9 @@
     height: 100% !important;
     padding: 0;
   }
+  .printformer-editor-main-modal #printformer-main-frame {
+    border: none;
+  }
 }
 #printformer-editor-notice,
 #printformer-editor-close {
