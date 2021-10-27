@@ -1,6 +1,6 @@
-require(['jquery',
+require(['jquery', 'prototype',
     'jquery/ui',
-    'domReady!'], function ($) {
+    'domReady!'], function ($, prototype) {
     'use strict';
 
     var Controller = Class.create();
