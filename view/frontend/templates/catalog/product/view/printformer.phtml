@@ -3,10 +3,10 @@
 $block->cleanupDraftSession();
 ?>
 
-<?php if($block->getProduct()->isSalable()): ?>
+<?php if ($block->getProduct()->isSalable()): ?>
     <div class="printformer-actions box-tocart">
-    <?php foreach($block->getCatalogProductPrintformerProducts($block->getProduct()->getId(), $block->getProduct()->getStoreId()) as $_catalogProductPrintformerProduct): ?>
-        <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
+        <?php foreach ($block->getCatalogProductPrintformerProducts($block->getProduct()->getId(), $block->getProduct()->getStoreId()) as $_catalogProductPrintformerProduct): ?>
+            <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
             <button id="printformer-button-<?php echo $_printformerProduct->getId() ?>"
                     type="button"
                     data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
@@ -14,7 +14,7 @@ $block->cleanupDraftSession();
                     data-pf-intent="<?php echo $_printformerProduct->getIntent(); ?>"
                     class="printformer-preselect action primary tocart printformer-button <?php echo $block->getButtonCss($_catalogProductPrintformerProduct) ?>"
                     disabled="disabled">
-                    <span><?php echo __($block->getButtonText()) ?></span>
+                <span><?php echo __($block->getButtonText()) ?></span>
             </button>
             <?php if ($block->canShowDeleteButton()): ?>
                 <button id="printformer-delete-<?php echo $_printformerProduct->getId() ?>"
@@ -24,16 +24,17 @@ $block->cleanupDraftSession();
                         class="action primary tocart printformer-delete"
                         disabled="disabled"
                         style="display: none"></button>
-                <div id="printformer-delete-confirm-<?php echo $_printformerProduct->getId() ?>">
+                <div id="printformer-delete-confirm-<?php echo $_printformerProduct->getId() ?>"
+                     style="display: none">
                     <p><?php echo __($block->getDeleteConfirmText()); ?></p>
                 </div>
             <?php endif; ?>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
     </div>
 
     <div id="printformer-editor-main" title="<?php echo $block->getProduct()->getName() ?>">
     </div>
-    <div id="printformer-editor-close">
+    <div id="printformer-editor-close" style="display: none">
         <p><?php echo __($block->getCloseNoticeText()) ?></p>
     </div>
     <?php if ($block->isFormatChangeNotice()): ?>
@@ -41,4 +42,4 @@ $block->cleanupDraftSession();
             <p><?php echo __($block->getFormatNoticeText()) ?></p>
         </div>
     <?php endif; ?>
-<?php endif;?>
+<?php endif; ?>
