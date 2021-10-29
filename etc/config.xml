@@ -9,16 +9,15 @@
                 <guest_wishlist_hint><![CDATA[You have to be registered to add this product to your Wishlist.]]></guest_wishlist_hint>
                 <cart_edit_text>Edit</cart_edit_text>
                 <expire_date>30</expire_date>
-                <config_button_text>Configure</config_button_text>
                 <processing_type>sync</processing_type>
                 <product_image_preview_width>1000</product_image_preview_width>
                 <product_image_preview_height>1000</product_image_preview_height>
                 <product_image_thumbnail_width>150</product_image_thumbnail_width>
                 <product_image_thumbnail_height>150</product_image_thumbnail_height>
-                <config_button_text>Design product</config_button_text>
-                <delete_confirm_text>Should the draft be deleted</delete_confirm_text>
+                <config_button_text><![CDATA[Design product]]></config_button_text>
+                <delete_confirm_text><![CDATA[Should the draft be deleted?]]></delete_confirm_text>
                 <order_status>pending</order_status>
-                <delete_confirm_text><![CDATA[Should the draft get deleted?]]></delete_confirm_text>
+
                 <redirect_on_cancel>1</redirect_on_cancel>
             </general>
             <draft>
