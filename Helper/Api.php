@@ -158,19 +158,22 @@ class Api extends AbstractHelper
     /**
      * @return Client
      */
-    public function getHttpClient()
+    public function getHttpClient($storeId = null)
     {
-        if (!isset($this->_httpClients[$this->getStoreId()])) {
-            $this->_httpClients[$this->getStoreId()] = new Client([
-                                                                      'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
-                                                                      'headers' => [
-                                                                          'Accept' => 'application/json',
-                                                                          'Authorization' => 'Bearer ' . $this->_config->setStoreId($this->getStoreId())->getClientApiKey(),
-                                                                      ]
-                                                                  ]);
+        if (!$storeId) {
+            $storeId = $this->getStoreId();
+        }
+        if (!isset($this->_httpClients[$storeId])) {
+            $this->_httpClients[$storeId] = new Client([
+                'base_url' => $this->apiUrl()->setStoreId($storeId)->getPrintformerBaseUrl(),
+                'headers' => [
+                  'Accept' => 'application/json',
+                  'Authorization' => 'Bearer ' . $this->_config->setStoreId($storeId)->getClientApiKey(),
+                ]
+            ]);
         }
 
-        return $this->_httpClients[$this->getStoreId()];
+        return $this->_httpClients[$storeId];
     }
 
     /**
@@ -353,9 +356,9 @@ class Api extends AbstractHelper
      *
      * @return mixed
      */
-    public function createDraftHash($masterId, $userIdentifier, $params = [])
+    public function createDraftHash($masterId, $userIdentifier, $storeId, $params = [])
     {
-        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft();
+        $url = $this->apiUrl()->setStoreId($storeId)->getDraft();
 
         $options = [
             'json' => [
@@ -372,7 +375,7 @@ class Api extends AbstractHelper
             $options['json'][$key] = $value;
         }
 
-        $response = $this->getHttpClient()->post($url, $options);
+        $response = $this->getHttpClient($storeId)->post($url, $options);
         $response = json_decode($response->getBody(), true);
         if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
             $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
@@ -587,7 +590,7 @@ class Api extends AbstractHelper
         $colorVariation = null,
         $availableVariants = []
     ) {
-        $store = $this->_storeManager->getStore();
+        $storeId = $this->_storeManager->getStore()->getId();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
         if(!$process->getId() && !$checkOnly) {
@@ -604,7 +607,7 @@ class Api extends AbstractHelper
 
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $dataParams);
+                    $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $storeId, $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -613,7 +616,7 @@ class Api extends AbstractHelper
             try {
                 $process->addData([
                     'draft_id' => $draftHash,
-                    'store_id' => $store->getId(),
+                    'store_id' => $storeId,
                     'intent' => $intent,
                     'session_unique_id' => $sessionUniqueId,
                     'product_id' => $productId,
@@ -711,20 +714,20 @@ class Api extends AbstractHelper
                 ];
 
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
-                $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $dataParams);
+                $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $storeId, $dataParams);
 
                 $process->addData([
-                                      'draft_id' => $draftHash,
-                                      'store_id' => $storeId,
-                                      'intent' => self::API_UPLOAD_INTENT,
-                                      'session_unique_id' => $sessionUniqueId,
-                                      'product_id' => $productId,
-                                      'customer_id' => $customerId,
-                                      'user_identifier' => $printformerUserIdentifier,
-                                      'created_at' => time(),
-                                      'printformer_product_id' => $printformerProductId,
-                                      'order_item_id' => $orderItemId
-                                  ]);
+                    'draft_id' => $draftHash,
+                    'store_id' => $storeId,
+                    'intent' => self::API_UPLOAD_INTENT,
+                    'session_unique_id' => $sessionUniqueId,
+                    'product_id' => $productId,
+                    'customer_id' => $customerId,
+                    'user_identifier' => $printformerUserIdentifier,
+                    'created_at' => time(),
+                    'printformer_product_id' => $printformerProductId,
+                    'order_item_id' => $orderItemId
+                ]);
                 $process->getResource()->save($process);
             }
         }
