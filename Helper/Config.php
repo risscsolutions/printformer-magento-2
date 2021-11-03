@@ -263,7 +263,7 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID,
-            ScopeInterface::SCOPE_STORES,
+            ScopeInterface::SCOPE_WEBSITES,
             $this->getStoreId()
         );
     }
