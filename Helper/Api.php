@@ -702,7 +702,7 @@ class Api extends AbstractHelper
                     'intent' => self::API_UPLOAD_INTENT
                 ];
 
-                if ($this->_config->getOrderDraftUpdate() && !empty($orderIncrementId)) {
+                if ($this->_config->getOrderDraftUpdate($storeId) && !empty($orderIncrementId)) {
                     $dataParams['customAttributes'] = [
                         $this->_config->getOrderDraftUpdateOrderId() => $orderIncrementId
                     ];
