@@ -391,7 +391,7 @@ class Api extends AbstractHelper
      * @param $orderId
      * @return mixed
      */
-    public function updateDraftHash($draftHash, $orderId)
+    public function updateDraftHash($draftHash, $orderId, $storeId = null)
     {
         $url = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
@@ -405,7 +405,7 @@ class Api extends AbstractHelper
             ]
         ];
 
-        $response = $this->getHttpClient()->put($url, $options);
+        $response = $this->getHttpClient($storeId)->put($url, $options);
         $response = json_decode($response->getBody(), true);
         if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
             $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
@@ -797,7 +797,7 @@ class Api extends AbstractHelper
     /**
      * @param $draftIds
      */
-    public function setAsyncOrdered($draftIds)
+    public function setAsyncOrdered($draftIds, $storeId = null)
     {
         try {
             $draftProcessingUrl = $this->apiUrl()->setStoreId($this->getStoreId())->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
@@ -808,7 +808,7 @@ class Api extends AbstractHelper
                     'stateChangedNotifyUrl' => $stateChangedNotifyUrl
                 ]
             ];
-            $response = $this->getHttpClient()->post($draftProcessingUrl, $postFields);
+            $response = $this->getHttpClient($storeId)->post($draftProcessingUrl, $postFields);
         } catch (Exception $e) {
             $this->_logger->debug('Process for draft ids failed. Error-message: '.$e->getMessage());
         }

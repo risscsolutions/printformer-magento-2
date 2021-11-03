@@ -109,17 +109,19 @@ abstract class Processing
             foreach ($unprocessedPrintformerOrderItemDraftsCollection->getItems() as $orderItem) {
                 if(!empty($orderItem['printformer_draftid'])){
                     $draftId = $orderItem['printformer_draftid'];
+                    $storeId = $orderItem['store_id'];
+
                     $draftToSync = [];
                     array_push($draftToSync, $draftId);
                     if (empty($this->orderItemIdsToFilter)){
                         $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
                     }
                     $incrementOrderId = $orderItem->getIncrementId();
-                    if ($this->printformerConfig->getOrderDraftUpdate()){
-                        $this->api->updateDraftHash($draftId, $incrementOrderId);
+                    if ($this->printformerConfig->getOrderDraftUpdate($storeId)){
+                        $this->api->updateDraftHash($draftId, $incrementOrderId, $storeId);
                     }
                     $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
-                    $this->api->setAsyncOrdered($draftToSync);
+                    $this->api->setAsyncOrdered($draftToSync, $storeId);
                 }
             }
         } else {
