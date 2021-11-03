@@ -10,6 +10,9 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Config extends AbstractHelper
 {
+    const XML_PATH_CONFIG_DRAFT_UPDATE              = 'printformer/draft/draft_update';
+    const XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID     = 'printformer/draft/draft_update_order_id';
+
     const XML_PATH_V2_API_KEY                       = 'printformer/version2group/v2apiKey';
     const XML_PATH_V2_IDENTIFIER                    = 'printformer/version2group/v2identifier';
 
@@ -19,8 +22,6 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_SECRET                    = 'printformer/general/secret_word';
     const XML_PATH_CONFIG_LOCALE                    = 'printformer/general/locale';
     const XML_PATH_CONFIG_STATUS                    = 'printformer/general/order_status';
-    const XML_PATH_CONFIG_DRAFT_UPDATE              = 'printformer/general/draft_update';
-    const XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID     = 'printformer/general/draft_update_order_id';
     const XML_PATH_CONFIG_DISPLAY_MODE              = 'printformer/general/display_mode';
     const XML_PATH_CONFIG_FRAME_FULLSCREEN          = 'printformer/general/frame_fullscreen';
 
@@ -242,13 +243,17 @@ class Config extends AbstractHelper
     /**
      * @return int
      */
-    public function getOrderDraftUpdate()
+    public function getOrderDraftUpdate($storeId = null)
     {
-        return intval($this->scopeConfig->getValue(
+        if (!$storeId){
+            $storeId = $this->getStoreId();
+        }
+
+        return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DRAFT_UPDATE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        ));
+            ScopeInterface::SCOPE_WEBSITES,
+            $storeId
+        );
     }
 
     /**
