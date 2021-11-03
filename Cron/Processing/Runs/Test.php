@@ -21,7 +21,7 @@ class Test extends Processing
         $fromDateTime = strtotime('-300 minutes', strtotime($currentDateTime));
         $this->fromDateTime = date(self::DEFAULT_DB_FORMAT, $fromDateTime);
 
-        $this->validUploadProcessingCountSmallerThen = 1;
+        $this->validUploadProcessingCountSmallerThen = 99999999;
 
         return true;
     }
