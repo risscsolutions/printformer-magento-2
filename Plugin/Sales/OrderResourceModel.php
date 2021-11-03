@@ -95,7 +95,7 @@ class OrderResourceModel
                         ->setOrderItemId($item->getId())
                         ->save();
 
-                    if ($this->config->getOrderDraftUpdate() && $orderModel->getStatus() == $this::STATE_PENDING){
+                    if ($this->config->getOrderDraftUpdate($item->getStoreId()) && $orderModel->getStatus() == $this::STATE_PENDING){
                         $this->api->updateDraftHash($draftId, $incrementOrderId);
                     }
 
