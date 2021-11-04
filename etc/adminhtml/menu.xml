@@ -10,12 +10,6 @@
          resource="Rissc_Printformer::module"
          parent="Magento_Backend::system"
     />
-    <add id="Rissc_Printformer::products" title="Products"
-         module="Rissc_Printformer" sortOrder="10"
-         resource="Rissc_Printformer::products"
-         action="printformer/products/index"
-         parent="Rissc_Printformer::module"
-    />
     <add id="Rissc_Printformer::drafts" title="Drafts"
          module="Rissc_Printformer" sortOrder="20"
          resource="Rissc_Printformer::drafts"
