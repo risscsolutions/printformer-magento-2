@@ -215,6 +215,11 @@ class Draft
      */
     public function getRedirectUrl($redirectUrl)
     {
+        $identifier='';
+        for($i = 0; $i < 32; $i++) {
+            $identifier .= mt_rand(0, 9);
+        }
+
         /**
          * Create a valid JWT
          */
@@ -222,7 +227,7 @@ class Draft
             ->setIssuedAt(time())
             ->set('client', $this->getClientIdentifier())
             ->set('user', $this->getUserIdentifier())
-            ->setId(bin2hex(random_bytes(16)), true)
+            ->setId($identifier, true)
             ->set('redirect', $redirectUrl)
             ->setExpiration($this->_config->getExpireDate());
 
@@ -239,6 +244,11 @@ class Draft
 
     public function getPdfDocument($draftId)
     {
+        $identifier='';
+        for($i = 0; $i < 32; $i++) {
+            $identifier .= mt_rand(0, 9);
+        }
+
         /**
          * Create a valid JWT
          */
@@ -246,7 +256,7 @@ class Draft
             ->setIssuedAt(time())
             ->set('client', $this->getClientIdentifier())
             ->set('user', $this->getUserIdentifier())
-            ->setId(bin2hex(random_bytes(16)), true)
+            ->setId($identifier, true)
             ->setExpiration($this->_config->getExpireDate());
 
         $JWT = (string)$JWTBuilder

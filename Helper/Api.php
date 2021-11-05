@@ -550,11 +550,16 @@ class Api extends AbstractHelper
     {
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
 
+        $identifier='';
+        for($i = 0; $i < 32; $i++) {
+            $identifier .= mt_rand(0, 9);
+        }
+
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier($this->getStoreId()))
             ->set('user', $userIdentifier)
-            ->setId(bin2hex(random_bytes(16)), true)
+            ->setId($identifier, true)
             ->set('redirect', $editorOpenUrl)
             ->setExpiration($this->_config->getExpireDate());
 
