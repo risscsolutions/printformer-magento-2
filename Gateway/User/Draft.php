@@ -215,11 +215,7 @@ class Draft
      */
     public function getRedirectUrl($redirectUrl)
     {
-        $identifier='';
-        for($i = 0; $i < 32; $i++) {
-            $identifier .= mt_rand(0, 9);
-        }
-
+        $identifier = bin2hex(random_bytes(16));
         /**
          * Create a valid JWT
          */
@@ -244,11 +240,7 @@ class Draft
 
     public function getPdfDocument($draftId)
     {
-        $identifier='';
-        for($i = 0; $i < 32; $i++) {
-            $identifier .= mt_rand(0, 9);
-        }
-
+        $identifier = bin2hex(random_bytes(16));
         /**
          * Create a valid JWT
          */
