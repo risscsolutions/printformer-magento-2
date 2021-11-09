@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-1column"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="footer">
+            <referenceContainer name="legal">
+                <referenceContainer name="legal.system">
+                    <container name="rissc-printformer-version" as="rissc-printformer-version" htmlTag="p" htmlClass="magento-version" htmlId="rissc-printformer-version" after="version">
+                        <block class="Rissc\Printformer\Block\Admin\Version"
+                               name="rissc-printformer-version-block"
+                               template="Rissc_Printformer::page/version.phtml" />
+                    </container>
+                </referenceContainer>
+            </referenceContainer>
+        </referenceContainer>
+    </body>
+</page>
