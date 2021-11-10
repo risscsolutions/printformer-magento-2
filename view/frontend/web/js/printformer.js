@@ -296,14 +296,26 @@ define([
 
                 var frameHtml = '';
                 frameHtml += beforeHtml;
-                frameHtml += '<iframe width="100%"' +
-                             '  height="100%"' +
-                             '  name="printformer-main-frame"' +
-                             '  id="printformer-main-frame"' +
-                             '/>';
+                frameHtml += '<iframe width="100%"'
+                    + '  height="100%"'
+                    + '  name="printformer-main-frame"'
+                    + '  id="printformer-main-frame"'
+                    + '/>'
+                    + '<div style=" position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);">'
+                    + '<div class="loader-ring"><div></div><div></div><div></div><div></div></div>'
+                    + '<p class="loader-ring-message">' + $t('Editor opens...') + '</p>'
+                    + '</div>';
+
                 frameHtml += afterHtml;
 
                 this.editorMain.html(frameHtml);
+
+                $('#printformer-main-frame').hide().on('load', function () {
+                    $('.loader-ring').hide();
+                    $('.loader-ring-message').hide();
+                    $('#printformer-main-frame').show()
+                });
+
                 $(this.form).off();
             }
 
