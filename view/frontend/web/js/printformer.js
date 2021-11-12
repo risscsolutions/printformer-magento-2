@@ -302,9 +302,14 @@ define([
                     + '  id="printformer-main-frame"'
                     + '/>'
                     + '<div style=" position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);">'
-                    + '<div class="loader-ring"><div></div><div></div><div></div><div></div></div>'
-                    + '<p class="loader-ring-message">' + $t('Editor opens...') + '</p>'
-                    + '</div>';
+                    + '<div class="loader-ring"><div></div><div></div><div></div><div></div></div>';
+
+                var openEditorPreviewText = this.options.openEditorPreviewText;
+                if(openEditorPreviewText){
+                    frameHtml += '<p class="loader-ring-message">' + $t(openEditorPreviewText) + '</p>';
+                }
+
+                frameHtml += '</div>';
 
                 frameHtml += afterHtml;
 

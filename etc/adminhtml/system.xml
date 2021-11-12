@@ -150,6 +150,12 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="open_editor_preview_text" translate="label" type="text" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Open Editor Preview Text</label>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
                 <field id="delete_confirm_text" translate="label" type="text" sortOrder="190" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Delete confirm text</label>
                     <depends>

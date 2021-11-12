@@ -807,6 +807,7 @@ class Printformer extends AbstractView
             'displayMode' => $this->configHelper->getDisplayMode(),
             'uniqueId' => $uniqueId,
             'productTitle' => $this->getProduct()->getName(),
+            'openEditorPreviewText' => $this->configHelper->getOpenEditorPreviewText(),
             'allowSkipConfig' => $this->configHelper->isAllowSkipConfig(), //@todo || $this->getDraftId(),
             'printformerProducts' => $this->getPrintformerProductsArray(),
             'variationsConfig' => $this->getVariationsConfig(),

@@ -28,6 +28,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_REDIRECT_ON_CANCEL        = 'printformer/general/redirect_on_cancel';
     const XML_PATH_CONFIG_REDIRECT                  = 'printformer/general/redirect_after_config';
     const XML_PATH_CONFIG_REDIRECT_URL              = 'printformer/general/redirect_alt_url';
+    const XML_PATH_CONFIG_OPEN_EDITOR_PREVIEW_TEXT  = 'printformer/general/open_editor_preview_text';
     const XML_PATH_CONFIG_SKIP_CONFIG               = 'printformer/general/allow_skip_config';
     const XML_PATH_CONFIG_WISHLIST_HINT             = 'printformer/general/guest_wishlist_hint';
     const XML_PATH_CONFIG_EXPIRE_DATE               = 'printformer/general/expire_date';
@@ -299,6 +300,18 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_REDIRECT_URL,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getOpenEditorPreviewText()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_OPEN_EDITOR_PREVIEW_TEXT,
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );
