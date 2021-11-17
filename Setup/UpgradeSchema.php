@@ -15,8 +15,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
     const TABLE_NAME_PRODUCT              = 'printformer_product';
     const TABLE_NAME_HISTORY              = 'printformer_async_history';
     const TABLE_NAME_CUSTOMER_GROUP_RIGHT = 'printformer_customer_group_right';
+    const TABLE_NAME_SALES_ORDER_ITEM     = 'sales_order_item';
     const TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT = 'catalog_product_printformer_product';
     const COLUMN_NAME_UPLOAD_PROCESSING_COUNT            = 'printformer_upload_processing_count';
+    const COLUMN_NAME_PROCESSING_COUNT_STATE             = 'printformer_count_state';
+    const COLUMN_NAME_PROCESSING_COUNT_DATE              = 'printformer_count_date';
 
     /**
      * @param SchemaSetupInterface $setup
@@ -523,7 +526,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $setup->getTable('sales_order_item'),
                 self::COLUMN_NAME_UPLOAD_PROCESSING_COUNT,
                 [
-                    'type' => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
+                    'type' => DdlTable::TYPE_SMALLINT,
                     'unsigned' => true,
                     'nullable' => false,
                     'default' => '0',
@@ -563,6 +566,36 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     ]
                 );
             }
+        }
+
+        if(version_compare($context->getVersion(), '100.8.61', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_SALES_ORDER_ITEM);
+
+            $connection->addColumn(
+                $tableName,
+                self::COLUMN_NAME_PROCESSING_COUNT_STATE,
+                [
+                    'type' => DdlTable::TYPE_SMALLINT,
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default' => '0',
+                    'comment' => 'Printformer Processing Count State'
+                ]
+            );
+
+            $connection->addColumn(
+                $tableName,
+                self::COLUMN_NAME_PROCESSING_COUNT_DATE,
+                [
+                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'size' => null,
+                    [
+                        'nullable' => false,
+                        'default' => DdlTable::TIMESTAMP_INIT
+                    ],
+                    'comment' => 'Printformer Processing Count Updated At'
+                ]
+            );
         }
 
         $setup->endSetup();

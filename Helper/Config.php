@@ -671,6 +671,7 @@ class Config extends AbstractHelper
      */
     public function getClientApiKey($storeId = null)
     {
+        $decryptedKey = null;
         if ($storeId === null) {
             $storeId = $this->getStoreId();
         }

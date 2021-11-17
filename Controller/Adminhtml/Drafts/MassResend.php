@@ -69,51 +69,62 @@ class MassResend extends AbstractController
 
     public function execute()
     {
-        $drafts = $this->getRequest()->getParam('drafts');
-        if(!empty($drafts)) {
-            /** @var Draft $draft */
-            $draft = $this->_draftFactory->create();
-            $draftCollection = $draft->getCollection()->addFieldToFilter('id', ['in' => $drafts]);
+        try {
+            $drafts = $this->getRequest()->getParam('drafts');
+            if(!empty($drafts)) {
+                /** @var Draft $draft */
+                $draft = $this->_draftFactory->create();
+                $draftCollection = $draft->getCollection()->addFieldToFilter('id', ['in' => $drafts]);
 
-            $draftIds = [];
-            foreach($draftCollection as $draft) {
-                /** @var OrderItem $orderItem */
-                $orderItem = $this->_orderItemFactory->create();
-                $orderItem = $orderItem->getCollection()
-                    ->addFieldToFilter('printformer_draftid', ['like' => '%' . $draft->getDraftId() . '%'])
-                    ->addFieldToFilter('printformer_storeid', ['eq' => $draft->getStoreId()])
-                    ->load()
-                    ->getFirstItem();
+                $draftIds = [];
+                foreach($draftCollection as $draft) {
+                    /** @var OrderItem $orderItem */
+                    $orderItem = $this->_orderItemFactory->create();
+                    $orderItem = $orderItem->getCollection()
+                        ->addFieldToFilter('printformer_draftid', ['like' => '%' . $draft->getDraftId() . '%'])
+                        ->addFieldToFilter('printformer_storeid', ['eq' => $draft->getStoreId()])
+                        ->load()
+                        ->getFirstItem();
 
-                if($orderItem->getId()) {
-                    /** @var Order $order */
-                    $order = $orderItem->getOrder();
-                    foreach ($order->getAllItems() as $item) {
-                        if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
-                            continue;
+                    if($orderItem->getId()) {
+                        /** @var Order $order */
+                        $order = $orderItem->getOrder();
+                        foreach ($order->getAllItems() as $item) {
+                            if ($draft->getProcessingId()){
+                                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+                                    continue;
+                                }
+                            }
+                            $draftHashes = explode(',', $item->getPrintformerDraftid());
+                            foreach($draftHashes as $draftHash) {
+                                $draftIds[] = $draftHash;
+                            }
                         }
-                        $draftHashes = explode(',', $item->getPrintformerDraftid());
-                        foreach($draftHashes as $draftHash) {
-                            $draftIds[] = $draftHash;
-                        }
+
+                        $orderItem->setPrintformerOrdered(1);
+                        $orderItem->getResource()->save($orderItem);
                     }
+                }
 
-                    $orderItem->setPrintformerOrdered(1);
-                    $orderItem->getResource()->save($orderItem);
+                if (empty($draftIds)) {
+                    $this->messageManager->addWarningMessage(__('Drafts have been resend previously.'));
+                    return $this->_redirect('*/*/index');
+                }
+
+                $this->_apiHelper->setAsyncOrdered(array_unique($draftIds));
+
+                $this->messageManager->addSuccessMessage(__('Drafts have been resend to processing.'));
+            } else {
+                $this->messageManager->addSuccessMessage(__('No drafts have been processed.'));
+            }
+        } finally {
+            if (isset($drafts) && !empty($drafts) && !empty($draftIds)){
+                foreach ($draftIds as $draftId) {
+                    $this->_apiHelper->setProcessingStateOnOrderItemByDraftId($draftId, $this->_apiHelper::ProcessingStateAdminMassResend);
                 }
             }
-
-            if (empty($draftIds)) {
-                $this->messageManager->addWarningMessage(__('Drafts have been resend previously.'));
-                return $this->_redirect('*/*/index');
-            }
-
-            $this->_apiHelper->setAsyncOrdered(array_unique($draftIds));
-
-            $this->messageManager->addSuccessMessage(__('Drafts have been resend to processing.'));
-            return $this->_redirect('*/*/index');
         }
-        $this->messageManager->addSuccessMessage(__('No drafts have been processed.'));
+
         return $this->_redirect('*/*/index');
     }
 }

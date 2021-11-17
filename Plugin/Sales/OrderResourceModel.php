@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Plugin\Sales;
 
+use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Model\Order as OrderModel;
 use Magento\Sales\Model\ResourceModel\Order;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
@@ -72,7 +73,7 @@ class OrderResourceModel
         $this->external = $external;
     }
 
-    public function afterSave(Order $orderResourceModel, AbstractDb $result, OrderModel $orderModel) : void
+    public function afterSave(Order $orderResourceModel, AbstractDb $result, OrderModel $orderModel)
     {
         try {
             $draftIds = [];
@@ -89,6 +90,7 @@ class OrderResourceModel
 
                 $itemDraftIds = explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID));
                 foreach ($itemDraftIds as $draftId) {
+                    $draftIds[] = $draftId;
                     $this->draftFactory
                         ->create()
                         ->load($draftId, 'draft_id')
@@ -98,8 +100,6 @@ class OrderResourceModel
                     if ($this->config->getOrderDraftUpdate($item->getStoreId()) && $orderModel->getStatus() == $this::STATE_PENDING){
                         $this->api->updateDraftHash($draftId, $incrementOrderId);
                     }
-
-                    $draftIds[] = $draftId;
                 }
             }
 
@@ -120,8 +120,14 @@ class OrderResourceModel
             }
         } catch (\Exception $e) {
             $this->logger->critical($e);
+        } finally {
+            if (isset($draftIds) && !empty($draftIds)){
+                foreach ($draftIds as $draftId) {
+                    $this->api->setProcessingStateOnOrderItemByDraftId($draftId, $this->api::ProcessingStateAfterOrder);
+                }
+            }
         }
 
-        return;
+        return $result;
     }
 }

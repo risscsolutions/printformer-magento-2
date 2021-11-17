@@ -11,6 +11,8 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Sales\Api\Data\OrderItemInterface;
+use Magento\Sales\Api\OrderItemRepositoryInterface;
 use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
@@ -25,12 +27,18 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
 use Exception;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Magento\Sales\Model\Order\ItemFactory;
 
 class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
     const API_UPLOAD_INTENT = 'upload';
     const CALLBACK_UPLOAD_ENDPOINT = 'printformer/process/draft';
+    const ProcessingStateAfterOrder = 9;
+    const ProcessingStateAfterCron = 2;
+    const ProcessingStateAfterUploadCallback = 3;
+    const ProcessingStateAdminMassResend = 4;
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -81,6 +89,21 @@ class Api extends AbstractHelper
     private $urlBuilder;
 
     /**
+     * @var ItemFactory
+     */
+    private $_itemFactory;
+
+    /**
+     * @var TimezoneInterface
+     */
+    private $timezone;
+
+    /**
+     * @var OrderItemRepositoryInterface
+     */
+    protected $orderItemRepository;
+
+    /**
      * Api constructor.
      * @param Context $context
      * @param CustomerSession $customerSession
@@ -109,7 +132,10 @@ class Api extends AbstractHelper
         AdminSession $adminSession,
         PrintformerProductAttributes $printformerProductAttributes,
         Filesystem $filesystem,
-        UrlInterface $urlBuilder
+        UrlInterface $urlBuilder,
+        ItemFactory $itemFactory,
+        TimezoneInterface $timezone,
+        OrderItemRepositoryInterface $orderItemRepository
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -123,6 +149,8 @@ class Api extends AbstractHelper
         $this->printformerProductAttributes = $printformerProductAttributes;
         $this->filesystem = $filesystem;
         $this->urlBuilder = $urlBuilder;
+        $this->_itemFactory = $itemFactory;
+        $this->timezone = $timezone;
 
         $this->setStoreId($storeManager->getStore()->getId());
 
@@ -133,6 +161,7 @@ class Api extends AbstractHelper
         $this->apiUrl()->setStoreManager($storeManager);
 
         parent::__construct($context);
+        $this->orderItemRepository = $orderItemRepository;
     }
 
     /**
@@ -846,6 +875,48 @@ class Api extends AbstractHelper
             }
         } else {
             $this->_logger->debug('Cant get response for draft-ids:'.implode(",", $draftIds));
+        }
+    }
+
+    /**
+     * @param $draftHash
+     * @return false|OrderItemInterface
+     */
+    public function getOrderItemByDraftId($draftHash)
+    {
+        $orderItem = false;
+        $process = $this->_draftFactory->create();
+
+        $draftCollection = $process->getCollection();
+        if($draftHash !== null) {
+            $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftHash]);
+            $process = $draftCollection->getFirstItem();
+
+            if ($process->getId()) {
+                $process = $draftCollection->getLastItem();
+                $orderItemId = $process->getOrderItemId();
+                if(!empty($orderItemId)){
+                    $orderItem = $this->orderItemRepository->get($orderItemId);
+                }
+            }
+        }
+
+        return $orderItem;
+    }
+
+    /**
+     * @param $draftId
+     */
+    public function setProcessingStateOnOrderItemByDraftId($draftId, $printformerCountState)
+    {
+        /** @var OrderItemInterface $orderItem */
+        $orderItem = $this->getOrderItemByDraftId($draftId);
+        $item = $this->_itemFactory->create();
+        if (isset($orderItem) && $orderItem->getItemId() !== null){
+            $item->getResource()->load($item, $orderItem->getItemId());
+            $item->setPrintformerCountState($printformerCountState);
+            $item->setPrintformerCountDate($this->timezone->date()->format('Y-m-d H:i:s'));
+            $item->getResource()->save($item);
         }
     }
 
