@@ -25,6 +25,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Downloadable\Model\Product\Type;
 use Rissc\Printformer\Helper\Config as PrintformerConfig;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 /**
  * Class Order
@@ -41,11 +42,6 @@ class Order extends Api
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
-
-    /**
-     * @var OrderItemRepositoryInterface
-     */
-    private $orderItemRepository;
 
     /**
      * @var ProductRepositoryInterface
@@ -68,7 +64,6 @@ class Order extends Api
     private $itemFactory;
 
     /**
-     * Order constructor.
      * @param Context $context
      * @param CustomerSession $customerSession
      * @param UrlHelper $urlHelper
@@ -88,6 +83,8 @@ class Order extends Api
      * @param Product $product
      * @param Config $printformerConfig
      * @param UrlInterface $urlBuilder
+     * @param ItemFactory $itemFactory
+     * @param TimezoneInterface $timezone
      */
     public function __construct(
         Context $context,
@@ -104,18 +101,18 @@ class Order extends Api
         Filesystem $filesystem,
         ItemCollectionFactory $itemCollectionFactory,
         OrderRepositoryInterface $orderRepository,
-        OrderItemRepositoryInterface $orderItemRepository,
         ProductRepositoryInterface $productRepository,
         Product $product,
         PrintformerConfig $printformerConfig,
         UrlInterface $urlBuilder,
-        ItemFactory $itemFactory
+        ItemFactory $itemFactory,
+        TimezoneInterface $timezone,
+        OrderItemRepositoryInterface $orderItemRepository
     )
     {
-        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder);
+        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder, $itemFactory, $timezone, $orderItemRepository);
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->orderRepository = $orderRepository;
-        $this->orderItemRepository = $orderItemRepository;
         $this->productRepository = $productRepository;
         $this->product = $product;
         $this->printformerConfig = $printformerConfig;
@@ -269,32 +266,6 @@ class Order extends Api
     public function getOrderItemById($orderItemId)
     {
         return $this->orderItemRepository->get($orderItemId);
-    }
-
-    /**
-     * @param $draftHash
-     * @return false|OrderItemInterface
-     */
-    public function getOrderItemByDraftId($draftHash)
-    {
-        $orderItem = false;
-        $process = $this->_draftFactory->create();
-
-        $draftCollection = $process->getCollection();
-        if($draftHash !== null) {
-            $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftHash]);
-            $process = $draftCollection->getFirstItem();
-
-            if ($process->getId()) {
-                $process = $draftCollection->getLastItem();
-                $orderItemId = $process->getOrderItemId();
-                if(!empty($orderItemId)){
-                    $orderItem = $this->orderItemRepository->get($orderItemId);
-                }
-            }
-        }
-
-        return $orderItem;
     }
 
     /**

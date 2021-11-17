@@ -9,6 +9,7 @@ use Rissc\Printformer\Model\Draft;
 use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Backend\Model\UrlInterface;
 use Rissc\Printformer\Setup\InstallData;
+use Rissc\Printformer\Helper\Api;
 
 class DraftStatus extends AbstractRenderer
 {
@@ -59,14 +60,36 @@ class DraftStatus extends AbstractRenderer
             }
         }
 
-        $processingIdHtml = '';
+        $resultHtml = '';
+
         if($row->getProcessingId()) {
-            $processingIdHtml .= '<br /><small style="color: #C0C0C0">' . __('Processing ID') . ': <strong>' . $row->getProcessingId() . '</strong></small>';
+            $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Processing ID') . ': <strong>' . $row->getProcessingId() . '</strong></small>';
+        }
+
+        if (isset($item)){
+            $printformerCountState = (integer)$item->getPrintformerCountState();
+            if($printformerCountState === Api::ProcessingStateAfterOrder){
+                $printformerCountStateMessage = 'Processed after order';
+            } elseif ($printformerCountState === Api::ProcessingStateAdminMassResend){
+                $printformerCountStateMessage = 'Processed after mass-resend';
+            } elseif ($printformerCountState === Api::ProcessingStateAfterCron){
+                $printformerCountStateMessage = 'Processed after cron';
+            } elseif ($printformerCountState === Api::ProcessingStateAfterUploadCallback){
+                $printformerCountStateMessage = 'processed after upload-callback';
+            }
+
+            if ($printformerCountState !== 0 && isset($printformerCountStateMessage) && $printformerCountState != '0'){
+                if(!$row->getProcessingId()) {
+                    $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Processing failed') . '... <strong>' . $row->getProcessingId() . '</strong></small>';
+                }
+                $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Last execution') . ': <strong>' . $item->getPrintformerCountDate() . '</strong></small>';
+                $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Last location') . ': <strong>' . $printformerCountStateMessage . '</strong></small>';
+            }
         }
 
         $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE . '_' . InstallData::MODULE_NAME . '/images/proccessing_status_red.svg');
         $draftStatus = __('Not processed yet!');
-        if($itemOrdered) {
+        if($itemOrdered && $row->getProcessingId()) {
             $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE . '_' . InstallData::MODULE_NAME . '/images/proccessing_status_green.svg');
             $draftStatus = __('Processed successfully!');
         }
@@ -79,6 +102,6 @@ class DraftStatus extends AbstractRenderer
                 <span style="float:left;margin-left:5px;display:block;line-height:19px;"><strong>' . $draftStatus  . '</strong></span>
                 <div style="clear:both;"><!-- --></div>
             </div>
-        ' . $processingIdHtml;
+        ' . $resultHtml;
     }
 }
