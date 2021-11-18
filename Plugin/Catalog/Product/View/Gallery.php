@@ -117,7 +117,7 @@ class Gallery
         $j = 0;
         foreach($draftIds as $draftId) {
             if ($this->getImagePreviewUrl(1, $draftId)) {
-                $printformerDraft = $this->getPrintformerDraft($draftId);
+                $printformerDraft = $this->printformerApi->getDraftUsagePageInfo($draftId, $this->printformerApi::DRAFT_USAGE_PAGE_INFO_PREVIEW);
                 $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
                 $result->removeAllItems();
                 for ($i = 0; $i < $pages; $i++) {

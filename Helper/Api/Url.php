@@ -262,6 +262,14 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
+    public function getDraftUsagePageInfo($draftHash, $pageInfo)
+    {
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDraftUsagePageInfo($draftHash, $pageInfo);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
     {
         if (!$redirectParams) {
