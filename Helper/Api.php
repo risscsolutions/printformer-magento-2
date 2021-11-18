@@ -39,6 +39,8 @@ class Api extends AbstractHelper
     const ProcessingStateAfterCron = 2;
     const ProcessingStateAfterUploadCallback = 3;
     const ProcessingStateAdminMassResend = 4;
+    const DRAFT_USAGE_PAGE_INFO_PREVIEW = 'preview';
+    const DRAFT_USAGE_PAGE_INFO_PRINT = 'print';
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -443,6 +445,24 @@ class Api extends AbstractHelper
         }
 
         return $response['data']['draftHash'];
+    }
+
+    /**
+     * @param $draftHash
+     * @param $pageInfo
+     * @param null $storeId
+     * @return mixed
+     */
+    public function getDraftUsagePageInfo($draftHash, $pageInfo, $storeId = null)
+    {
+        $url = $this->_urlHelper
+            ->setStoreId($this->_storeManager->getStore()->getId())
+            ->getDraftUsagePageInfo($draftHash, $pageInfo);
+
+        $response = $this->getHttpClient($storeId)->get($url);
+        $response = json_decode($response->getBody(), true);
+
+        return $response['data'];
     }
 
     /**

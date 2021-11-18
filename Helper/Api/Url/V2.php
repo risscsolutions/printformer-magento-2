@@ -20,6 +20,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_CREATE_DRAFT              = '/api-ext/draft';
     const API_DELETE_DRAFT              = '/api-ext/draft/{draftId}';
     const API_UPDATE_DRAFT              = '/api-ext/draft/{draftId}';
+    const API_GET_DRAFT_USAGE_PAGE_INFO = '/api-ext/draft/{draftId}/{usage}/page-info';
     const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
     const API_UPLOAD_DRAFT              = '/api-ext/draft/{draftId}/upload';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
@@ -505,6 +506,14 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getDraftUpdate($draftHash)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_UPDATE_DRAFT);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDraftUsagePageInfo($draftHash, $usage)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace(array('{draftId}', '{usage}'), array($draftHash, $usage), self::API_GET_DRAFT_USAGE_PAGE_INFO);;
     }
 
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
