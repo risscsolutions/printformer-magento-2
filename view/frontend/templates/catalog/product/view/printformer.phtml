@@ -1,11 +1,12 @@
 <?php
 /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $block */
 $block->cleanupDraftSession();
+$product = $block->getProduct();
 ?>
 
-<?php if ($block->getProduct()->isSalable()): ?>
-    <div class="printformer-actions box-tocart">
-        <?php foreach ($block->getCatalogProductPrintformerProducts($block->getProduct()->getId(), $block->getProduct()->getStoreId()) as $_catalogProductPrintformerProduct): ?>
+<?php if ($product->isSalable()): ?>
+    <div class="printformer-actions box-tocart <?php if ($product->getTypeId() === 'downloadable'): ?>product-options-bottom<?php endif; ?>">
+        <?php foreach ($block->getCatalogProductPrintformerProducts($product->getId(), $product->getStoreId()) as $_catalogProductPrintformerProduct): ?>
             <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
             <button id="printformer-button-<?php echo $_printformerProduct->getId() ?>"
                     type="button"
@@ -20,7 +21,7 @@ $block->cleanupDraftSession();
                 <button id="printformer-delete-<?php echo $_printformerProduct->getId() ?>"
                         data-printformer-product="<?php echo $_printformerProduct->getId() ?>"
                         data-printformer-master="<?php echo $_printformerProduct->getMasterId(); ?>"
-                        data-product-id="<?php echo $block->getProduct()->getId(); ?>"
+                        data-product-id="<?php echo $product->getId(); ?>"
                         class="action primary tocart printformer-delete"
                         disabled="disabled"
                         style="display: none"></button>
@@ -32,7 +33,7 @@ $block->cleanupDraftSession();
         <?php endforeach; ?>
     </div>
 
-    <div id="printformer-editor-main" style="text-align: center; display: flex" title="<?php echo $block->getProduct()->getName() ?>">
+    <div id="printformer-editor-main" style="text-align: center; display: flex" title="<?php echo $product->getName() ?>">
     </div>
     <div id="printformer-editor-close" style="display: none">
         <p><?php echo __($block->getCloseNoticeText()) ?></p>
