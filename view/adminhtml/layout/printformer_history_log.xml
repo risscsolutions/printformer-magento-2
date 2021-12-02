@@ -13,8 +13,18 @@
                 <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="printformer_processing.grid.columnSet" as="grid.columnSet">
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="created_at">
                         <arguments>
-                            <argument name="header" xsi:type="string" translate="true">Date</argument>
+                            <argument name="header" xsi:type="string" translate="true">Api Called</argument>
                             <argument name="index" xsi:type="string">created_at</argument>
+                            <argument name="type" xsi:type="string">datetime</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="updated_at">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Response Received</argument>
+                            <argument name="index" xsi:type="string">updated_at</argument>
                             <argument name="type" xsi:type="string">datetime</argument>
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
@@ -32,16 +42,6 @@
                             <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Direction</argument>
                         </arguments>
                     </block>
-                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="draft_id">
-                        <arguments>
-                            <argument name="header" xsi:type="string" translate="true">Draft-ID</argument>
-                            <argument name="index" xsi:type="string" translate="true">draft_id</argument>
-                            <argument name="type" xsi:type="string">text</argument>
-                            <argument name="column_css_class" xsi:type="string">col-id</argument>
-                            <argument name="header_css_class" xsi:type="string">col-id</argument>
-                            <argument name="width" xsi:type="string">100px</argument>
-                        </arguments>
-                    </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="status">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Status</argument>
@@ -53,6 +53,15 @@
                             <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Status</argument>
                         </arguments>
                     </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="request_type">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Request-Type</argument>
+                            <argument name="index" xsi:type="string">request_type</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                        </arguments>
+                    </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="api_url">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Api-Url</argument>
@@ -61,6 +70,24 @@
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
                             <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Url</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="request_data">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Data</argument>
+                            <argument name="index" xsi:type="string">request_data</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                        </arguments>
+                    </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="response_data">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Response</argument>
+                            <argument name="index" xsi:type="string">response_data</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
                         </arguments>
                     </block>
                 </block>

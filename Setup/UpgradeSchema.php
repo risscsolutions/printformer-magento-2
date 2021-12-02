@@ -3,10 +3,10 @@
 namespace Rissc\Printformer\Setup;
 
 use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\DB\Ddl\Table as DdlTable;
 use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
-use Magento\Framework\DB\Ddl\Table as DdlTable;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 
 class UpgradeSchema implements UpgradeSchemaInterface
@@ -157,7 +157,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'nullable' => false,
                         'default' => DdlTable::TIMESTAMP_INIT
                     ],
-                    'Create At'
+                    'Created At'
                 )
                 ->addColumn(
                     'direction',
@@ -596,6 +596,40 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     'comment' => 'Printformer Processing Count Updated At'
                 ]
             );
+        }
+
+        if(version_compare($context->getVersion(), '100.8.62', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_HISTORY);
+            $columnName = 'request_type';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => DdlTable::TYPE_TEXT,
+                        'unsigned' => true,
+                        'nullable' => false,
+                        'comment' => 'Request type'
+                    ]
+                );
+            }
+
+            $columnName = 'updated_at';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => DdlTable::TYPE_TIMESTAMP,
+                        'size' => null,
+                        [
+                            'nullable' => false,
+                            'default' => DdlTable::TIMESTAMP_INIT_UPDATE
+                        ],
+                        'comment' => 'Updated At'
+                    ]
+                );
+            }
         }
 
         $setup->endSetup();

@@ -166,7 +166,11 @@ class Draft
         if (!$url) {
             return '';
         }
+
+        $createdEntry = $this->_logHelper->createPostEntry($url);
         $response = $this->_httpClient->post($url);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
         $response = json_decode($response->getBody(), true);
 
         return $response['data']['identifier'];
@@ -214,11 +218,7 @@ class Draft
      */
     public function getRedirectUrl($redirectUrl)
     {
-        $identifier='';
-        for($i = 0; $i < 32; $i++) {
-            $identifier .= mt_rand(0, 9);
-        }
-
+        $identifier = bin2hex(random_bytes(16));
         /**
          * Create a valid JWT
          */
@@ -243,11 +243,7 @@ class Draft
 
     public function getPdfDocument($draftId)
     {
-        $identifier='';
-        for($i = 0; $i < 32; $i++) {
-            $identifier .= mt_rand(0, 9);
-        }
-
+        $identifier = bin2hex(random_bytes(16));
         /**
          * Create a valid JWT
          */
@@ -297,14 +293,14 @@ class Draft
             ->setStoreId($storeId)
             ->getDraftDelete($draftId);
 
-        $this->_logger->debug($url);
-
+        $createdEntry = $this->_logHelper->createPostEntry($url);
         /** @var \Zend_Http_Response $response */
         $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
             ->request(\Zend_Http_Client::POST);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
 
         if (!$response->isSuccessful()) {
             throw new Exception(__('Error deleting draft.'));
@@ -333,49 +329,51 @@ class Draft
      */
     public function createDraft($masterId, $intent = null, $userIdentifier = null)
     {
+        $url = $this->_urlHelper
+            ->setStoreId($this->_storeManager->getStore()->getId())
+            ->getDraft();
+
         $historyData = [
             'direction' => 'outgoing'
         ];
 
-        $postFields = [
+        $requestData = [
             'json' => [
                 'master_id' => $masterId
             ]
         ];
 
-            $postFields['json']['user_identifier'] = $this->getUserIdentifier();
-        $postFields['json']['user_identifier'] = $this->getUserIdentifier();
+        $requestData['json']['user_identifier'] = $this->getUserIdentifier();
 
         if ($intent !== null) {
-            $postFields['intent'] = $this->getIntent($intent);
+            $requestData['intent'] = $this->getIntent($intent);
         }
 
-        $historyData['request_data'] = json_encode($postFields);
+        $historyData['request_data'] = json_encode($requestData);
         $historyData['draft_id'] = $masterId;
 
-        $url = $this->_urlHelper
-            ->setStoreId($this->_storeManager->getStore()->getId())
-            ->getDraft();
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $response = $this->_httpClient->post($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
-        $response = $this->_httpClient->post($url, $postFields);
         $response = json_decode($response->getBody(), true);
 
         $draftHash = $response['data']['draftHash'];
 
         if (!isset($draftHash)) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             return null;
         }
 
         if (isset($draftHash)) {
             $historyData['status'] = 'send';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             return $draftHash;
         }
 
         $historyData['status'] = 'failed';
-        $this->_logHelper->addEntry($historyData);
+        $this->_logHelper->createEntry($historyData);
         return null;
     }
 
@@ -389,14 +387,14 @@ class Draft
         $url = $this->_urlHelper
             ->getDraft($draftId);
 
-        $this->_logger->debug($url);
-
+        $createdEntry = $this->_logHelper->createPostEntry($url);
         /** @var \Zend_Http_Response $response */
         $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
             ->request(\Zend_Http_Client::POST);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
 
         if (!$response->isSuccessful()) {
             throw new Exception(__('Error deleting draft.'));

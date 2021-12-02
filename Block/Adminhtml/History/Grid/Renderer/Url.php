@@ -7,37 +7,25 @@ use Magento\Framework\DataObject;
 
 class Url extends AbstractRenderer
 {
+
     /**
-     * @param DataObject $row
+     * Class to try format array from string
+     *
+     * @param string $data
      * @return string
      */
-    public function render(DataObject $row)
+    public function prepareJsonData(string $data)
     {
-        /** @var \Rissc\Printformer\Model\History\Log $row */
+        $result = '';
 
-        $url = $row->getApiUrl();
-        $parsedUrl = parse_url($url);
-
-        if(!empty($parsedUrl['query'])) {
-            unset($parsedUrl['query']);
+        if (!empty($data)){
+            $result = json_encode(json_decode($data, true), JSON_PRETTY_PRINT);
+            if (empty($result) || $result === 'null'){
+                $result = $data;
+            }
         }
 
-        $dataHtml = '<div class="api_data" style="display: none;">
-            <div>
-                <label for="api_request_data_' . $row->getId() . '"><strong>' . __('Request Data') . ':</strong></label>
-                <div class="control">
-                    <pre style="background-color:#ECECEC; padding: 10px;" class="api_request_data" data-row-id="' . $row->getId() . '" id="api_request_data_' . $row->getId() . '">' . str_replace('\\/', '/', json_encode(json_decode($row->getData('request_data'), true), JSON_PRETTY_PRINT)) . '</pre>
-                </div>
-            </div><br />
-            <div>
-                <label for="api_response_data_' . $row->getId() . '"><strong>' . __('Response Data') . ':</strong></label>
-                <div class="control">
-                    <pre style="background-color:#ECECEC; padding: 10px;" class="api_response_data" data-row-id="' . $row->getId() . '" id="api_response_data_' . $row->getId() . '">' . str_replace('\\/', '/', json_encode(json_decode($row->getData('response_data'), true), JSON_PRETTY_PRINT)) . '</pre>
-                </div>
-            </div>
-        </div>';
-
-        return $this->unparseUrl($parsedUrl) . $dataHtml;
+        return $result;
     }
 
     /**
@@ -57,5 +45,38 @@ class Url extends AbstractRenderer
         $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
 
         return $scheme . $user . $pass . $host . $port . $path . $query . $fragment;
+    }
+
+    /**
+     * @param DataObject $row
+     * @return string
+     */
+    public function render(DataObject $row)
+    {
+        /** @var \Rissc\Printformer\Model\History\Log $row */
+
+        $url = $row->getApiUrl();
+        $parsedUrl = parse_url($url);
+
+        if(!empty($parsedUrl['query'])) {
+            unset($parsedUrl['query']);
+        }
+
+        $dataHtml = '<div class="api_data" style="display: none;">
+            <div>
+                <label for="api_request_data_' . $row->getId() . '"><strong>' . __('Request Data') . ':</strong></label>
+                <div class="control">
+                    <pre style="background-color:#ECECEC; padding: 10px;" class="api_request_data" data-row-id="' . $row->getId() . '" id="api_request_data_' . $row->getId() . '">' . $this->prepareJsonData($row->getData('request_data')) . '</pre>
+                </div>
+            </div><br />
+            <div>
+                <label for="api_response_data_' . $row->getId() . '"><strong>' . __('Response Data') . ':</strong></label>
+                <div class="control">
+                    <pre style="background-color:#ECECEC; padding: 10px;" class="api_response_data" data-row-id="' . $row->getId() . '" id="api_response_data_' . $row->getId() . '">' . $this->prepareJsonData($row->getData('response_data')) . '</pre>
+                </div>
+            </div>
+        </div>';
+
+        return $this->unparseUrl($parsedUrl) . $dataHtml;
     }
 }

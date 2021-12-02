@@ -11,6 +11,7 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Backend\Model\Session as AdminSession;
+use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\DraftFactory;
 use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\Context;
@@ -107,10 +108,11 @@ class Order extends Api
         UrlInterface $urlBuilder,
         ItemFactory $itemFactory,
         TimezoneInterface $timezone,
-        OrderItemRepositoryInterface $orderItemRepository
+        OrderItemRepositoryInterface $orderItemRepository,
+        LogHelper $log
     )
     {
-        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder, $itemFactory, $timezone, $orderItemRepository);
+        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder, $itemFactory, $timezone, $orderItemRepository, $log);
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->orderRepository = $orderRepository;
         $this->productRepository = $productRepository;
