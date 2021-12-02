@@ -13,6 +13,7 @@ use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
+use Rissc\Printformer\Helper\Log;
 
 class Product
 {
@@ -60,6 +61,10 @@ class Product
      * @var Config
      */
     protected $configHelper;
+    /**
+     * @var Log
+     */
+    private $logHelper;
 
     /**
      * Product constructor.
@@ -77,7 +82,8 @@ class Product
         Url $urlHelper,
         PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
-        Config $configHelper
+        Config $configHelper,
+        Log $logHelper
     ) {
         $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
@@ -85,6 +91,7 @@ class Product
         $this->printformerProductFactory = $printformerProductFactory;
         $this->productFactory = $productFactory;
         $this->configHelper = $configHelper;
+        $this->logHelper = $logHelper;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->connection = $printformerProduct->getResource()->getConnection();
@@ -148,6 +155,7 @@ class Product
         $errors = [];
 
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
+
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
         if (empty($apiKey)) {
@@ -162,7 +170,9 @@ class Product
             ]
         ]);
 
+        $createdEntry = $this->logHelper->createGetEntry($url);
         $response = $request->get($url);
+        $this->logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
         if ($response->getStatusCode() !== 200) {
             throw new Exception(__('Error fetching products.'));

@@ -126,7 +126,7 @@ class Draft
         $historyData['response_data'] = $response;
         if (empty($response)) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Empty Response: ' . $response . ', Url: ' . $url));
         }
 
@@ -134,13 +134,13 @@ class Draft
 
         if (!$responseArray['success']) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Response success: false'));
         }
 
         if (!is_array($responseArray)) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error decoding response.'));
         }
         if (isset($responseArray['success']) && false == $responseArray['success']) {
@@ -149,7 +149,7 @@ class Draft
                 $errorMsg = $responseArray['error'];
             }
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__($errorMsg));
         }
 
@@ -161,7 +161,7 @@ class Draft
         }
 
         $historyData['status'] = 'send';
-        $this->_logHelper->addEntry($historyData);
+        $this->_logHelper->createEntry($historyData);
 
         return $this;
     }
@@ -222,7 +222,7 @@ class Draft
             $historyData['response_data'] = json_encode($curlResponse);
             if (isset($curlResponse['success']) && !$curlResponse['success']) {
                 $historyData['status'] = 'failed';
-                $this->_logHelper->addEntry($historyData);
+                $this->_logHelper->createEntry($historyData);
                 return false;
             }
 
@@ -248,13 +248,13 @@ class Draft
                 }
 
                 $historyData['status'] = 'send';
-                $this->_logHelper->addEntry($historyData);
+                $this->_logHelper->createEntry($historyData);
                 return true;
             }
         }
 
         $historyData['status'] = 'failed';
-        $this->_logHelper->addEntry($historyData);
+        $this->_logHelper->createEntry($historyData);
         return false;
     }
 

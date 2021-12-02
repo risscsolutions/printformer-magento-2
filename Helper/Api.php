@@ -29,6 +29,7 @@ use Magento\Framework\UrlInterface;
 use Exception;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
+use Rissc\Printformer\Helper\Log as LogHelper;
 
 class Api extends AbstractHelper
 {
@@ -106,7 +107,11 @@ class Api extends AbstractHelper
     protected $orderItemRepository;
 
     /**
-     * Api constructor.
+     * @var Log
+     */
+    private $_logHelper;
+
+    /**
      * @param Context $context
      * @param CustomerSession $customerSession
      * @param UrlHelper $urlHelper
@@ -120,6 +125,10 @@ class Api extends AbstractHelper
      * @param PrintformerProductAttributes $printformerProductAttributes
      * @param Filesystem $filesystem
      * @param UrlInterface $urlBuilder
+     * @param ItemFactory $itemFactory
+     * @param TimezoneInterface $timezone
+     * @param OrderItemRepositoryInterface $orderItemRepository
+     * @param Log $_logHelper
      */
     public function __construct(
         Context $context,
@@ -137,7 +146,8 @@ class Api extends AbstractHelper
         UrlInterface $urlBuilder,
         ItemFactory $itemFactory,
         TimezoneInterface $timezone,
-        OrderItemRepositoryInterface $orderItemRepository
+        OrderItemRepositoryInterface $orderItemRepository,
+        LogHelper $_logHelper
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -153,6 +163,8 @@ class Api extends AbstractHelper
         $this->urlBuilder = $urlBuilder;
         $this->_itemFactory = $itemFactory;
         $this->timezone = $timezone;
+        $this->orderItemRepository = $orderItemRepository;
+        $this->_logHelper = $_logHelper;
 
         $this->setStoreId($storeManager->getStore()->getId());
 
@@ -163,7 +175,6 @@ class Api extends AbstractHelper
         $this->apiUrl()->setStoreManager($storeManager);
 
         parent::__construct($context);
-        $this->orderItemRepository = $orderItemRepository;
     }
 
     /**
@@ -229,18 +240,23 @@ class Api extends AbstractHelper
     public function checkUserData($customer)
     {
         if ($customer->getPrintformerIdentification() !== null) {
-            $userData = $this->getHttpClient()->get(
-                $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
-                    $customer->getPrintformerIdentification()
-                )
-            );
+            $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData($customer->getPrintformerIdentification());
 
-            if ($userData->getStatusCode() === 200) {
-                $resultData = json_decode($userData->getBody()->getContents(), true);
+            $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
+            $response = $this->getHttpClient()->get($apiUrl);
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
+            $userDataContent = $response->getBody()->getContents();
+            if ($response->getStatusCode() === 200) {
+                $resultData = json_decode($userDataContent, true);
                 $profileData = $resultData['data']['profile'];
 
                 if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
-                    $options = [
+                    $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
+                        $customer->getPrintformerIdentification()
+                    );
+
+                    $requestData = [
                         'json' => [
                             'firstName' => $customer->getFirstname(),
                             'lastName' => $customer->getLastname(),
@@ -248,16 +264,13 @@ class Api extends AbstractHelper
                         ]
                     ];
 
-                    $this->getHttpClient()->put(
-                        $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
-                            $customer->getPrintformerIdentification()
-                        ), $options
-                    );
+                    $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
+                    $response = $this->getHttpClient()->put($url, $requestData);
+                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
                 }
             }
         } else {
-
-            $options = [
+            $requestData = [
                 'json' => [
                     'firstName' => $customer->getFirstname(),
                     'lastName' => $customer->getLastname(),
@@ -265,10 +278,9 @@ class Api extends AbstractHelper
                 ]
             ];
 
-            $userIdentifier = $this->createUser($options);
+            $userIdentifier = $this->createUser($requestData);
             $customer->setData('printformer_identification', $userIdentifier);
         }
-
     }
 
     /**
@@ -367,16 +379,18 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param array $userOptions
-     * @return string
+     * @param null $requestData
+     * @return mixed
      */
-    public function createUser($userOptions = [])
+    public function createUser($requestData = null)
     {
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
 
-        $response = $this->getHttpClient()->post($url, $userOptions);
-        $response = json_decode($response->getBody(), true);
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $response = $this->getHttpClient()->post($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
+        $response = json_decode($response->getBody(), true);
         return $response['data']['identifier'];
     }
 
@@ -391,23 +405,27 @@ class Api extends AbstractHelper
     {
         $url = $this->apiUrl()->setStoreId($storeId)->getDraft();
 
-        $options = [
+        $requestData = [
             'json' => [
                 'user_identifier' => $userIdentifier
             ]
         ];
-
         if(!empty($masterId)){
-            $options['json']['master_id'] = $masterId;
+            $requestData['json']['master_id'] = $masterId;
         }
         $params = $this->mergeAdditionalParamsForApiCall($params);
-
         foreach($params as $key => $value) {
-            $options['json'][$key] = $value;
+            $requestData['json'][$key] = $value;
         }
 
-        $response = $this->getHttpClient($storeId)->post($url, $options);
-        $response = json_decode($response->getBody(), true);
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $response = $this->getHttpClient($storeId)->post($url, $requestData);
+        $responseBody = $response->getBody();
+        $responseContent = $responseBody->getContents();
+        $response = json_decode($responseBody, true);
+        $this->_logHelper->updateEntry($createdEntry, [
+            'response_data' => $responseContent, 'draft_id' => $response['data']['draftHash']]);
+
         if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
             $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
         } else {
@@ -428,7 +446,7 @@ class Api extends AbstractHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraftUpdate($draftHash);
 
-        $options = [
+        $requestData = [
             'json' => [
                 'customAttributes' => [
                     $this->_config->getOrderDraftUpdateOrderId() => $orderId
@@ -436,7 +454,10 @@ class Api extends AbstractHelper
             ]
         ];
 
-        $response = $this->getHttpClient($storeId)->put($url, $options);
+        $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
+        $response = $this->getHttpClient($storeId)->put($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
         $response = json_decode($response->getBody(), true);
         if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
             $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
@@ -455,13 +476,15 @@ class Api extends AbstractHelper
      */
     public function getDraftUsagePageInfo($draftHash, $pageInfo, $storeId = null)
     {
-        $url = $this->_urlHelper
+        $apiUrl = $this->_urlHelper
             ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraftUsagePageInfo($draftHash, $pageInfo);
 
-        $response = $this->getHttpClient($storeId)->get($url);
-        $response = json_decode($response->getBody(), true);
+        $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
+        $response = $this->getHttpClient($storeId)->get($apiUrl);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
+        $response = json_decode($response->getBody(), true);
         return $response['data'];
     }
 
@@ -499,7 +522,7 @@ class Api extends AbstractHelper
                 $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
 
                 //upload temporary file-url
-                $options = [
+                $requestData = [
                     'json' => [
                         'fileURL' => $filePathUrl,
                         'callbackURL' => $callBackUrlWithQueryString
@@ -507,7 +530,10 @@ class Api extends AbstractHelper
                 ];
 
                 try {
-                    $response = $this->getHttpClient()->post($apiUrl, $options);
+                    $createdEntry = $this->_logHelper->createPostEntry($apiUrl, $requestData);
+                    $response = $this->getHttpClient()->post($apiUrl, $requestData);
+                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
                     if ($response->getStatusCode() === 204){
                         $this->_logger->debug('Upload status code: 204'.'for upload with draft id: '.$draftId);
                         return true;
@@ -546,13 +572,15 @@ class Api extends AbstractHelper
         if ($this->_sessionHelper->hasDraftInCache($oldDraftId)) {
             $this->_sessionHelper->removeDraftFromCache($oldDraftId);
         }
+
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
 
+        $createdEntry = $this->_logHelper->createGetEntry($url);
         $response = $this->getHttpClient()->get($url);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
         $draftInfo = json_decode($response->getBody(), true);
-
         $draftHash = $draftInfo['data']['draftHash'];
-
         if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
             $this->_sessionHelper->updateDraftInCache($draftHash, $draftInfo['data']);
         } else {
@@ -573,9 +601,11 @@ class Api extends AbstractHelper
         if (!$this->_sessionHelper->hasDraftInCache($draftHash) || $forceUpdate) {
             $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft($draftHash);
 
+            $createdEntry = $this->_logHelper->createGetEntry($url);
             $response = $this->getHttpClient()->get($url);
-            $response = json_decode($response->getBody(), true);
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
+            $response = json_decode($response->getBody(), true);
             if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
                 $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
             } else {
@@ -598,19 +628,50 @@ class Api extends AbstractHelper
     {
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
 
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier($this->getStoreId()))
-            ->set('user', $userIdentifier)
-            ->setId(bin2hex(random_bytes(16)), true)
-            ->set('redirect', $editorOpenUrl)
-            ->setExpiration($this->_config->getExpireDate());
+        $client = $this->_config->getClientIdentifier($this->getStoreId());
+        $id = bin2hex(random_bytes(16));
+        $replicateAsHeader = true;
+        $expirationDate = $this->_config->getExpireDate();
+        $setIssuedAt = time();
 
+        $requestData = [
+            'apiKey' => $this->_config->getClientApiKey($this->getStoreId()),
+            'storeId' => $this->_config->getClientApiKey($this->getStoreId())
+        ];
+
+        $JWTBuilder = (new Builder())
+            ->setIssuedAt($setIssuedAt)
+            ->set('client', $client)
+            ->set('user', $userIdentifier)
+            ->setId($id, $replicateAsHeader)
+            ->set('redirect', $editorOpenUrl)
+            ->setExpiration($expirationDate);
+
+        $data = [
+            'draftId' => $draftHash,
+            'userIdentifier' => $userIdentifier,
+            'params' => $params,
+            'storeId' => $this->getStoreId(),
+            'client' => $client,
+            'id' => $id,
+            'replicateAsHeader' => $replicateAsHeader,
+            'redirect' => $editorOpenUrl,
+            'expirationDateTimestamp' => $expirationDate,
+            'expirationDateISO8601' => date('c',$expirationDate),
+            'setIssuedAtTimestamp' => $setIssuedAt,
+            'setIssuedAtISO8601' => date('c',$setIssuedAt),
+            'request_data' => $requestData,
+        ];
+
+        $entry = $this->_logHelper->createRedirectEntry($editorOpenUrl, $data);
         $JWT = (string)$JWTBuilder
             ->sign(new Sha256(), $this->_config->getClientApiKey($this->getStoreId()))
             ->getToken();
+        $redirectUrl = $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
+        $entry->setResponseData(json_encode(["redirectUrl" => $redirectUrl, "jwt" => $JWT]));
+        $this->_logHelper->updateEntry($entry);
 
-        return $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
+        return $redirectUrl;
     }
 
     /**
@@ -850,14 +911,18 @@ class Api extends AbstractHelper
     {
         try {
             $draftProcessingUrl = $this->apiUrl()->setStoreId($this->getStoreId())->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
+
             $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
-            $postFields = [
+            $requestData = [
                 'json' => [
                     'draftIds' => $draftIds,
                     'stateChangedNotifyUrl' => $stateChangedNotifyUrl
                 ]
             ];
-            $response = $this->getHttpClient($storeId)->post($draftProcessingUrl, $postFields);
+
+            $createdEntry = $this->_logHelper->createPostEntry($draftProcessingUrl, $requestData);
+            $response = $this->getHttpClient($storeId)->post($draftProcessingUrl, $requestData);
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
         } catch (Exception $e) {
             $this->_logger->debug('Process for draft ids failed. Error-message: '.$e->getMessage());
         }
@@ -1014,11 +1079,14 @@ class Api extends AbstractHelper
         ];
 
         try {
-            $response = $httpClient->get($thumbnailUrl . '?' . http_build_query($postFields));
+            $completeThumbnailUrl = $thumbnailUrl . '?' . http_build_query($postFields);
+
+            $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
+            $response = $httpClient->get($completeThumbnailUrl);
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
         } catch(ServerException $e) {
             throw $e;
         }
-
 
         /** @var Psr7Stream $stream */
         $stream = $response->getBody();
@@ -1066,7 +1134,9 @@ class Api extends AbstractHelper
      */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
-        $postFields = [
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl().'/api-ext/draft/claim';
+
+        $requestData = [
             'json' => [
                 'user_identifier' => $userIdentifier,
                 'drafts' => $drafts,
@@ -1074,8 +1144,11 @@ class Api extends AbstractHelper
             ]
         ];
 
-        return json_decode($this->getHttpClient()->post($this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() .
-                                                        '/api-ext/draft/claim', $postFields)->getBody(), true);
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $body = $this->getHttpClient()->post($url, $requestData)->getBody();
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $body->getContents()]);
+
+        return json_decode($body, true);
     }
 
     /**
@@ -1086,14 +1159,18 @@ class Api extends AbstractHelper
      */
     public function userMerge($userIdentifierOne, $userIdentifierTwo)
     {
-        $postFields = [
+        $requestData = [
             'json' => [
                 'source_user_identifier' => $userIdentifierTwo
             ]
         ];
 
-        return json_decode($this->getHttpClient()->post($this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() . '/api-ext/user/' .
-                                                        $userIdentifierOne . '/merge', $postFields)->getBody(), true);
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() . '/api-ext/user/' . $userIdentifierOne . '/merge';
+
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $response = $this->getHttpClient()->post($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+        return json_decode($response->getBody(), true);
     }
 
     /**
@@ -1105,10 +1182,13 @@ class Api extends AbstractHelper
     public function updatePrintformerDraft($draftHash, $dataParams = [])
     {
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft($draftHash);
-
-        $response = $this->getHttpClient()->put($url, [
+        $requestData = [
             'json' => $dataParams
-        ]);
+        ];
+
+        $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
+        $response = $this->getHttpClient()->put($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
         if ($response->getStatusCode() == 200) {
             return true;
