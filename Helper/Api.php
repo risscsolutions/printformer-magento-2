@@ -639,11 +639,12 @@ class Api extends AbstractHelper
             'storeId' => $this->_config->getClientApiKey($this->getStoreId())
         ];
 
+        $identifier = bin2hex(random_bytes(16));
         $JWTBuilder = (new Builder())
             ->setIssuedAt($setIssuedAt)
             ->set('client', $client)
             ->set('user', $userIdentifier)
-            ->setId($id, $replicateAsHeader)
+            ->setId($identifier, $replicateAsHeader)
             ->set('redirect', $editorOpenUrl)
             ->setExpiration($expirationDate);
 

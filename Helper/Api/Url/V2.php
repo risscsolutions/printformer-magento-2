@@ -467,11 +467,12 @@ class V2 extends AbstractHelper implements VersionInterface
 
         $this->_config->setStoreId($storeId);
 
+        $identifier = bin2hex(random_bytes(16));
         $JWTBuilder = (new Builder())
             ->setIssuedAt(time())
             ->set('client', $this->_config->getClientIdentifier($storeId))
             ->set('user', $userIdentifier)
-            ->setId(bin2hex(random_bytes(16)), true)
+            ->setId($identifier, true)
             ->set('redirect', $reviewEditUrl)
             ->setExpiration($this->_config->getExpireDate());
 
