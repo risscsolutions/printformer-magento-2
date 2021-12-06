@@ -244,9 +244,9 @@ class Api extends AbstractHelper
 
             $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
             $response = $this->getHttpClient()->get($apiUrl);
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
             $userDataContent = $response->getBody()->getContents();
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
+
             if ($response->getStatusCode() === 200) {
                 $resultData = json_decode($userDataContent, true);
                 $profileData = $resultData['data']['profile'];
@@ -266,7 +266,7 @@ class Api extends AbstractHelper
 
                     $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
                     $response = $this->getHttpClient()->put($url, $requestData);
-                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
                 }
             }
         } else {
@@ -1084,7 +1084,7 @@ class Api extends AbstractHelper
 
             $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
             $response = $httpClient->get($completeThumbnailUrl);
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => 'IMAGE']);
         } catch(ServerException $e) {
             throw $e;
         }
