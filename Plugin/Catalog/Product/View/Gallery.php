@@ -118,7 +118,7 @@ class Gallery
         foreach($draftIds as $draftId) {
             if ($this->getImagePreviewUrl(1, $draftId)) {
                 $printformerDraft = $this->printformerApi->getDraftUsagePageInfo($draftId, $this->printformerApi::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-                $pages = isset($printformerDraft['pages']) ? $printformerDraft['pages'] : 1;
+                $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
                 $result->removeAllItems();
                 for ($i = 0; $i < $pages; $i++) {
                     try {
@@ -187,7 +187,7 @@ class Gallery
         $url = null;
         if ($this->config->isUseImagePreview() && $draftId) {
             try {
-                if (!isset($this->draftImageCreated[$draftId.$page])) {
+                if (!is_array(getimagesize($this->mediaHelper->getImageFilePath($draftId, $page, false)))) {
                     $jpgImg = $this->printformerApi->getThumbnail(
                         $draftId,
                         $this->printformerApi->getUserIdentifier(),

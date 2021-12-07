@@ -472,20 +472,29 @@ class Api extends AbstractHelper
      * @param $draftHash
      * @param $pageInfo
      * @param null $storeId
-     * @return mixed
+     * @return array|mixed
      */
     public function getDraftUsagePageInfo($draftHash, $pageInfo, $storeId = null)
     {
-        $apiUrl = $this->_urlHelper
-            ->setStoreId($this->_storeManager->getStore()->getId())
-            ->getDraftUsagePageInfo($draftHash, $pageInfo);
+        $storedDraftPageInfo = $this->_sessionHelper->getDraftPageInfo($draftHash);
 
-        $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
-        $response = $this->getHttpClient($storeId)->get($apiUrl);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+        if (!$storedDraftPageInfo) {
+            $apiUrl = $this->_urlHelper
+                ->setStoreId($this->_storeManager->getStore()->getId())
+                ->getDraftUsagePageInfo($draftHash, $pageInfo);
 
-        $response = json_decode($response->getBody(), true);
-        return $response['data'];
+            $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
+            $response = $this->getHttpClient($storeId)->get($apiUrl);
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
+            $response = json_decode($response->getBody(), true);
+            $this->_sessionHelper->setDraftPageInfo($draftHash, $response['data']);
+            $result =  $response['data'];
+        } else {
+            $result = $storedDraftPageInfo;
+        }
+
+        return $result;
     }
 
     /**
