@@ -237,4 +237,40 @@ class Session extends AbstractHelper
         unset($drafts[$draftId]);
         $this->catalogSession->setPrintformerDraftCache($drafts);
     }
+
+    /**
+     * @param string $draftId
+     * @return array|false
+     */
+    public function getDraftPageInfo(string $draftId)
+    {
+        $draftPageInfoFromSession = $this->catalogSession->getPrintformerDraftPageInfo();
+        if (is_array($draftPageInfoFromSession) && isset($draftPageInfoFromSession[$draftId])){
+            $result = $draftPageInfoFromSession;
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $draftId
+     * @param $data
+     * @return false
+     */
+    public function setDraftPageInfo($draftId, $data)
+    {
+        if (is_array($data)){
+            $preparedData = array(
+                $draftId => $data
+            );
+
+            $result = $this->catalogSession->setPrintformerDraftPageInfo($preparedData);
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
 }
