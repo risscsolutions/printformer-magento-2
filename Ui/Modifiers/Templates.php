@@ -270,12 +270,10 @@ class Templates implements ModifierInterface
                                 'imports' => [
                                     'productId' => '${ $.provider }:data.product.current_product_id',
                                     'storeId' => '${ $.provider }:data.product.current_store_id',
-                                    '__disableTmpl' => ['productId' => false, 'storeId' => false],
                                 ],
                                 'exports' => [
                                     'productId' => '${ $.externalProvider }:params.current_product_id',
                                     'storeId' => '${ $.externalProvider }:params.current_store_id',
-                                    '__disableTmpl' => ['productId' => false, 'storeId' => false],
                                 ]
                             ],
                         ],
@@ -375,8 +373,7 @@ class Templates implements ModifierInterface
                             'intent' => 'intent'
                         ],
                         'links' => [
-                            'insertData' => '${ $.provider }:${ $.dataProvider }',
-                            '__disableTmpl' => ['insertData' => false],
+                            'insertData' => '${ $.provider }:${ $.dataProvider }'
                         ],
                         'sortOrder' => 2,
                     ],
