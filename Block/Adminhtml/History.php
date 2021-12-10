@@ -11,7 +11,7 @@ class History extends Container implements BlockInterface
     {
         $this->_controller = 'adminhtml_history';
         $this->_blockGroup = 'Rissc_Printformer';
-        $this->_headerText = __('Printformer Processing History');
+        $this->_headerText = __('Printformer Request Log');
         parent::_construct();
 
         $this->removeButton('add');
