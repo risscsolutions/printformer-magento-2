@@ -38,8 +38,7 @@ class OrderModel
                 /** @var \Magento\Sales\Model\Order\Item $item */
                 foreach ($subject->getAllItems() as $key => $item) {
                     /** @var \Magento\Quote\Model\Quote\Item $quoteItem */
-                    $keyId = $this->searchForSku($item->getSku(), $allItems);
-                    $quoteItem = $allItems[$keyId];
+                    $quoteItem = $allItems[$key];
                     $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                     if ($draftId) {
                         $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
@@ -53,19 +52,5 @@ class OrderModel
         } catch (\Exception $e) {
             $this->logger->critical($e);
         }
-    }
-
-    /**
-     * @param $sku
-     * @param $array
-     * @return int|string|null
-     */
-    function searchForSku($sku, $array) {
-        foreach ($array as $key => $val) {
-            if ($val['sku'] === $sku) {
-                return $key;
-            }
-        }
-        return null;
     }
 }
