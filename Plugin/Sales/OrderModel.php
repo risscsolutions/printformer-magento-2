@@ -38,7 +38,7 @@ class OrderModel
                 /** @var \Magento\Sales\Model\Order\Item $item */
                 foreach ($subject->getAllItems() as $key => $item) {
                     /** @var \Magento\Quote\Model\Quote\Item $quoteItem */
-                    $keyId = $this->searchForSku($item->getSku(), $allItems);
+                    $keyId = $this->searchForItemId($item->getQuoteItemId(), $allItems);
                     $quoteItem = $allItems[$keyId];
                     $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                     if ($draftId) {
@@ -60,9 +60,9 @@ class OrderModel
      * @param $array
      * @return int|string|null
      */
-    function searchForSku($sku, $array) {
+    function searchForItemId($sku, $array) {
         foreach ($array as $key => $val) {
-            if ($val['sku'] === $sku) {
+            if ($val['item_id'] === $sku) {
                 return $key;
             }
         }

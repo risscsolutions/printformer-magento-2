@@ -15,6 +15,7 @@ use Magento\Framework\UrlInterface;
 use Rissc\Printformer\Helper\Product as ProductHelper;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Magento\Backend\Model\Session as BackendSession;
+use Magento\Framework\App\ProductMetadata;
 
 /**
  * Class Templates
@@ -64,10 +65,17 @@ class Templates implements ModifierInterface
     protected $_session;
 
     /**
+     * @var ProductMetadata
+     */
+    private $productMetadata;
+
+    /**
      * @param LocatorInterface $locator
      * @param UrlInterface $urlBuilder
      * @param ProductHelper $productHelper
      * @param ConfigHelper $config
+     * @param BackendSession $session
+     * @param ProductMetadata $productMetadata
      * @param string $scopeName
      * @param string $scopePrefix
      */
@@ -77,6 +85,7 @@ class Templates implements ModifierInterface
         ProductHelper $productHelper,
         ConfigHelper $config,
         BackendSession $session,
+        ProductMetadata $productMetadata,
         $scopeName = '',
         $scopePrefix = ''
     ) {
@@ -87,6 +96,7 @@ class Templates implements ModifierInterface
         $this->configHelper = $config;
         $this->productHelper = $productHelper;
         $this->_session = $session;
+        $this->productMetadata = $productMetadata;
     }
 
     /**
@@ -200,6 +210,20 @@ class Templates implements ModifierInterface
     }
 
     /**
+     * @return bool
+     */
+    public function isMagentoVersion24(): bool
+    {
+        if (strpos($this->productMetadata->getVersion(), '2.4') !== false) {
+            $result = true;
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+
+    /**
      * @param Phrase $title
      * @param $scope
      *
@@ -270,12 +294,10 @@ class Templates implements ModifierInterface
                                 'imports' => [
                                     'productId' => '${ $.provider }:data.product.current_product_id',
                                     'storeId' => '${ $.provider }:data.product.current_store_id',
-                                    '__disableTmpl' => ['productId' => false, 'storeId' => false],
                                 ],
                                 'exports' => [
                                     'productId' => '${ $.externalProvider }:params.current_product_id',
                                     'storeId' => '${ $.externalProvider }:params.current_store_id',
-                                    '__disableTmpl' => ['productId' => false, 'storeId' => false],
                                 ]
                             ],
                         ],
@@ -283,6 +305,11 @@ class Templates implements ModifierInterface
                 ],
             ],
         ];
+
+        if ($this->isMagentoVersion24()) {
+            $modal['children'][$listingTarget]['arguments']['data']['config']['imports']['__disableTmpl'] = ['productId' => false, 'storeId' => false];
+            $modal['children'][$listingTarget]['arguments']['data']['config']['exports']['__disableTmpl'] = ['productId' => false, 'storeId' => false];
+        }
 
         return $modal;
     }
@@ -350,7 +377,7 @@ class Templates implements ModifierInterface
     {
         $dataProvider = $scope . '_listing';
 
-        return [
+        $result = [
             'arguments' => [
                 'data' => [
                     'config' => [
@@ -375,8 +402,7 @@ class Templates implements ModifierInterface
                             'intent' => 'intent'
                         ],
                         'links' => [
-                            'insertData' => '${ $.provider }:${ $.dataProvider }',
-                            '__disableTmpl' => ['insertData' => false],
+                            'insertData' => '${ $.provider }:${ $.dataProvider }'
                         ],
                         'sortOrder' => 2,
                     ],
@@ -399,6 +425,12 @@ class Templates implements ModifierInterface
                 ],
             ],
         ];
+
+        if ($this->isMagentoVersion24()) {
+            $result['arguments']['data']['config']['links']['__disableTmpl'] = ['insertData' => false];
+        }
+
+        return $result;
     }
 
     /**
