@@ -25,6 +25,9 @@
 .printformer-editor-open .page-main .columns .column.main {
   padding: 0 !important;
 }
+.printformer-editor-open .page-main .columns #printformer_shopframe_container {
+  height: 97% !important;
+}
 .printformer-editor-open .page-main .columns .inner-frame {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
