@@ -121,7 +121,6 @@ class Printformer extends AbstractView
         $this->sessionHelper = $sessionHelper;
         $this->draftFactory = $draftFactory;
         $this->cart = $cart;
-        $this->_isScopePrivate = true;
         $this->wishlistItem = $wishlistItem;
         $this->_catalogSession = $catalogSession;
         $this->_apiHelper = $apiHelper;
