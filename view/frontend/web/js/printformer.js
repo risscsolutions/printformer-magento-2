@@ -442,6 +442,8 @@ define([
 
             if (!this.allDraftsDone(draftIds, this.options.printformerProducts)) {
                 this.addBtnDisable();
+            } else {
+                this.addBtnEnable();
             }
         },
 
