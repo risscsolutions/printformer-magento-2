@@ -11,5 +11,6 @@
         <referenceBlock name="product.info">
             <block ifconfig="printformer/general/enabled" class="Rissc\Printformer\Block\Catalog\Product\View\Printformer" name="printformer.buttons" as="form_top" template="Rissc_Printformer::catalog/product/view/printformer.phtml" cacheable="false" />
         </referenceBlock>
+        <referenceBlock name="product.info.addtocart" template="Rissc_Printformer::product/view/addtocart.phtml"/>
     </body>
 </page>
