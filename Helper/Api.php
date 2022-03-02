@@ -593,14 +593,16 @@ class Api extends AbstractHelper
         $printformerProductId = null,
         $checkOnly = false,
         $colorVariation = null,
-        $availableVariants = []
+        $availableVariants = [],
+        $disablePreflight = false
     ) {
         $storeId = $this->_storeManager->getStore()->getId();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
         if(!$process->getId() && !$checkOnly) {
             $dataParams = [
-                'intent' => $intent
+                'intent' => $intent,
+                'disablePreflight' => $disablePreflight // param for Grafick Service Product
             ];
 
             if (!empty($availableVariants) && is_array($availableVariants)){
