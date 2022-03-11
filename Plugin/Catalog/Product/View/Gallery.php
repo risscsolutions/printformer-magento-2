@@ -187,7 +187,8 @@ class Gallery
         $url = null;
         if ($this->config->isUseImagePreview() && $draftId) {
             try {
-                if (!is_array(getimagesize($this->mediaHelper->getImageFilePath($draftId, $page, false)))) {
+                $filePath = $this->mediaHelper->getImageFilePath($draftId, $page, false);
+                if (!file_exists($filePath) || !is_array(getimagesize($filePath))) {
                     $jpgImg = $this->printformerApi->getThumbnail(
                         $draftId,
                         $this->printformerApi->getUserIdentifier(),
