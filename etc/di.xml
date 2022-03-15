@@ -111,4 +111,7 @@
     <type name="Magento\Framework\App\Request\CsrfValidator">
         <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\CsrfValidatorSkip" />
     </type>
+    <type name="Magento\Checkout\Model\DefaultConfigProvider">
+        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\Checkout\Model\DefaultConfigProvider" />
+    </type>
 </config>
