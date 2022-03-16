@@ -2,7 +2,7 @@
 namespace Rissc\Printformer\Helper;
 
 use GuzzleHttp\Exception\ServerException;
-use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use GuzzleHttp\Client;
 use Magento\Customer\Model\Customer;

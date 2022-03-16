@@ -1,7 +1,7 @@
 <?php
 namespace Rissc\Printformer\Helper\Api\Url;
 
-use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
