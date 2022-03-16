@@ -14,7 +14,7 @@ use Magento\Framework\UrlInterface;
 use GuzzleHttp\Client;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Rissc\Printformer\Helper\Api\Url;
-use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Config;
