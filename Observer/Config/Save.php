@@ -10,6 +10,7 @@ use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
+use Magento\Framework\App\Cache\TypeListInterface;
 
 
 class Save implements ObserverInterface
@@ -29,14 +30,21 @@ class Save implements ObserverInterface
      */
     protected $configWriter;
 
+    /**
+     * @var TypeListInterface
+     */
+    protected $cacheTypeList;
+
     public function __construct(
         LoggerInterface $logger,
         ApiHelper $_apiHelper,
-        WriterInterface $configWriter
+        WriterInterface $configWriter,
+        TypeListInterface $cacheTypeList
     ) {
         $this->logger = $logger;
         $this->_apiHelper = $_apiHelper;
         $this->configWriter = $configWriter;
+        $this->cacheTypeList = $cacheTypeList;
     }
 
     /**
@@ -61,10 +69,11 @@ class Save implements ObserverInterface
 
         $website = (int)$observer->getEvent()->getWebsite();
         if (!empty($website)) {
-            $scope = ScopeInterface::SCOPE_WEBSITE;
+            $scope = ScopeInterface::SCOPE_WEBSITES;
             $scopeId = $website;
         }
         $this->configWriter->save('printformer/version2group/v2clientName', $name, $scope, $scopeId);
+        $this->cacheTypeList->cleanType('config');
     }
 
 }
