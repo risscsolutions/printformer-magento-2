@@ -146,8 +146,8 @@ class Draft
         $this->_httpClient = $this->getGuzzleClient();
 
         try {
-            $this->setStoreId($storeManager->getStore()->getId());
-            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+            $storeId = $storeManager->getStore()->getId();
+            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($storeId)));
         } catch (NoSuchEntityException $e) {
         }
     }
