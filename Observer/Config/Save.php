@@ -54,12 +54,24 @@ class Save implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
+        //default scope values
         $resultName = '';
+        $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+        $scopeId = 0;
+
         try {
-            $storeId = false;
-            $websiteId = $observer->getWebsite();
-            $url = $this->_apiHelper->apiUrl()->getClientName($storeId, $websiteId);
-            $httpClient = $this->_apiHelper->getHttpClient($storeId, $websiteId);
+            $websiteId = (int)$observer->getEvent()->getWebsite();
+            if (!empty($websiteId)) {
+                //website scope values
+                $scope = ScopeInterface::SCOPE_WEBSITES;
+                $scopeId = $websiteId;
+                $url = $this->_apiHelper->apiUrl()->getClientName();
+                $httpClient = $this->_apiHelper->getHttpClient();
+            } else {
+                $url = $this->_apiHelper->apiUrl()->getDefaultClientName();
+                $httpClient = $this->_apiHelper->getDefaultHttpClient();
+            }
+
             $response = $httpClient->get($url);
             $response = json_decode($response->getBody(), true);
             $resultName = $response['data']['name'];
@@ -68,14 +80,6 @@ class Save implements ObserverInterface
             $this->logger->debug($message);
         }
 
-        $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
-        $scopeId = 0;
-
-        $website = (int)$observer->getEvent()->getWebsite();
-        if (!empty($website)) {
-            $scope = ScopeInterface::SCOPE_WEBSITES;
-            $scopeId = $website;
-        }
         $this->configWriter->save(ConfigHelper::XML_PATH_V2_NAME, $resultName, $scope, $scopeId);
         $this->cacheTypeList->cleanType('config');
     }

@@ -46,6 +46,7 @@ class Api extends AbstractHelper
     const ProcessingStateAdminMassResend = 4;
     const DRAFT_USAGE_PAGE_INFO_PREVIEW = 'preview';
     const DRAFT_USAGE_PAGE_INFO_PRINT = 'print';
+    const ADMIN_SCOPE = 0;
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -196,6 +197,24 @@ class Api extends AbstractHelper
         }
 
         parent::__construct($context);
+    }
+
+    /**
+     * @return Client
+     */
+    public function getDefaultHttpClient()
+    {
+        if (!isset($this->_httpClients[$this->getStoreId()])) {
+            $this->_httpClients[self::ADMIN_SCOPE] = new Client([
+                'base_url' => $this->apiUrl()->getPrintformerBaseUrl(self::ADMIN_SCOPE),
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->_config->getClientApiKey(self::ADMIN_SCOPE),
+                ]
+            ]);
+        }
+
+        return $this->_httpClients[self::ADMIN_SCOPE];
     }
 
     /**

@@ -13,6 +13,7 @@ use Rissc\Printformer\Model\Config\Source\Redirect;
 class Url extends AbstractHelper implements VersionInterface
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
+    const ADMIN_SCOPE = 0;
 
     /** @var V2Helper */
     protected $_versionHelper = null;
@@ -34,6 +35,11 @@ class Url extends AbstractHelper implements VersionInterface
         $this->config = $config;
 
         parent::__construct($context);
+    }
+
+    public function getDefaultClientName()
+    {
+        return $this->getVersionHelper()->setStoreId(self::ADMIN_SCOPE)->getClientName();
     }
 
     /**
