@@ -13,6 +13,7 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Api\OrderItemRepositoryInterface;
 use Magento\Store\Model\Store;
@@ -28,7 +29,6 @@ use Magento\Backend\Model\Session as AdminSession;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
-use Exception;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Log as LogHelper;
@@ -173,15 +173,17 @@ class Api extends AbstractHelper
         $this->orderItemRepository = $orderItemRepository;
         $this->_logHelper = $_logHelper;
 
-        $this->setStoreId($storeManager->getStore()->getId());
-
         $this->_urlHelper->setStoreId($this->getStoreId());
         $this->_config->setStoreId($this->getStoreId());
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
 
-        $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+        try {
+            $this->setStoreId($storeManager->getStore()->getId());
+            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+        } catch (NoSuchEntityException $e) {
+        }
 
         parent::__construct($context);
     }
