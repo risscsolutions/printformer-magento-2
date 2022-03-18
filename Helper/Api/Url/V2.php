@@ -4,13 +4,13 @@ namespace Rissc\Printformer\Helper\Api\Url;
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
-use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Api\VersionInterface;
@@ -77,6 +77,11 @@ class V2 extends AbstractHelper implements VersionInterface
     protected $_catalogHelper;
 
     /**
+     * @var Configuration
+     */
+    private $jwtConfig;
+
+    /**
      * V2 constructor.
      *
      * @param Context $context
@@ -96,7 +101,12 @@ class V2 extends AbstractHelper implements VersionInterface
         $this->_config = $config;
         $this->_customerSession = $customerSession;
         $this->_catalogHelper = $catalogHelper;
-        $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+
+        try {
+            $this->setStoreId($storeManager->getStore()->getId());
+            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+        } catch (NoSuchEntityException $e) {
+        }
 
         parent::__construct($context);
     }

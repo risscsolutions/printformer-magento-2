@@ -5,6 +5,7 @@ namespace Rissc\Printformer\Gateway\User;
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Rissc\Printformer\Gateway\Exception;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\HTTP\ZendClientFactory;
@@ -17,7 +18,6 @@ use Magento\Framework\UrlInterface;
 use GuzzleHttp\Client;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Rissc\Printformer\Helper\Api\Url;
-use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Config;
@@ -98,6 +98,11 @@ class Draft
     private $encryptor;
 
     /**
+     * @var Configuration
+     */
+    private $jwtConfig;
+
+    /**
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
      * @param Decoder $jsonDecoder
@@ -139,7 +144,12 @@ class Draft
         $this->_config = $config;
         $this->_urlHelper->initVersionHelper();
         $this->_httpClient = $this->getGuzzleClient();
-        $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+
+        try {
+            $this->setStoreId($storeManager->getStore()->getId());
+            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+        } catch (NoSuchEntityException $e) {
+        }
     }
 
     /**
