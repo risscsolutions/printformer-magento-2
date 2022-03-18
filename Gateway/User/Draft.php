@@ -2,6 +2,9 @@
 
 namespace Rissc\Printformer\Gateway\User;
 
+use DateTimeImmutable;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use Rissc\Printformer\Gateway\Exception;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\HTTP\ZendClientFactory;
@@ -136,6 +139,7 @@ class Draft
         $this->_config = $config;
         $this->_urlHelper->initVersionHelper();
         $this->_httpClient = $this->getGuzzleClient();
+        $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
     }
 
     /**
@@ -218,45 +222,43 @@ class Draft
      */
     public function getRedirectUrl($redirectUrl)
     {
+        $client = $this->_config->getClientIdentifier();
         $identifier = bin2hex(random_bytes(16));
-        /**
-         * Create a valid JWT
-         */
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
-            ->set('user', $this->getUserIdentifier())
-            ->setId($identifier, true)
-            ->set('redirect', $redirectUrl)
-            ->setExpiration($this->_config->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $this->getUserIdentifier())
+            ->identifiedBy($identifier)
+            ->withClaim('redirect', $redirectUrl)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $authUrl = $this->_urlHelper->getAuth();
         if (!$authUrl) {
             return '';
         }
+
         return $this->_urlHelper->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
     }
 
     public function getPdfDocument($draftId)
     {
+        $client = $this->_config->getClientIdentifier();
         $identifier = bin2hex(random_bytes(16));
-        /**
-         * Create a valid JWT
-         */
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
-            ->set('user', $this->getUserIdentifier())
-            ->setId($identifier, true)
-            ->setExpiration($this->_config->getExpireDate());
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $this->getUserIdentifier())
+            ->identifiedBy($identifier)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
-            ->getToken();
         return $this->_urlHelper->getPdfUrl($draftId) . '?' . http_build_query(['jwt' => $JWT]);
     }
 

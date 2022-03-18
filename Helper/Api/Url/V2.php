@@ -1,7 +1,10 @@
 <?php
 namespace Rissc\Printformer\Helper\Api\Url;
 
-use Lcobucci\JWT\Builder;
+use DateTimeImmutable;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -93,6 +96,7 @@ class V2 extends AbstractHelper implements VersionInterface
         $this->_config = $config;
         $this->_customerSession = $customerSession;
         $this->_catalogHelper = $catalogHelper;
+        $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
 
         parent::__construct($context);
     }
@@ -405,17 +409,15 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminPDF($draftHash, $quoteId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($expirationDate);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $pdfUrl = $this->getPDF($draftHash);
-
         $postFields = [
             'jwt' => $JWT
         ];
@@ -428,17 +430,15 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminPreviewPDF($draftHash, $quoteId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($expirationDate);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $pdfUrl = $this->getPreviewPDF($draftHash);
-
         $postFields = [
             'jwt' => $JWT
         ];
@@ -464,22 +464,20 @@ class V2 extends AbstractHelper implements VersionInterface
             $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
             $storeId = $this->_storeId;
         }
-
         $this->_config->setStoreId($storeId);
-
+        $client = $this->_config->getClientIdentifier($storeId);
         $identifier = bin2hex(random_bytes(16));
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier($storeId))
-            ->set('user', $userIdentifier)
-            ->setId($identifier, true)
-            ->set('redirect', $reviewEditUrl)
-            ->setExpiration($this->_config->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey($storeId))
-            ->getToken();
-
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $userIdentifier)
+            ->identifiedBy($identifier)
+            ->withClaim('redirect', $reviewEditUrl)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $postFields = [
             'jwt' => $JWT
