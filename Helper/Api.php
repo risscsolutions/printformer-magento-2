@@ -1,10 +1,12 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
-use GuzzleHttp\Exception\ServerException;
-use Lcobucci\JWT\Token\Builder;
+use DateTimeImmutable;
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ServerException;
 use Magento\Customer\Model\Customer;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -112,6 +114,11 @@ class Api extends AbstractHelper
     private $_logHelper;
 
     /**
+     * @var Configuration
+     */
+    private Configuration $jwtConfig;
+
+    /**
      * @param Context $context
      * @param CustomerSession $customerSession
      * @param UrlHelper $urlHelper
@@ -173,6 +180,8 @@ class Api extends AbstractHelper
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
+
+        $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
 
         parent::__construct($context);
     }
@@ -636,47 +645,43 @@ class Api extends AbstractHelper
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
-
         $client = $this->_config->getClientIdentifier($this->getStoreId());
-        $id = bin2hex(random_bytes(16));
-        $replicateAsHeader = true;
+        $identifier = bin2hex(random_bytes(16));
+        $issuedAt = new DateTimeImmutable();
         $expirationDate = $this->_config->getExpireDate();
-        $setIssuedAt = time();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $userIdentifier)
+            ->identifiedBy($identifier)
+            ->withClaim('redirect', $editorOpenUrl)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
+        $setIssuedAtTimestamp = time();
+        $expirationDateTimeStamp = $this->_config->getExpireDateTimeStamp();
         $requestData = [
             'apiKey' => $this->_config->getClientApiKey($this->getStoreId()),
             'storeId' => $this->_config->getClientApiKey($this->getStoreId())
         ];
-
-        $identifier = bin2hex(random_bytes(16));
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt($setIssuedAt)
-            ->set('client', $client)
-            ->set('user', $userIdentifier)
-            ->setId($identifier, $replicateAsHeader)
-            ->set('redirect', $editorOpenUrl)
-            ->setExpiration($expirationDate);
-
         $data = [
             'draftId' => $draftHash,
             'userIdentifier' => $userIdentifier,
             'params' => $params,
             'storeId' => $this->getStoreId(),
             'client' => $client,
-            'id' => $id,
-            'replicateAsHeader' => $replicateAsHeader,
+            'id' => $identifier,
+            'replicateAsHeader' => true,
             'redirect' => $editorOpenUrl,
-            'expirationDateTimestamp' => $expirationDate,
-            'expirationDateISO8601' => date('c',$expirationDate),
-            'setIssuedAtTimestamp' => $setIssuedAt,
-            'setIssuedAtISO8601' => date('c',$setIssuedAt),
+            'expirationDateTimestamp' => $expirationDateTimeStamp,
+            'expirationDateISO8601' => date('c',$expirationDateTimeStamp),
+            'setIssuedAtTimestamp' => $setIssuedAtTimestamp,
+            'setIssuedAtISO8601' => date('c',$setIssuedAtTimestamp),
             'request_data' => $requestData,
         ];
-
         $entry = $this->_logHelper->createRedirectEntry($editorOpenUrl, $data);
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey($this->getStoreId()))
-            ->getToken();
+
         $redirectUrl = $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
         $entry->setResponseData(json_encode(["redirectUrl" => $redirectUrl, "jwt" => $JWT]));
         $this->_logHelper->updateEntry($entry);
@@ -1062,24 +1067,13 @@ class Api extends AbstractHelper
      */
     public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
-        $httpClient = new Client([
-                                     'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
-                                     'headers' => [
-                                         'Accept' => 'application/json'
-                                     ]
-                                 ]);
-
-        $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash, 0);
-
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->set('user', $userIdentifier)
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->withClaim('user', $userIdentifier)
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $postFields = [
             'jwt' => $JWT,
@@ -1089,6 +1083,13 @@ class Api extends AbstractHelper
         ];
 
         try {
+            $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash, 0);
+            $httpClient = new Client([
+                'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
+                'headers' => [
+                    'Accept' => 'application/json'
+                ]
+            ]);
             $completeThumbnailUrl = $thumbnailUrl . '?' . http_build_query($postFields);
 
             $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
@@ -1117,17 +1118,14 @@ class Api extends AbstractHelper
      */
     public function getPdfLink($draftHash)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $pdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPDF($draftHash);
-
         $postFields = [
             'jwt' => $JWT
         ];
@@ -1234,14 +1232,12 @@ class Api extends AbstractHelper
      */
     public function getDerivateLink($fileId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $derivateDownloadLink = $this->apiUrl()->setStoreId($this->getStoreId())->getDerivat($fileId);
 
@@ -1259,14 +1255,12 @@ class Api extends AbstractHelper
      */
     public function createReviewPdfUrl($reviewId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
 
@@ -1284,14 +1278,12 @@ class Api extends AbstractHelper
      */
     public function getReviewPdfUrl($reviewId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
 
@@ -1309,14 +1301,12 @@ class Api extends AbstractHelper
      */
     public function getIdmlPackage($draftId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $getIdmlPackage = $this->apiUrl()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
 
@@ -1334,14 +1324,12 @@ class Api extends AbstractHelper
      */
     public function closePagePlanner()
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
 
         $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
 
