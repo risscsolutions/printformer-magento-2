@@ -1075,7 +1075,7 @@ class Api extends AbstractHelper
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->withClaim('user', $userIdentifier)
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $postFields = [
             'jwt' => $JWT,
@@ -1125,7 +1125,7 @@ class Api extends AbstractHelper
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $pdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPDF($draftHash);
         $postFields = [
@@ -1239,7 +1239,7 @@ class Api extends AbstractHelper
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $derivateDownloadLink = $this->apiUrl()->setStoreId($this->getStoreId())->getDerivat($fileId);
 
@@ -1262,7 +1262,7 @@ class Api extends AbstractHelper
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
 
@@ -1285,7 +1285,7 @@ class Api extends AbstractHelper
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
 
@@ -1308,7 +1308,7 @@ class Api extends AbstractHelper
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $getIdmlPackage = $this->apiUrl()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
 
@@ -1331,7 +1331,7 @@ class Api extends AbstractHelper
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey());
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
 
