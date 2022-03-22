@@ -216,6 +216,18 @@
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\ResetPrintformerIdentifier</frontend_model>
                 </field>
             </group>
+            <group id="information" translate="label" type="text" sortOrder="9998" showInDefault="0" showInWebsite="0"
+                   showInStore="0">
+                <comment><![CDATA[]]></comment>
+                <label>Information</label>
+                <frontend_model>Rissc\Printformer\Block\Adminhtml\Group\Markdown\Readme</frontend_model>
+            </group>
+            <group id="changelog" translate="label" type="text" sortOrder="9999" showInDefault="1" showInWebsite="0"
+                   showInStore="0">
+                <comment><![CDATA[]]></comment>
+                <label>Changelog</label>
+                <frontend_model>Rissc\Printformer\Block\Adminhtml\Group\Markdown\Changelog</frontend_model>
+            </group>
         </section>
     </system>
 </config>
