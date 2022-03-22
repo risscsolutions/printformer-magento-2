@@ -3,10 +3,10 @@
 namespace Rissc\Printformer\Setup;
 
 use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\DB\Ddl\Table as DdlTable;
 use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
-use Magento\Framework\DB\Ddl\Table as DdlTable;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 
 class UpgradeSchema implements UpgradeSchemaInterface
@@ -15,8 +15,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
     const TABLE_NAME_PRODUCT              = 'printformer_product';
     const TABLE_NAME_HISTORY              = 'printformer_async_history';
     const TABLE_NAME_CUSTOMER_GROUP_RIGHT = 'printformer_customer_group_right';
+    const TABLE_NAME_SALES_ORDER_ITEM     = 'sales_order_item';
     const TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT = 'catalog_product_printformer_product';
     const COLUMN_NAME_UPLOAD_PROCESSING_COUNT            = 'printformer_upload_processing_count';
+    const COLUMN_NAME_PROCESSING_COUNT_STATE             = 'printformer_count_state';
+    const COLUMN_NAME_PROCESSING_COUNT_DATE              = 'printformer_count_date';
 
     /**
      * @param SchemaSetupInterface $setup
@@ -154,7 +157,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'nullable' => false,
                         'default' => DdlTable::TIMESTAMP_INIT
                     ],
-                    'Create At'
+                    'Created At'
                 )
                 ->addColumn(
                     'direction',
@@ -523,7 +526,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $setup->getTable('sales_order_item'),
                 self::COLUMN_NAME_UPLOAD_PROCESSING_COUNT,
                 [
-                    'type' => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
+                    'type' => DdlTable::TYPE_SMALLINT,
                     'unsigned' => true,
                     'nullable' => false,
                     'default' => '0',
@@ -560,6 +563,70 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'type' => Table::TYPE_TEXT,
                         'length' => 255,
                         'comment' => 'Available variant-versions shown in printformer color-selection'
+                    ]
+                );
+            }
+        }
+
+        if(version_compare($context->getVersion(), '100.8.61', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_SALES_ORDER_ITEM);
+
+            $connection->addColumn(
+                $tableName,
+                self::COLUMN_NAME_PROCESSING_COUNT_STATE,
+                [
+                    'type' => DdlTable::TYPE_SMALLINT,
+                    'unsigned' => true,
+                    'nullable' => false,
+                    'default' => '0',
+                    'comment' => 'Printformer Processing Count State'
+                ]
+            );
+
+            $connection->addColumn(
+                $tableName,
+                self::COLUMN_NAME_PROCESSING_COUNT_DATE,
+                [
+                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'size' => null,
+                    [
+                        'nullable' => false,
+                        'default' => DdlTable::TIMESTAMP_INIT
+                    ],
+                    'comment' => 'Printformer Processing Count Updated At'
+                ]
+            );
+        }
+
+        if(version_compare($context->getVersion(), '100.8.62', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_HISTORY);
+            $columnName = 'request_type';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => DdlTable::TYPE_TEXT,
+                        'unsigned' => true,
+                        'nullable' => false,
+                        'comment' => 'Request type'
+                    ]
+                );
+            }
+
+            $columnName = 'updated_at';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => DdlTable::TYPE_TIMESTAMP,
+                        'size' => null,
+                        [
+                            'nullable' => false,
+                            'default' => DdlTable::TIMESTAMP_INIT_UPDATE
+                        ],
+                        'comment' => 'Updated At'
                     ]
                 );
             }

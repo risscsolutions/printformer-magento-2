@@ -1,15 +1,20 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use DateInterval;
+use DateTimeImmutable;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 class Config extends AbstractHelper
 {
-    const XML_PATH_V2_ENABLED                       = 'printformer/version2group/version2';
+    const XML_PATH_CONFIG_DRAFT_UPDATE              = 'printformer/draft/draft_update';
+    const XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID     = 'printformer/draft/draft_update_order_id';
+
     const XML_PATH_V2_API_KEY                       = 'printformer/version2group/v2apiKey';
     const XML_PATH_V2_IDENTIFIER                    = 'printformer/version2group/v2identifier';
 
@@ -19,14 +24,13 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_SECRET                    = 'printformer/general/secret_word';
     const XML_PATH_CONFIG_LOCALE                    = 'printformer/general/locale';
     const XML_PATH_CONFIG_STATUS                    = 'printformer/general/order_status';
-    const XML_PATH_CONFIG_DRAFT_UPDATE              = 'printformer/general/draft_update';
-    const XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID     = 'printformer/general/draft_update_order_id';
     const XML_PATH_CONFIG_DISPLAY_MODE              = 'printformer/general/display_mode';
     const XML_PATH_CONFIG_FRAME_FULLSCREEN          = 'printformer/general/frame_fullscreen';
 
     const XML_PATH_CONFIG_REDIRECT_ON_CANCEL        = 'printformer/general/redirect_on_cancel';
     const XML_PATH_CONFIG_REDIRECT                  = 'printformer/general/redirect_after_config';
     const XML_PATH_CONFIG_REDIRECT_URL              = 'printformer/general/redirect_alt_url';
+    const XML_PATH_CONFIG_OPEN_EDITOR_PREVIEW_TEXT  = 'printformer/general/open_editor_preview_text';
     const XML_PATH_CONFIG_SKIP_CONFIG               = 'printformer/general/allow_skip_config';
     const XML_PATH_CONFIG_WISHLIST_HINT             = 'printformer/general/guest_wishlist_hint';
     const XML_PATH_CONFIG_EXPIRE_DATE               = 'printformer/general/expire_date';
@@ -61,8 +65,6 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_COLOR_OPTION_NAME         = 'printformer/color/option_name';
     const XML_PATH_CONFIG_COLOR_OPTION_VALUES       = 'printformer/color/option_values';
 
-    const XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE     = 'printformer/general/processing_type';
-
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
 
     /**
@@ -81,21 +83,29 @@ class Config extends AbstractHelper
     protected $_customerSession;
 
     /**
+     * @var EncryptorInterface
+     */
+    private $encryptor;
+
+    /**
      * Config constructor.
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param CustomerSession $customerSession
+     * @param EncryptorInterface $encryptor
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
-        CustomerSession $customerSession
+        CustomerSession $customerSession,
+        EncryptorInterface $encryptor
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
         $this->storeId = $this->storeManager->getStore()->getId();
         $this->_customerSession = $customerSession;
+        $this->encryptor = $encryptor;
     }
 
     /**
@@ -236,13 +246,17 @@ class Config extends AbstractHelper
     /**
      * @return int
      */
-    public function getOrderDraftUpdate()
+    public function getOrderDraftUpdate($storeId = null)
     {
-        return intval($this->scopeConfig->getValue(
+        if (!$storeId){
+            $storeId = $this->getStoreId();
+        }
+
+        return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DRAFT_UPDATE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        ));
+            ScopeInterface::SCOPE_WEBSITES,
+            $storeId
+        );
     }
 
     /**
@@ -252,7 +266,7 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID,
-            ScopeInterface::SCOPE_STORES,
+            ScopeInterface::SCOPE_WEBSITES,
             $this->getStoreId()
         );
     }
@@ -288,6 +302,18 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_REDIRECT_URL,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getOpenEditorPreviewText()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_OPEN_EDITOR_PREVIEW_TEXT,
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );
@@ -390,9 +416,33 @@ class Config extends AbstractHelper
     }
 
     /**
-     * @return string
+     * @return DateTimeImmutable
      */
-    public function getExpireDate()
+    public function getExpireDate(): DateTimeImmutable
+    {
+        $days = $this->scopeConfig->getValue(
+            self::XML_PATH_CONFIG_EXPIRE_DATE,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        );
+
+        $dateTimeImmutable = new DateTimeImmutable();
+        $expireDateTimeImmutable = $dateTimeImmutable;
+
+        try {
+            $dateTimeInterval = new DateInterval('P' . $days . 'D');
+            $expireDateTimeImmutable = $dateTimeImmutable->add($dateTimeInterval);
+        } catch (\Exception $e) {
+            $this->_logger->warning('invalid datetime interval format, please verify');
+        }
+
+        return $expireDateTimeImmutable;
+    }
+
+    /**
+     * @return DateTimeImmutable
+     */
+    public function getExpireDateTimeStamp(): string
     {
         $days = $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_EXPIRE_DATE,
@@ -642,49 +692,27 @@ class Config extends AbstractHelper
     }
 
     /**
-     * @return string
-     */
-    public function getProcessingType()
-    {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_DRAFT_PROCESSING_TYPE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
-    }
-
-    /**
-     * @param int $storeId
-     * @return bool
-     */
-    public function isV2Enabled($storeId = null)
-    {
-        if ($storeId === null) {
-            $storeId = $this->getStoreId();
-        }
-
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_V2_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $storeId
-        );
-    }
-
-    /**
      * @param int $storeId
      * @return mixed
      */
     public function getClientApiKey($storeId = null)
     {
+        $decryptedKey = null;
         if ($storeId === null) {
             $storeId = $this->getStoreId();
         }
 
-        return $this->scopeConfig->getValue(
+        $encryptedKey = $this->scopeConfig->getValue(
             self::XML_PATH_V2_API_KEY,
             ScopeInterface::SCOPE_STORES,
             $storeId
         );
+
+        if (!empty($encryptedKey)){
+            $decryptedKey = $this->encryptor->decrypt($encryptedKey);
+        }
+
+        return $decryptedKey;
     }
 
     /**

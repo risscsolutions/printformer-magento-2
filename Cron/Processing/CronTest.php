@@ -2,15 +2,13 @@
 namespace Rissc\Printformer\Cron\Processing;
 
 use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Cron\Processing\Runs\First;
-use Rissc\Printformer\Cron\Processing\Runs\Second;
-use Rissc\Printformer\Cron\Processing\Runs\Third;
+use Rissc\Printformer\Cron\Processing\Runs\Test;
 
 /**
  * Class Processing
  * @package Rissc\Printformer\Cron
  */
-class Cron
+class CronTest
 {
     /**
      * @var LoggerInterface
@@ -18,37 +16,21 @@ class Cron
     protected $logger;
 
     /**
-     * @var First
+     * @var Test
      */
-    private $first;
-
-    /**
-     * @var Second
-     */
-    private $second;
-
-    /**
-     * @var Third
-     */
-    private $third;
+    private $test;
 
     /**
      * @param LoggerInterface $logger
-     * @param First $first
-     * @param Second $second
-     * @param Third $third
+     * @param Test $test
      */
     public function __construct(
         LoggerInterface $logger,
-        First $first,
-        Second $second,
-        Third $third
+        Test $test
     )
     {
         $this->logger = $logger;
-        $this->first = $first;
-        $this->second = $second;
-        $this->third = $third;
+        $this->test = $test;
     }
 
     /**
@@ -57,9 +39,7 @@ class Cron
     public function execute()
     {
         $this->logger->debug('--------------------------------Cron started--------------------------------');
-        $this->first->execute();
-        $this->second->execute();
-        $this->third->execute();
+        $this->test->execute();
         $this->logger->debug('--------------------------------Cron finished-------------------------------');
     }
 }

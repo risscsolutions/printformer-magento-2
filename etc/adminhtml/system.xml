@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
-        <tab id="rissc_extensions" translate="label" sortOrder="110">
+        <tab id="rissc_extensions" translate="label" sortOrder="110" class="admin__page-rissc-tab">
             <label>Rissc Extensions</label>
         </tab>
         <section id="printformer" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -15,33 +15,26 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="order_status" translate="label" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Status for Payed Order</label>
+                    <label>Status when the print data should be generated</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status</source_model>
                     <can_be_empty>0</can_be_empty>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="draft_update" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Update draft after order save</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Please enter update-order-identifier (for order-increment-id)</label>
-                    <can_be_empty>0</can_be_empty>
-                    <validate>required-entry</validate>
-                    <depends>
-                        <field id="draft_update">1</field>
-                    </depends>
-                </field>
                 <field id="redirect_after_config" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Redirect After Configuration</label>
+                    <label>Redirect the user after the editor</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\Redirect</source_model>
                     <depends>
                         <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="delete_draft_button" translate="label" type="select" sortOrder="55" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Show delete Draft Button</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="redirect_after_config">1</field>
                     </depends>
                 </field>
                 <field id="redirect_on_cancel" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -58,17 +51,18 @@
                     </depends>
                 </field>
                 <field id="allow_skip_config" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Allow Add to Cart without Configuration</label>
+                    <label>Allow add to cart without printformer design</label>
                     <source_model>Rissc\Printformer\Model\Config\Source\YesNoPartitial</source_model>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
                 <field id="printformer_upload_template_id" translate="label" type="text" sortOrder="82" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Printformer Upload-Template-Id</label>
+                    <label>Upload Template Identifier</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
+                    <comment>Add a upload template identifier if you want to create printformer design based on downloadable product files</comment>
                 </field>
                 <field id="display_mode" translate="label" type="select" sortOrder="85" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Open editor in ...</label>
@@ -113,35 +107,39 @@
                 <field id="product_image_preview_width" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Preview image width</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="product_image_preview_height" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Preview image height</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="product_image_thumbnail_width" translate="label" type="text" sortOrder="135" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Thumbnail image width</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="product_image_thumbnail_height" translate="label" type="text" sortOrder="136" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Thumbnail image height</label>
                     <depends>
+                        <field id="enabled">1</field>
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
                 <field id="config_button_text" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>"Configure" Button Text</label>
+                    <label>Design Button Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
                 <field id="config_button_css" translate="label" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>"Configure" Button CSS</label>
+                    <label>Design Button CSS Class</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
@@ -152,16 +150,8 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="processing_type" translate="label" type="select" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Processing Type</label>
-                    <source_model>Rissc\Printformer\Gateway\Admin\Draft</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="delete_draft_button" translate="label" type="select" sortOrder="180" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Show delete Draft Button</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                <field id="open_editor_preview_text" translate="label" type="text" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Open Editor Preview Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
@@ -187,40 +177,43 @@
                     </depends>
                 </field>
             </group>
+            <group id="draft" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Additional Draft Configuration</label>
+                <field id="draft_update" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Update draft after order save</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="draft_update_order_id" translate="label" type="text" sortOrder="47" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Printformer attribute for the Magento order number</label>
+                    <can_be_empty>0</can_be_empty>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="draft_update">1</field>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
             <group id="version2group" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>API Credentials</label>
-                <field id="version2" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Enable Version 2</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
                 <field id="v2url" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Remote host</label>
-                    <depends>
-                        <field id="version2">1</field>
-                    </depends>
                     <validate>validate-url</validate>
                 </field>
-                <field id="v2apiKey" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="v2apiKey" translate="label" type='obscure' sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>API Key</label>
-                    <depends>
-                        <field id="version2">1</field>
-                    </depends>
-                    <validate>validate-length minimum-length-32 maximum-length-32</validate>
+                    <validate>validate-length maximum-length-32</validate>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
                 <field id="v2identifier" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Identifier</label>
-                    <depends>
-                        <field id="version2">1</field>
-                    </depends>
                     <validate>validate-length minimum-length-8 maximum-length-8</validate>
                 </field>
                 <field id="reset_printformer_identifier_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="0">
                     <button_label>Reset Printformer Identifier</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\ResetPrintformerIdentifier</frontend_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                        <field id="version2">1</field>
-                    </depends>
                 </field>
             </group>
         </section>

@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Plugin\Sales;
 
+use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Model\Order as OrderModel;
 use Magento\Sales\Model\ResourceModel\Order;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
@@ -72,7 +73,7 @@ class OrderResourceModel
         $this->external = $external;
     }
 
-    public function afterSave(Order $orderResourceModel, AbstractDb $result, OrderModel $orderModel) : void
+    public function afterSave(Order $orderResourceModel, AbstractDb $result, OrderModel $orderModel)
     {
         try {
             $draftIds = [];
@@ -89,17 +90,16 @@ class OrderResourceModel
 
                 $itemDraftIds = explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID));
                 foreach ($itemDraftIds as $draftId) {
+                    $draftIds[] = $draftId;
                     $this->draftFactory
                         ->create()
                         ->load($draftId, 'draft_id')
                         ->setOrderItemId($item->getId())
                         ->save();
 
-                    if ($this->config->getOrderDraftUpdate() && $orderModel->getStatus() == $this::STATE_PENDING){
+                    if ($this->config->getOrderDraftUpdate($item->getStoreId()) && $orderModel->getStatus() == $this::STATE_PENDING){
                         $this->api->updateDraftHash($draftId, $incrementOrderId);
                     }
-
-                    $draftIds[] = $draftId;
                 }
             }
 
@@ -116,16 +116,18 @@ class OrderResourceModel
             }
 
             if (in_array($orderModel->getStatus(), $this->config->getOrderStatus())) {
-                if ($this->config->getProcessingType() == Draft::DRAFT_PROCESSING_TYPE_SYNC && !$this->config->isV2Enabled()) {
-                    $this->draft->setDraftOrdered($orderModel);
-                } else {
-                    $this->api->setAsyncOrdered($draftIds);
-                }
+                $this->api->setAsyncOrdered($draftIds);
             }
         } catch (\Exception $e) {
             $this->logger->critical($e);
+        } finally {
+            if (isset($draftIds) && !empty($draftIds)){
+                foreach ($draftIds as $draftId) {
+                    $this->api->setProcessingStateOnOrderItemByDraftId($draftId, $this->api::ProcessingStateAfterOrder);
+                }
+            }
         }
 
-        return;
+        return $result;
     }
 }

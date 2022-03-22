@@ -93,15 +93,11 @@ class Renderer extends ItemRenderer
         $result = parent::getImage($product, $imageId, $attributes);
         $draftId = $this->getItem()->getPrintformerDraftid();
         if ($draftId && $this->configHelper->isUseImagePreview()) {
-            if($this->configHelper->isV2Enabled()) {
-                $draftId = explode(',', $draftId)[0];
-                if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
-                    $this->mediaHelper->createThumbnail($draftId);
-                }
-                $result->setImageUrl($this->mediaHelper->getImageUrl($draftId));
-            } else {
-                $result->setImageUrl($this->apiUrlHelper->getThumbnail($draftId));
+            $draftId = explode(',', $draftId)[0];
+            if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
+                $this->mediaHelper->createThumbnail($draftId);
             }
+            $result->setImageUrl($this->mediaHelper->getImageUrl($draftId, 1, true));
         }
         return $result;
     }

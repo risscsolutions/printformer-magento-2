@@ -1,12 +1,13 @@
 <?php
 /** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $block */
 $block->cleanupDraftSession();
+$product = $block->getProduct();
 ?>
 
-<?php if($block->getProduct()->isSalable()): ?>
-    <?php foreach($block->getCatalogProductPrintformerProducts() as $_catalogProductPrintformerProduct): ?>
-        <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
-        <div class="printformer-actions box-tocart">
+<?php if ($product->isSalable()): ?>
+    <div class="printformer-actions box-tocart <?php if ($product->getTypeId() === 'downloadable'): ?>product-options-bottom<?php endif; ?>">
+        <?php foreach ($block->getCatalogProductPrintformerProducts($product->getId(), $product->getStoreId()) as $_catalogProductPrintformerProduct): ?>
+            <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
             <button id="printformer-button-<?php echo $_printformerProduct->getId() ?>"
                     type="button"
                     data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
@@ -14,29 +15,27 @@ $block->cleanupDraftSession();
                     data-pf-intent="<?php echo $_printformerProduct->getIntent(); ?>"
                     class="printformer-preselect action primary tocart printformer-button <?php echo $block->getButtonCss($_catalogProductPrintformerProduct) ?>"
                     disabled="disabled">
-                <?php if($_printformerProduct->getIntent() == 'upload' || $_printformerProduct->getIntent() == 'upload-and-editor'): ?>
-                    <span><?php echo __('Upload') ?></span>
-                <?php else: ?>
-                    <span><?php echo __($block->getButtonText()) ?></span>
-                <?php endif; ?>
+                <span><?php echo __($block->getButtonText()) ?></span>
             </button>
             <?php if ($block->canShowDeleteButton()): ?>
                 <button id="printformer-delete-<?php echo $_printformerProduct->getId() ?>"
                         data-printformer-product="<?php echo $_printformerProduct->getId() ?>"
                         data-printformer-master="<?php echo $_printformerProduct->getMasterId(); ?>"
-                        data-product-id="<?php echo $block->getProduct()->getId(); ?>"
+                        data-product-id="<?php echo $product->getId(); ?>"
                         class="action primary tocart printformer-delete"
-                        disabled="disabled"></button>
-                <div id="printformer-delete-confirm-<?php echo $_printformerProduct->getId() ?>">
+                        disabled="disabled"
+                        style="display: none"></button>
+                <div id="printformer-delete-confirm-<?php echo $_printformerProduct->getId() ?>"
+                     style="display: none">
                     <p><?php echo __($block->getDeleteConfirmText()); ?></p>
                 </div>
             <?php endif; ?>
-        </div>
-    <?php endforeach; ?>
-
-    <div id="printformer-editor-main" title="<?php echo $block->getProduct()->getName() ?>">
+        <?php endforeach; ?>
     </div>
-    <div id="printformer-editor-close">
+
+    <div id="printformer-editor-main" style="text-align: center; display: flex" title="<?php echo $product->getName() ?>">
+    </div>
+    <div id="printformer-editor-close" style="display: none">
         <p><?php echo __($block->getCloseNoticeText()) ?></p>
     </div>
     <?php if ($block->isFormatChangeNotice()): ?>
@@ -44,4 +43,4 @@ $block->cleanupDraftSession();
             <p><?php echo __($block->getFormatNoticeText()) ?></p>
         </div>
     <?php endif; ?>
-<?php endif;?>
+<?php endif; ?>

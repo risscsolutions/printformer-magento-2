@@ -13,6 +13,7 @@ use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
+use Rissc\Printformer\Helper\Log;
 
 class Product
 {
@@ -60,6 +61,10 @@ class Product
      * @var Config
      */
     protected $configHelper;
+    /**
+     * @var Log
+     */
+    private $logHelper;
 
     /**
      * Product constructor.
@@ -77,7 +82,8 @@ class Product
         Url $urlHelper,
         PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
-        Config $configHelper
+        Config $configHelper,
+        Log $logHelper
     ) {
         $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
@@ -85,6 +91,7 @@ class Product
         $this->printformerProductFactory = $printformerProductFactory;
         $this->productFactory = $productFactory;
         $this->configHelper = $configHelper;
+        $this->logHelper = $logHelper;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->connection = $printformerProduct->getResource()->getConnection();
@@ -148,9 +155,10 @@ class Product
         $errors = [];
 
         $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
+
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
-        if (empty($apiKey) || empty($this->configHelper->isV2Enabled($storeId))) {
+        if (empty($apiKey)) {
             throw new Exception(__('You need to select a website to synchronize your templates.'));
         }
 
@@ -162,7 +170,9 @@ class Product
             ]
         ]);
 
+        $createdEntry = $this->logHelper->createGetEntry($url);
         $response = $request->get($url);
+        $this->logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
         if ($response->getStatusCode() !== 200) {
             throw new Exception(__('Error fetching products.'));
@@ -210,7 +220,7 @@ class Product
         $masterIDs = [];
         $responseRealigned = [];
         foreach ($responseArray as $responseData) {
-            $masterID = ($this->configHelper->isV2Enabled($storeId) && isset($responseData['id']) ? $responseData['id'] :
+            $masterID = (isset($responseData['id']) ? $responseData['id'] :
                 $responseData['rissc_w2p_master_id']);
             if (!in_array($masterID, $masterIDs)) {
                 $masterIDs[] = $masterID;
@@ -360,13 +370,13 @@ class Product
         /** @var PrintformerProduct $pfProduct */
         $pfProduct = $this->printformerProductFactory->create();
         $pfProduct->setStoreId($storeId)
-            ->setSku($this->configHelper->isV2Enabled($storeId) ? null : $data['sku'])
+            ->setSku(null)
             ->setName($data['name'])
-            ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['description'])
-            ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
-            ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
-            ->setMasterId($this->configHelper->isV2Enabled($storeId) ? $data['id'] : $data['rissc_w2p_master_id'])
-            ->setMd5($this->configHelper->isV2Enabled($storeId) ? null : $data['rissc_w2p_md5'])
+            ->setDescription(null)
+            ->setShortDescription(null)
+            ->setStatus(1)
+            ->setMasterId($data['id'])
+            ->setMd5(null)
             ->setIntent($intent)
             ->setCreatedAt(time())
             ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
@@ -386,11 +396,11 @@ class Product
      */
     public function updatePrintformerProduct(PrintformerProduct $pfProduct, array $data, string $intent, int $storeId)
     {
-        $pfProduct->setSku($this->configHelper->isV2Enabled($storeId) ? null : $data['sku'])
+        $pfProduct->setSku(null)
             ->setName($data['name'])
-            ->setDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['description'])
-            ->setShortDescription($this->configHelper->isV2Enabled($storeId) ? null : $data['short_description'])
-            ->setStatus($this->configHelper->isV2Enabled($storeId) ? 1 : $data['status'])
+            ->setDescription(null)
+            ->setShortDescription(null)
+            ->setStatus(1)
             ->setIntent($intent)
             ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
 

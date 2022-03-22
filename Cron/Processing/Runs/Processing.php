@@ -105,21 +105,29 @@ abstract class Processing
         $this->uploadPrintformerOrderUploadItems();
 
         $unprocessedPrintformerOrderItemDraftsCollection = $this->getUnprocessedPrintformerOrderItemsDrafts();
-        if (!empty($unprocessedPrintformerOrderItemDraftsCollection->getItems())){
-            foreach ($unprocessedPrintformerOrderItemDraftsCollection->getItems() as $orderItem) {
-                if(!empty($orderItem['printformer_draftid'])){
-                    $draftId = $orderItem['printformer_draftid'];
-                    $draftToSync = [];
-                    array_push($draftToSync, $draftId);
-                    if (empty($this->orderItemIdsToFilter)){
-                        $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
+        $unprocessedPrintformerOrderItems = $unprocessedPrintformerOrderItemDraftsCollection->getItems();
+        if (!empty($unprocessedPrintformerOrderItems)){
+            foreach ($unprocessedPrintformerOrderItems as $orderItem) {
+                if(!empty($draftId = $orderItem['printformer_draftid'])){
+                    try {
+                        $storeId = $orderItem['store_id'];
+
+                        $draftToSync = [];
+                        array_push($draftToSync, $draftId);
+                        if (empty($this->orderItemIdsToFilter)){
+                            $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
+                        }
+                        $incrementOrderId = $orderItem->getIncrementId();
+                        if ($this->printformerConfig->getOrderDraftUpdate($storeId)){
+                            $this->api->updateDraftHash($draftId, $incrementOrderId, $storeId);
+                        }
+                        $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
+                        $this->api->setAsyncOrdered($draftToSync, $storeId);
+                    } catch (\Exception $e) {
+                        $this->logger->critical($e);
+                    } finally {
+                        $this->api->setProcessingStateOnOrderItemByDraftId($draftId, $this->api::ProcessingStateAfterCron);
                     }
-                    $incrementOrderId = $orderItem->getIncrementId();
-                    if ($this->printformerConfig->getOrderDraftUpdate()){
-                        $this->api->updateDraftHash($draftId, $incrementOrderId);
-                    }
-                    $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
-                    $this->api->setAsyncOrdered($draftToSync);
                 }
             }
         } else {
@@ -223,10 +231,9 @@ abstract class Processing
     }
 
     /**
-     * @param $unprocessedOrderItemsCollection
-     * @return array
+     * Init upload for upload-order-items
      */
-    protected function uploadPrintformerOrderUploadItems()
+    protected function uploadPrintformerOrderUploadItems(): void
     {
         $unprocessedOrderItemsCollection = $this->getUnprocessedPrintformerOrderUploadItemsCollection();
 
@@ -243,7 +250,6 @@ abstract class Processing
                 }
             }
         }
-        return $uploadedItemsDrafts;
     }
 
     /**

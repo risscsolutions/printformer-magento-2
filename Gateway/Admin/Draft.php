@@ -16,9 +16,6 @@ class Draft
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
 
-    const DRAFT_PROCESSING_TYPE_SYNC    = 'sync';
-    const DRAFT_PROCESSING_TYPE_ASYNC   = 'async';
-
     /**
      * @var LoggerInterface
      */
@@ -75,22 +72,6 @@ class Draft
     }
 
     /**
-     * @return array
-     */
-    public function toOptionArray()
-    {
-        return [['value' => 'sync', 'label' => __('Synchron')], ['value' => 'async', 'label' => __('Asynchron')]];
-    }
-
-    /**
-     * @return array
-     */
-    public function toArray()
-    {
-        return ['sync' => __('Synchron'), 'async' => __('Asynchron')];
-    }
-
-    /**
      * @param \Magento\Sales\Api\Data\OrderInterface $order
      * @return $this
      * @throws \Rissc\Printformer\Gateway\Exception
@@ -121,9 +102,9 @@ class Draft
                 ->getDraftProcessing($draftIds, $order->getQuoteId());
 
             $historyData['request_data'] = json_encode([
-                $draftIds,
-                md5($order->getQuoteId())
-            ]);
+                                                           $draftIds,
+                                                           md5($order->getQuoteId())
+                                                       ]);
             $historyData['api_url'] = $url;
             $historyData['draft_id'] = implode(', ', $draftIds);
 
@@ -145,7 +126,7 @@ class Draft
         $historyData['response_data'] = $response;
         if (empty($response)) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Empty Response: ' . $response . ', Url: ' . $url));
         }
 
@@ -153,13 +134,13 @@ class Draft
 
         if (!$responseArray['success']) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error setting draft ordered. Response success: false'));
         }
 
         if (!is_array($responseArray)) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error decoding response.'));
         }
         if (isset($responseArray['success']) && false == $responseArray['success']) {
@@ -168,7 +149,7 @@ class Draft
                 $errorMsg = $responseArray['error'];
             }
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             throw new Exception(__($errorMsg));
         }
 
@@ -180,7 +161,7 @@ class Draft
         }
 
         $historyData['status'] = 'send';
-        $this->_logHelper->addEntry($historyData);
+        $this->_logHelper->createEntry($historyData);
 
         return $this;
     }
@@ -241,7 +222,7 @@ class Draft
             $historyData['response_data'] = json_encode($curlResponse);
             if (isset($curlResponse['success']) && !$curlResponse['success']) {
                 $historyData['status'] = 'failed';
-                $this->_logHelper->addEntry($historyData);
+                $this->_logHelper->createEntry($historyData);
                 return false;
             }
 
@@ -267,13 +248,13 @@ class Draft
                 }
 
                 $historyData['status'] = 'send';
-                $this->_logHelper->addEntry($historyData);
+                $this->_logHelper->createEntry($historyData);
                 return true;
             }
         }
 
         $historyData['status'] = 'failed';
-        $this->_logHelper->addEntry($historyData);
+        $this->_logHelper->createEntry($historyData);
         return false;
     }
 

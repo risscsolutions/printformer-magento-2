@@ -1,16 +1,13 @@
 <?php
 namespace Rissc\Printformer\Controller\Process;
 
-use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Gateway\Admin\Draft as DraftGateway;
 use Rissc\Printformer\Helper\Order;
 use Magento\Framework\Filesystem;
-use Rissc\Printformer\Helper\Config as PrintformerConfig;
 
 /**
  * To process specific draft
@@ -39,27 +36,20 @@ class Draft extends Action
      * @var Order
      */
     private $order;
-    /**
-     * @var PrintformerConfig
-     */
-    private $printformerConfig;
 
     /**
-     * Draft constructor.
      * @param Context $context
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
      * @param Filesystem $filesystem
      * @param Order $order
-     * @param PrintformerConfig $printformerConfig
      */
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
         LoggerInterface $logger,
         Filesystem $filesystem,
-        Order $order,
-        PrintformerConfig $printformerConfig
+        Order $order
     )
     {
         parent::__construct($context);
@@ -67,18 +57,16 @@ class Draft extends Action
         $this->logger = $logger;
         $this->filesystem = $filesystem;
         $this->order = $order;
-        $this->printformerConfig = $printformerConfig;
     }
 
     public function execute()
     {
-        $this->logger->debug('draft-process callback started');
+        $result = $this->jsonFactory->create();
 
-        $draftHash = $this->getRequest()->getParam('draft_id');
-        $requestParams = ['draft_id' => $draftHash];
-
-        if ($this->printformerConfig->getProcessingType() == DraftGateway::DRAFT_PROCESSING_TYPE_ASYNC || $this->printformerConfig->isV2Enabled()) {
-            $result = $this->jsonFactory->create();
+        try {
+            $this->logger->debug('draft-process callback started');
+            $draftHash = $this->getRequest()->getParam('draft_id');
+            $requestParams = ['draft_id' => $draftHash];
 
             $directoryWriteInstance = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
             $filePath = $this->getRequest()->getParam('filepath');
@@ -113,19 +101,17 @@ class Draft extends Action
 
             http_response_code(200);
             header('Content-Type: application/json');
-        } else {
-            $responseInfo = [
-                'failed' => true,
-                'printformer-config processing_type currently' => $this->printformerConfig->getProcessingType(),
-                'printformer-config processing_type required' => DraftGateway::DRAFT_PROCESSING_TYPE_ASYNC,
-                'printformerConfig isV2Enabled currently' => !$this->printformerConfig->isV2Enabled(),
-                'printformerConfig isV2Enabled required' => true
-            ];
-            $resultResponse = array_merge($responseInfo, $requestParams);
-            $this->logger->debug('draft-process callback is not configured for asynchron');
+
+            $this->logger->debug('draft-process callback finished');
+            $result->setData($resultResponse);
+        } finally {
+            if (isset($draftToSync) && !empty($draftToSync)){
+                foreach ($draftToSync as $draftId) {
+                    $this->order->setProcessingStateOnOrderItemByDraftId($draftId, $this->order::ProcessingStateAfterUploadCallback);
+                }
+            }
         }
 
-        $this->logger->debug('draft-process callback finished');
-        return $result->setData($resultResponse);
+        return $result;
     }
 }

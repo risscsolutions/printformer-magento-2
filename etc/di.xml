@@ -14,8 +14,8 @@
     <preference for="Magento\Checkout\Block\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface"
                 type="Magento\Framework\Api\SearchResults" />
-    <preference for="Magento\Checkout\Block\Cart\Item\Renderer"
-                type="Rissc\Printformer\Block\Checkout\Cart\Renderer" />
+    <preference for="Magento\Downloadable\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
+    <preference for="Magento\Bundle\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
 
     <!-- Plugins -->
     <type name="Magento\Catalog\Block\Product\View\Gallery">
@@ -110,5 +110,8 @@
     </type>
     <type name="Magento\Framework\App\Request\CsrfValidator">
         <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\CsrfValidatorSkip" />
+    </type>
+    <type name="Magento\Checkout\Model\DefaultConfigProvider">
+        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\Checkout\Model\DefaultConfigProvider" />
     </type>
 </config>

@@ -2,6 +2,10 @@
 
 namespace Rissc\Printformer\Gateway\User;
 
+use DateTimeImmutable;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Rissc\Printformer\Gateway\Exception;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\HTTP\ZendClientFactory;
@@ -14,10 +18,10 @@ use Magento\Framework\UrlInterface;
 use GuzzleHttp\Client;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Rissc\Printformer\Helper\Api\Url;
-use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Config;
+use Magento\Framework\Encryption\EncryptorInterface;
 
 class Draft
 {
@@ -81,11 +85,6 @@ class Draft
      */
     protected $userIdentifier = null;
 
-    /**
-     * @var
-     */
-    protected $v2enabled = null;
-
     protected $mediaHelper;
 
     /**
@@ -94,7 +93,16 @@ class Draft
     private $_config;
 
     /**
-     * Draft constructor.
+     * @var EncryptorInterface
+     */
+    private $encryptor;
+
+    /**
+     * @var Configuration
+     */
+    private $jwtConfig;
+
+    /**
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
      * @param Decoder $jsonDecoder
@@ -106,6 +114,7 @@ class Draft
      * @param UrlInterface $url
      * @param Media $mediaHelper
      * @param Config $config
+     * @param EncryptorInterface $encryptor
      */
     public function __construct(
         LoggerInterface $logger,
@@ -118,7 +127,8 @@ class Draft
         LogHelper $logHelper,
         UrlInterface $url,
         Media $mediaHelper,
-        Config $config
+        Config $config,
+        EncryptorInterface $encryptor
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -129,22 +139,17 @@ class Draft
         $this->_url = $url;
         $this->_customerSession = $session;
         $this->_scopeConfig = $scopeConfig;
-        $this->_httpClient = $this->getGuzzleClient();
         $this->mediaHelper = $mediaHelper;
-
-        $this->_urlHelper->initVersionHelper($this->isV2Enabled());
+        $this->encryptor = $encryptor;
         $this->_config = $config;
-    }
+        $this->_urlHelper->initVersionHelper();
+        $this->_httpClient = $this->getGuzzleClient();
 
-    /**
-     * @return bool
-     */
-    public function isV2Enabled()
-    {
-        if ($this->v2enabled === null) {
-            $this->v2enabled = ($this->_scopeConfig->getValue('printformer/version2group/version2', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) == 1);
+        try {
+            $storeId = $storeManager->getStore()->getId();
+            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($storeId)));
+        } catch (NoSuchEntityException $e) {
         }
-        return $this->v2enabled;
     }
 
     /**
@@ -153,8 +158,16 @@ class Draft
     public function getClientApiKey()
     {
         if ($this->apiKey === null) {
-            $this->apiKey = $this->_scopeConfig->getValue('printformer/version2group/v2apiKey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+            $encryptedKey = $this->_scopeConfig->getValue(Config::XML_PATH_V2_API_KEY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+
+            if (!empty($encryptedKey)){
+                $decryptedKey = $this->encryptor->decrypt($encryptedKey);
+                if (!empty($decryptedKey)){
+                    $this->apiKey = $decryptedKey;
+                }
+            }
         }
+
         return $this->apiKey;
     }
 
@@ -167,7 +180,11 @@ class Draft
         if (!$url) {
             return '';
         }
+
+        $createdEntry = $this->_logHelper->createPostEntry($url);
         $response = $this->_httpClient->post($url);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
         $response = json_decode($response->getBody(), true);
 
         return $response['data']['identifier'];
@@ -215,43 +232,43 @@ class Draft
      */
     public function getRedirectUrl($redirectUrl)
     {
-        /**
-         * Create a valid JWT
-         */
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
-            ->set('user', $this->getUserIdentifier())
-            ->setId(bin2hex(random_bytes(16)), true)
-            ->set('redirect', $redirectUrl)
-            ->setExpiration($this->_config->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
-            ->getToken();
+        $client = $this->_config->getClientIdentifier();
+        $identifier = bin2hex(random_bytes(16));
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $this->getUserIdentifier())
+            ->identifiedBy($identifier)
+            ->withClaim('redirect', $redirectUrl)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $authUrl = $this->_urlHelper->getAuth();
         if (!$authUrl) {
             return '';
         }
+
         return $this->_urlHelper->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
     }
 
     public function getPdfDocument($draftId)
     {
-        /**
-         * Create a valid JWT
-         */
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->getClientIdentifier())
-            ->set('user', $this->getUserIdentifier())
-            ->setId(bin2hex(random_bytes(16)), true)
-            ->setExpiration($this->_config->getExpireDate());
+        $client = $this->_config->getClientIdentifier();
+        $identifier = bin2hex(random_bytes(16));
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $this->getUserIdentifier())
+            ->identifiedBy($identifier)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->getClientApiKey())
-            ->getToken();
         return $this->_urlHelper->getPdfUrl($draftId) . '?' . http_build_query(['jwt' => $JWT]);
     }
 
@@ -268,9 +285,8 @@ class Draft
             'Content-Type:' => 'application/json',
             'Accept' => 'application/json'
         ];
-        if ($this->isV2Enabled()) {
-            $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
-        }
+        $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
+
         return new Client([
             'base_uri' => $url,
             'headers' => $header,
@@ -289,14 +305,14 @@ class Draft
             ->setStoreId($storeId)
             ->getDraftDelete($draftId);
 
-        $this->_logger->debug($url);
-
+        $createdEntry = $this->_logHelper->createPostEntry($url);
         /** @var \Zend_Http_Response $response */
         $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
             ->request(\Zend_Http_Client::POST);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
 
         if (!$response->isSuccessful()) {
             throw new Exception(__('Error deleting draft.'));
@@ -325,62 +341,51 @@ class Draft
      */
     public function createDraft($masterId, $intent = null, $userIdentifier = null)
     {
-        $url      = null;
-        $response = null;
+        $url = $this->_urlHelper
+            ->setStoreId($this->_storeManager->getStore()->getId())
+            ->getDraft();
 
         $historyData = [
             'direction' => 'outgoing'
         ];
 
-        $headers = [
-            "X-Magento-Tags-Pattern: .*",
-            "Content-Type: application/json"
-        ];
-
-        $postFields = [
+        $requestData = [
             'json' => [
                 'master_id' => $masterId
             ]
         ];
 
-        if ($this->isV2Enabled()) {
-            $postFields['json']['user_identifier'] = $this->getUserIdentifier();
-        }
+        $requestData['json']['user_identifier'] = $this->getUserIdentifier();
 
         if ($intent !== null) {
-            $postFields['intent'] = $this->getIntent($intent);
+            $requestData['intent'] = $this->getIntent($intent);
         }
 
-        $historyData['request_data'] = json_encode($postFields);
+        $historyData['request_data'] = json_encode($requestData);
         $historyData['draft_id'] = $masterId;
 
-        $url = $this->_urlHelper
-            ->setStoreId($this->_storeManager->getStore()->getId())
-            ->getDraft();
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $response = $this->_httpClient->post($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
-        if ($this->isV2Enabled()) {
-            $header['Authorization'] = 'Bearer' . $this->getClientApiKey();
-        }
-
-        $response = $this->_httpClient->post($url, $postFields);
         $response = json_decode($response->getBody(), true);
 
         $draftHash = $response['data']['draftHash'];
 
         if (!isset($draftHash)) {
             $historyData['status'] = 'failed';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             return null;
         }
 
         if (isset($draftHash)) {
             $historyData['status'] = 'send';
-            $this->_logHelper->addEntry($historyData);
+            $this->_logHelper->createEntry($historyData);
             return $draftHash;
         }
 
         $historyData['status'] = 'failed';
-        $this->_logHelper->addEntry($historyData);
+        $this->_logHelper->createEntry($historyData);
         return null;
     }
 
@@ -394,14 +399,14 @@ class Draft
         $url = $this->_urlHelper
             ->getDraft($draftId);
 
-        $this->_logger->debug($url);
-
+        $createdEntry = $this->_logHelper->createPostEntry($url);
         /** @var \Zend_Http_Response $response */
         $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
             ->request(\Zend_Http_Client::POST);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
 
         if (!$response->isSuccessful()) {
             throw new Exception(__('Error deleting draft.'));

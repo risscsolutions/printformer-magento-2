@@ -129,7 +129,7 @@ class OrderedCallback
         }
         $_historyData['response_data'] = json_encode($_apiResponseObject->getMessage());
         if (!$existingLogEntry) {
-            $this->_logHelper->addEntry($_historyData);
+            $this->_logHelper->createEntry($_historyData);
         } else {
             $this->_logHelper->editEntry($existingLogEntry->getId(), $_historyData);
         }

@@ -1,13 +1,16 @@
 <?php
 namespace Rissc\Printformer\Helper\Api\Url;
 
-use Lcobucci\JWT\Builder;
+use DateTimeImmutable;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Api\VersionInterface;
@@ -20,6 +23,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_CREATE_DRAFT              = '/api-ext/draft';
     const API_DELETE_DRAFT              = '/api-ext/draft/{draftId}';
     const API_UPDATE_DRAFT              = '/api-ext/draft/{draftId}';
+    const API_GET_DRAFT_USAGE_PAGE_INFO = '/api-ext/draft/{draftId}/{usage}/page-info';
     const API_REPLICATE_DRAFT           = '/api-ext/draft/{draftId}/replicate';
     const API_UPLOAD_DRAFT              = '/api-ext/draft/{draftId}/upload';
     const API_DRAFT_PROCESSING          = '/api-ext/pdf-processing';
@@ -73,6 +77,11 @@ class V2 extends AbstractHelper implements VersionInterface
     protected $_catalogHelper;
 
     /**
+     * @var Configuration
+     */
+    private $jwtConfig;
+
+    /**
      * V2 constructor.
      *
      * @param Context $context
@@ -92,6 +101,12 @@ class V2 extends AbstractHelper implements VersionInterface
         $this->_config = $config;
         $this->_customerSession = $customerSession;
         $this->_catalogHelper = $catalogHelper;
+
+        try {
+            $this->setStoreId($storeManager->getStore()->getId());
+            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+        } catch (NoSuchEntityException $e) {
+        }
 
         parent::__construct($context);
     }
@@ -404,17 +419,15 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminPDF($draftHash, $quoteId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($expirationDate);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $pdfUrl = $this->getPDF($draftHash);
-
         $postFields = [
             'jwt' => $JWT
         ];
@@ -427,17 +440,15 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminPreviewPDF($draftHash, $quoteId)
     {
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
-            ->setExpiration($this->_config->setStoreId($this->getStoreId())->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->setStoreId($this->getStoreId())->getClientApiKey())
-            ->getToken();
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($expirationDate);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $pdfUrl = $this->getPreviewPDF($draftHash);
-
         $postFields = [
             'jwt' => $JWT
         ];
@@ -463,21 +474,20 @@ class V2 extends AbstractHelper implements VersionInterface
             $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
             $storeId = $this->_storeId;
         }
-
         $this->_config->setStoreId($storeId);
-
-        $JWTBuilder = (new Builder())
-            ->setIssuedAt(time())
-            ->set('client', $this->_config->getClientIdentifier($storeId))
-            ->set('user', $userIdentifier)
-            ->setId(bin2hex(random_bytes(16)), true)
-            ->set('redirect', $reviewEditUrl)
-            ->setExpiration($this->_config->getExpireDate());
-
-        $JWT = (string)$JWTBuilder
-            ->sign(new Sha256(), $this->_config->getClientApiKey($storeId))
-            ->getToken();
-
+        $client = $this->_config->getClientIdentifier($storeId);
+        $identifier = bin2hex(random_bytes(16));
+        $issuedAt = new DateTimeImmutable();
+        $expirationDate = $this->_config->getExpireDate();
+        $JWTBuilder = $this->jwtConfig->builder()
+            ->issuedAt($issuedAt)
+            ->withClaim('client', $client)
+            ->withClaim('user', $userIdentifier)
+            ->identifiedBy($identifier)
+            ->withClaim('redirect', $reviewEditUrl)
+            ->expiresAt($expirationDate)
+            ->withHeader('jti', $identifier);
+        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $postFields = [
             'jwt' => $JWT
@@ -500,6 +510,14 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getDraftUpdate($draftHash)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_UPDATE_DRAFT);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDraftUsagePageInfo($draftHash, $usage)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace(array('{draftId}', '{usage}'), array($draftHash, $usage), self::API_GET_DRAFT_USAGE_PAGE_INFO);;
     }
 
     public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
