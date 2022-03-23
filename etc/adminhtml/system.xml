@@ -227,7 +227,7 @@
                 <label>Information</label>
                 <frontend_model>Rissc\Printformer\Block\Adminhtml\Group\Markdown\Readme</frontend_model>
             </group>
-            <group id="changelog" translate="label" type="text" sortOrder="9999" showInDefault="1" showInWebsite="0"
+            <group id="changelog" translate="label" type="text" sortOrder="9999" showInDefault="0" showInWebsite="0"
                    showInStore="0">
                 <comment><![CDATA[]]></comment>
                 <label>Changelog</label>
