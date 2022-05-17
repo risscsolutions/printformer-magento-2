@@ -118,9 +118,6 @@ abstract class Processing
                             $this->orderHelper->updateProcessingCountByOrderItem($orderItem);
                         }
                         $incrementOrderId = $orderItem->getIncrementId();
-                        if ($this->printformerConfig->getOrderDraftUpdate($storeId)){
-                            $this->api->updateDraftHash($draftId, $incrementOrderId, $storeId);
-                        }
                         $this->logger->debug('normal drafts to process found:'.implode(",", $draftToSync));
                         $this->api->setAsyncOrdered($draftToSync, $storeId);
                     } catch (\Exception $e) {
