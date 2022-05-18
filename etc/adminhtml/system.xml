@@ -216,6 +216,10 @@
                     <label>Identifier</label>
                     <validate>validate-length minimum-length-8 maximum-length-8</validate>
                 </field>
+                <field id="v2clientName" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Client Name</label>
+                    <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Field\Disable</frontend_model>
+                </field>
                 <field id="reset_printformer_identifier_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="0">
                     <button_label>Reset Printformer Identifier</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\ResetPrintformerIdentifier</frontend_model>

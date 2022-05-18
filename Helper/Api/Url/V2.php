@@ -41,6 +41,8 @@ class V2 extends AbstractHelper implements VersionInterface
 
     const API_GET_USER                  = '/api-ext/user/{userId}';
 
+    const API_CLIENT_NAME               = '/api-ext/client';
+
     const API_PRODUCT_FEED              = '/api-ext/product-feed';
 
 
@@ -602,5 +604,13 @@ class V2 extends AbstractHelper implements VersionInterface
     {
         return $this->getPrintformerBaseUrl() . self::API_PRODUCT_FEED;
     }
+
+     /**
+      * @return string
+      */
+     public function getClientName()
+     {
+         return $this->getPrintformerBaseUrl() . self::API_CLIENT_NAME;
+     }
 
 }
