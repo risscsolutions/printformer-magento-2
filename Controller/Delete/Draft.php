@@ -38,7 +38,14 @@ class Draft
         $product = $this->_productFactory->create();
         $this->_productResource->load($product, intval($params['product_id']));
 
-        if ($product && $product->getId()) {
+        $productId = $product->getId();
+        if (isset($params['selected_product_id'])) {
+            $selectedProductId = $params['selected_product_id'];
+        } else {
+            $selectedProductId = $productId;
+        }
+
+        if ($product && $productId) {
             $connection = $this->_productResource->getConnection();
 
             $objm = ObjectManager::getInstance();
@@ -51,9 +58,9 @@ class Draft
                 SELECT * FROM `" . $connection->getTableName('printformer_draft') . "`
                 WHERE
                     `intent` = '" . $params['intent'] . "' AND
-                    `product_id` = " . $product->getId() . " AND
+                    `product_id` = " . $selectedProductId . " AND
                     `printformer_product_id` = " . $params['printformer_product'] . " AND
-                    `session_unique_id` = '" . $uniqueId . ':' . $product->getId() . "'
+                    `session_unique_id` = '" . $uniqueId . ':' . $productId . "'
                 ORDER BY `created_at` DESC
             ";
 
@@ -68,8 +75,8 @@ class Draft
                 $sessionHelper->unsetCurrentIntent();
 
                 $printformerSession = $sessionHelper->getCatalogSession()->getData(Session::SESSION_KEY_PRINTFORMER_DRAFTID);
-                if (isset($printformerSession[$rawDraft['store_id']][$product->getId()])) {
-                    unset($printformerSession[$rawDraft['store_id']][$product->getId()]);
+                if (isset($printformerSession[$rawDraft['store_id']][$productId])) {
+                    unset($printformerSession[$rawDraft['store_id']][$productId]);
                     $sessionHelper->getCatalogSession()->setData(Session::SESSION_KEY_PRINTFORMER_DRAFTID,
                         $printformerSession);
                 }

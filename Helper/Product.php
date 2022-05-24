@@ -56,47 +56,57 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param     $productId
+     * @param $productId
      * @param int $storeId
-     *
+     * @param bool $includeDefaultStoreInWhereSelect
+     * @param bool $subordinateSimpleProducts
      * @return array
      */
-    public function getPrintformerProducts($productId, $storeId = 0)
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, bool $includeDefaultStoreInWhereSelect = true, bool $subordinateSimpleProducts = false)
+    {
+        $connection = $this->resourceConnection->getConnection();
+
+        $select = $connection->select()
+            ->from('catalog_product_printformer_product');
+
+        if ($includeDefaultStoreInWhereSelect && $storeId !== 0){
+            $select->where("store_id IN (". 0 . "," . $storeId .")");
+        } else {
+            $select->where('store_id = ?', intval($storeId));
+        }
+
+        if (!empty($subordinateSimpleProducts)){
+            array_unshift($subordinateSimpleProducts, $productId);
+            $select->where("product_id IN (" . implode(',', $subordinateSimpleProducts) . ")");
+        } else {
+            $select->where('product_id = ?', intval($productId));
+        }
+
+        return $connection->fetchAll($select);
+    }
+
+    /**
+     * @param $productId
+     * @param int $storeId
+     * @param bool $subordinateSimpleProducts
+     * @return array
+     */
+    public function getPrintformerProducts($productId, int $storeId = 0, bool $subordinateSimpleProducts = false): array
     {
         $printformerProducts = [];
 
-        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId) as $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, true, $subordinateSimpleProducts) as $row) {
             $printformerProduct = $this->productFactory->create();
             $this->resource->load($printformerProduct, $row['printformer_product_id']);
 
             if($printformerProduct->getId()) {
+                $printformerProduct->setData('template_id', $row['printformer_product_id']);
+                $printformerProduct->setData('product_id', $row['product_id']);
                 $printformerProducts[] = $printformerProduct;
             }
         }
 
         return $printformerProducts;
-    }
-
-    /**
-     * @param     $productId
-     * @param int $storeId
-     *
-     * @return array
-     */
-    protected function getCatalogProductPrintformerProductsData($productId, $storeId = 0, $chain = true)
-    {
-        $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()
-            ->from('catalog_product_printformer_product')
-            ->where('product_id = ?', intval($productId))
-            ->where('store_id = ?', intval($storeId));
-
-        $templates = $connection->fetchAll($select);
-        if ($chain && empty($templates)) {
-            $templates = $this->getCatalogProductPrintformerProductsData($productId, 0, false);
-        }
-
-        return $templates;
     }
 
     /**
@@ -127,7 +137,10 @@ class Product extends AbstractHelper
             $this->resource->load($printformerProduct, $row['printformer_product_id']);
 
             if($printformerProduct->getId()) {
+                $printformerProduct->setData('template_id', $row['printformer_product_id']);
+                $printformerProduct->setData('product_id', $row['product_id']);
                 $id = $row['id'];
+                //todo: check better version to fix array merge performance issue
                 $row = array_merge($row, $printformerProduct->getData());
                 $row['id'] = $id;
             }
@@ -151,7 +164,11 @@ class Product extends AbstractHelper
 
             $printformerProduct = $this->productFactory->create();
             $this->resource->load($printformerProduct, $row['printformer_product_id']);
-            $catalogProductPrintformerProducts[$i]->setPrintformerProduct($printformerProduct);
+            if($printformerProduct->getId()) {
+                $printformerProduct->setData('template_id', $row['printformer_product_id']);
+                $printformerProduct->setData('product_id', $row['product_id']);
+                $catalogProductPrintformerProducts[$i]->setPrintformerProduct($printformerProduct);
+            }
         }
 
         return $catalogProductPrintformerProducts;

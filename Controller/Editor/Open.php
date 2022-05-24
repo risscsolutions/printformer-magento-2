@@ -95,7 +95,8 @@ class Open extends Action
         PreselectHelper $preselectHelper,
         ApiHelper $apiHelper,
         PageFactory $pageFactory
-    ) {
+    )
+    {
         $this->_draftGateway = $draftGateway;
         $this->_urlHelper = $urlHelper;
         $this->_productFactory = $productFactory;
@@ -195,17 +196,23 @@ class Open extends Action
         /**
          * Get all params and variables needed
          */
-        $params               = $this->_getParams();
-        $productId            = $this->_getParam('product_id');
-        $masterId             = $this->_getParam('master_id');
-        $intent               = $this->_getParam('intent');
-        $printformerDraft     = $this->_getParam('draft_id');
-        $sessionUniqueId      = $this->_getParam('session_id');
-        $requestReferrer      = $this->_getParam('custom_referrer');
+        $params = $this->_getParams();
+        $productId = $this->_getParam('product_id');
+        $draftProductId = $productId;
+        $selectedProductId = $this->_getParam('selected_product_id');
+        $masterId = $this->_getParam('master_id');
+        $intent = $this->_getParam('intent');
+        $printformerDraft = $this->_getParam('draft_id');
+        $sessionUniqueId = $this->_getParam('session_id');
+        $requestReferrer = $this->_getParam('custom_referrer');
         $printformerProductId = $this->_getParam('printformer_product_id');
-        $storeId              = $this->_storeManager->getStore()->getId();
-        $customerSession      = $this->_sessionHelper->getCustomerSession();
-        $overrideFrameConfig  = $this->_getParam('shopframe') != null;
+        $storeId = $this->_storeManager->getStore()->getId();
+        $customerSession = $this->_sessionHelper->getCustomerSession();
+        $overrideFrameConfig = $this->_getParam('shopframe') != null;
+
+        if ($selectedProductId && $productId !== $selectedProductId) {
+           $draftProductId = $selectedProductId;
+        }
 
         /**
          * Stop process if page reload
@@ -233,21 +240,21 @@ class Open extends Action
          * Load product and save intent to session data
          */
         /** @var Product $product */
-        $product = $this->_productFactory->create()->load($productId);
+        $product = $this->_productFactory->create()->load($draftProductId);
         $this->_sessionHelper->setCurrentIntent($intent);
 
         /**
          * Try to load draft from database
          */
         $draftProcess = $this->_apiHelper->draftProcess(
-             $printformerDraft,
-             $masterId,
-             $product->getId(),
-             $intent,
-             $sessionUniqueId,
-             null,
-             $printformerProductId
-         );
+            $printformerDraft,
+            $masterId,
+            $product->getId(),
+            $intent,
+            $sessionUniqueId,
+            null,
+            $printformerProductId
+        );
 
         /**
          * If draft could not be created or loaded, show an error
@@ -322,15 +329,21 @@ class Open extends Action
 
     /**
      * @param Product $product
-     * @param string  $intent
-     * @param int     $customerId
-     * @param int     $storeId
-     * @param string  $sessionUniqueId
+     * @param string $intent
+     * @param int $customerId
+     * @param int $storeId
+     * @param string $sessionUniqueId
      *
      * @return Draft
      * @throws \Exception
      */
-    protected function _createDraftProcess(Product $product, $storeId, $intent, $customerId, $sessionUniqueId = null)
+    protected function _createDraftProcess(
+        Product $product,
+        $storeId,
+        $intent,
+        $customerId,
+        $sessionUniqueId = null
+    )
     {
         $draftId = $this->_draftGateway->createDraft($product->getPrintformerProduct(), $intent);
         $userIdentifier = $this->_draftGateway->getUserIdentifier();
@@ -338,15 +351,15 @@ class Open extends Action
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
         $draftProcess->addData([
-            'draft_id' => $draftId,
-            'store_id' => $storeId,
-            'intent' => $intent,
-            'session_unique_id' => $sessionUniqueId,
-            'product_id' => $product->getId(),
-            'customer_id' => $customerId,
-            'user_identifier' => $userIdentifier,
-            'created_at' => time()
-        ]);
+                                   'draft_id' => $draftId,
+                                   'store_id' => $storeId,
+                                   'intent' => $intent,
+                                   'session_unique_id' => $sessionUniqueId,
+                                   'product_id' => $product->getId(),
+                                   'customer_id' => $customerId,
+                                   'user_identifier' => $userIdentifier,
+                                   'created_at' => time()
+                               ]);
         $draftProcess->getResource()->save($draftProcess);
 
         if (!$draftProcess->getId()) {
@@ -357,17 +370,24 @@ class Open extends Action
     }
 
     /**
-     * @param string          $sessionUniqueId
-     * @param Product         $product
-     * @param string          $intent
-     * @param string          $printformerDraft
-     * @param int             $storeId
+     * @param string $sessionUniqueId
+     * @param Product $product
+     * @param string $intent
+     * @param string $printformerDraft
+     * @param int $storeId
      * @param CustomerSession $customerSession
      *
      * @return Draft
      * @throws \Exception
      */
-    protected function _getDraftProcess($sessionUniqueId, $product, $intent, $printformerDraft, $storeId, $customerSession)
+    protected function _getDraftProcess(
+        $sessionUniqueId,
+        $product,
+        $intent,
+        $printformerDraft,
+        $storeId,
+        $customerSession
+    )
     {
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
@@ -409,19 +429,25 @@ class Open extends Action
     /**
      * @param       $requestReferrer
      * @param Draft $draftProcess
-     * @param int   $storeId
+     * @param int $storeId
      * @param array $params
-     * @param bool  $encodeUrl
+     * @param bool $encodeUrl
      *
      * @return string
      */
-    protected function _getCallbackUrl($requestReferrer, Draft $draftProcess, $storeId = 0, $params = [], $encodeUrl = true)
+    protected function _getCallbackUrl(
+        $requestReferrer,
+        Draft $draftProcess,
+        $storeId = 0,
+        $params = [],
+        $encodeUrl = true
+    )
     {
         if ($requestReferrer != null) {
             $referrer = urldecode($requestReferrer);
         } else {
             $referrerParams = array_merge($params, [
-                'store_id'      => $storeId,
+                'store_id' => $storeId,
                 'draft_process' => $draftProcess->getId()
             ]);
 
@@ -450,7 +476,14 @@ class Open extends Action
      * @param array $params
      * @return string
      */
-    protected function _buildRedirectUrl($editorUrl, $requestReferrer, Draft $draftProcess, CustomerSession $customerSession, $storeId = 0, $params = [])
+    protected function _buildRedirectUrl(
+        $editorUrl,
+        $requestReferrer,
+        Draft $draftProcess,
+        CustomerSession $customerSession,
+        $storeId = 0,
+        $params = []
+    )
     {
         /**
          * Disassembly editor url into base url and params for following process
