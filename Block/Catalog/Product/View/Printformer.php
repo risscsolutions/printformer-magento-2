@@ -331,6 +331,7 @@ class Printformer extends AbstractView
             $pfProducts = $this->printformerProductHelper->getPrintformerProducts(
                 $product->getId(),
                 $this->_storeManager->getStore()->getId(),
+                false,
                 $childProductIds
             );
         } else {
