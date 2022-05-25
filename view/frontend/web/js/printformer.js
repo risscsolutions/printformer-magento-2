@@ -459,7 +459,10 @@ define([
                 }
             }
 
-            if ($(':visible[data-pf-template-container]').children('[data-pf-draft]').data('pf-draft') === 'active') {
+            let dataPfTemplateDraftContainer = $(':visible[data-pf-template-container]').children('[data-pf-draft]');
+            if (dataPfTemplateDraftContainer.length === 0) {
+                this.addBtnEnable();
+            } else if (dataPfTemplateDraftContainer.data('pf-draft') === 'active'){
                 this.addBtnEnable();
             } else {
                 this.addBtnDisable();
