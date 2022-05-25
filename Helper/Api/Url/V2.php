@@ -104,7 +104,10 @@ class V2 extends AbstractHelper implements VersionInterface
 
         try {
             $this->setStoreId($storeManager->getStore()->getId());
-            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+            $clientApiKey = $this->_config->getClientApiKey($this->getStoreId());
+            if (isset($clientApiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+            }
         } catch (NoSuchEntityException $e) {
         }
 
