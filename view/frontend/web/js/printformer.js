@@ -496,9 +496,9 @@ define([
                     this.setButtonText($(button), $t('View draft'));
                 }
                 button.data('pf-draft', 'active');
-                button.siblings('.printformer-delete').css('display', '');
+                button.siblings('.printformer-delete[data-printformer-product="'+printformerProduct['template_id']+'"]').css('display', '');
             } else {
-                button.siblings('.printformer-delete').hide()
+                button.siblings('.printformer-delete[data-printformer-product="'+printformerProduct['template_id']+'"]').hide();
             }
 
             this.initDeleteButton(printformerProduct);
