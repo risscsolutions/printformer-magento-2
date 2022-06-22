@@ -159,7 +159,7 @@ class Product
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
         if (empty($apiKey)) {
-            throw new Exception(__('You need to select a website to synchronize your templates.'));
+            throw new Exception(__('There are no available credentials for this website. Please check your settings in admin section.'));
         }
 
         $request = new HttpClient([
