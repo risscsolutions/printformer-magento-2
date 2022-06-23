@@ -16,20 +16,24 @@ class Observer
 
     /** @var CatalogSession */
     protected $_catalogSession;
+    private Session $sessionHelper;
 
     /**
      * Observer constructor.
      *
      * @param CustomerSession $_customerSession
-     * @param CatalogSession  $_catalogSession
+     * @param CatalogSession $_catalogSession
+     * @param Session $sessionHelper
      */
     public function __construct(
         CustomerSession $_customerSession,
-        CatalogSession $_catalogSession
+        CatalogSession $_catalogSession,
+        Session $sessionHelper
     )
     {
         $this->_customerSession = $_customerSession;
         $this->_catalogSession = $_catalogSession;
+        $this->sessionHelper = $sessionHelper;
     }
 
     /**
@@ -40,6 +44,17 @@ class Observer
         $this->_catalogSession->setSavedPrintformerOptions(null);
         $this->_catalogSession->setData(Save::PERSONALISATIONS_QUERY_PARAM, null);
         $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
-        $this->_customerSession->setSessionUniqueID(null);
+        $product = $observer->getData('product');
+        if (isset($product)){
+            if ($quoteChildren = $observer->getQuoteItem()->getChildren()) {
+                $productId = $quoteChildren[0]['product']->getData('entity_id');
+            } else {
+                $productId = $product->getData('entity_id');
+            }
+            if (isset($productId)) { //todo: load product id from child if configurable and quote-item-children :)
+                $this->sessionHelper->removeSessionUniqueIdByProductIdFromSession($productId);
+            }
+        }
+
     }
 }

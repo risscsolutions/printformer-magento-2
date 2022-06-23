@@ -40,9 +40,7 @@ class Draft
 
         $productId = $product->getId();
         if (isset($params['selected_product_id'])) {
-            $selectedProductId = $params['selected_product_id'];
-        } else {
-            $selectedProductId = $productId;
+            $productId = $params['selected_product_id'];
         }
 
         if ($product && $productId) {
@@ -52,13 +50,13 @@ class Draft
             /** @var Session $sessionHelper */
             $sessionHelper = $objm->get(Session::class);
 
-            $uniqueId = explode(':', $sessionHelper->getCustomerSession()->getSessionUniqueID() ?? '')[0];
+            $uniqueId = explode(':', $sessionHelper->getSessionUniqueIdByProductId($productId) ?? '')[0];
 
             $sqlQuery = "
                 SELECT * FROM `" . $connection->getTableName('printformer_draft') . "`
                 WHERE
                     `intent` = '" . $params['intent'] . "' AND
-                    `product_id` = " . $selectedProductId . " AND
+                    `product_id` = " . $productId . " AND
                     `printformer_product_id` = " . $params['printformer_product'] . " AND
                     `session_unique_id` = '" . $uniqueId . ':' . $productId . "'
                 ORDER BY `created_at` DESC

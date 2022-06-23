@@ -2,6 +2,8 @@
 
 namespace Rissc\Printformer\Block\Checkout\Cart;
 
+use Magento\Catalog\Block\Product\Image;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Catalog\Helper\Product\Configuration;
@@ -86,19 +88,23 @@ class Renderer extends ItemRenderer
     }
 
     /**
-     * {@inheritdoc}
+     * @param $product
+     * @param $imageId
+     * @param $attributes
+     * @return Image
      */
-    public function getImage($product, $imageId, $attributes = [])
+    public function getImage($product, $imageId, $attributes = []): Image
     {
         $result = parent::getImage($product, $imageId, $attributes);
-        $draftId = $this->getItem()->getPrintformerDraftid();
-        if ($draftId && $this->configHelper->isUseImagePreview()) {
-            $draftId = explode(',', $draftId ?? '')[0];
-            if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
-                $this->mediaHelper->createThumbnail($draftId);
+        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($this->getItem());
+
+        if ($draftIds) {
+            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+            if (isset($imageUrl)) {
+                $result->setImageUrl($imageUrl);
             }
-            $result->setImageUrl($this->mediaHelper->getImageUrl($draftId, 1, true));
         }
+
         return $result;
     }
 

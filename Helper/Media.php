@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Data\Collection;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -51,7 +52,8 @@ class Media extends AbstractHelper
         Api $apiHelper,
         Config $config,
         Url $urlHelper
-    ) {
+    )
+    {
         $this->filesystem = $filesystem;
         $this->storeManager = $storeManager;
         $this->_apiHelper = $apiHelper;
@@ -70,7 +72,11 @@ class Media extends AbstractHelper
      *
      * @throws FileSystemException
      */
-    public function getImageFilePath($draftId, $page = 1, $isThumbnail = false)
+    public function getImageFilePath(
+        $draftId,
+        $page = 1,
+        $isThumbnail = false
+    )
     {
         $imagePathDefaultString = $this->getImagePath($isThumbnail);
         $imagePath = sprintf($imagePathDefaultString, $draftId, $page);
@@ -89,13 +95,17 @@ class Media extends AbstractHelper
      *
      * @throws FileSystemException
      */
-    public function deleteImage($draftId, $page = 1, $isThumbnail = false)
+    public function deleteImage(
+        $draftId,
+        $page = 1,
+        $isThumbnail = false
+    )
     {
         $imagePath = $this->getImagePath($isThumbnail);
 
         $mediaDir = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
         $draftImagePath = sprintf($imagePath, $draftId, $page);
-        if($mediaDir->isExist($draftImagePath)) {
+        if ($mediaDir->isExist($draftImagePath)) {
             $mediaDir->delete($draftImagePath);
             return true;
         }
@@ -110,11 +120,14 @@ class Media extends AbstractHelper
      *
      * @throws FileSystemException
      */
-    public function deleteAllImages($draftId, $isThumbnail = false)
+    public function deleteAllImages(
+        $draftId,
+        $isThumbnail = false
+    )
     {
         $run = true;
         $page = 1;
-        while($run) {
+        while ($run) {
             $run = $this->deleteImage($draftId, $page, $isThumbnail);
             $page++;
         }
@@ -125,7 +138,10 @@ class Media extends AbstractHelper
      * @param int $uniqueGetParam
      * @return string
      */
-    public function getThumbnail($draftHash, $uniqueGetParam = 0)
+    public function getThumbnail(
+        $draftHash,
+        $uniqueGetParam = 0
+    )
     {
         $thumbnailUrl = $this->getThumbnail($draftHash);
         if ($uniqueGetParam) {
@@ -142,16 +158,21 @@ class Media extends AbstractHelper
      * @return string
      * @throws NoSuchEntityException
      */
-    public function getImageUrl($draftId, $page = 1, $isThumbnail = false, $uniqueGetParam = 1)
+    public function getImageUrl(
+        $draftId,
+        $page = 1,
+        $isThumbnail = false,
+        $uniqueGetParam = 1
+    )
     {
         $imagePath = $this->getImagePath($isThumbnail);
-        
+
         $thumbnailUrl = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . sprintf($imagePath, $draftId, $page);
-        
+
         if ($uniqueGetParam) {
             $thumbnailUrl = $this->_urlHelper->appendUniqueGetParam($thumbnailUrl);
         }
-        
+
         return $thumbnailUrl;
     }
 
@@ -182,7 +203,10 @@ class Media extends AbstractHelper
      * @throws FileSystemException
      * @throws AlreadyExistsException
      */
-    public function createThumbnail(string $draftId, $page = 1)
+    public function createThumbnail(
+        string $draftId,
+        $page = 1
+    )
     {
         $jpgImg = $this->_apiHelper->getThumbnail(
             $draftId,
@@ -202,7 +226,7 @@ class Media extends AbstractHelper
         $height = imagesy($image);
 
         $out = imagecreatetruecolor($width, $height);
-        imagealphablending($out,false);
+        imagealphablending($out, false);
         $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
         imagefill($out, 0, 0, $transparentindex);
         imagesavealpha($out, true);
@@ -220,7 +244,10 @@ class Media extends AbstractHelper
      * @throws FileSystemException
      * @throws AlreadyExistsException
      */
-    public function createPreview(string $draftId, $page = 1)
+    public function createPreview(
+        string $draftId,
+        $page = 1
+    )
     {
         $jpgImg = $this->_apiHelper->getThumbnail(
             $draftId,
@@ -240,7 +267,7 @@ class Media extends AbstractHelper
         $height = imagesy($image);
 
         $out = imagecreatetruecolor($width, $height);
-        imagealphablending($out,false);
+        imagealphablending($out, false);
         $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
         imagefill($out, 0, 0, $transparentindex);
         imagesavealpha($out, true);
@@ -249,5 +276,181 @@ class Media extends AbstractHelper
         imagepng($out, $imageFilePath, 7);
 
         imagedestroy($image);
+    }
+
+    /**
+     * Add draft-image-item to image-collection
+     *
+     * @param $draftId
+     * @param $result
+     * @param $counter
+     * @return mixed
+     */
+    public function loadDraftImagesToResultCollection(
+        $draftId,
+        $result,
+        $counter = 0
+    )
+    {
+        if ($this->getImagePreviewUrl(1, $draftId)) {
+            $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
+            $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+            $result->removeAllItems();
+            for ($index = 0; $index < $pages; $index++) {
+                try {
+                    $imagePreviewFilePath = $this->getImageFilePath($draftId, ($index + 1));
+                    $additionalHash = '';
+                    if (file_exists($imagePreviewFilePath)) {
+                        $additionalHash = '?hash=' . filemtime($imagePreviewFilePath);
+                    }
+                    $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
+                    $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
+                    $result->addItem(new \Magento\Framework\DataObject(
+                         [
+                             'id' => $index + $counter,
+                             'small_image_url' => $fullImagePreviewUrl,
+                             'medium_image_url' => $fullImagePreviewUrl,
+                             'large_image_url' => $fullImagePreviewUrl,
+                             'is_main_image' => ($index + $counter == 0),
+                             'file' => $imagePreviewFilePath,
+                             'position' => 1,
+                             'label' => 'Image Printformer',
+                             'disabled' => 0,
+                             'media_type' => 'image'
+                         ]));
+                } catch (\Exception $e) {
+                    $this->_logger->error($e->getMessage());
+                    $this->_logger->error($e->getTraceAsString());
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Create / load file by draft-id and return url
+     *
+     * @param int $page
+     * @param string $draftId
+     * @return null|string
+     */
+    private function getImagePreviewUrl(int $page = 1, $draftId)
+    {
+        $url = null;
+        if ($this->_config->isUseImagePreview() && $draftId) {
+            try {
+                $filePath = $this->getImageFilePath($draftId, $page, false);
+                if (!file_exists($filePath) || !is_array(getimagesize($filePath))) {
+                    $jpgImg = $this->_apiHelper->getThumbnail(
+                        $draftId,
+                        $this->_apiHelper->getUserIdentifier(),
+                        $this->_config->getImagePreviewWidth(),
+                        $this->_config->getImagePreviewHeight(),
+                        $page
+                    );
+                    $printformerImage = $jpgImg['content'];
+                    $imageFilePath = $this->getImageFilePath($draftId, $page);
+                    $image = imagecreatefromstring($printformerImage);
+                    $width = imagesx($image);
+                    $height = imagesy($image);
+                    $out = imagecreatetruecolor($width, $height);
+                    imagealphablending($out, false);
+                    $transparentindex = imagecolorallocatealpha($out, 0, 0, 0, 127);
+                    imagefill($out, 0, 0, $transparentindex);
+                    imagesavealpha($out, true);
+                    imagecopyresized($out, $image, 0, 0, 0, 0, $width, $height, $width, $height);
+                    imagepng($out, $imageFilePath);
+                    $this->_eventManager->dispatch('printformer_image_preview_create', [
+                        'printformer_image' => $printformerImage,
+                        'original_image' => $image,
+                        'width' => $width,
+                        'height' => $height,
+                        'final_image' => $out,
+                        'image_path' => $imageFilePath
+                    ]);
+                    imagedestroy($image);
+                    $this->draftImageCreated[$draftId.$page] = true;
+                }
+
+                $url = $this->getImageUrl($draftId, $page,false, 0);
+            } catch (\Exception $e) {
+                $this->_logger->error($e->getMessage());
+                $this->_logger->error($e->getTraceAsString());
+            }
+        }
+
+        return $url;
+    }
+
+    /**
+     * Load draft image pages to result collection
+     *
+     * @param $draftId
+     * @param $result
+     * @param $counter
+     * @return mixed
+     */
+    public function loadDraftImagesFormattedToResultCollection(
+        $draftId,
+        $result,
+        $counter = 0
+    )
+    {
+        if ($this->getImagePreviewUrl(1, $draftId)) {
+            $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
+            $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+            $result->removeAllItems();
+            for ($index = 0; $index < $pages; $index++) {
+                try {
+                    $imagePreviewFilePath = $this->getImageFilePath($draftId, ($index + 1));
+                    $additionalHash = '';
+                    if (file_exists($imagePreviewFilePath)) {
+                        $additionalHash = '?hash=' . filemtime($imagePreviewFilePath);
+                    }
+                    $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
+                    $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
+                    $result->addItem(new \Magento\Framework\DataObject(
+                         [
+                             'thumb' => $fullImagePreviewUrl,
+                             'img' => $fullImagePreviewUrl,
+                             'full' => $fullImagePreviewUrl,
+                             'caption' => "Image Printformer",
+                             'position' => "1",
+                             'isMain' => ($index + $counter == 0),
+                             'type' => 'image',
+                             'videoUrl' => null
+                         ]));
+                } catch (\Exception $e) {
+                    $this->_logger->error($e->getMessage());
+                    $this->_logger->error($e->getTraceAsString());
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get image url by draft id (first if comma separated string) if file exists
+     *
+     * @param string $draftIds
+     * @return string
+     */
+    public function loadThumbsImageUrlByDraftId(string $draftIds)
+    {
+        $result = false;
+        if ($this->_config->isUseImagePreview()) {
+            $draftIds = explode(',', $draftIds)[0];
+            try {
+                if (!file_exists($this->getImageFilePath($draftIds, 1, true))) {
+                    $this->createThumbnail($draftIds);
+                }
+                $result = $this->getImageUrl($draftIds, 1, true);
+            } catch (AlreadyExistsException|FileSystemException|NoSuchEntityException $e) {
+            }
+        }
+
+        return $result;
     }
 }

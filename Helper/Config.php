@@ -7,8 +7,11 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Rissc\Printformer\Setup\InstallSchema;
 
 class Config extends AbstractHelper
 {
@@ -67,6 +70,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_COLOR_OPTION_VALUES       = 'printformer/color/option_values';
 
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
+    const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
 
     /**
      * @var StoreManagerInterface
@@ -743,6 +747,72 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );
+    }
+
+    /**
+     * Get Drafids from quote-item or if product is configurable and has children-item, then from first child-item
+     *
+     * @param $item
+     * @return string
+     */
+    public function getDraftIdsFromSpecificItemType($item)
+    {
+        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+            $childItems = $item->getChildren();
+            if (!empty($childItems)) {
+                $firstChildItem = $childItems[0];
+                $draftIds = $firstChildItem->getPrintformerDraftid();
+            } else {
+                $draftIds = $item->getPrintformerDraftid();
+            }
+        } else {
+            $draftIds = $item->getPrintformerDraftid();
+        }
+
+        return $draftIds;
+    }
+
+    /**
+     * Add draft ids to quote-item depending on product type
+     *
+     * @param $item
+     * @param $draftIds
+     * @return Item
+     */
+    public function setDraftsOnItemType($item, $draftIds): Item
+    {
+        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+            $childItems = $item->getChildren();
+            if (!empty($childItems)){
+                $firstChildItem = $childItems[0];
+                $firstChildItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
+                $item->unsetData(InstallSchema::COLUMN_NAME_DRAFTID);
+            }
+        } else {
+            if (empty($item->getParentItem())) {
+                $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
+            }
+        }
+
+        return $item;
+    }
+
+    /**
+     * Check if product is a child-product
+     *
+     * @param $item
+     * @return bool
+     */
+    public function isItemChildSimpleOfConfigurable($item): bool
+    {
+        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+            $childItems = $item->getChildren();
+            if (!empty($childItems)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

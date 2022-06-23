@@ -145,7 +145,7 @@ class Product
                 $apiSecret = $this->configHelper->getClientApiKey();
                 $remoteHost = $this->urlHelper->getAdminProducts();
 
-                if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost) {
+                if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost && isset($apiSecret, $remoteHost)) {
                     $storeIds[] = $store->getId();
                 }
             }
