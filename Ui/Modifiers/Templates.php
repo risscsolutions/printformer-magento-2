@@ -240,7 +240,7 @@ class Templates implements ModifierInterface
                         'componentType' => Modal::NAME,
                         'dataScope' => '',
                         'component' => 'Rissc_Printformer/component/templates_modal',
-                        'syncUrl'   => $this->urlBuilder->getUrl('printformer/product/sync'),
+                        'syncUrl'   => $this->urlBuilder->getUrl('printformer/product/sync', ['store_id' => $this->locator->getProduct()->getStoreId()]),
                         'options' => [
                             'title' => $title,
                             'buttons' => [
