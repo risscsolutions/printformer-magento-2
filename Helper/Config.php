@@ -254,7 +254,7 @@ class Config extends AbstractHelper
 
         return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DRAFT_UPDATE,
-            ScopeInterface::SCOPE_WEBSITES,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -266,7 +266,7 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->getValue(
             self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID,
-            ScopeInterface::SCOPE_WEBSITES,
+            ScopeInterface::SCOPE_STORE,
             $this->getStoreId()
         );
     }
