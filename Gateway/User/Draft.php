@@ -147,7 +147,10 @@ class Draft
 
         try {
             $storeId = $storeManager->getStore()->getId();
-            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($storeId)));
+            $clientApiKey = $this->_config->getClientApiKey($storeId);
+            if (isset($clientApiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($clientApiKey));
+            }
         } catch (NoSuchEntityException $e) {
         }
     }

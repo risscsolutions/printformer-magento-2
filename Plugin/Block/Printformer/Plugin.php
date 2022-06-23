@@ -38,8 +38,8 @@ class Plugin
             if ($this->_catalogSession->getData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
                 $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
             }
-            if ($this->_customerSession->getSessionUniqueID()) {
-                $this->_customerSession->setSessionUniqueID(null);
+            if ($this->_customerSession->getSessionUniqueId()) {
+                $this->_customerSession->setSessionUniqueId(null);
             }
         }
 

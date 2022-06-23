@@ -87,7 +87,7 @@ class WishlistModel
                 InstallSchema::COLUMN_NAME_DRAFTID,
                 $this->session->getDraftId($productId, $storeId)
             );
-            $this->session->unsDraftId($productId, $storeId);
+            $this->session->unsetDraftId($productId, $storeId);
         }
     }
 

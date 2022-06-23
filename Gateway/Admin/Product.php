@@ -138,17 +138,17 @@ class Product
         if ($storeId == Store::DEFAULT_STORE_ID) {
             $defaultApiSecret = $this->configHelper->setStoreId(Store::DEFAULT_STORE_ID)->getClientApiKey();
             $defaultRemoteHost = $this->urlHelper->setStoreId(Store::DEFAULT_STORE_ID)->getAdminProducts();
-            /** @var Website $website */
-            foreach ($this->_websiteRepository->getList() as $website) {
-                /** @var Store $store */
-                $store = $website->getDefaultStore();
-                $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
-                $remoteHost = $this->urlHelper->setStoreId($store->getId())->getAdminProducts();
+                /** @var Website $website */
+                foreach ($this->_websiteRepository->getList() as $website) {
+                    /** @var Store $store */
+                    $store = $website->getDefaultStore();
+                    $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
+                    $remoteHost = $this->urlHelper->setStoreId($store->getId())->getAdminProducts();
 
-                if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost) {
-                    $storeIds[] = $store->getId();
+                    if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost && isset($apiSecret, $remoteHost)) {
+                        $storeIds[] = $store->getId();
+                    }
                 }
-            }
         } else {
             $storeIds[] = $storeId;
         }

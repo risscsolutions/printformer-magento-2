@@ -198,7 +198,6 @@ class Open extends Action
          */
         $params = $this->_getParams();
         $productId = $this->_getParam('product_id');
-        $draftProductId = $productId;
         $selectedProductId = $this->_getParam('selected_product_id');
         $masterId = $this->_getParam('master_id');
         $intent = $this->_getParam('intent');
@@ -211,7 +210,7 @@ class Open extends Action
         $overrideFrameConfig = $this->_getParam('shopframe') != null;
 
         if ($selectedProductId && $productId !== $selectedProductId) {
-           $draftProductId = $selectedProductId;
+           $productId = $selectedProductId;
         }
 
         /**
@@ -240,7 +239,7 @@ class Open extends Action
          * Load product and save intent to session data
          */
         /** @var Product $product */
-        $product = $this->_productFactory->create()->load($draftProductId);
+        $product = $this->_productFactory->create()->load($productId);
         $this->_sessionHelper->setCurrentIntent($intent);
 
         /**
@@ -393,7 +392,7 @@ class Open extends Action
         $draftProcess = $this->_draftFactory->create();
 
         if ($sessionUniqueId == null) {
-            $sessionUniqueId = $customerSession->getSessionUniqueID();
+            $sessionUniqueId = $this->_sessionHelper->getSessionUniqueIdByProductId($product->getId());
         }
 
         if ($sessionUniqueId) {

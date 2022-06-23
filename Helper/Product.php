@@ -2,13 +2,21 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Magento\Catalog\Model\ProductRepository;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Rissc\Printformer\Model\Draft;
+use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
 use Magento\Framework\App\RequestInterface;
+use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Session;
 
 class Product extends AbstractHelper
 {
@@ -33,36 +41,65 @@ class Product extends AbstractHelper
     protected $_request;
 
     /**
+     * @var ProductRepository
+     */
+    private ProductRepository $catalogProductRepository;
+
+    /**
+     * @var DraftFactory
+     */
+    private DraftFactory $draftFactory;
+
+    /**
+     * @var Config
+     */
+    private Config $configHelper;
+    private \Rissc\Printformer\Helper\Session $sessionHelper;
+
+    /**
      * Product constructor.
      * @param ProductFactory $productFactory
      * @param ResourceProduct $resource
      * @param ResourceConnection $resourceConnection
      * @param Context $context
      * @param RequestInterface $request
+     * @param ProductRepository $catalogProductRepository
+     * @param DraftFactory $draftFactory
+     * @param Config $configHelper
      */
     public function __construct(
         ProductFactory $productFactory,
         ResourceProduct $resource,
         ResourceConnection $resourceConnection,
         Context $context,
-        RequestInterface $request
+        RequestInterface $request,
+        ProductRepository $catalogProductRepository,
+        DraftFactory $draftFactory,
+        Config $configHelper,
+        Session $sessionHelper
     ) {
         $this->productFactory = $productFactory;
         $this->resource = $resource;
         $this->resourceConnection = $resourceConnection;
         $this->_request = $request;
+        $this->catalogProductRepository = $catalogProductRepository;
+        $this->draftFactory = $draftFactory;
+        $this->configHelper = $configHelper;
+        $this->sessionHelper = $sessionHelper;
 
         parent::__construct($context);
     }
 
     /**
+     * Fetch-all on db-table *catalog_product_printformer_product  for product-id and possible child-product-ids
+     *
      * @param $productId
      * @param int $storeId
      * @param bool $includeDefaultStoreInWhereSelect
-     * @param bool $subordinateSimpleProducts
+     * @param array $childProductIds
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, bool $includeDefaultStoreInWhereSelect = true, bool $subordinateSimpleProducts = false)
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, bool $includeDefaultStoreInWhereSelect = true, array $childProductIds = [])
     {
         $connection = $this->resourceConnection->getConnection();
 
@@ -75,9 +112,9 @@ class Product extends AbstractHelper
             $select->where('store_id = ?', intval($storeId));
         }
 
-        if (!empty($subordinateSimpleProducts)){
-            array_unshift($subordinateSimpleProducts, $productId);
-            $select->where("product_id IN (" . implode(',', $subordinateSimpleProducts) . ")");
+        if (!empty($childProductIds)){
+            array_unshift($childProductIds, $productId);
+            $select->where("product_id IN (" . implode(',', $childProductIds) . ")");
         } else {
             $select->where('product_id = ?', intval($productId));
         }
@@ -86,16 +123,18 @@ class Product extends AbstractHelper
     }
 
     /**
+     * Get printformer-products prepared for frontend methods
+     *
      * @param $productId
      * @param int $storeId
      * @param bool $subordinateSimpleProducts
      * @return array
      */
-    public function getPrintformerProducts($productId, int $storeId = 0, bool $subordinateSimpleProducts = false): array
+    public function getPrintformerProductsForFrontendConfigurationLogic($productId, int $storeId = 0, $childProductIds = []): array
     {
         $printformerProducts = [];
 
-        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, true, $subordinateSimpleProducts) as $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, true, $childProductIds) as $row) {
             $printformerProduct = $this->productFactory->create();
             $this->resource->load($printformerProduct, $row['printformer_product_id']);
 
@@ -150,15 +189,19 @@ class Product extends AbstractHelper
     }
 
     /**
+     * Prepare results from getCatalogProductPrintformerProductsData
+     *
      * @param $productId
      * @param int $storeId
      * @return array
      */
-    public function getCatalogProductPrintformerProducts($productId, $storeId = 0): array
+    public function prepareCatalogProductPrintformerProductsData($productId, int $storeId = 0): array
     {
+        //Todo: function can maybe merged with getCatalogProductPrintformerProductsData for better performance
         $catalogProductPrintformerProducts = [];
 
-        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId) as $i => $row) {
+        $childProductIds = [];
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, true, $childProductIds) as $i => $row) {
             $catalogProductPrintformerProducts[$i] = new DataObject();
             $catalogProductPrintformerProducts[$i]->setCatalogProductPrintformerProduct(new DataObject($row));
 
@@ -175,17 +218,75 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param     $productId
-     * @param int $storeId
+     * Get draft-id from unique id with required pf-product-id and the main-page-product-id
+     *
+     * @param $printformerProductId
+     * @param $productId
+     * @return string
+     */
+    public function getDraftId($printformerProductId, $productId)
+    {
+        $draftId = '';
+        $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
+
+        if (isset($sessionUniqueId)) {
+            /** @var Draft $draft */
+            $draft = $this->draftFactory->create();
+            $draftCollection = $draft->getCollection()
+                ->addFieldToFilter('printformer_product_id', $printformerProductId)
+                ->addFieldToFilter('product_id', $productId)
+                ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
+                ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
+
+            if ($draftCollection->count() > 0) {
+                $draft = $draftCollection->getFirstItem();
+                if ($draft->getId() && $draft->getDraftId()) {
+                    $draftId = $draft->getDraftId();
+                }
+            }
+        }
+
+        return $draftId;
+    }
+
+
+    /**
+     * @param integer $draftId
      *
      * @return array
      */
-    public function getPrintformerProductsArray($productId, $storeId = 0)
+    public function getProductVariations($draftId = null)
     {
-        $printformerProducts = [];
-        foreach($this->getPrintformerProducts($productId, $storeId) as $printformerProduct) {
-            $printformerProducts[] = $printformerProduct->getData();
+        $variations = [];
+        if ($draftId) {
+            $draft = $this->draftFactory->create()->load($draftId, 'draft_id');
+            if ($draft->getFormatVariation()) {
+                $variations[$this->configHelper->getFormatQueryParameter()] = $draft->getFormatVariation();
+            }
+            if ($draft->getColorVariation()) {
+                $variations[$this->configHelper->getColorQueryParameter()] = $draft->getColorVariation();
+            }
         }
-        return $printformerProducts;
+
+        return $variations;
+    }
+
+    /**
+     * @param integer $draftId
+     *
+     * @return array
+     */
+    public function getProductQty($draftId = null)
+    {
+        $qty = 1; //@todo min qty from sysconf?
+        if ($draftId) {
+            $draft = $this->draftFactory->create()//@todo add getDraft()
+            ->load($draftId, 'draft_id');
+            if ($draft->getQty()) {
+                $qty = $draft->getQty();
+            }
+        }
+
+        return $qty;
     }
 }

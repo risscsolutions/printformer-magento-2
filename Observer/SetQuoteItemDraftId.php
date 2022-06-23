@@ -1,7 +1,9 @@
 <?php
 namespace Rissc\Printformer\Observer;
 
+use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Quote\Model\Quote\Item;
 use Rissc\Printformer\Setup\InstallSchema;
 
 class SetQuoteItemDraftId implements ObserverInterface
@@ -45,29 +47,30 @@ class SetQuoteItemDraftId implements ObserverInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @param Observer $observer
+     * @return void
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
         if (!$this->configHelper->isEnabled()) {
             return;
         }
         try {
             /**
-             *@var \Magento\Quote\Model\Quote\Item
+             *@var Item $item
              */
             $item = $observer->getEvent()->getData('quote_item');
-            if (!($item instanceof \Magento\Quote\Model\Quote\Item)
+            if (!($item instanceof Item)
                 || !isset($item->getBuyRequest()['printformer_draftid'])) {
                 return;
             }
             $storeId = $this->storeManager->getStore()->getId();
             $draftIds = $item->getBuyRequest()['printformer_draftid'];
 
+            $item = $this->configHelper->setDraftsOnItemType($item, $draftIds);
             $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-            $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
 
-            $this->sessionHelper->unsDraftId($item->getProduct()->getId(), $storeId);
+            $this->sessionHelper->unsetDraftId($item->getProduct()->getId(), $storeId);
         } catch (\Exception $e) {
             $this->logger->critical($e);
         }
