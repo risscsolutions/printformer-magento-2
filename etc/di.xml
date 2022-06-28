@@ -17,6 +17,7 @@
     <preference for="Magento\Downloadable\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Magento\Bundle\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
+    <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="Rissc\Printformer\Block\Swatches\Product\Renderer\Configurable" />
 
     <!-- Plugins -->
     <type name="Magento\ConfigurableProduct\Block\Product\View\Type\Configurable">

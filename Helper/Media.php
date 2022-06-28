@@ -5,6 +5,7 @@ namespace Rissc\Printformer\Helper;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Data\Collection;
+use Magento\Framework\DataObject;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -283,44 +284,104 @@ class Media extends AbstractHelper
      *
      * @param $draftId
      * @param $result
-     * @param $counter
      * @return mixed
      */
-    public function loadDraftImagesToResultCollection(
-        $draftId,
-        $result,
-        $counter = 0
+    public function loadDraftImagesToNonChildCollection(
+        $draftIds,
+        $result
     )
     {
-        if ($this->getImagePreviewUrl(1, $draftId)) {
-            $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-            $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
-            $result->removeAllItems();
-            for ($index = 0; $index < $pages; $index++) {
-                try {
-                    $imagePreviewFilePath = $this->getImageFilePath($draftId, ($index + 1));
-                    $additionalHash = '';
-                    if (file_exists($imagePreviewFilePath)) {
-                        $additionalHash = '?hash=' . filemtime($imagePreviewFilePath);
+        if ($this->_config->isUseImagePreview()) {
+            if (!empty($draftIds)) {
+                $counter = 0;
+                $result->removeAllItems();
+
+                foreach ($draftIds as $draftIdKey => $draftId) {
+                    $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
+                    $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+
+                    for ($index = 0; $index < $pages; $index++) {
+                        try {
+                            $imagePreviewFilePath = $this->getImageFilePath($draftId, ($index + 1));
+                            $additionalHash = '';
+                            if (file_exists($imagePreviewFilePath)) {
+                                $additionalHash = '?hash=' . filemtime($imagePreviewFilePath);
+                            }
+                            $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
+                            $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
+                            $result->addItem(new DataObject([
+                                 'id' => $index + $counter,
+                                 'small_image_url' => $fullImagePreviewUrl,
+                                 'medium_image_url' => $fullImagePreviewUrl,
+                                 'large_image_url' => $fullImagePreviewUrl,
+                                 'is_main_image' => ($index + $counter == 0),
+                                 'file' => $imagePreviewFilePath,
+                                 'position' => 1,
+                                 'label' => 'Image Printformer',
+                                 'disabled' => 0,
+                                 'media_type' => 'image'
+                             ]));
+                        } catch (\Exception $e) {
+                            $this->_logger->error($e->getMessage());
+                            $this->_logger->error($e->getTraceAsString());
+                        }
                     }
-                    $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
-                    $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
-                    $result->addItem(new \Magento\Framework\DataObject(
-                         [
-                             'id' => $index + $counter,
-                             'small_image_url' => $fullImagePreviewUrl,
-                             'medium_image_url' => $fullImagePreviewUrl,
-                             'large_image_url' => $fullImagePreviewUrl,
-                             'is_main_image' => ($index + $counter == 0),
-                             'file' => $imagePreviewFilePath,
-                             'position' => 1,
-                             'label' => 'Image Printformer',
-                             'disabled' => 0,
-                             'media_type' => 'image'
-                         ]));
-                } catch (\Exception $e) {
-                    $this->_logger->error($e->getMessage());
-                    $this->_logger->error($e->getTraceAsString());
+
+                    $counter += 100;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Load draft image pages to result collection
+     *
+     * @param $draftIds
+     * @param $result
+     * @return mixed
+     */
+    public function loadDraftImagesToChildCollection(
+        $draftIds,
+        $result
+    )
+    {
+        if ($this->_config->isUseImagePreview()) {
+            if (!empty($draftIds)) {
+                $counter = 0;
+                $result->removeAllItems();
+
+                foreach ($draftIds as $draftIdKey => $draftId) {
+                    $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
+                    $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+
+                    for ($index = 0; $index < $pages; $index++) {
+                        try {
+                            $imagePreviewFilePath = $this->getImageFilePath($draftId, ($index + 1));
+                            $additionalHash = '';
+                            if (file_exists($imagePreviewFilePath)) {
+                                $additionalHash = '?hash=' . filemtime($imagePreviewFilePath);
+                            }
+                            $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
+                            $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
+                            $result->addItem(new DataObject(
+                                                 [
+                                                     'thumb' => $fullImagePreviewUrl,
+                                                     'img' => $fullImagePreviewUrl,
+                                                     'full' => $fullImagePreviewUrl,
+                                                     'caption' => "Image Printformer",
+                                                     'position' => "1",
+                                                     'isMain' => ($index + $counter == 0),
+                                                     'type' => 'image',
+                                                     'videoUrl' => null
+                                                 ]));
+                            $counter += 100;
+                        } catch (\Exception $e) {
+                            $this->_logger->error($e->getMessage());
+                            $this->_logger->error($e->getTraceAsString());
+                        }
+                    }
                 }
             }
         }
@@ -381,54 +442,6 @@ class Media extends AbstractHelper
         }
 
         return $url;
-    }
-
-    /**
-     * Load draft image pages to result collection
-     *
-     * @param $draftId
-     * @param $result
-     * @param $counter
-     * @return mixed
-     */
-    public function loadDraftImagesFormattedToResultCollection(
-        $draftId,
-        $result,
-        $counter = 0
-    )
-    {
-        if ($this->getImagePreviewUrl(1, $draftId)) {
-            $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-            $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
-            $result->removeAllItems();
-            for ($index = 0; $index < $pages; $index++) {
-                try {
-                    $imagePreviewFilePath = $this->getImageFilePath($draftId, ($index + 1));
-                    $additionalHash = '';
-                    if (file_exists($imagePreviewFilePath)) {
-                        $additionalHash = '?hash=' . filemtime($imagePreviewFilePath);
-                    }
-                    $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
-                    $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
-                    $result->addItem(new \Magento\Framework\DataObject(
-                         [
-                             'thumb' => $fullImagePreviewUrl,
-                             'img' => $fullImagePreviewUrl,
-                             'full' => $fullImagePreviewUrl,
-                             'caption' => "Image Printformer",
-                             'position' => "1",
-                             'isMain' => ($index + $counter == 0),
-                             'type' => 'image',
-                             'videoUrl' => null
-                         ]));
-                } catch (\Exception $e) {
-                    $this->_logger->error($e->getMessage());
-                    $this->_logger->error($e->getTraceAsString());
-                }
-            }
-        }
-
-        return $result;
     }
 
     /**

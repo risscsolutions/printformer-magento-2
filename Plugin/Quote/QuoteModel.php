@@ -92,6 +92,7 @@ class QuoteModel
                 /** @var Draft $draftProcess */
                 $draftProcess = $this->_apiHelper->draftProcess($draftId);
                 if ($draftProcess->getId()) {
+                    //todo?: maybe check for getsession-unique-id before set by product and draft
                     $this->session->setSessionUniqueIdByProductIdAndDraftId($draftProcess->getProductId(), $draftProcess->getDraftId());
                     $draftHashRelations[$draftProcess->getPrintformerProductId()] = $draftProcess->getDraftId();
                 }
@@ -160,8 +161,10 @@ class QuoteModel
                 $draftHashArray = explode(',', $draftIds ?? '');
 
                     foreach($draftHashArray as $draftId) {
-                        $quoteItem->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-                        $quoteItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                        if (!empty($draftId)) {
+                            $quoteItem->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
+                            $quoteItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                        }
                     }
 
                     $this->session->unsetDraftId($quoteItem->getProduct()->getId(), $storeId);

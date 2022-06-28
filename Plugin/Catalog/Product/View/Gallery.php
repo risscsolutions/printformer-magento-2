@@ -84,12 +84,8 @@ class Gallery
     {
         $product = $gallery->getProduct();
         $draftIds = $this->getDraftIds($product->getId(), $product->getStore()->getId(), $product->getTypeId());
-        $counter = 0;
 
-        foreach($draftIds as $draftId) {
-           $this->mediaHelper->loadDraftImagesToResultCollection($draftId, $result, $counter);
-           $counter += 100;
-        }
+        $this->mediaHelper->loadDraftImagesToNonChildCollection($draftIds, $result);
 
         return $result;
     }

@@ -826,4 +826,32 @@ class Config extends AbstractHelper
             $this->getStoreId()
         );
     }
+
+    /**
+     * Load draftId from buy-Request of quote-Item
+     *
+     * @param $quoteItem
+     * @param int $id
+     * @param $productId
+     * @return null
+     */
+    public function loadDraftFromQuoteItem(
+        $quoteItem,
+        int $id,
+        $productId
+    )
+    {
+        if (($productId && $productId === $quoteItem->getProduct()->getId()) || (empty($productId))) {
+            $buyRequest = $quoteItem->getBuyRequest();
+            $draftHashRelations = $buyRequest->getDraftHashRelations();
+            if(!empty($draftHashRelations)) {
+                if (isset($draftHashRelations[$id])) {
+                    $draftId = $draftHashRelations[$id];
+                    return $draftId;
+                }
+            }
+        }
+
+        return null;
+    }
 }

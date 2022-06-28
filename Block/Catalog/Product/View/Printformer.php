@@ -176,7 +176,7 @@ class Printformer extends AbstractView
      *
      * @return int
      */
-    public function getDraftId(PrintformerProduct $printformerProduct, $printformerProductId = null)
+    public function getDraftId(PrintformerProduct $printformerProduct)
     {
         $draftId = null;
         $productId = $this->getRequest()->getParam('product_id');
@@ -196,20 +196,21 @@ class Printformer extends AbstractView
                                 if (!empty($children)) {
                                     $firstChild = $children[0];
                                     if (!empty($firstChild)) {
-                                        $draftId = $this->loadDraftFromQuoteItem($firstChild, $printformerProduct->getId(), $printformerProductId);
+                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getId(), $printformerProduct->getProductId());
                                     }
                                 }
                             } else {
-                                $draftId = $this->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getId(), $printformerProductId);
+                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getId(), $printformerProduct->getProductId());
                             }
                         }
                         break;
                     case 'wishlist':
                         $wishlistItem = $this->wishlistItem->loadWithOptions($id);
                         if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
+                            //todo?: change logic to create/get/load correct draft for correct draft-id * maybe complete logic in helper
                             $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
                         }
-                        //todo: adjust to get draft id for child-products like on function loadDraftFromQuoteItem
+                        //todo?: adjust to get draft id for child-products like on function loadDraftFromQuoteItem
                         break;
                     default:
                         break;
@@ -325,13 +326,13 @@ class Printformer extends AbstractView
         }
 
         foreach ($pfProducts as $printformerProductKey => $printformerProduct) {
-            $draftId = $this->getDraftId($printformerProduct, $printformerProduct->getProductId());
+            $draftId = $this->getDraftId($printformerProduct);
 
             $printformerProducts[$printformerProductKey] = $printformerProduct->getData();
             $printformerProducts[$printformerProductKey]['url'] = $this->getEditorUrl($printformerProduct, $product);
 
             if (isset($draftId)) {
-                if ($this->canShowDeleteButton($draftId)) {
+                if ($this->canShowDeleteButton()) {
                     $printformerProducts[$printformerProductKey]['delete_url'] = $this->getDeleteUrl($printformerProduct, $product->getId());
                 }
                 $printformerProducts[$printformerProductKey]['draft_id'] = $draftId;
@@ -1039,33 +1040,5 @@ class Printformer extends AbstractView
         }
 
         return $allProducts;
-    }
-
-    /**
-     * Load draftId from buy-Request of quote-Item
-     *
-     * @param Quote\Item $quoteItem
-     * @param int $id
-     * @param $productId
-     * @return null
-     */
-    private function loadDraftFromQuoteItem(
-        Quote\Item $quoteItem,
-        int $id,
-        $productId
-    )
-    {
-        if (($productId && $productId === $quoteItem->getProduct()->getId()) || (empty($productId))) {
-            $buyRequest = $quoteItem->getBuyRequest();
-            $draftHashRelations = $buyRequest->getDraftHashRelations();
-            if(!empty($draftHashRelations)) {
-                if (isset($draftHashRelations[$id])) {
-                    $draftId = $draftHashRelations[$id];
-                    return $draftId;
-                }
-            }
-        }
-
-        return null;
     }
 }

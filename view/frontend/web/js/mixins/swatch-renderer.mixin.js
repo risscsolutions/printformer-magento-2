@@ -72,19 +72,32 @@ define([
                         if (allCheckedOptionIdsFound) {
                             $('[data-product-type]').hide();
                             $(element).show();
-                            if ($(element).children('[data-pf-draft]').data('pf-draft') === 'active') {
-                                $widget.addBtnEnable();
-                            } else {
-                                $widget.addBtnDisable();
+
+                            let selectedProductId = $(element).data('productId');
+                            let simpleProductDrafts = $widget.options.printformerProducts[selectedProductId];
+                            var draftIds = [];
+
+                            $.each($widget.options.printformerProducts, function (index, printformerProduct) {
+                                if (printformerProduct['product_id'] == selectedProductId) {
+                                    if (printformerProduct['draft_ids']) {
+                                        $.each(printformerProduct['draft_ids'], function( index, value ) {
+                                            if (value != '') {
+                                                draftIds.push(value);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+
+                            if (draftIds.length > 0) {
+                                $('#printformer_draftid').prop('value', draftIds);
                             }
                         }
                     }, checkedOptionIds);
 
                 } else if (checkedOptions.length > 0) {
                     $('[data-product-type]').hide();
-                    // console.log("Missing attribute-selections, waiting for completed selection. Hide all templates");
                 } else if (checkedOptions.length === 0) {
-                    // console.log("No option selected. Show templates of configurable product if possible");
                     $('[data-product-type][data-product-type="simple"]').hide();
                     $('[data-product-type="configurable"][data-product-type]').show('');
                 }
