@@ -84,7 +84,6 @@ class Configurable
         if ($this->configHelper->isUseImagePreview()) {
             $config = $this->decoder->decode($result);
             foreach ($config['images'] as $productId => $image) {
-                $imagesResult = [];
                 $product = $this->productRepository->getById($productId);
                 $images = $product->getMediaGalleryImages();
 
@@ -92,21 +91,28 @@ class Configurable
                     $productId,
                     $this->storeManager->getStore()->getId()
                 );
+
+
+                $draftIds = [];
                 foreach ($pfProducts as $pfProduct) {
                     $draftId = $this->printformerProductHelper->getDraftId($pfProduct->getId(), $pfProduct->getProductId());
-                    if (!empty($draftId)){
-                        $imagesResult = $this->mediaHelper->loadDraftImagesFormattedToResultCollection($draftId, $images);
+                    if (!empty($draftId)) {
+                        array_push($draftIds, $draftId);
                     }
                 }
 
-                if (!empty($imagesResult)){
-                    $images = $imagesResult->getItems();
-                    if (!empty($images)) {
-                        $config['images'][$productId] = [];
-                    }
+                if (!empty($draftIds)){
+                    $draftItem = $this->mediaHelper->loadDraftImagesToChildCollection($draftIds, $images);
+                    if (!empty($draftItem)){
+                        $images = $draftItem->getItems();
 
-                    foreach ($images as $image) {
-                        $config['images'][$productId][] = $image->getData();
+                        if (!empty($images)) {
+                            $config['images'][$productId] = [];
+                        }
+
+                        foreach ($images as $image) {
+                            $config['images'][$productId][] = $image->getData();
+                        }
                     }
                 }
             }
