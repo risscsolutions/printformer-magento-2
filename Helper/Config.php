@@ -829,29 +829,49 @@ class Config extends AbstractHelper
 
     /**
      * Load draftId from buy-Request of quote-Item
-     *
      * @param $quoteItem
-     * @param int $id
-     * @param $productId
-     * @return null
+     * @param int $productId
+     * @param int $printformerProductId
+     * @return false|string
      */
     public function loadDraftFromQuoteItem(
         $quoteItem,
-        int $id,
-        $productId
+        int $productId,
+        int $printformerProductId
     )
     {
-        if (($productId && $productId === $quoteItem->getProduct()->getId()) || (empty($productId))) {
+        $resultDraft = false;
+        if (($productId && $productId == $quoteItem->getProduct()->getId()) || (empty($productId))) {
             $buyRequest = $quoteItem->getBuyRequest();
             $draftHashRelations = $buyRequest->getDraftHashRelations();
-            if(!empty($draftHashRelations)) {
-                if (isset($draftHashRelations[$id])) {
-                    $draftId = $draftHashRelations[$id];
-                    return $draftId;
+            if (!empty($draftHashRelations) && is_array($draftHashRelations)) {
+                if (isset($draftHashRelations[$productId][$printformerProductId])) {
+                    $resultDraft = $draftHashRelations[$productId][$printformerProductId];
                 }
             }
         }
 
-        return null;
+        return $resultDraft;
+    }
+
+    public function updateDraftHashRelations(
+        $draftHashRelations,
+        $productId,
+        $printformerProductId,
+        $draftId
+    )
+    {
+        if (is_array($draftHashRelations)) {
+            if(isset($draftHashRelations[$productId])) {
+                $draftHashRelationsProduct = $draftHashRelations[$productId];
+            }
+            if (!isset($draftHashRelationsProduct)) {
+                $draftHashRelations[$productId] = [];
+            }
+            if (is_array($draftHashRelations[$productId])){
+                $draftHashRelations[$productId][$printformerProductId] = $draftId;
+            }
+        }
+        return $draftHashRelations;
     }
 }

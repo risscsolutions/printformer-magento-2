@@ -11,6 +11,7 @@ use Rissc\Printformer\Setup\InstallSchema;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Helper\Config;
+use Magento\Framework\Registry;
 
 class QuoteModel
 {
@@ -38,6 +39,7 @@ class QuoteModel
      * @var Config
      */
     private Config $configHelper;
+    private Registry $registry;
 
     /**
      * QuoteModel constructor.
@@ -46,19 +48,22 @@ class QuoteModel
      * @param LoggerInterface $logger
      * @param ApiHelper $apiHelper
      * @param Config $configHelper
+     * @param Registry $registry
      */
     public function __construct(
         StoreManagerInterface $storeManager,
         Session $session,
         LoggerInterface $logger,
         ApiHelper $apiHelper,
-        Config $configHelper
+        Config $configHelper,
+        Registry $registry
     ) {
         $this->storeManager = $storeManager;
         $this->session = $session;
         $this->logger = $logger;
         $this->_apiHelper = $apiHelper;
         $this->configHelper = $configHelper;
+        $this->registry = $registry;
     }
 
     /**
@@ -80,23 +85,59 @@ class QuoteModel
         if(!$buyRequest instanceof \Magento\Framework\DataObject)
             return $proceed($product, $buyRequest, $processMode);
 
+        $currentOrder = $this->registry->registry('current_order');
+        (!empty($currentOrder)) ? $isReordered = true : $isReordered = false;
+
         $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
         if (!empty($draftIds)) {
             $draftHashArray = explode(',', $draftIds ?? '');
 
             $draftHashRelations = [];
+            $newDraftHashArray = [];
             foreach ($draftHashArray as $draftId) {
                 if ($draftId == '') {
                     continue;
                 }
-                /** @var Draft $draftProcess */
-                $draftProcess = $this->_apiHelper->draftProcess($draftId);
+
+                if ($isReordered) {
+                    $oldDraftId = $draftId;
+                    $newDraftProcess = $this->_apiHelper->generateNewReplicateDraft($oldDraftId);
+                    if (!empty($newDraftProcess)) {
+                        $newDraftId = $newDraftProcess->getDraftId();
+                        if (!empty($newDraftId)) {
+                            $draftId = $newDraftId;
+                            $relations = $buyRequest->getData('draft_hash_relations');
+                            if (!empty($relations[$newDraftProcess->getPrintformerProductId()])) {
+                                $relations[$newDraftProcess->getPrintformerProductId()] = $newDraftId;
+                                $buyRequest->setData('draft_hash_relations', $relations);
+                            }
+                        }
+                    }
+                }
+
+                if (empty($newDraftProcess)) {
+                    /** @var Draft $draftProcess */
+                    $draftProcess = $this->_apiHelper->draftProcess($draftId);
+                } else {
+                    $draftProcess = $newDraftProcess;
+                }
+
                 if ($draftProcess->getId()) {
                     //todo?: maybe check for getsession-unique-id before set by product and draft
                     $this->session->setSessionUniqueIdByProductIdAndDraftId($draftProcess->getProductId(), $draftProcess->getDraftId());
-                    $draftHashRelations[$draftProcess->getPrintformerProductId()] = $draftProcess->getDraftId();
+                    $draftHashRelations = $this->configHelper->updateDraftHashRelations(
+                        $draftHashRelations,
+                        $draftProcess->getProductId(),
+                        $draftProcess->getPrintformerProductId(),
+                        $draftProcess->getDraftId()
+                    );
                 }
+
+                array_push($newDraftHashArray, $draftId);
             }
+
+            $newDraftHashArrayFormatted = implode(',', $newDraftHashArray);
+            $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $newDraftHashArrayFormatted);
 
             if (!empty($draftHashRelations)) {
                 $buyRequest->setData('draft_hash_relations', $draftHashRelations);
@@ -157,17 +198,16 @@ class QuoteModel
                 if (isset($buyRequest[InstallSchema::COLUMN_NAME_DRAFTID])) {
                     $storeId = $this->storeManager->getStore()->getId();
                     $buyRequest = $quoteItem->getBuyRequest();
-                    $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                $draftHashArray = explode(',', $draftIds ?? '');
-
-                    foreach($draftHashArray as $draftId) {
-                        if (!empty($draftId)) {
+                    $draftHashRelations = $buyRequest->getData('draft_hash_relations');
+                    if (isset($draftHashRelations) && is_array($draftHashRelations)){
+                        if (isset($draftHashRelations[$quoteItem->getProduct()->getId()])) {
+                            $newDraftHashes = $draftHashRelations[$quoteItem->getProduct()->getId()];
+                            $newDraftHashField = implode(',', $newDraftHashes);
+                            $quoteItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $newDraftHashField);
                             $quoteItem->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-                            $quoteItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                            $this->session->unsetDraftId($quoteItem->getProduct()->getId(), $storeId);
                         }
                     }
-
-                    $this->session->unsetDraftId($quoteItem->getProduct()->getId(), $storeId);
                 }
             }
         } catch (\Exception $e) {

@@ -81,27 +81,36 @@ class Plugin
                 /** @var DataObject $buyRequest */
                 $buyRequest = $item->getBuyRequest();
 
-                $draftId = $buyRequest->getPrintformerDraftid();
-                if (!$draftId) {
+                $draftFromBuyRequest = $buyRequest->getPrintformerDraftid();
+                if (!$draftFromBuyRequest) {
                     continue;
                 }
 
-                /** @var Draft $draftProcess */
-                $draftProcess = $this->_apiHelper->draftProcess($draftId);
-                if (!$draftProcess->getId()) {
-                    continue;
+                $draftIds = explode(',', $draftFromBuyRequest);
+
+                if (!$draftIds) {
+                    $draftIds = [];
+                    array_push($draftIds, $draftFromBuyRequest);
                 }
 
-                $userIdentifier = $this->_apiHelper->getUserIdentifier();
-                if ($userIdentifier != $customer->getPrintformerIdentification()) {
-                    $userIdentifier = $customer->getPrintformerIdentification();
-                }
+                foreach ($draftIds as $draftId) {
+                    /** @var Draft $draftProcess */
+                    $draftProcess = $this->_apiHelper->draftProcess($draftId);
+                    if (!$draftProcess->getId()) {
+                        continue;
+                    }
 
-                if (!$draftProcess->getCustomerId()) {
-                    $draftProcess->setCustomerId($customer->getId());
-                    $draftProcess->setUserIdentifier($userIdentifier);
+                    $userIdentifier = $this->_apiHelper->getUserIdentifier();
+                    if ($userIdentifier != $customer->getPrintformerIdentification()) {
+                        $userIdentifier = $customer->getPrintformerIdentification();
+                    }
 
-                    $this->_draftResource->save($draftProcess);
+                    if (!$draftProcess->getCustomerId()) {
+                        $draftProcess->setCustomerId($customer->getId());
+                        $draftProcess->setUserIdentifier($userIdentifier);
+
+                        $this->_draftResource->save($draftProcess);
+                    }
                 }
             }
         }
