@@ -27,6 +27,7 @@ use Magento\Catalog\Model\Product;
 use Magento\Downloadable\Model\Product\Type;
 use Rissc\Printformer\Helper\Config as PrintformerConfig;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 
 /**
  * Class Order
@@ -109,10 +110,11 @@ class Order extends Api
         ItemFactory $itemFactory,
         TimezoneInterface $timezone,
         OrderItemRepositoryInterface $orderItemRepository,
-        LogHelper $log
+        LogHelper $log,
+        DraftResource $draftResource
     )
     {
-        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder, $itemFactory, $timezone, $orderItemRepository, $log);
+        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder, $itemFactory, $timezone, $orderItemRepository, $log, $draftResource);
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->orderRepository = $orderRepository;
         $this->productRepository = $productRepository;

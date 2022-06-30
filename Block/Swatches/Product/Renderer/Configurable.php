@@ -115,11 +115,11 @@ class Configurable extends parentConfigurable
                                 if (!empty($children)) {
                                     $firstChild = $children[0];
                                     if (!empty($firstChild)) {
-                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getId(), $printformerProduct->getProductId());
+                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getProductId(), $printformerProduct->getId());
                                     }
                                 }
                             } else {
-                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getId(), $printformerProduct->getProductId());
+                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
                             }
                         }
                         break;
