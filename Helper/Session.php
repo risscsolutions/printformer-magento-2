@@ -140,6 +140,14 @@ class Session extends AbstractHelper
     }
 
     /**
+     * @return CheckoutSession
+     */
+    public function getCheckoutSession()
+    {
+        return $this->checkoutSession;
+    }
+
+    /**
      * Get unique id from session for the unique-ids-entry with corresponding product-id
      *
      * @param $productId

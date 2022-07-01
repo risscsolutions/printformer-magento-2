@@ -107,8 +107,8 @@ class QuoteModel
                         if (!empty($newDraftId)) {
                             $draftId = $newDraftId;
                             $relations = $buyRequest->getData('draft_hash_relations');
-                            if (!empty($relations[$newDraftProcess->getPrintformerProductId()])) {
-                                $relations[$newDraftProcess->getPrintformerProductId()] = $newDraftId;
+                            if (!empty($relations[$newDraftProcess->getProductId()][$newDraftProcess->getPrintformerProductId()])) {
+                                $relations[$newDraftProcess->getProductId()][$newDraftProcess->getPrintformerProductId()] = $newDraftId;
                                 $buyRequest->setData('draft_hash_relations', $relations);
                             }
                         }
