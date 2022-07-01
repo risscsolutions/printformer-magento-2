@@ -71,12 +71,6 @@ class Configurable extends parentConfigurable
      */
     const SWATCH_RENDERER_TEMPLATE = 'Rissc_Printformer::swatches/product/view/renderer.phtml';
 
-//    protected function getRendererTemplate()
-//    {
-//        return $this->isProductHasSwatchAttribute ?
-//            self::SWATCH_RENDERER_TEMPLATE : self::CONFIGURABLE_RENDERER_TEMPLATE;
-//    }
-
     /**
      * Return renderer template
      *

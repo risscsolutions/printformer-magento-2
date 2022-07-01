@@ -6,12 +6,16 @@ use DateTimeImmutable;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\DataObject;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Model\DraftFactory;
 
 class Config extends AbstractHelper
 {
@@ -91,6 +95,7 @@ class Config extends AbstractHelper
      * @var EncryptorInterface
      */
     private $encryptor;
+    private DraftFactory $draftFactory;
 
     /**
      * Config constructor.
@@ -104,13 +109,15 @@ class Config extends AbstractHelper
         Context $context,
         StoreManagerInterface $storeManager,
         CustomerSession $customerSession,
-        EncryptorInterface $encryptor
+        EncryptorInterface $encryptor,
+        DraftFactory $draftFactory
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
         $this->storeId = $this->storeManager->getStore()->getId();
         $this->_customerSession = $customerSession;
         $this->encryptor = $encryptor;
+        $this->draftFactory = $draftFactory;
     }
 
     /**
@@ -828,6 +835,19 @@ class Config extends AbstractHelper
     }
 
     /**
+     * @param string $draftIds
+     * @return DataObject[]
+     */
+    public function loadDraftItemsByIds(string $draftIds): array
+    {
+        /** @var Draft $draftFactory */
+        $draftFactory = $this->draftFactory->create();
+        $draftCollection = $draftFactory->getCollection();
+        $draftCollection->addFieldToFilter('draft_id', ['in' => $draftIds]);
+        return $draftCollection->getItems();
+    }
+
+    /**
      * Load draftId from buy-Request of quote-Item
      * @param $quoteItem
      * @param int $productId
@@ -842,11 +862,12 @@ class Config extends AbstractHelper
     {
         $resultDraft = false;
         if (($productId && $productId == $quoteItem->getProduct()->getId()) || (empty($productId))) {
-            $buyRequest = $quoteItem->getBuyRequest();
-            $draftHashRelations = $buyRequest->getDraftHashRelations();
-            if (!empty($draftHashRelations) && is_array($draftHashRelations)) {
-                if (isset($draftHashRelations[$productId][$printformerProductId])) {
-                    $resultDraft = $draftHashRelations[$productId][$printformerProductId];
+            $quoteItemDraftsField = $quoteItem->getData(SessionHelper::SESSION_KEY_PRINTFORMER_DRAFTID);
+            $quoteItemDraftsCollectionItems = $this->loadDraftItemsByIds($quoteItemDraftsField);
+
+            foreach ($quoteItemDraftsCollectionItems as $quoteItemCollectionItem) {
+                if ($quoteItemCollectionItem->getProductId() == $productId && $quoteItemCollectionItem->getPrintformerProductId() == $printformerProductId) {
+                    $resultDraft = $quoteItemCollectionItem->getDraftId();
                 }
             }
         }
