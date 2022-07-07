@@ -14,6 +14,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Catalog\Model\ProductFactory;
 
 /**
  * Class ConfigurableProduct
@@ -48,6 +49,7 @@ class ConfigurableProduct extends AbstractHelper
      */
     protected $storeId;
     private ProductRepositoryInterface $productRepository;
+    private ProductFactory $productFactory;
 
     /**
      * ConfigurableProduct constructor.
@@ -64,13 +66,15 @@ class ConfigurableProduct extends AbstractHelper
         Configurable $configurable,
         Attribute $attributeFactory,
         StoreManagerInterface $storeManager,
-        ProductRepositoryInterface $productRepository
+        ProductRepositoryInterface $productRepository,
+        ProductFactory $productFactory
     ) {
         $this->resourceConfigurable = $resourceConfigurable;
         $this->configurable = $configurable;
         $this->attributeFactory = $attributeFactory;
         $this->storeManager = $storeManager;
         $this->productRepository = $productRepository;
+        $this->productFactory = $productFactory;
         //set store id
         try {
             $this->storeId = $this->storeManager->getStore()->getId();
@@ -256,5 +260,16 @@ class ConfigurableProduct extends AbstractHelper
         }
 
         return $resultAvailableVariants;
+    }
+
+    /**
+     * @param $superAttributes
+     * @param $parentProductId
+     * @return \Magento\Catalog\Model\Product
+     */
+    public function getChildProductBySuperAttributes($superAttributes, $parentProductId): \Magento\Catalog\Model\Product
+    {
+        $parentProduct = $this->productFactory->create()->load($parentProductId);
+        return $this->configurable->getProductByAttributes($superAttributes, $parentProduct);
     }
 }
