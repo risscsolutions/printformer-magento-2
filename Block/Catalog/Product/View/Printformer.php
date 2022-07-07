@@ -329,9 +329,9 @@ class Printformer extends AbstractView
             $draftId = $this->getDraftId($printformerProduct);
 
             $printformerProducts[$printformerProductKey] = $printformerProduct->getData();
-            $printformerProducts[$printformerProductKey]['url'] = $this->getEditorUrl($printformerProduct, $product);
+            $printformerProducts[$printformerProductKey]['url'] = $this->getEditorUrl($printformerProduct, $product, $draftId);
 
-            if (isset($draftId)) {
+            if ($draftId) {
                 if ($this->canShowDeleteButton()) {
                     $printformerProducts[$printformerProductKey]['delete_url'] = $this->getDeleteUrl($printformerProduct, $product->getId());
                 }
@@ -355,7 +355,8 @@ class Printformer extends AbstractView
      */
     public function getEditorUrl(
         PrintformerProduct $printformerProduct,
-        Product $product = null
+        Product $product = null,
+        $draftId = false
     )
     {
         if (!$product) {
@@ -372,7 +373,7 @@ class Printformer extends AbstractView
         return $this->urlHelper->getEditorEntry(
             $product->getId(),
             $printformerProduct->getMasterId(),
-            $this->getDraftId($printformerProduct),
+            $draftId,
             $params,
             $printformerProduct->getIntent()
         );
@@ -743,9 +744,12 @@ class Printformer extends AbstractView
                                             $children = $quoteItem->getChildren();
                                             if (!empty($children)) {
                                                 $firstChild = $children[0];
-                                                $printformerDraftId = $firstChild->getPrintformerDraftid();
-                                                if (isset($printformerDraftId)) {
-                                                    $uniqueId = $this->sessionHelper->setSessionUniqueIdByProductIdAndDraftId($productId, $printformerDraftId);
+                                                $printformerDraftField = $firstChild->getPrintformerDraftid();
+                                                if ($printformerDraftField) {
+                                                    $draftHashArray = explode(',', $printformerDraftField);
+                                                    foreach($draftHashArray as $draftHash) {
+                                                        $uniqueId = $this->sessionHelper->setSessionUniqueIdByProductIdAndDraftId($productId, $draftHash);
+                                                    }
                                                 }
                                             }
                                         }
