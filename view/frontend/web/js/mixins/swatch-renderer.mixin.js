@@ -91,6 +91,7 @@ define([
 
                             if (draftIds.length > 0) {
                                 $('#printformer_draftid').prop('value', draftIds);
+                                $widget.element.parents('.product-info-main').find('[data-action="add-to-wishlist"]').data('post').data.printformer_draftid = draftIds;
                             }
                         }
                     }, checkedOptionIds);
