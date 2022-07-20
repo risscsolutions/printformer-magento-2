@@ -174,6 +174,13 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="transfer_user_data" translate="label" type="select" sortOrder="210" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Transfer user data to printformer</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
                 <field id="sync_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="0">
                     <button_label>Synchronize templates</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync</frontend_model>

@@ -250,6 +250,7 @@ class Api extends AbstractHelper
      */
     public function checkUserData($customer)
     {
+        $transfer = $this->_config->isDataTransferEnabled();
         if ($customer->getPrintformerIdentification() !== null) {
             $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData($customer->getPrintformerIdentification());
 
@@ -262,30 +263,32 @@ class Api extends AbstractHelper
                 $resultData = json_decode($userDataContent, true);
                 $profileData = $resultData['data']['profile'];
 
-                if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
-                    $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
-                        $customer->getPrintformerIdentification()
-                    );
+                if ($transfer) {
+                    if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
+                        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
+                            $customer->getPrintformerIdentification()
+                        );
 
-                    $requestData = [
-                        'json' => [
-                            'firstName' => $customer->getFirstname(),
-                            'lastName' => $customer->getLastname(),
-                            'email' => $customer->getEmail()
-                        ]
-                    ];
+                        $requestData = [
+                            'json' => [
+                                'firstName' => $customer->getFirstname(),
+                                'lastName' => $customer->getLastname(),
+                                'email' => $customer->getEmail()
+                            ]
+                        ];
 
-                    $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
-                    $response = $this->getHttpClient()->put($url, $requestData);
-                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
+                        $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
+                        $response = $this->getHttpClient()->put($url, $requestData);
+                        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
+                    }
                 }
             }
         } else {
             $requestData = [
                 'json' => [
-                    'firstName' => $customer->getFirstname(),
-                    'lastName' => $customer->getLastname(),
-                    'email' => $customer->getEmail()
+                    'firstName' => $transfer ? $customer->getFirstname() : '',
+                    'lastName' => $transfer ? $customer->getLastname() : '',
+                    'email' => $transfer ? $customer->getEmail() : ''
                 ]
             ];
 
