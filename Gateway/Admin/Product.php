@@ -207,14 +207,12 @@ class Product
     }
 
     /**
-     * @param int $storeId
-     * @param array $responseArray
+     * @param $storeId
+     * @param $responseArray
      * @return $this
-     * @throws Exception
      * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    protected function _syncProducts($storeId = Store::DEFAULT_STORE_ID, $responseArray)
+    protected function _syncProducts($storeId, $responseArray)
     {
 
         $masterIDs = [];
