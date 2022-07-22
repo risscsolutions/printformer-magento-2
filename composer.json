@@ -4,9 +4,9 @@
     "type": "magento2-module",
     "version": "100.8.65",
     "require": {
-        "lcobucci/jwt": "4.1.5",
-        "guzzlehttp/guzzle": "6.4.1",
-        "erusev/parsedown": "1.7.4"
+        "lcobucci/jwt": "^4.1",
+        "guzzlehttp/guzzle": "^7.4",
+        "erusev/parsedown": "^1.7"
     },
     "autoload": {
         "files": [ "registration.php" ],
