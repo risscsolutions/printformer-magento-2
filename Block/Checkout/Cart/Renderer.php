@@ -93,7 +93,7 @@ class Renderer extends ItemRenderer
         $result = parent::getImage($product, $imageId, $attributes);
         $draftId = $this->getItem()->getPrintformerDraftid();
         if ($draftId && $this->configHelper->isUseImagePreview()) {
-            $draftId = explode(',', $draftId)[0];
+            $draftId = explode(',', $draftId ?? '')[0];
             if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
                 $this->mediaHelper->createThumbnail($draftId);
             }

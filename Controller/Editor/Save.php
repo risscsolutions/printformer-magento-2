@@ -127,7 +127,7 @@ class Save extends Action
             $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
             $uniqueID = null;
             if ($sessionUniqueId) {
-                $uniqueExplode = explode(':', $sessionUniqueId);
+                $uniqueExplode = explode(':', $sessionUniqueId ?? '');
                 if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                     $uniqueID = $sessionUniqueId;
                 } else {

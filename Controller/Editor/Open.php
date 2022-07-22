@@ -377,7 +377,7 @@ class Open extends Action
         }
 
         if ($sessionUniqueId) {
-            $uniqueExplode = explode(':', $sessionUniqueId);
+            $uniqueExplode = explode(':', $sessionUniqueId ?? '');
             if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                 $draftCollection = $draftProcess->getCollection()
                     ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
@@ -455,7 +455,7 @@ class Open extends Action
         /**
          * Disassembly editor url into base url and params for following process
          */
-        $editorUrlparts = explode('?', $editorUrl);
+        $editorUrlparts = explode('?', $editorUrl ?? '');
 
         $editorUrlBase = $editorUrlparts[0];
         $editorUrlParams = '';

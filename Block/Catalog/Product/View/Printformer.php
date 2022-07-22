@@ -206,7 +206,7 @@ class Printformer extends AbstractView
         } else {
             $sessionUniqueId = $this->sessionHelper->getCustomerSession()->getSessionUniqueID();
             if ($sessionUniqueId) {
-                $uniqueIdExplode = explode(':', $sessionUniqueId);
+                $uniqueIdExplode = explode(':', $sessionUniqueId ?? '');
                 if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $this->getProduct()->getId()) {
                     /** @var Draft $draft */
                     $draft = $this->draftFactory->create();
@@ -782,7 +782,7 @@ class Printformer extends AbstractView
         }
 
         $uniqueId = $this->getUniqueSessionId();
-        $uniqueIdExplode = explode(':', $uniqueId);
+        $uniqueIdExplode = explode(':', $uniqueId ?? '');
         if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId()) {
             $uniqueId = null;
         }

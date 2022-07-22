@@ -45,7 +45,7 @@ class Draft
             /** @var Session $sessionHelper */
             $sessionHelper = $objm->get(Session::class);
 
-            $uniqueId = explode(':', $sessionHelper->getCustomerSession()->getSessionUniqueID())[0];
+            $uniqueId = explode(':', $sessionHelper->getCustomerSession()->getSessionUniqueID() ?? '')[0];
 
             $sqlQuery = "
                 SELECT * FROM `" . $connection->getTableName('printformer_draft') . "`
