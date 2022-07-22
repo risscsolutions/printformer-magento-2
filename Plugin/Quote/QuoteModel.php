@@ -71,7 +71,7 @@ class QuoteModel
 
         $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
         if (!empty($draftIds)) {
-            $draftHashArray = explode(',', $draftIds);
+            $draftHashArray = explode(',', $draftIds ?? '');
 
             $draftHashRelations = [];
             foreach ($draftHashArray as $draftId) {
@@ -120,7 +120,7 @@ class QuoteModel
                 $storeId = $this->storeManager->getStore()->getId();
                 $buyRequest = $item->getBuyRequest();
                 $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                $draftHashArray = explode(',', $draftIds);
+                $draftHashArray = explode(',', $draftIds ?? '');
 
                 foreach($draftHashArray as $draftId) {
                     $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);

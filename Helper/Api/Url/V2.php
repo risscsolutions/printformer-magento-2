@@ -328,7 +328,7 @@ class V2 extends AbstractHelper implements VersionInterface
      * {@inheritdoc}
      */
     public function getThumbnail($draftHash) {
-        $draftHash = explode(',', $draftHash)[0];
+        $draftHash = explode(',', $draftHash ?? '')[0];
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PNG);
     }
 

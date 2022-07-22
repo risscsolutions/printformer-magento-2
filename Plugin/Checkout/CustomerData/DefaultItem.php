@@ -50,7 +50,7 @@ class DefaultItem
     public function aroundGetItemData(SubjectDefaultItem $defaultItem, \Closure $proceed, CartItemInterface $item)
     {
         $result = $proceed($item);
-        $draftId = explode(',', $item->getPrintformerDraftid())[0];
+        $draftId = explode(',', $item->getPrintformerDraftid() ?? '')[0];
         if ($draftId && $this->configHelper->isUseImagePreview()) {
             if (!file_exists($this->mediaHelper->getImageFilePath($draftId, 1, true))) {
                 $this->mediaHelper->createThumbnail($draftId);

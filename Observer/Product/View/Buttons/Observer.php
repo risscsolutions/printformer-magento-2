@@ -56,7 +56,7 @@ class Observer implements ObserverInterface
 
             if ($attribute->getId()) {
                 $currentlySelectedValueFromMultiselect = $attribute->getFrontend()->getValue($product);
-                $multiselectAsArray = explode(',', $currentlySelectedValueFromMultiselect);
+                $multiselectAsArray = explode(',', $currentlySelectedValueFromMultiselect ?? '');
                 $allOptionIds = [];
                 foreach ($multiselectAsArray as $singleMultiselectItem) {
                     $allOptionIds[] = $attribute->getSource()->getOptionId(ltrim($singleMultiselectItem));
