@@ -250,6 +250,7 @@ class Api extends AbstractHelper
      */
     public function checkUserData($customer)
     {
+        $transfer = $this->_config->isDataTransferEnabled();
         if ($customer->getPrintformerIdentification() !== null) {
             $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData($customer->getPrintformerIdentification());
 
@@ -261,6 +262,10 @@ class Api extends AbstractHelper
             if ($response->getStatusCode() === 200) {
                 $resultData = json_decode($userDataContent, true);
                 $profileData = $resultData['data']['profile'];
+
+                if (!$transfer) {
+                    return;
+                }
 
                 if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
                     $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
@@ -283,9 +288,9 @@ class Api extends AbstractHelper
         } else {
             $requestData = [
                 'json' => [
-                    'firstName' => $customer->getFirstname(),
-                    'lastName' => $customer->getLastname(),
-                    'email' => $customer->getEmail()
+                    'firstName' => $transfer ? $customer->getFirstname() : '',
+                    'lastName' => $transfer ? $customer->getLastname() : '',
+                    'email' => $transfer ? $customer->getEmail() : ''
                 ]
             ];
 

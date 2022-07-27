@@ -17,8 +17,8 @@
                 <config_button_text><![CDATA[Design product]]></config_button_text>
                 <delete_confirm_text><![CDATA[Should the draft be deleted?]]></delete_confirm_text>
                 <order_status>pending</order_status>
-
                 <redirect_on_cancel>1</redirect_on_cancel>
+                <transfer_user_data>0</transfer_user_data>
             </general>
             <draft>
                 <draft_update>0</draft_update>
