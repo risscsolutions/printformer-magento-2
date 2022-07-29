@@ -155,15 +155,22 @@ class V2 extends AbstractHelper implements VersionInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getPrintformerBaseUrl()
     {
-        return rtrim($this->scopeConfig->getValue(
+        $resultBaseUrl = '';
+        $baseUrl = $this->scopeConfig->getValue(
             'printformer/version2group/v2url',
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
-        ),"/");
+        );
+
+        if (!empty($baseUrl)) {
+            $resultBaseUrl = rtrim($baseUrl,"/");
+        }
+
+        return $resultBaseUrl;
     }
 
     /**
