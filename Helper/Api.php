@@ -393,7 +393,7 @@ class Api extends AbstractHelper
      * @param null $requestData
      * @return mixed
      */
-    public function createUser($requestData = null)
+    public function createUser($requestData = [])
     {
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
 
