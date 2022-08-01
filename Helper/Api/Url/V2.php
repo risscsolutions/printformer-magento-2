@@ -103,8 +103,12 @@ class V2 extends AbstractHelper implements VersionInterface
         $this->_catalogHelper = $catalogHelper;
 
         try {
-            $this->setStoreId($storeManager->getStore()->getId());
-            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+            $storeId = $storeManager->getStore()->getId();
+            $this->setStoreId($storeId);
+            $apiKey = $this->_config->getClientApiKey($storeId);
+            if (!empty($apiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+            }
         } catch (NoSuchEntityException $e) {
         }
 
