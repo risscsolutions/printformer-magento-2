@@ -77,24 +77,6 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param integer $storeId
-     * @return \Rissc\Printformer\Helper\Url
-     */
-    public function setStoreId($storeId)
-    {
-        $this->config->setStoreId($storeId);
-        return $this;
-    }
-
-    /**
-     * @return integer
-     */
-    public function getStoreId()
-    {
-        return $this->config->getStoreId();
-    }
-
-    /**
      * @return string
      */
     public function getAdminProductsUrl()

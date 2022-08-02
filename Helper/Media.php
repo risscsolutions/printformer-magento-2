@@ -127,7 +127,7 @@ class Media extends AbstractHelper
      */
     public function getThumbnail($draftHash, $uniqueGetParam = 0)
     {
-        $thumbnailUrl = $this->getVersionHelper()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
+        $thumbnailUrl = $this->getThumbnail($draftHash);
         if ($uniqueGetParam) {
             $thumbnailUrl = $this->_urlHelper->appendUniqueGetParam($thumbnailUrl);
         }

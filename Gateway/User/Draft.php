@@ -280,9 +280,7 @@ class Draft
      */
     protected function getGuzzleClient()
     {
-        $url = $this->_urlHelper
-            ->setStoreId($this->_storeManager->getStore()->getId())
-            ->getDraft();
+        $url = $this->_urlHelper->getDraft();
 
         $header = [
             'Content-Type:' => 'application/json',
@@ -305,7 +303,6 @@ class Draft
     public function deleteDraft($draftId, $storeId)
     {
         $url = $this->_urlHelper
-            ->setStoreId($storeId)
             ->getDraftDelete($draftId);
 
         $createdEntry = $this->_logHelper->createPostEntry($url);
@@ -345,7 +342,6 @@ class Draft
     public function createDraft($masterId, $intent = null, $userIdentifier = null)
     {
         $url = $this->_urlHelper
-            ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraft();
 
         $historyData = [
