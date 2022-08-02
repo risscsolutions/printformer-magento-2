@@ -289,15 +289,7 @@ class Api extends AbstractHelper
                 }
             }
         } else {
-            $requestData = [
-                'json' => [
-                    'firstName' => $transfer ? $customer->getFirstname() : '',
-                    'lastName' => $transfer ? $customer->getLastname() : '',
-                    'email' => $transfer ? $customer->getEmail() : ''
-                ]
-            ];
-
-            $userIdentifier = $this->createUser($requestData);
+            $userIdentifier = $this->createUser($customer);
             $customer->setData('printformer_identification', $userIdentifier);
         }
     }
@@ -317,7 +309,7 @@ class Api extends AbstractHelper
             if ($store->getCode() == 'admin') {
                 if ($admin !== null) {
                     if (!$admin->getData('printformer_identification')) {
-                        $adminUserIdentifier = $this->createUser();
+                        $adminUserIdentifier = $this->createUser($customer);
                         $connection = $admin->getResource()->getConnection();
                         $connection->query("
                         UPDATE " . $connection->getTableName('admin_user') . "
@@ -401,9 +393,28 @@ class Api extends AbstractHelper
      * @param null $requestData
      * @return mixed
      */
-    public function createUser($requestData = [])
+    public function createUser($customer = null)
     {
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
+
+        $transfer = $this->_config->isDataTransferEnabled();
+        $requestData = [];
+
+        try {
+            if ($customer && $transfer) {
+                $requestData = [
+                    'json' => [
+                        'firstName' => $customer->getFirstname(),
+                        'lastName' => $customer->getLastname(),
+                        'email' => $customer->getEmail()
+                    ]
+                ];
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error('Can\'t load customer data from $customer variable');
+            $this->_logger->error($e->getMessage());
+            $this->_logger->error($e->getTraceAsString());
+        }
 
         $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
         $response = $this->getHttpClient()->post($url, $requestData);
@@ -1358,7 +1369,7 @@ class Api extends AbstractHelper
      */
     protected function loadPrintformerIdentifierOnCustomer($customer)
     {
-        $customerUserIdentifier = $this->createUser();
+        $customerUserIdentifier = $this->createUser($customer);
         $connection = $customer->getResource()->getConnection();
         $connection->query("
                     UPDATE " . $connection->getTableName('customer_entity') . "
