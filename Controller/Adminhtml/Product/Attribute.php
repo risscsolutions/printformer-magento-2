@@ -52,7 +52,7 @@ class Attribute
         $storeId = $this->getRequest()->getParam('store_id', Store::DEFAULT_STORE_ID);
         $attributeCode = $this->getRequest()->getParam('code', Store::DEFAULT_STORE_ID);
         try {
-            if (!$this->config->setStoreId($storeId)->isEnabled()) {
+            if (!$this->config->isEnabled()) {
                 throw new \Exception(__('Module disabled.'));
             }
 

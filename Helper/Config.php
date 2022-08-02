@@ -109,24 +109,11 @@ class Config extends AbstractHelper
     }
 
     /**
-     * @param int $storeId
-     * @return $this
-     */
-    public function setStoreId($storeId)
-    {
-        $this->storeId = $storeId;
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getStoreId()
     {
-        if (!$this->storeId) {
-            $this->setStoreId(\Magento\Store\Model\Store::DEFAULT_STORE_ID);
-        }
-        return $this->storeId;
+        return $this->storeManager->getStore()->getId();
     }
 
     /**

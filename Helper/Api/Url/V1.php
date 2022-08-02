@@ -98,24 +98,6 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function setStoreId($storeId)
-    {
-        $this->config->setStoreId($storeId);
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getStoreId()
-    {
-        return $this->config->getStoreId();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
     {
         $baseParams = [
