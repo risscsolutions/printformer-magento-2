@@ -60,7 +60,7 @@ class ResetIdentifier extends Action
         $response = [];
 
         try {
-            if (!$this->config->setStoreId($storeId)->isEnabled()) {
+            if (!$this->config->isEnabled()) {
                 throw new \Exception(__('Module disabled.'));
             }
 

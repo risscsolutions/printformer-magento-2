@@ -136,14 +136,14 @@ class Product
     {
         $storeIds = [];
         if ($storeId == Store::DEFAULT_STORE_ID) {
-            $defaultApiSecret = $this->configHelper->setStoreId(Store::DEFAULT_STORE_ID)->getClientApiKey();
-            $defaultRemoteHost = $this->urlHelper->setStoreId(Store::DEFAULT_STORE_ID)->getAdminProducts();
+            $defaultApiSecret = $this->configHelper->getClientApiKey();
+            $defaultRemoteHost = $this->urlHelper->getAdminProducts();
             /** @var Website $website */
             foreach ($this->_websiteRepository->getList() as $website) {
                 /** @var Store $store */
                 $store = $website->getDefaultStore();
-                $apiSecret = $this->configHelper->setStoreId($store->getId())->getClientApiKey();
-                $remoteHost = $this->urlHelper->setStoreId($store->getId())->getAdminProducts();
+                $apiSecret = $this->configHelper->getClientApiKey();
+                $remoteHost = $this->urlHelper->getAdminProducts();
 
                 if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost) {
                     $storeIds[] = $store->getId();
@@ -154,7 +154,7 @@ class Product
         }
         $errors = [];
 
-        $url = $this->urlHelper->setStoreId($storeId)->getAdminProducts();
+        $url = $this->urlHelper->getAdminProducts();
 
         $apiKey = $this->configHelper->getClientApiKey($storeId);
 
@@ -367,8 +367,7 @@ class Product
     {
         /** @var PrintformerProduct $pfProduct */
         $pfProduct = $this->printformerProductFactory->create();
-        $pfProduct->setStoreId($storeId)
-            ->setSku(null)
+        $pfProduct->setSku(null)
             ->setName($data['name'])
             ->setDescription(null)
             ->setShortDescription(null)

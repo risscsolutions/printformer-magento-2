@@ -6,18 +6,6 @@ use Magento\Catalog\Api\Data\ProductInterface;
 interface VersionInterface
 {
     /**
-     * @param integer $storeId
-     *
-     * @return $this
-     */
-    public function setStoreId($storeId);
-
-    /**
-     * @return integer
-     */
-    public function getStoreId();
-
-    /**
      * @param int        $productId
      * @param int        $masterId
      * @param string     $draftHash

@@ -103,8 +103,7 @@ class Link
      */
     public function getPdfUrl(DataObject $item, $draftHash)
     {
-        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
-            ->getAdminPdf($draftHash, $item->getOrder()->getQuoteId());
+        return $this->_urlHelper->getAdminPdf($draftHash, $item->getOrder()->getQuoteId());
     }
 
     /**
@@ -114,8 +113,7 @@ class Link
      */
     public function getPreviewPdfUrl(DataObject $item, $draftHash)
     {
-        return $this->_urlHelper->setStoreId($item->getPrintformerStoreid())
-            ->getAdminPreviewPDF($draftHash, $item->getOrder()->getQuoteId());
+        return $this->_urlHelper->getAdminPreviewPDF($draftHash, $item->getOrder()->getQuoteId());
     }
 
     /**
