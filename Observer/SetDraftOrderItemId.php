@@ -50,7 +50,7 @@ class SetDraftOrderItemId implements ObserverInterface
              */
             $order = $observer->getData('order');
             foreach ($order->getAllItems() as $item) {
-                foreach(explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID)) as $draftId) {
+                foreach(explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID) ?? '') as $draftId) {
                     if (!empty($draftId)){
                         $this->draftFactory
                             ->create()

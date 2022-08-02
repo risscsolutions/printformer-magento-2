@@ -178,11 +178,11 @@ class Gallery
     }
 
     /**
-     * @param int $page
-     * @param string $draftId
-     * @return null|string
+     * @param $page
+     * @param $draftId
+     * @return string|null
      */
-    private function getImagePreviewUrl($page = 1, $draftId)
+    private function getImagePreviewUrl($page, $draftId)
     {
         $url = null;
         if ($this->config->isUseImagePreview() && $draftId) {

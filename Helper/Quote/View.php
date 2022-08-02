@@ -105,7 +105,7 @@ class View
         $product->getResource()->load($product, $product->getId());
 
         if (!empty($buyRequest->getData('printformer_draftid'))){
-            $draftHashes = explode(',', $buyRequest->getData('printformer_draftid'));
+            $draftHashes = explode(',', $buyRequest->getData('printformer_draftid') ?? '');
 
             foreach($draftHashes as $draftHash) {
                 $draftProcess = $this->_apiHelper->draftProcess($draftHash);

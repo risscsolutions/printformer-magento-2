@@ -180,8 +180,11 @@ class Api extends AbstractHelper
         $this->apiUrl()->setStoreManager($storeManager);
 
         try {
-            $this->setStoreId($storeManager->getStore()->getId());
-            $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->_config->getClientApiKey($this->getStoreId())));
+            $storeId = $storeManager->getStore()->getId();
+            $apiKey = $this->_config->getClientApiKey($storeId);
+            if (!empty($apiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+            }
         } catch (NoSuchEntityException $e) {
         }
 
@@ -398,7 +401,7 @@ class Api extends AbstractHelper
      * @param null $requestData
      * @return mixed
      */
-    public function createUser($requestData = null)
+    public function createUser($requestData = [])
     {
         $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
 

@@ -122,7 +122,7 @@ class DefaultConfigProvider
 
         $draftId = $cartItem->getPrintformerDraftid();
         if ($draftId && $this->configHelper->isUseImagePreview()) {
-            $draftId = explode(',', $draftId)[0];
+            $draftId = explode(',', $draftId ?? '')[0];
             $filePath = $this->mediaHelper->getImageFilePath($draftId, 1, true);
             if (!file_exists($filePath)) {
                 $this->mediaHelper->createThumbnail($draftId);

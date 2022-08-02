@@ -127,7 +127,7 @@ class UpgradeData implements UpgradeDataInterface
             {
                 if(preg_match('/' . $regex . '/i', $row['source_model'], $match))
                 {
-                    $classExplode = explode('\\', $match[0]);
+                    $classExplode = explode('\\', $match[0] ?? '');
                     $namespace = $classExplode[0];
                     $module = $classExplode[1];
 
@@ -244,7 +244,7 @@ class UpgradeData implements UpgradeDataInterface
             $insertData = [];
             $i = 0;
             foreach($result as $row) {
-                foreach(explode(',', $row['intent']) as $intent) {
+                foreach(explode(',', $row['intent'] ?? '') as $intent) {
                     if ($i == 1000) {
                         $connection->beginTransaction();
                         $connection->insertMultiple('printformer_product', $insertData);
