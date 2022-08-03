@@ -396,7 +396,7 @@ class Media extends AbstractHelper
      * @param string $draftId
      * @return null|string
      */
-    private function getImagePreviewUrl(int $page = 1, $draftId)
+    private function getImagePreviewUrl(int $page, $draftId)
     {
         $url = null;
         if ($this->_config->isUseImagePreview() && $draftId) {
@@ -454,7 +454,7 @@ class Media extends AbstractHelper
     {
         $result = false;
         if ($this->_config->isUseImagePreview()) {
-            $draftIds = explode(',', $draftIds)[0];
+            $draftIds = explode(',', $draftIds ?? '')[0];
             try {
                 if (!file_exists($this->getImageFilePath($draftIds, 1, true))) {
                     $this->createThumbnail($draftIds);

@@ -86,7 +86,7 @@ class Plugin
                     continue;
                 }
 
-                $draftIds = explode(',', $draftFromBuyRequest);
+                $draftIds = explode(',', $draftFromBuyRequest ?? '');
 
                 if (!$draftIds) {
                     $draftIds = [];

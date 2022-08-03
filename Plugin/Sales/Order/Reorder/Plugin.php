@@ -76,7 +76,7 @@ class Plugin
         if ($this->_registry->registry('printformer_is_reorder')) {
             $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
             if (!empty($draftIds)) {
-                $draftHashArray = explode(',', $draftIds);
+                $draftHashArray = explode(',', $draftIds ?? '');
                 foreach ($draftHashArray as $draftId) {
                     $oldDraftId = $draftId;
                     $newDraft = $this->_apiHelper->generateNewReplicateDraft($oldDraftId);

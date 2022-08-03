@@ -748,7 +748,7 @@ class Printformer extends AbstractView
                                     if (!isset($uniqueId)) {
                                         $printformerDraftField = $childProduct->getPrintformerDraftid();
                                         if ($printformerDraftField) {
-                                            $draftHashArray = explode(',', $printformerDraftField);
+                                            $draftHashArray = explode(',', $printformerDraftField ?? '');
                                             foreach($draftHashArray as $draftHash) {
                                                 $uniqueId = $this->sessionHelper->setSessionUniqueIdByProductIdAndDraftId($productId, $draftHash);
                                             }

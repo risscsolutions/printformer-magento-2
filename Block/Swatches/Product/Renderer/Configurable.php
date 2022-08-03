@@ -81,7 +81,7 @@ class Configurable extends parentConfigurable
     protected function getRendererTemplate()
     {
         return $this->isProductHasSwatchAttribute() ?
-            self::SWATCH_RENDERER_TEMPLATE : self::CONFIGURABLE_RENDERER_TEMPLATE;
+            $this::SWATCH_RENDERER_TEMPLATE : $this::CONFIGURABLE_RENDERER_TEMPLATE;
     }
 
     /**
@@ -132,7 +132,7 @@ class Configurable extends parentConfigurable
             $productId = $printformerProduct->getProductId();
             $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
             if ($sessionUniqueId) {
-                $uniqueIdExplode = explode(':', $sessionUniqueId);
+                $uniqueIdExplode = explode(':', $sessionUniqueId ?? '');
                 if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $productId) {
                     $draftId = $this->printformerProductHelper->getDraftId($printformerProduct->getId(), $productId);
                 }
