@@ -209,6 +209,11 @@ class Open extends Action
         $customerSession = $this->_sessionHelper->getCustomerSession();
         $overrideFrameConfig = $this->_getParam('shopframe') != null;
 
+        $customerId = null;
+        if($customerSession->getCustomerId() !== null) {
+            $customerId = $customerSession->getCustomerId();
+        }
+
         if ($selectedProductId && $productId !== $selectedProductId) {
            $productId = $selectedProductId;
         }
@@ -251,7 +256,7 @@ class Open extends Action
             $product->getId(),
             $intent,
             $sessionUniqueId,
-            null,
+            $customerId,
             $printformerProductId
         );
 

@@ -9,6 +9,7 @@ use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 
@@ -32,6 +33,7 @@ class Plugin
 
     /** @var DraftResource */
     protected $_draftResource;
+    private SessionHelper $sessionHelper;
 
     /**
      * Plugin constructor.
@@ -47,13 +49,15 @@ class Plugin
         QuoteFactory $quoteFactory,
         QuoteResource $quoteResource,
         DraftResource $draftResource,
-        ApiHelper $apiHelper
+        ApiHelper $apiHelper,
+        SessionHelper $sessionHelper
     ) {
         $this->_customerSession = $customerSession;
         $this->_quoteFactory = $quoteFactory;
         $this->_quoteResource = $quoteResource;
         $this->_draftResource = $draftResource;
         $this->_apiHelper = $apiHelper;
+        $this->sessionHelper = $sessionHelper;
     }
 
     /**
@@ -78,10 +82,7 @@ class Plugin
 
             /** @var Quote\Item $item */
             foreach ($quote->getAllItems() as $item) {
-                /** @var DataObject $buyRequest */
-                $buyRequest = $item->getBuyRequest();
-
-                $draftFromBuyRequest = $buyRequest->getPrintformerDraftid();
+                $draftFromBuyRequest = $item->getPrintformerDraftid();
                 if (!$draftFromBuyRequest) {
                     continue;
                 }
@@ -106,10 +107,12 @@ class Plugin
                     }
 
                     if (!$draftProcess->getCustomerId()) {
-                        $draftProcess->setCustomerId($customer->getId());
-                        $draftProcess->setUserIdentifier($userIdentifier);
-
-                        $this->_draftResource->save($draftProcess);
+                        $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId());
+                        $draftId = $replicateDraft->getDraftId();
+                        $item->setPrintformerDraftid($draftId);
+                        $this->sessionHelper->removeSessionUniqueIdByProductIdFromSession($item->getProduct()->getId());
+                        $this->sessionHelper->setSessionUniqueIdByProductIdAndDraftId($item->getProduct()->getId(), $draftId);
+                        $item->save();
                     }
                 }
             }

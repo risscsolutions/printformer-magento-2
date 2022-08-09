@@ -62,25 +62,27 @@ class Draft
                 ORDER BY `created_at` DESC
             ";
 
-            $rawDraft = $connection->fetchRow($sqlQuery);
-
-            if (!empty($rawDraft['id']) && isset($rawDraft['store_id']) && is_numeric($rawDraft['store_id'])) {
-                $connection->query("
+            $rawDrafts = $connection->fetchAll($sqlQuery);
+            foreach ($rawDrafts as $rawDraft) {
+                if (!empty($rawDraft['id']) && isset($rawDraft['store_id']) && is_numeric($rawDraft['store_id'])) {
+                    $connection->query("
                     DELETE FROM " . $connection->getTableName('printformer_draft') . "
                     WHERE `id` = " . $rawDraft['id'] . ";
                 ");
 
-                $sessionHelper->unsetCurrentIntent();
+                    $sessionHelper->unsetCurrentIntent();
 
-                $printformerSession = $sessionHelper->getCatalogSession()->getData(Session::SESSION_KEY_PRINTFORMER_DRAFTID);
-                if (isset($printformerSession[$rawDraft['store_id']][$productId])) {
-                    unset($printformerSession[$rawDraft['store_id']][$productId]);
-                    $sessionHelper->getCatalogSession()->setData(Session::SESSION_KEY_PRINTFORMER_DRAFTID,
-                        $printformerSession);
+                    $printformerSession = $sessionHelper->getCatalogSession()->getData(Session::SESSION_KEY_PRINTFORMER_DRAFTID);
+                    if (isset($printformerSession[$rawDraft['store_id']][$productId])) {
+                        unset($printformerSession[$rawDraft['store_id']][$productId]);
+                        $sessionHelper->getCatalogSession()->setData(Session::SESSION_KEY_PRINTFORMER_DRAFTID,
+                                                                     $printformerSession);
+                    }
+
+                    $this->messageManager->addSuccessMessage(__('Draft has been successfully deleted.'));
                 }
-
-                $this->messageManager->addSuccessMessage(__('Draft has been successfully deleted.'));
             }
+
         }
 
         header('Location: ' . $product->getProductUrl());
