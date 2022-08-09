@@ -148,25 +148,6 @@ class Save extends Action
             $draft->setSessionUniqueId($uniqueID);
             $draft->getResource()->save($draft);
 
-            $quoteItems = $this->_sessionHelper->getCheckoutSession()->getQuote()->getItemsCollection();
-            foreach ($quoteItems as $quoteItem) {
-                if (
-                    $quoteItem->getProductId() == $draft->getProductId()
-                ) {
-                    $buyRequest = $quoteItem->getBuyRequest();
-                    $draftHashRelations = $buyRequest->getDraftHashRelations();
-                    $draftHashRelations = $this->_configHelper->updateDraftHashRelations($draftHashRelations, $draft->getProductId(), $draft->getPrintformerProductId(), $draft->getDraftId());
-
-                    if (is_array($draftHashRelations)) {
-                        if (isset($draftHashRelations[(int)$productId])) {
-                            $newPrintformerDraftField = implode(',', $draftHashRelations[(int)$productId]);
-                            $quoteItem->setData(SessionHelper::SESSION_KEY_PRINTFORMER_DRAFTID, $newPrintformerDraftField);
-                            $quoteItem->save();
-                        }
-                    }
-                }
-            }
-
             /** @var Api $apiHelper */
             $apiHelper = ObjectManager::getInstance()->get(Api::class);
 
