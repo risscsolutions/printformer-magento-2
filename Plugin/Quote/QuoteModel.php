@@ -101,7 +101,8 @@ class QuoteModel
 
                 if ($isReordered) {
                     $oldDraftId = $draftId;
-                    $newDraftProcess = $this->_apiHelper->generateNewReplicateDraft($oldDraftId);
+                    $customerId = $this->session->getCustomerSession()->getCustomerId();
+                    $newDraftProcess = $this->_apiHelper->generateNewReplicateDraft($oldDraftId, $customerId);
                     if (!empty($newDraftProcess)) {
                         $newDraftId = $newDraftProcess->getDraftId();
                         if (!empty($newDraftId)) {
@@ -124,7 +125,7 @@ class QuoteModel
 
                 if ($draftProcess->getId()) {
                     //todo?: maybe check for getsession-unique-id before set by product and draft
-                    $this->session->setSessionUniqueIdByProductIdAndDraftId($draftProcess->getProductId(), $draftProcess->getDraftId());
+                    $this->session->loadSessionUniqueId($draftProcess->getProductId(), $draftProcess->getPrintformerProductId(), $draftProcess->getDraftId());
                     $draftHashRelations = $this->configHelper->updateDraftHashRelations(
                         $draftHashRelations,
                         $draftProcess->getProductId(),
