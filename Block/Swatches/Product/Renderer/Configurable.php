@@ -182,7 +182,7 @@ class Configurable extends parentConfigurable
             }
         }
 
-        !empty($resultPrintformerProducts) && is_array($resultPrintformerProducts) ? $result = json_encode($resultPrintformerProducts) : $result = '';
+        !empty($resultPrintformerProducts) && is_array($resultPrintformerProducts) ? $result = json_encode($resultPrintformerProducts) : $result = '{}';
 
         return $result;
     }
