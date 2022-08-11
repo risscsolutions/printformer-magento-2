@@ -109,9 +109,11 @@ class Plugin
                     if (!$draftProcess->getCustomerId()) {
                         $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId());
                         $draftId = $replicateDraft->getDraftId();
+                        $productId = $item->getProduct()->getId();
+                        $pfProductId = $replicateDraft->getPrintformerProductId();
                         $item->setPrintformerDraftid($draftId);
-                        $this->sessionHelper->removeSessionUniqueIdByProductIdFromSession($item->getProduct()->getId());
-                        $this->sessionHelper->setSessionUniqueIdByProductIdAndDraftId($item->getProduct()->getId(), $draftId);
+                        $this->sessionHelper->removeSessionUniqueIdFromSession($productId, $pfProductId);
+                        $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
                         $item->save();
                     }
                 }

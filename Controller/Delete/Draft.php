@@ -50,7 +50,7 @@ class Draft
             /** @var Session $sessionHelper */
             $sessionHelper = $objm->get(Session::class);
 
-            $uniqueId = explode(':', $sessionHelper->getSessionUniqueIdByProductId($productId) ?? '')[0];
+            $uniqueId = explode(':', $sessionHelper->getSessionUniqueIdByProductId($productId, $params['printformer_product']) ?? '')[0];
 
             $sqlQuery = "
                 SELECT * FROM `" . $connection->getTableName('printformer_draft') . "`
@@ -58,7 +58,7 @@ class Draft
                     `intent` = '" . $params['intent'] . "' AND
                     `product_id` = " . $productId . " AND
                     `printformer_product_id` = " . $params['printformer_product'] . " AND
-                    `session_unique_id` = '" . $uniqueId . ':' . $productId . "'
+                    `session_unique_id` = '" . $uniqueId . "'
                 ORDER BY `created_at` DESC
             ";
 

@@ -396,35 +396,23 @@ class Open extends Action
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
 
-        if ($sessionUniqueId == null) {
-            $sessionUniqueId = $this->_sessionHelper->getSessionUniqueIdByProductId($product->getId());
+        $draftCollection = $draftProcess->getCollection()
+            ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
+            ->addFieldToFilter('intent', ['eq' => $intent]);
+        if ($printformerDraft != null) {
+            $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
         }
-
-        if ($sessionUniqueId) {
-            $uniqueExplode = explode(':', $sessionUniqueId ?? '');
-            if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
-                $draftCollection = $draftProcess->getCollection()
-                    ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
-                    ->addFieldToFilter('intent', ['eq' => $intent]);
-                if ($printformerDraft != null) {
-                    $draftCollection->addFieldToFilter('draft_id', ['eq' => $printformerDraft]);
-                }
-                if ($draftCollection->count() == 1) {
-                    if ($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
-                        || $this->_sessionHelper->getCustomerId() == null) {
-                        /** @var Draft $draft */
-                        $draftProcess = $draftCollection->getFirstItem();
-                        if ($draftProcess->getId() && $draftProcess->getDraftId()) {
-                            $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
-                        }
-                    }
-                } else {
-                    $draftProcess = $draftCollection->getLastItem();
+        if ($draftCollection->count() == 1) {
+            if ($draftCollection->getFirstItem()->getUserIdentifier() == $this->_draftGateway->getUserIdentifier()
+                || $this->_sessionHelper->getCustomerId() == null) {
+                /** @var Draft $draft */
+                $draftProcess = $draftCollection->getFirstItem();
+                if ($draftProcess->getId() && $draftProcess->getDraftId()) {
+                    $this->_sessionHelper->setCurrentIntent($draftProcess->getIntent());
                 }
             }
         } else {
-            if (!empty($printformerDraft)) {
-            }
+            $draftProcess = $draftCollection->getLastItem();
         }
 
         return $draftProcess;

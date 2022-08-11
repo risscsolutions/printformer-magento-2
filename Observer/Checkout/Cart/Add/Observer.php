@@ -51,8 +51,8 @@ class Observer
             } else {
                 $productId = $product->getData('entity_id');
             }
-            if (isset($productId)) { //todo: load product id from child if configurable and quote-item-children :)
-                $this->sessionHelper->removeSessionUniqueIdByProductIdFromSession($productId);
+            if (isset($productId)) {
+                $this->sessionHelper->removeSessionUniqueIdFromSession($productId);
             }
         }
 

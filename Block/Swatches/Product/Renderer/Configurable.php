@@ -130,11 +130,12 @@ class Configurable extends parentConfigurable
             }
         } else {
             $productId = $printformerProduct->getProductId();
-            $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
+            $pfProductId = $printformerProduct->getId();
+            $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
             if ($sessionUniqueId) {
                 $uniqueIdExplode = explode(':', $sessionUniqueId ?? '');
                 if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $productId) {
-                    $draftId = $this->printformerProductHelper->getDraftId($printformerProduct->getId(), $productId);
+                    $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
                 }
             }
         }

@@ -125,26 +125,28 @@ class Save extends Action
 
         try {
             $productId = $this->getRequest()->getParam('product_id');
-            $draftId = $this->getRequest()->getParam('draft_process');
+            $draftProcessId = $this->getRequest()->getParam('draft_process');
             $storeId = $this->getRequest()->getParam('store_id');
 
             $product = $this->_productRepository->getById($productId, false, $storeId);
             $extraParams = [];
-
-            $sessionUniqueId = $this->_sessionHelper->getSessionUniqueIdByProductId($productId);
+            $pfProduct = $this->_sessionHelper->getPfProductByDraftProcessId($draftProcessId);
+            $pfProductId = $pfProduct->getPrintformerProductId();
+            $draftId = $pfProduct->getDraftId();
+            $sessionUniqueId = $this->_sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
             if ($sessionUniqueId) {
                 $uniqueExplode = explode(':', $sessionUniqueId ?? '');
                 if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                     $uniqueID = $sessionUniqueId;
                 } else {
-                    $uniqueID = $this->_sessionHelper->setSessionUniqueIdByProductIdAndDraftId($productId, $draftId);
+                    $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
                 }
             } else {
-                $uniqueID = $this->_sessionHelper->setSessionUniqueIdByProductIdAndDraftId($productId, $draftId);
+                $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
             }
 
             /** @var Draft $draft */
-            $draft = $this->_draftFactory->create()->load($draftId);
+            $draft = $this->_draftFactory->create()->load($draftProcessId);
             $draft->setSessionUniqueId($uniqueID);
             $draft->getResource()->save($draft);
 
@@ -165,7 +167,7 @@ class Save extends Action
                 $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()] = $personalisations;
             }
 
-            $params = $this->initDraft($product, $draftId, $storeId, $extraParams);
+            $params = $this->initDraft($product, $draftProcessId, $storeId, $extraParams);
             $redirectAddToCart = $this->_configHelper->getConfigRedirect()!= Redirect::CONFIG_REDIRECT_URL_PRODUCT;
             if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
                 // update wishlist item options if true
@@ -211,6 +213,7 @@ class Save extends Action
                         $requestParams[] = 'project_id=' . $this->getRequest()->getParam('project_id');
                     }
                     if ($product->getTypeId() === Type::TYPE_SIMPLE) {
+                        //todo: check why on products without parent you go here
                         $configurableProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(), $storeId);
                         if(!empty($configurableProduct)) {
                             $product = $configurableProduct;

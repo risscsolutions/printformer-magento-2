@@ -227,7 +227,7 @@ class Product extends AbstractHelper
     public function getDraftId($printformerProductId, $productId)
     {
         $draftId = '';
-        $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
+        $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $printformerProductId);
 
         if (isset($sessionUniqueId)) {
             /** @var Draft $draft */
@@ -236,10 +236,10 @@ class Product extends AbstractHelper
                 ->addFieldToFilter('printformer_product_id', $printformerProductId)
                 ->addFieldToFilter('product_id', $productId)
                 ->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId])
-                ->setOrder('created_at', AbstractDb::SORT_ORDER_DESC);
+                ->setOrder('created_at', AbstractDb::SORT_ORDER_ASC);
 
             if ($draftCollection->count() > 0) {
-                $draft = $draftCollection->getFirstItem();
+                $draft = $draftCollection->getLastItem();
                 if ($draft->getId() && $draft->getDraftId()) {
                     $draftId = $draft->getDraftId();
                 }

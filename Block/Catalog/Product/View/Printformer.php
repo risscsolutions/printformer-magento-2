@@ -223,13 +223,8 @@ class Printformer extends AbstractView
             }
         } else {
             $productId = $printformerProduct->getProductId();
-            $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
-            if ($sessionUniqueId) {
-                $uniqueIdExplode = explode(':', $sessionUniqueId ?? '');
-                if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $productId) {
-                    $draftId = $this->printformerProductHelper->getDraftId($printformerProduct->getId(), $productId);
-                }
-            }
+            $pfProductId = $printformerProduct->getId();
+            $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
         }
 
         return $draftId;
@@ -741,16 +736,20 @@ class Printformer extends AbstractView
                                 $buyRequest = $quoteItem->getBuyRequest();
                                 $uniqueId = $buyRequest->getData('printformer_unique_session_id');
                                 if ($superAttributes = $buyRequest->getData('super_attribute')) {
-                                    $childProduct = $this->configurableProductHelper->getChildProductBySuperAttributes($superAttributes, $buyRequest->getData('product'));
-
-                                    $productId = $childProduct->getId();
-                                    $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
-                                    if (!isset($uniqueId)) {
-                                        $printformerDraftField = $childProduct->getPrintformerDraftid();
-                                        if ($printformerDraftField) {
-                                            $draftHashArray = explode(',', $printformerDraftField ?? '');
-                                            foreach($draftHashArray as $draftHash) {
-                                                $uniqueId = $this->sessionHelper->setSessionUniqueIdByProductIdAndDraftId($productId, $draftHash);
+                                    if (!empty($children = $quoteItem->getChildren())) {
+                                        $childProduct = $children[0];
+                                        if (!empty($childProduct)) {
+                                            $pfProductId = $this->sessionHelper->getPfProductIdByDraftId($childProduct->getPrintformerDraftid());
+                                            $productId = $childProduct->getProductId();
+                                            $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                                            if (!isset($uniqueId)) {
+                                                $printformerDraftField = $childProduct->getPrintformerDraftid();
+                                                if ($printformerDraftField) {
+                                                    $draftHashArray = explode(',', $printformerDraftField ?? '');
+                                                    foreach($draftHashArray as $draftHash) {
+                                                        $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -764,17 +763,12 @@ class Printformer extends AbstractView
                             $buyRequest = $wishlistItem->getBuyRequest();
                             $uniqueId = $buyRequest->getData('printformer_unique_session_id');
                             //todo: test and adjust logic to load draft id by wishlistItem
-                            //                            $this->sessionHelper->setSessionUniqueId($productId, $uniqueId, $draftid);
+                            //$this->sessionHelper->setSessionUniqueId($productId, $uniqueId, $draftid);
                         }
                         break;
                     default:
                         break;
                 }
-            }
-        } else {
-            //todo: check via breakpoint if you have the case to land here and miss a correct product-id
-            if (!empty($productId)) {
-                $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId);
             }
         }
 

@@ -147,20 +147,90 @@ class Session extends AbstractHelper
         return $this->checkoutSession;
     }
 
+    private function getSessionUniqueIdFromDraft(string $draftId)
+    {
+        $uniqueId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem = $draftCollection->getLastItem();
+            $uniqueId = $lastItem->getSessionUniqueId();
+        } catch (\Exception $e) {
+        }
+        return $uniqueId;
+    }
+
+    /**
+     * @param string $draftId
+     * @return false
+     */
+    public function getPfProductIdByDraftId($draftId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem = $draftCollection->getLastItem();
+            $printformerProductId = $lastItem->getPrintformerProductId();
+        } catch (\Exception $e) {
+        }
+        return $printformerProductId;
+    }
+
+    /**
+     * @param string $draftId
+     * @return false
+     */
+    public function getPfProductByDraftId(string $draftId)
+    {
+        $lastPfProduct = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('id', ['eq' => $draftId]);
+            $lastPfProduct = $draftCollection->getLastItem();
+
+        } catch (\Exception $e) {
+        }
+        return $lastPfProduct;
+    }
+
+    /**
+     * @param string $processId
+     * @return false
+     */
+    public function getPfProductByDraftProcessId(string $processId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('id', ['eq' => $processId]);
+            $lastPfProduct = $draftCollection->getLastItem();
+
+        } catch (\Exception $e) {
+        }
+        return $lastPfProduct;
+    }
+
     /**
      * Get unique id from session for the unique-ids-entry with corresponding product-id
      *
      * @param $productId
      * @return string|null
      */
-    public function getSessionUniqueIdByProductId($productId)
+    public function getSessionUniqueIdByProductId($productId, $pfProductId)
     {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
         $sessionUniqueId = null;
 
-        if (!empty($sessionUniqueIds) && !empty($productId)){
+        if (!empty($sessionUniqueIds) && !empty($productId) && !empty($pfProductId)){
             if (isset($sessionUniqueIds[$productId])) {
-                $sessionUniqueId = $sessionUniqueIds[$productId];
+                if (isset($sessionUniqueIds[$productId][$pfProductId])) {
+                    $sessionUniqueId = $sessionUniqueIds[$productId][$pfProductId];
+                }
             }
         }
 
@@ -168,27 +238,44 @@ class Session extends AbstractHelper
     }
 
     /**
-     * Create unique id  for a new unique-ids-entry with corresponding product-id if there is no one in drafts-table
-     * or load the existing unique-id for the draft with product-id
+     * Get unique id from session for the unique-ids-entry with corresponding product and pf-product-id
      *
      * @param $productId
-     * @param $uniqueId
-     * @return mixed|string|null
+     * @param $pfProductId
+     * @return string|null
      */
-    public function setSessionUniqueIdByProductIdAndDraftId(
-        $productId, $draftId = null
-    )
+    public function getSessionUniqueIdByProductAndPfProductId($productId, $pfProductId)
     {
-        if (!empty($draftId)) {
-            $draftProcess = $this->draftFactory->create();
-            $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
-            $lastItem = $draftCollection->getLastItem();
-            $uniqueId = $lastItem->getSessionUniqueId();
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        $sessionUniqueId = null;
+
+        if (!empty($sessionUniqueIds) && !empty($productId)){
+            if (isset($sessionUniqueIds[$productId])) {
+                $sessionUniqueId = $sessionUniqueIds[$productId][$pfProductId];
+            }
         }
 
-        if (!isset($uniqueId)) {
-            $uniqueId = md5(time() . '_' . $this->customerSession->getCustomerId() . '_' . $productId) . ':' . $productId;
+        return $sessionUniqueId;
+    }
+
+    /**
+     * Create unique id  for a new unique-ids-entry with corresponding product- and pf-product-id if there is no one in
+     * drafts-table or load the existing unique-id for the draft with product-id
+     *
+     * @param $productId
+     * @param $pfProductId
+     * @param $draftId
+     * @return false|string
+     */
+    public function loadSessionUniqueId(
+        $productId,
+        $pfProductId,
+        $draftId = ''
+    )
+    {
+        $uniqueId = false;
+        if (!empty($draftId)) {
+            $uniqueId = $this->getSessionUniqueIdFromDraft($draftId);
         }
 
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
@@ -196,8 +283,14 @@ class Session extends AbstractHelper
             $sessionUniqueIds = array();
         }
 
-        $sessionUniqueIds[$productId] = $uniqueId;
-        $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+        if (!empty($pfProductId) && !empty($productId)) {
+            if (empty($uniqueId)) {
+                $uniqueId = md5(time() . '_' . $this->customerSession->getCustomerId() . '_' . $productId);
+            }
+            $sessionUniqueIds[$productId][$pfProductId] = $uniqueId;
+            $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+        }
+
         return $uniqueId;
     }
 
@@ -207,11 +300,30 @@ class Session extends AbstractHelper
      * @param $productId
      * @return void
      */
-    public function removeSessionUniqueIdByProductIdFromSession($productId)
+    public function removeSessionUniqueIdFromSession($productId, $pfProductId = null)
     {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
         if (!empty($sessionUniqueIds) && !empty($productId)){
-            unset($sessionUniqueIds[$productId]);
+            if (!empty($pfProductId)) {
+                unset($sessionUniqueIds[$productId][$pfProductId]);
+            } else {
+                unset($sessionUniqueIds[$productId]);
+            }
+        }
+        $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+    }
+
+    /**
+     * Remove the current session-unique id for concrete product-id from session
+     *
+     * @param $productId
+     * @return void
+     */
+    public function removeSessionUniqueIdByProductIdFromSession($productId, $pfProductId)
+    {
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        if (!empty($sessionUniqueIds) && !empty($productId) && !empty($pfProductId)){
+            unset($sessionUniqueIds[$productId][$pfProductId]);
             $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
         }
     }
@@ -370,5 +482,4 @@ class Session extends AbstractHelper
 
         return $result;
     }
-
 }
