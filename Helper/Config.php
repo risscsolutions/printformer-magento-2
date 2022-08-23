@@ -51,6 +51,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
+    const XML_PATH_CONFIG_SHOW_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/show_editor_button_on_configurable_product_page';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
 
@@ -739,6 +740,18 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->isSetFlag(
             self::XML_PATH_CONFIG_SHOW_DELETE_BUTTON,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        );
+    }
+
+    /**
+     * @return bool
+     */
+    public function showEditorButtonOnConfigurableProductPage()
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::XML_PATH_CONFIG_SHOW_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE,
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );
