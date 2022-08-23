@@ -4,8 +4,10 @@ namespace Rissc\Printformer\Helper;
 
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Rissc\Printformer\Model\DraftFactory;
 
 class Session extends AbstractHelper
 {
@@ -23,6 +25,16 @@ class Session extends AbstractHelper
     protected $customerSession;
 
     /**
+     * @var CheckoutSession
+     */
+    private CheckoutSession $checkoutSession;
+
+    /**
+     * @var DraftFactory
+     */
+    private DraftFactory $draftFactory;
+
+    /**
      * Session constructor.
      * @param Context $context
      * @param CatalogSession $catalogSession
@@ -31,10 +43,14 @@ class Session extends AbstractHelper
     public function __construct(
         Context $context,
         CatalogSession $catalogSession,
-        CustomerSession $customerSession
+        CustomerSession $customerSession,
+        CheckoutSession $checkoutSession,
+        DraftFactory $draftFactory
     ) {
         $this->catalogSession = $catalogSession;
         $this->customerSession = $customerSession;
+        $this->checkoutSession = $checkoutSession;
+        $this->draftFactory = $draftFactory;
         parent::__construct($context);
     }
 
@@ -61,7 +77,7 @@ class Session extends AbstractHelper
      * @param int $storeId
      * @return $this
      */
-    public function unsDraftId($productId, $storeId)
+    public function unsetDraftId($productId, $storeId)
     {
         $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
         if (!is_array($data)) {
@@ -123,6 +139,199 @@ class Session extends AbstractHelper
         return $this->customerSession;
     }
 
+    /**
+     * @return CheckoutSession
+     */
+    public function getCheckoutSession()
+    {
+        return $this->checkoutSession;
+    }
+
+    private function getSessionUniqueIdFromDraft(string $draftId)
+    {
+        $uniqueId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem = $draftCollection->getLastItem();
+            $uniqueId = $lastItem->getSessionUniqueId();
+        } catch (\Exception $e) {
+        }
+        return $uniqueId;
+    }
+
+    /**
+     * @param string $draftId
+     * @return false
+     */
+    public function getPfProductIdByDraftId($draftId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem = $draftCollection->getLastItem();
+            $printformerProductId = $lastItem->getPrintformerProductId();
+        } catch (\Exception $e) {
+        }
+        return $printformerProductId;
+    }
+
+    /**
+     * @param string $draftId
+     * @return false
+     */
+    public function getPfProductByDraftId(string $draftId)
+    {
+        $lastPfProduct = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('id', ['eq' => $draftId]);
+            $lastPfProduct = $draftCollection->getLastItem();
+
+        } catch (\Exception $e) {
+        }
+        return $lastPfProduct;
+    }
+
+    /**
+     * @param string $processId
+     * @return false
+     */
+    public function getPfProductByDraftProcessId(string $processId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('id', ['eq' => $processId]);
+            $lastPfProduct = $draftCollection->getLastItem();
+
+        } catch (\Exception $e) {
+        }
+        return $lastPfProduct;
+    }
+
+    /**
+     * Get unique id from session for the unique-ids-entry with corresponding product-id
+     *
+     * @param $productId
+     * @return string|null
+     */
+    public function getSessionUniqueIdByProductId($productId, $pfProductId)
+    {
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        $sessionUniqueId = null;
+
+        if (!empty($sessionUniqueIds) && !empty($productId) && !empty($pfProductId)){
+            if (isset($sessionUniqueIds[$productId])) {
+                if (isset($sessionUniqueIds[$productId][$pfProductId])) {
+                    $sessionUniqueId = $sessionUniqueIds[$productId][$pfProductId];
+                }
+            }
+        }
+
+        return $sessionUniqueId;
+    }
+
+    /**
+     * Get unique id from session for the unique-ids-entry with corresponding product and pf-product-id
+     *
+     * @param $productId
+     * @param $pfProductId
+     * @return string|null
+     */
+    public function getSessionUniqueIdByProductAndPfProductId($productId, $pfProductId)
+    {
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        $sessionUniqueId = null;
+
+        if (!empty($sessionUniqueIds) && !empty($productId)){
+            if (isset($sessionUniqueIds[$productId])) {
+                $sessionUniqueId = $sessionUniqueIds[$productId][$pfProductId];
+            }
+        }
+
+        return $sessionUniqueId;
+    }
+
+    /**
+     * Create unique id  for a new unique-ids-entry with corresponding product- and pf-product-id if there is no one in
+     * drafts-table or load the existing unique-id for the draft with product-id
+     *
+     * @param $productId
+     * @param $pfProductId
+     * @param $draftId
+     * @return false|string
+     */
+    public function loadSessionUniqueId(
+        $productId,
+        $pfProductId,
+        $draftId = ''
+    )
+    {
+        $uniqueId = false;
+        if (!empty($draftId)) {
+            $uniqueId = $this->getSessionUniqueIdFromDraft($draftId);
+        }
+
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        if (empty($sessionUniqueIds)){
+            $sessionUniqueIds = array();
+        }
+
+        if (!empty($pfProductId) && !empty($productId)) {
+            if (empty($uniqueId)) {
+                $uniqueId = md5(time() . '_' . $this->customerSession->getCustomerId() . '_' . $productId);
+            }
+            $sessionUniqueIds[$productId][$pfProductId] = $uniqueId;
+            $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+        }
+
+        return $uniqueId;
+    }
+
+    /**
+     * Remove the current session-unique id for concrete product-id from session
+     *
+     * @param $productId
+     * @return void
+     */
+    public function removeSessionUniqueIdFromSession($productId, $pfProductId = null)
+    {
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        if (!empty($sessionUniqueIds) && !empty($productId)){
+            if (!empty($pfProductId)) {
+                unset($sessionUniqueIds[$productId][$pfProductId]);
+            } else {
+                unset($sessionUniqueIds[$productId]);
+            }
+        }
+        $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+    }
+
+    /**
+     * Remove the current session-unique id for concrete product-id from session
+     *
+     * @param $productId
+     * @return void
+     */
+    public function removeSessionUniqueIdByProductIdFromSession($productId, $pfProductId)
+    {
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        if (!empty($sessionUniqueIds) && !empty($productId) && !empty($pfProductId)){
+            unset($sessionUniqueIds[$productId][$pfProductId]);
+            $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+        }
+    }
+
+    /**
+     * @param $intent
+     * @return void
+     */
     public function setCurrentIntent($intent)
     {
         if ($intent != $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {

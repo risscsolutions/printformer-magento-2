@@ -5,6 +5,7 @@ namespace Rissc\Printformer\Plugin\Checkout\Model;
 use Magento\Catalog\Helper\Image;
 use Magento\Catalog\Model\Product\Configuration\Item\ItemResolverInterface;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -120,19 +121,15 @@ class DefaultConfigProvider
             'mini_cart_product_thumbnail'
         );
 
-        $draftId = $cartItem->getPrintformerDraftid();
-        if ($draftId && $this->configHelper->isUseImagePreview()) {
-            $draftId = explode(',', $draftId ?? '')[0];
-            $filePath = $this->mediaHelper->getImageFilePath($draftId, 1, true);
-            if (!file_exists($filePath)) {
-                $this->mediaHelper->createThumbnail($draftId);
-            }
-            $imageUrl = $this->mediaHelper->getImageUrl($draftId, 1, true);
+        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($cartItem);
+        if (!empty($draftIds)) {
+            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
         }
 
-        if (empty($imageUrl)){
+        if (!isset($imageUrl)){
             $imageUrl = $imageHelper->getUrl();
         }
+
 
         $imageData = [
             'src' => $imageUrl,

@@ -2,6 +2,8 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\ConfigurableProduct\Model\Product\Type\Model;
@@ -12,6 +14,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Catalog\Model\ProductFactory;
 
 /**
  * Class ConfigurableProduct
@@ -45,6 +48,8 @@ class ConfigurableProduct extends AbstractHelper
      * @var int
      */
     protected $storeId;
+    private ProductRepositoryInterface $productRepository;
+    private ProductFactory $productFactory;
 
     /**
      * ConfigurableProduct constructor.
@@ -53,18 +58,23 @@ class ConfigurableProduct extends AbstractHelper
      * @param Configurable $configurable
      * @param Attribute $attributeFactory
      * @param StoreManagerInterface $storeManager
+     * @param ProductRepositoryInterface $productRepository
      */
     public function __construct(
         Context $context,
         ConfigurableResource $resourceConfigurable,
         Configurable $configurable,
         Attribute $attributeFactory,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        ProductRepositoryInterface $productRepository,
+        ProductFactory $productFactory
     ) {
         $this->resourceConfigurable = $resourceConfigurable;
         $this->configurable = $configurable;
         $this->attributeFactory = $attributeFactory;
         $this->storeManager = $storeManager;
+        $this->productRepository = $productRepository;
+        $this->productFactory = $productFactory;
         //set store id
         try {
             $this->storeId = $this->storeManager->getStore()->getId();
@@ -98,6 +108,28 @@ class ConfigurableProduct extends AbstractHelper
         }
 
         return $parentId;
+    }
+
+    /**
+     * Get Parent Product Resource from by child-product-id
+     *
+     * @param $simpleProductId
+     * @param $storeId
+     * @return ProductInterface|null
+     */
+    public function getFirstConfigurableBySimpleProductId($simpleProductId, $storeId)
+    {
+        $product = null;
+
+        try {
+            $parentIds = $this->resourceConfigurable->getParentIdsByChild($simpleProductId);
+            if(isset($parentIds[0])){
+                $product = $this->productRepository->getById($parentIds[0], false, $storeId);
+            }
+        } catch(\Exception $e) {
+        }
+
+        return $product;
     }
 
     /**
@@ -228,5 +260,16 @@ class ConfigurableProduct extends AbstractHelper
         }
 
         return $resultAvailableVariants;
+    }
+
+    /**
+     * @param $superAttributes
+     * @param $parentProductId
+     * @return \Magento\Catalog\Model\Product
+     */
+    public function getChildProductBySuperAttributes($superAttributes, $parentProductId): \Magento\Catalog\Model\Product
+    {
+        $parentProduct = $this->productFactory->create()->load($parentProductId);
+        return $this->configurable->getProductByAttributes($superAttributes, $parentProduct);
     }
 }

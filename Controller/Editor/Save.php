@@ -15,6 +15,7 @@ use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Api\Url;
+use Rissc\Printformer\Helper\ConfigurableProduct;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
@@ -22,6 +23,7 @@ use Rissc\Printformer\Setup\InstallSchema;
 use Magento\Framework\Data\Form\FormKey;
 use Rissc\Printformer\Model\Config\Source\Redirect;
 use Rissc\Printformer\Helper\Media as MediaHelper;
+use Magento\Catalog\Model\Product\Type;
 
 class Save extends Action
 {
@@ -71,6 +73,7 @@ class Save extends Action
      * @var MediaHelper
      */
     protected $_mediaHelper;
+    private ConfigurableProduct $configurableProductHelper;
 
     /**
      * Save constructor.
@@ -83,6 +86,8 @@ class Save extends Action
      * @param DraftFactory $draftFactory
      * @param Session $catalogSession
      * @param FormKey $formKey
+     * @param MediaHelper $mediaHelper
+     * @param ConfigurableProduct $configurableProductHelper
      */
     public function __construct(
         LoggerInterface $logger,
@@ -94,7 +99,8 @@ class Save extends Action
         DraftFactory $draftFactory,
         Session $catalogSession,
         FormKey $formKey,
-        MediaHelper $mediaHelper
+        MediaHelper $mediaHelper,
+        ConfigurableProduct $configurableProductHelper
     ) {
         parent::__construct($context);
 
@@ -107,6 +113,7 @@ class Save extends Action
         $this->_catalogSession = $catalogSession;
         $this->_formKey = $formKey;
         $this->_mediaHelper = $mediaHelper;
+        $this->configurableProductHelper = $configurableProductHelper;
     }
 
     public function execute()
@@ -118,29 +125,28 @@ class Save extends Action
 
         try {
             $productId = $this->getRequest()->getParam('product_id');
-            $draftId = $this->getRequest()->getParam('draft_process');
+            $draftProcessId = $this->getRequest()->getParam('draft_process');
             $storeId = $this->getRequest()->getParam('store_id');
 
             $product = $this->_productRepository->getById($productId, false, $storeId);
             $extraParams = [];
-
-            $sessionUniqueId = $this->_sessionHelper->getCustomerSession()->getSessionUniqueID();
-            $uniqueID = null;
+            $pfProduct = $this->_sessionHelper->getPfProductByDraftProcessId($draftProcessId);
+            $pfProductId = $pfProduct->getPrintformerProductId();
+            $draftId = $pfProduct->getDraftId();
+            $sessionUniqueId = $this->_sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
             if ($sessionUniqueId) {
                 $uniqueExplode = explode(':', $sessionUniqueId ?? '');
                 if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
                     $uniqueID = $sessionUniqueId;
                 } else {
-                    $uniqueID = md5(time() . '_' . $this->_sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
-                    $this->_sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
+                    $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
                 }
             } else {
-                $uniqueID = md5(time() . '_' . $this->_sessionHelper->getCustomerSession()->getCustomerId() . '_' . $product->getId()) . ':' . $product->getId();
-                $this->_sessionHelper->getCustomerSession()->setSessionUniqueID($uniqueID);
+                $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
             }
 
             /** @var Draft $draft */
-            $draft = $this->_draftFactory->create()->load($draftId);
+            $draft = $this->_draftFactory->create()->load($draftProcessId);
             $draft->setSessionUniqueId($uniqueID);
             $draft->getResource()->save($draft);
 
@@ -161,7 +167,7 @@ class Save extends Action
                 $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()] = $personalisations;
             }
 
-            $params = $this->initDraft($product, $draftId, $storeId, $extraParams);
+            $params = $this->initDraft($product, $draftProcessId, $storeId, $extraParams);
             $redirectAddToCart = $this->_configHelper->getConfigRedirect()!= Redirect::CONFIG_REDIRECT_URL_PRODUCT;
             if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
                 // update wishlist item options if true
@@ -186,15 +192,32 @@ class Save extends Action
                     ->forward('add');
             } else { // redirect to product page
                 if ($this->getRequest()->getParam('is_edit') == '1') {
+                    $productId = $this->getRequest()->getParam('edit_product');
+
+                    if ($product->getTypeId() === Type::TYPE_SIMPLE) {
+                        $product = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(), $storeId);
+                        if (!empty($product)) {
+                            $productId = $product->getId();
+                        }
+                    }
+
                     $configureUrl = $this->_url->getUrl('checkout/cart/configure', [
                         'id' => $this->getRequest()->getParam('quote_id'),
-                        'product_id' => $this->getRequest()->getParam('edit_product')
+                        'product_id' => $productId
                     ]);
+
                     $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($configureUrl);
                 } else {
                     $requestParams = [];
                     if ($this->getRequest()->getParam('project_id')) {
                         $requestParams[] = 'project_id=' . $this->getRequest()->getParam('project_id');
+                    }
+                    if ($product->getTypeId() === Type::TYPE_SIMPLE) {
+                        //todo: check why on products without parent you go here
+                        $configurableProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(), $storeId);
+                        if(!empty($configurableProduct)) {
+                            $product = $configurableProduct;
+                        }
                     }
                     $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($this->_urlHelper->getRedirect($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
                 }

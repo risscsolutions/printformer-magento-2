@@ -9,6 +9,7 @@ use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 
@@ -32,6 +33,7 @@ class Plugin
 
     /** @var DraftResource */
     protected $_draftResource;
+    private SessionHelper $sessionHelper;
 
     /**
      * Plugin constructor.
@@ -47,13 +49,15 @@ class Plugin
         QuoteFactory $quoteFactory,
         QuoteResource $quoteResource,
         DraftResource $draftResource,
-        ApiHelper $apiHelper
+        ApiHelper $apiHelper,
+        SessionHelper $sessionHelper
     ) {
         $this->_customerSession = $customerSession;
         $this->_quoteFactory = $quoteFactory;
         $this->_quoteResource = $quoteResource;
         $this->_draftResource = $draftResource;
         $this->_apiHelper = $apiHelper;
+        $this->sessionHelper = $sessionHelper;
     }
 
     /**
@@ -78,30 +82,40 @@ class Plugin
 
             /** @var Quote\Item $item */
             foreach ($quote->getAllItems() as $item) {
-                /** @var DataObject $buyRequest */
-                $buyRequest = $item->getBuyRequest();
-
-                $draftId = $buyRequest->getPrintformerDraftid();
-                if (!$draftId) {
+                $draftFromBuyRequest = $item->getPrintformerDraftid();
+                if (!$draftFromBuyRequest) {
                     continue;
                 }
 
-                /** @var Draft $draftProcess */
-                $draftProcess = $this->_apiHelper->draftProcess($draftId);
-                if (!$draftProcess->getId()) {
-                    continue;
+                $draftIds = explode(',', $draftFromBuyRequest ?? '');
+
+                if (!$draftIds) {
+                    $draftIds = [];
+                    array_push($draftIds, $draftFromBuyRequest);
                 }
 
-                $userIdentifier = $this->_apiHelper->getUserIdentifier();
-                if ($userIdentifier != $customer->getPrintformerIdentification()) {
-                    $userIdentifier = $customer->getPrintformerIdentification();
-                }
+                foreach ($draftIds as $draftId) {
+                    /** @var Draft $draftProcess */
+                    $draftProcess = $this->_apiHelper->draftProcess($draftId);
+                    if (!$draftProcess->getId()) {
+                        continue;
+                    }
 
-                if (!$draftProcess->getCustomerId()) {
-                    $draftProcess->setCustomerId($customer->getId());
-                    $draftProcess->setUserIdentifier($userIdentifier);
+                    $userIdentifier = $this->_apiHelper->getUserIdentifier();
+                    if ($userIdentifier != $customer->getPrintformerIdentification()) {
+                        $userIdentifier = $customer->getPrintformerIdentification();
+                    }
 
-                    $this->_draftResource->save($draftProcess);
+                    if (!$draftProcess->getCustomerId()) {
+                        $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId());
+                        $draftId = $replicateDraft->getDraftId();
+                        $productId = $item->getProduct()->getId();
+                        $pfProductId = $replicateDraft->getPrintformerProductId();
+                        $item->setPrintformerDraftid($draftId);
+                        $this->sessionHelper->removeSessionUniqueIdFromSession($productId, $pfProductId);
+                        $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
+                        $item->save();
+                    }
                 }
             }
         }

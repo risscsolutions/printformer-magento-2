@@ -32,6 +32,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Log as LogHelper;
+use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 
 class Api extends AbstractHelper
 {
@@ -117,6 +118,8 @@ class Api extends AbstractHelper
      * @var Configuration
      */
     private Configuration $jwtConfig;
+    private DraftResource $draftResource;
+    private Context $context;
 
     /**
      * @param Context $context
@@ -154,7 +157,8 @@ class Api extends AbstractHelper
         ItemFactory $itemFactory,
         TimezoneInterface $timezone,
         OrderItemRepositoryInterface $orderItemRepository,
-        LogHelper $_logHelper
+        LogHelper $_logHelper,
+        DraftResource $draftResource
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -172,6 +176,8 @@ class Api extends AbstractHelper
         $this->timezone = $timezone;
         $this->orderItemRepository = $orderItemRepository;
         $this->_logHelper = $_logHelper;
+        $this->draftResource = $draftResource;
+        $this->context = $context;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -1015,6 +1021,46 @@ class Api extends AbstractHelper
             $item->setPrintformerCountDate($this->timezone->date()->format('Y-m-d H:i:s'));
             $item->getResource()->save($item);
         }
+    }
+
+    /**
+     * @param $draftId
+     * @return false|Draft
+     */
+    public function generateNewReplicateDraft($draftId, $customerId = null)
+    {
+        $result = false;
+        $oldDraftId = $draftId;
+
+        $newDraftId = $this->getReplicateDraftId($oldDraftId);
+        if (!empty($newDraftId)) {
+            /** @var Draft $draftProcess */
+            $draftProcess = $this->draftProcess($oldDraftId);
+            if ($draftProcess->getId()) {
+                /** @var Draft $newDraftProcess */
+                $newDraftProcess = $this->_draftFactory->create();
+                $draftData = $draftProcess->getData();
+                unset($draftData['id']);
+                unset($draftData['created_at']);
+                unset($draftData['order_item_id']);
+                unset($draftData['processing_id']);
+                $draftData['processing_status'] = 0;
+
+                if (isset($customerId)) {
+                    $draftData['customer_id'] = $customerId;
+                }
+
+                $newDraftProcess->addData($draftData);
+
+                $newDraftProcess->setDraftId($newDraftId);
+                $newDraftProcess->setCopyFrom($oldDraftId);
+
+                $this->draftResource->save($newDraftProcess);
+                $result = $newDraftProcess;
+            }
+        }
+
+        return $result;
     }
 
     /**

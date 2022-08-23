@@ -28,6 +28,7 @@ define([
             this._initEditorMain();
 
             $.each(this.options.printformerProducts, function (index, printformerProduct) {
+                // $('[data-product-type]').show();
                 that.initButton(printformerProduct);
             });
             this._initAddBtn();
@@ -458,30 +459,14 @@ define([
                 }
             }
 
-            if (!this.allDraftsDone(draftIds, this.options.printformerProducts)) {
-                this.addBtnDisable();
-            } else {
+            let dataPfTemplateDraftContainer = $(':visible[data-pf-template-container]').children('[data-pf-draft]');
+            if (dataPfTemplateDraftContainer.length === 0) {
                 this.addBtnEnable();
+            } else if (dataPfTemplateDraftContainer.data('pf-draft') === 'active'){
+                this.addBtnEnable();
+            } else {
+                this.addBtnDisable();
             }
-        },
-
-        allDraftsDone: function(draftIds, allDrafts) {
-            switch (this.options.allowSkipConfig) {
-                case 0:
-                    if (draftIds.length < allDrafts.length) {
-                        return false;
-                    }
-                    break;
-                case 2:
-                    if (allDrafts.length > 0 && draftIds.length < 1) {
-                        return false;
-                    }
-                    break;
-                default:
-                    return true;
-            }
-
-            return true;
         },
 
         addBtnEnable: function () {
@@ -493,11 +478,12 @@ define([
         },
 
         initButton: function(printformerProduct) {
-            var button = $(this.options.buttonSelector + printformerProduct['id']);
-
-            var url = printformerProduct['url'];
+            let button = $(this.options.buttonSelector + printformerProduct['product_id'] + '-' + printformerProduct['template_id']);
+            let url = new URL(printformerProduct['url']);
+            let search_params = url.searchParams;
 
             button.click({printformer: this}, function(event) {
+                search_params.set('selected_product_id', $(this).parents('div').data('product-id'));
                 event.data.printformer.editorMainOpen(url);
             });
 
@@ -509,10 +495,10 @@ define([
                 } else {
                     this.setButtonText($(button), $t('View draft'));
                 }
-
-                button.siblings('.printformer-delete').css('display', '');
+                button.data('pf-draft', 'active');
+                button.siblings('.printformer-delete[data-printformer-product="'+printformerProduct['template_id']+'"]').css('display', '');
             } else {
-                button.siblings('.printformer-delete').hide()
+                button.siblings('.printformer-delete[data-printformer-product="'+printformerProduct['template_id']+'"]').hide();
             }
 
             this.initDeleteButton(printformerProduct);
@@ -523,9 +509,14 @@ define([
 
             if (!this.isDefined(printformerProduct.delete_url)) {
                 return;
+            } else {
+                let url = new URL(printformerProduct.delete_url);
+                let search_params = url.searchParams;
+                search_params.set('selected_product_id', printformerProduct.product_id);
+                printformerProduct.delete_url = url;
             }
 
-            var confirmModal = $('#printformer-delete-confirm-' + printformerProduct.id).modal({
+            var confirmModal = $('#printformer-delete-confirm-' + printformerProduct.product_id + '-' + printformerProduct.template_id).modal({
                 modalClass: "printformer-editor-close-modal",
                 buttons: [
                     {
@@ -550,7 +541,7 @@ define([
             });
 
             if (printformerProduct.draft_id !== null) {
-                var button = $('#printformer-delete-' + printformerProduct.id);
+                let button = $('#printformer-delete-' + printformerProduct.product_id + '-' + printformerProduct.template_id);
                 $(button).prop('disabled', false);
 
                 $(button).on('click', function(e) {
@@ -560,8 +551,6 @@ define([
 
                     return false;
                 });
-
-
             }
         },
 

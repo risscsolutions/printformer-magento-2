@@ -6,9 +6,16 @@ use DateTimeImmutable;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\DataObject;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Model\Draft;
+use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Model\DraftFactory;
 
 class Config extends AbstractHelper
 {
@@ -44,6 +51,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
+    const XML_PATH_CONFIG_SHOW_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/show_editor_button_on_configurable_product_page';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
 
@@ -67,6 +75,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_COLOR_OPTION_VALUES       = 'printformer/color/option_values';
 
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
+    const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
 
     /**
      * @var StoreManagerInterface
@@ -87,6 +96,7 @@ class Config extends AbstractHelper
      * @var EncryptorInterface
      */
     private $encryptor;
+    private DraftFactory $draftFactory;
 
     /**
      * Config constructor.
@@ -100,13 +110,15 @@ class Config extends AbstractHelper
         Context $context,
         StoreManagerInterface $storeManager,
         CustomerSession $customerSession,
-        EncryptorInterface $encryptor
+        EncryptorInterface $encryptor,
+        DraftFactory $draftFactory
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
         $this->storeId = $this->storeManager->getStore()->getId();
         $this->_customerSession = $customerSession;
         $this->encryptor = $encryptor;
+        $this->draftFactory = $draftFactory;
     }
 
     /**
@@ -734,6 +746,18 @@ class Config extends AbstractHelper
     }
 
     /**
+     * @return bool
+     */
+    public function showEditorButtonOnConfigurableProductPage()
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::XML_PATH_CONFIG_SHOW_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE,
+            ScopeInterface::SCOPE_STORES,
+            $this->getStoreId()
+        );
+    }
+
+    /**
      * @return string
      */
     public function getDeleteConfirmText()
@@ -746,6 +770,72 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Get Drafids from quote-item or if product is configurable and has children-item, then from first child-item
+     *
+     * @param $item
+     * @return string
+     */
+    public function getDraftIdsFromSpecificItemType($item)
+    {
+        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+            $childItems = $item->getChildren();
+            if (!empty($childItems)) {
+                $firstChildItem = $childItems[0];
+                $draftIds = $firstChildItem->getPrintformerDraftid();
+            } else {
+                $draftIds = $item->getPrintformerDraftid();
+            }
+        } else {
+            $draftIds = $item->getPrintformerDraftid();
+        }
+
+        return $draftIds;
+    }
+
+    /**
+     * Add draft ids to quote-item depending on product type
+     *
+     * @param $item
+     * @param $draftIds
+     * @return Item
+     */
+    public function setDraftsOnItemType($item, $draftIds): Item
+    {
+        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+            $childItems = $item->getChildren();
+            if (!empty($childItems)){
+                $firstChildItem = $childItems[0];
+                $firstChildItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
+                $item->unsetData(InstallSchema::COLUMN_NAME_DRAFTID);
+            }
+        } else {
+            if (empty($item->getParentItem())) {
+                $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
+            }
+        }
+
+        return $item;
+    }
+
+    /**
+     * Check if product is a child-product
+     *
+     * @param $item
+     * @return bool
+     */
+    public function isItemChildSimpleOfConfigurable($item): bool
+    {
+        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+            $childItems = $item->getChildren();
+            if (!empty($childItems)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return string
      */
     public function isDataTransferEnabled()
@@ -755,5 +845,67 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );
+    }
+
+    /**
+     * @param string $draftIds
+     * @return DataObject[]
+     */
+    public function loadDraftItemsByIds(string $draftIds): array
+    {
+        /** @var Draft $draftFactory */
+        $draftFactory = $this->draftFactory->create();
+        $draftCollection = $draftFactory->getCollection();
+        $draftCollection->addFieldToFilter('draft_id', ['in' => $draftIds]);
+        return $draftCollection->getItems();
+    }
+
+    /**
+     * Load draftId from buy-Request of quote-Item
+     * @param $quoteItem
+     * @param int $productId
+     * @param int $printformerProductId
+     * @return false|string
+     */
+    public function loadDraftFromQuoteItem(
+        $quoteItem,
+        int $productId,
+        int $printformerProductId
+    )
+    {
+        $resultDraft = false;
+        if (($productId && $productId == $quoteItem->getProduct()->getId()) || (empty($productId))) {
+            $quoteItemDraftsField = $quoteItem->getData(SessionHelper::SESSION_KEY_PRINTFORMER_DRAFTID);
+            $quoteItemDraftsCollectionItems = $this->loadDraftItemsByIds($quoteItemDraftsField);
+
+            foreach ($quoteItemDraftsCollectionItems as $quoteItemCollectionItem) {
+                if ($quoteItemCollectionItem->getProductId() == $productId && $quoteItemCollectionItem->getPrintformerProductId() == $printformerProductId) {
+                    $resultDraft = $quoteItemCollectionItem->getDraftId();
+                }
+            }
+        }
+
+        return $resultDraft;
+    }
+
+    public function updateDraftHashRelations(
+        $draftHashRelations,
+        $productId,
+        $printformerProductId,
+        $draftId
+    )
+    {
+        if (is_array($draftHashRelations)) {
+            if(isset($draftHashRelations[$productId])) {
+                $draftHashRelationsProduct = $draftHashRelations[$productId];
+            }
+            if (!isset($draftHashRelationsProduct)) {
+                $draftHashRelations[$productId] = [];
+            }
+            if (is_array($draftHashRelations[$productId])){
+                $draftHashRelations[$productId][$printformerProductId] = $draftId;
+            }
+        }
+        return $draftHashRelations;
     }
 }
