@@ -513,6 +513,7 @@ define([
                 let url = new URL(printformerProduct.delete_url);
                 let search_params = url.searchParams;
                 search_params.set('selected_product_id', printformerProduct.product_id);
+                search_params.set('selected_product_draft_id', printformerProduct.draft_id);
                 printformerProduct.delete_url = url;
             }
 

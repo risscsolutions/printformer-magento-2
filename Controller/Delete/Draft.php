@@ -8,7 +8,6 @@ use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\Framework\App\ObjectManager;
 use Rissc\Printformer\Helper\Session;
-use Magento\Framework\Message\Manager as MessageManager;
 
 class Draft
     extends Action
@@ -38,51 +37,32 @@ class Draft
         $product = $this->_productFactory->create();
         $this->_productResource->load($product, intval($params['product_id']));
 
-        $productId = $product->getId();
-        if (isset($params['selected_product_id'])) {
-            $productId = $params['selected_product_id'];
-        }
+        $productId = $params['selected_product_id'];
+        $draftId = $params['selected_product_draft_id'];
+        $printformerProductId = $params['printformer_product'];
 
-        if ($product && $productId) {
+        if (isset($productId) && isset($draftId) && isset($printformerProductId)) {
             $connection = $this->_productResource->getConnection();
 
             $objm = ObjectManager::getInstance();
             /** @var Session $sessionHelper */
             $sessionHelper = $objm->get(Session::class);
 
-            $uniqueId = explode(':', $sessionHelper->getSessionUniqueIdByProductId($productId, $params['printformer_product']) ?? '')[0];
-
-            $sqlQuery = "
-                SELECT * FROM `" . $connection->getTableName('printformer_draft') . "`
-                WHERE
-                    `intent` = '" . $params['intent'] . "' AND
-                    `product_id` = " . $productId . " AND
-                    `printformer_product_id` = " . $params['printformer_product'] . " AND
-                    `session_unique_id` = '" . $uniqueId . "'
-                ORDER BY `created_at` DESC
-            ";
-
-            $rawDrafts = $connection->fetchAll($sqlQuery);
-            foreach ($rawDrafts as $rawDraft) {
-                if (!empty($rawDraft['id']) && isset($rawDraft['store_id']) && is_numeric($rawDraft['store_id'])) {
-                    $connection->query("
+            if (!empty($draftId)) {
+                $connection->query("
                     DELETE FROM " . $connection->getTableName('printformer_draft') . "
-                    WHERE `id` = " . $rawDraft['id'] . ";
+                    WHERE `draft_id` = '" . $draftId . "';
                 ");
 
-                    $sessionHelper->unsetCurrentIntent();
+                $sessionHelper->unsetCurrentIntent();
 
-                    $printformerSession = $sessionHelper->getCatalogSession()->getData(Session::SESSION_KEY_PRINTFORMER_DRAFTID);
-                    if (isset($printformerSession[$rawDraft['store_id']][$productId])) {
-                        unset($printformerSession[$rawDraft['store_id']][$productId]);
-                        $sessionHelper->getCatalogSession()->setData(Session::SESSION_KEY_PRINTFORMER_DRAFTID,
-                                                                     $printformerSession);
-                    }
-
-                    $this->messageManager->addSuccessMessage(__('Draft has been successfully deleted.'));
+                $sessionUniqueIds = $sessionHelper->getCustomerSession()->getSessionUniqueIds();
+                if (isset($sessionUniqueIds[$productId][$printformerProductId])) {
+                    unset($sessionUniqueIds[$productId][$printformerProductId]);
+                    $sessionHelper->getCustomerSession()->setData('session_unique_ids', $sessionUniqueIds);
                 }
+                $this->messageManager->addSuccessMessage(__('Draft has been successfully deleted.'));
             }
-
         }
 
         header('Location: ' . $product->getProductUrl());
