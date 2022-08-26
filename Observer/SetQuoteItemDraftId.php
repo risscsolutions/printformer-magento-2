@@ -64,12 +64,18 @@ class SetQuoteItemDraftId implements ObserverInterface
                 || !isset($item->getBuyRequest()['printformer_draftid'])) {
                 return;
             }
+
+            if ($item->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+                $childProduct = $item->getChildren();
+                if (is_array($childProduct) && !empty($childProduct)) {
+                    $item = $childProduct[0];
+                }
+            }
+
             $storeId = $this->storeManager->getStore()->getId();
             $draftIds = $item->getBuyRequest()['printformer_draftid'];
-
             $item = $this->configHelper->setDraftsOnItemType($item, $draftIds);
             $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-
             $this->sessionHelper->unsetDraftId($item->getProduct()->getId(), $storeId);
         } catch (\Exception $e) {
             $this->logger->critical($e);
