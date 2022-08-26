@@ -133,10 +133,7 @@ class Configurable extends parentConfigurable
             $pfProductId = $printformerProduct->getId();
             $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
             if ($sessionUniqueId) {
-                $uniqueIdExplode = explode(':', $sessionUniqueId ?? '');
-                if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $productId) {
-                    $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
-                }
+                $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
             }
         }
 

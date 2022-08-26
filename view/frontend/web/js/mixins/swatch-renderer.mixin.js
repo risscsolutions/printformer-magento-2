@@ -95,12 +95,17 @@ define([
                             }
 
                             let dataPfTemplateDraftContainer = $(':visible[data-pf-template-container]').children('[data-pf-draft]');
+                            let addBtnSelector = '#product-addtocart-button, #product-updatecart-button';
                             if (dataPfTemplateDraftContainer.length === 0) {
-                                $('#product-addtocart-button').prop('disabled', false)
-                            } else if (dataPfTemplateDraftContainer.data('pf-draft') === 'active'){
-                                $('#product-addtocart-button').prop('disabled', false)
+                                $(addBtnSelector).prop('disabled', false)
                             } else {
-                                $('#product-addtocart-button').prop('disabled', true)
+                                $(addBtnSelector).prop('disabled', true)
+
+                                $.each(dataPfTemplateDraftContainer, function(index, dataPfTemplate){
+                                    if ($(dataPfTemplate).data('pf-draft') === 'active'){
+                                        $(addBtnSelector).prop('disabled', false)
+                                    }
+                                }, addBtnSelector);
                             }
                         }
                     }, checkedOptionIds);

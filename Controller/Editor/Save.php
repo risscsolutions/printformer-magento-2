@@ -133,17 +133,7 @@ class Save extends Action
             $pfProduct = $this->_sessionHelper->getPfProductByDraftProcessId($draftProcessId);
             $pfProductId = $pfProduct->getPrintformerProductId();
             $draftId = $pfProduct->getDraftId();
-            $sessionUniqueId = $this->_sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
-            if ($sessionUniqueId) {
-                $uniqueExplode = explode(':', $sessionUniqueId ?? '');
-                if (isset($uniqueExplode[1]) && $product->getId() == $uniqueExplode[1]) {
-                    $uniqueID = $sessionUniqueId;
-                } else {
-                    $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
-                }
-            } else {
-                $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
-            }
+            $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
 
             /** @var Draft $draft */
             $draft = $this->_draftFactory->create()->load($draftProcessId);

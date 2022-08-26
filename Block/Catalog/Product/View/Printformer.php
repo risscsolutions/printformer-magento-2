@@ -786,11 +786,6 @@ class Printformer extends AbstractView
         }
 
         $uniqueId = $this->getUniqueSessionId();
-        $uniqueIdExplode = explode(':', $uniqueId ?? '');
-        if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] != $this->getProduct()->getId()) {
-            $uniqueId = null;
-        }
-
         $minSaleQty = 1;
         try {
             $stockItem = $product->getExtensionAttributes()->getStockItem();
