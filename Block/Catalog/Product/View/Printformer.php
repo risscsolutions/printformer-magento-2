@@ -353,24 +353,26 @@ class Printformer extends AbstractView
         $draftId = $this->getDraftId($printformerProduct);
         $quoteItems = $this->cart->getQuote()->getItems();
 
-        foreach ($quoteItems as $quoteItem) {
-            if ($quoteItem->getProductType() == ConfigurableType::TYPE_CODE) {
-                if ($quoteItem) {
-                    if ($quoteItem->getDraftId() == $draftId) {
-                        return true;
-                    }
+        if (is_array($quoteItems)) {
+            foreach ($quoteItems as $quoteItem) {
+                if ($quoteItem->getProductType() == ConfigurableType::TYPE_CODE) {
+                    if ($quoteItem) {
+                        if ($quoteItem->getDraftId() == $draftId) {
+                            return true;
+                        }
 
-                    if (!empty($children = $quoteItem->getChildren())) {
-                        foreach ($children as $child) {
-                            if ($child->getData(InstallSchema::COLUMN_NAME_DRAFTID) == $draftId) {
-                                return true;
+                        if (!empty($children = $quoteItem->getChildren())) {
+                            foreach ($children as $child) {
+                                if ($child->getData(InstallSchema::COLUMN_NAME_DRAFTID) == $draftId) {
+                                    return true;
+                                }
                             }
                         }
                     }
-                }
-            } else {
-                if ($quoteItem->getDraftId() == $draftId) {
-                    return true;
+                } else {
+                    if ($quoteItem->getDraftId() == $draftId) {
+                        return true;
+                    }
                 }
             }
         }
