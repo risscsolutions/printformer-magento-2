@@ -124,8 +124,6 @@ class QuoteModel
                 }
 
                 if ($draftProcess->getId()) {
-                    //todo?: maybe check for getsession-unique-id before set by product and draft
-                    $this->session->loadSessionUniqueId($draftProcess->getProductId(), $draftProcess->getPrintformerProductId(), $draftProcess->getDraftId());
                     $draftHashRelations = $this->configHelper->updateDraftHashRelations(
                         $draftHashRelations,
                         $draftProcess->getProductId(),
