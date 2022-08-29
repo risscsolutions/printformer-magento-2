@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Delete;
 
 use Magento\Framework\App\Action\Action;
@@ -22,7 +23,8 @@ class Draft
         Context $context,
         ProductFactory $productFactory,
         ProductResource $productResource
-    ) {
+    )
+    {
         $this->_productFactory = $productFactory;
         $this->_productResource = $productResource;
 
@@ -37,11 +39,14 @@ class Draft
         $product = $this->_productFactory->create();
         $this->_productResource->load($product, intval($params['product_id']));
 
-        $productId = $params['selected_product_id'];
-        $draftId = $params['selected_product_draft_id'];
-        $printformerProductId = $params['printformer_product'];
+        if (isset($params['selected_product_id'])
+            && isset($params['selected_product_draft_id'])
+            && isset($params['printformer_product'])
+        ) {
+            $productId = $params['selected_product_id'];
+            $draftId = $params['selected_product_draft_id'];
+            $printformerProductId = $params['printformer_product'];
 
-        if (isset($productId) && isset($draftId) && isset($printformerProductId)) {
             $connection = $this->_productResource->getConnection();
 
             $objm = ObjectManager::getInstance();
@@ -50,9 +55,9 @@ class Draft
 
             if (!empty($draftId)) {
                 $connection->query("
-                    DELETE FROM " . $connection->getTableName('printformer_draft') . "
-                    WHERE `draft_id` = '" . $draftId . "';
-                ");
+                DELETE FROM " . $connection->getTableName('printformer_draft') . "
+                WHERE `draft_id` = '" . $draftId . "';
+            ");
 
                 $sessionHelper->unsetCurrentIntent();
 
