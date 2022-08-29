@@ -32,7 +32,7 @@ $product = $block->getProduct();
                             disabled="disabled">
                         <span><?php echo __($block->getButtonText()) ?></span>
                     </button>
-                    <?php if ($block->canShowDeleteButton()): ?>
+                    <?php if ($block->canShowDeleteButton() && !$block->draftIsUsedInCart($_printformerProduct)): ?>
                         <button id="printformer-delete-<?php echo $product->getId(); ?>-<?php echo $_printformerProduct->getTemplateId() ?>"
                                 data-printformer-product="<?php echo $_printformerProduct->getId() ?>"
                                 data-printformer-master="<?php echo $_printformerProduct->getMasterId(); ?>"

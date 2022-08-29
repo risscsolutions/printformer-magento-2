@@ -179,7 +179,7 @@ class Printformer extends AbstractView
     /**
      * Get Draft id depends by your request / position from where request is sent.
      *
-     * @return int
+     * @return string
      */
     public function getDraftId(PrintformerProduct $printformerProduct)
     {
@@ -331,7 +331,7 @@ class Printformer extends AbstractView
             $printformerProducts[$printformerProductKey] = $printformerProduct->getData();
             $printformerProducts[$printformerProductKey]['url'] = $this->getEditorUrl($printformerProduct, $product);
 
-            if (isset($draftId)) {
+            if (!empty($draftId)) {
                 if ($this->canShowDeleteButton()) {
                     $printformerProducts[$printformerProductKey]['delete_url'] = $this->getDeleteUrl($printformerProduct, $product->getId());
                 }
@@ -344,6 +344,38 @@ class Printformer extends AbstractView
         }
 
         return $printformerProducts;
+    }
+
+    public function draftIsUsedInCart(
+        $printformerProduct
+    )
+    {
+        $draftId = $this->getDraftId($printformerProduct);
+        $quoteItems = $this->cart->getQuote()->getItems();
+
+        foreach ($quoteItems as $quoteItem) {
+            if ($quoteItem->getProductType() == ConfigurableType::TYPE_CODE) {
+                if ($quoteItem) {
+                    if ($quoteItem->getDraftId() == $draftId) {
+                        return true;
+                    }
+
+                    if (!empty($children = $quoteItem->getChildren())) {
+                        foreach ($children as $child) {
+                            if ($child->getData(InstallSchema::COLUMN_NAME_DRAFTID) == $draftId) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            } else {
+                if ($quoteItem->getDraftId() == $draftId) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
