@@ -103,9 +103,12 @@ class Gallery
         $catalogProductPrintformerProducts = $this->printformerBlock->getCatalogProductPrintformerProducts($productId, $storeId);
 
         foreach($catalogProductPrintformerProducts as $catalogProductPrintformerProduct) {
-            $draftId = $this->printformerBlock->getDraftId($catalogProductPrintformerProduct->getPrintformerProduct());
-            if (!empty($draftId)) {
-                $draftIds[] = $draftId;
+            $pfProduct = $catalogProductPrintformerProduct->getPrintformerProduct();
+            $draftId = $this->printformerProductHelper->searchAndLoadDraftId($pfProduct);
+            if (!$this->printformerProductHelper->draftIsAlreadyUsedInCart($draftId)) {
+                if (!empty($draftId)) {
+                    $draftIds[] = $draftId;
+                }
             }
         }
 

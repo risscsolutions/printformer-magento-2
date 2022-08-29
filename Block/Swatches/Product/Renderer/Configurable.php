@@ -127,13 +127,16 @@ class Configurable extends parentConfigurable
                     default:
                         break;
                 }
-            }
-        } else {
-            $productId = $printformerProduct->getProductId();
-            $pfProductId = $printformerProduct->getId();
-            $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
-            if ($sessionUniqueId) {
-                $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
+            } else {
+                $productId = $printformerProduct->getProductId();
+                $pfProductId = $printformerProduct->getId();
+                $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                if ($sessionUniqueId) {
+                    $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
+                    if ($this->printformerProductHelper->draftIsAlreadyUsedInCart($draftId)) {
+                        $draftId = null;
+                    }
+                }
             }
         }
 

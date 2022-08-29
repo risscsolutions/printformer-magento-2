@@ -177,60 +177,6 @@ class Printformer extends AbstractView
     }
 
     /**
-     * Get Draft id depends by your request / position from where request is sent.
-     *
-     * @return string
-     */
-    public function getDraftId(PrintformerProduct $printformerProduct)
-    {
-        $draftId = null;
-        $productId = $this->getRequest()->getParam('product_id');
-        // Get draft ID on cart product edit page
-        if ($this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
-            $quoteItem = null;
-            $wishlistItem = null;
-            $id = (int)$this->getRequest()->getParam('id');
-            $productId = (int)$this->getRequest()->getParam('product_id');
-            if ($id) {
-                switch ($this->getRequest()->getModuleName()) {
-                    case 'checkout':
-                        $quoteItem = $this->cart->getQuote()->getItemById($id);
-                        if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                            if ($quoteItem->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
-                                $children = $quoteItem->getChildren();
-                                if (!empty($children)) {
-                                    $firstChild = $children[0];
-                                    if (!empty($firstChild)) {
-                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getProductId(), $printformerProduct->getId());
-                                    }
-                                }
-                            } else {
-                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
-                            }
-                        }
-                        break;
-                    case 'wishlist':
-                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
-                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
-                            //todo?: change logic to create/get/load correct draft for correct draft-id * maybe complete logic in helper
-                            $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
-                        }
-                        //todo?: adjust to get draft id for child-products like on function loadDraftFromQuoteItem
-                        break;
-                    default:
-                        break;
-                }
-            }
-        } else {
-            $productId = $printformerProduct->getProductId();
-            $pfProductId = $printformerProduct->getId();
-            $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
-        }
-
-        return $draftId;
-    }
-
-    /**
      * @return int
      */
     public function getIntent()
@@ -326,7 +272,7 @@ class Printformer extends AbstractView
         }
 
         foreach ($pfProducts as $printformerProductKey => $printformerProduct) {
-            $draftId = $this->getDraftId($printformerProduct);
+            $draftId = $this->printformerProductHelper->searchAndLoadDraftId($printformerProduct);
 
             $printformerProducts[$printformerProductKey] = $printformerProduct->getData();
             $printformerProducts[$printformerProductKey]['url'] = $this->getEditorUrl($printformerProduct, $product);
@@ -346,38 +292,10 @@ class Printformer extends AbstractView
         return $printformerProducts;
     }
 
-    public function draftIsUsedInCart(
-        $printformerProduct
-    )
+    public function draftIsUsedInCart($printformerProduct)
     {
-        $draftId = $this->getDraftId($printformerProduct);
-        $quoteItems = $this->cart->getQuote()->getItems();
-
-        if (is_array($quoteItems)) {
-            foreach ($quoteItems as $quoteItem) {
-                if ($quoteItem->getProductType() == ConfigurableType::TYPE_CODE) {
-                    if ($quoteItem) {
-                        if ($quoteItem->getDraftId() == $draftId) {
-                            return true;
-                        }
-
-                        if (!empty($children = $quoteItem->getChildren())) {
-                            foreach ($children as $child) {
-                                if ($child->getData(InstallSchema::COLUMN_NAME_DRAFTID) == $draftId) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    if ($quoteItem->getDraftId() == $draftId) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        $draftId = $this->printformerProductHelper->searchAndLoadDraftId($printformerProduct);
+        return $this->printformerProductHelper->draftIsAlreadyUsedInCart($draftId);
     }
 
     /**
@@ -402,11 +320,10 @@ class Printformer extends AbstractView
             $params['quote_id'] = $this->getRequest()->getParam('id');
             $params['product_id'] = $this->getRequest()->getParam('product_id');
         }
-
         return $this->urlHelper->getEditorEntry(
             $product->getId(),
             $printformerProduct->getMasterId(),
-            $this->getDraftId($printformerProduct),
+            $this->printformerProductHelper->searchAndLoadDraftId($printformerProduct),
             $params,
             $printformerProduct->getIntent()
         );

@@ -12,11 +12,16 @@ use Magento\Framework\DataObject;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
+use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
 use Magento\Framework\App\RequestInterface;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Setup\InstallSchema;
+use Magento\Checkout\Model\Cart;
+use Magento\Wishlist\Model\Item as WishlistItem;
+
 
 class Product extends AbstractHelper
 {
@@ -55,6 +60,8 @@ class Product extends AbstractHelper
      */
     private Config $configHelper;
     private \Rissc\Printformer\Helper\Session $sessionHelper;
+    private Cart $cart;
+    private WishlistItem $wishlistItem;
 
     /**
      * Product constructor.
@@ -76,7 +83,9 @@ class Product extends AbstractHelper
         ProductRepository $catalogProductRepository,
         DraftFactory $draftFactory,
         Config $configHelper,
-        Session $sessionHelper
+        Session $sessionHelper,
+        Cart $cart,
+        WishlistItem $wishlistItem
     ) {
         $this->productFactory = $productFactory;
         $this->resource = $resource;
@@ -86,6 +95,8 @@ class Product extends AbstractHelper
         $this->draftFactory = $draftFactory;
         $this->configHelper = $configHelper;
         $this->sessionHelper = $sessionHelper;
+        $this->cart = $cart;
+        $this->wishlistItem = $wishlistItem;
 
         parent::__construct($context);
     }
@@ -249,6 +260,63 @@ class Product extends AbstractHelper
         return $draftId;
     }
 
+    /**
+     * Get Draft id depends by your request / position from where request is sent.
+     *
+     * @return string
+     */
+    public function searchAndLoadDraftId(PrintformerProduct $printformerProduct)
+    {
+        $draftId = null;
+        $productId = $this->_request->getParam('product_id');
+        // Get draft ID on cart product edit page
+        if ($this->_request->getActionName() == 'configure' && $this->_request->getParam('id') && $this->_request->getParam('product_id')) {
+            $quoteItem = null;
+            $wishlistItem = null;
+            $id = (int)$this->_request->getParam('id');
+            $productId = (int)$this->_request->getParam('product_id');
+            if ($id) {
+                switch ($this->_request->getModuleName()) {
+                    case 'checkout':
+                        $quoteItem = $this->cart->getQuote()->getItemById($id);
+                        if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
+                            if ($quoteItem->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+                                $children = $quoteItem->getChildren();
+                                if (!empty($children)) {
+                                    $firstChild = $children[0];
+                                    if (!empty($firstChild)) {
+                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getProductId(), $printformerProduct->getId());
+                                    }
+                                }
+                            } else {
+                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
+                            }
+                        }
+                        break;
+                    case 'wishlist':
+                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
+                            //todo?: change logic to create/get/load correct draft for correct draft-id * maybe complete logic in helper
+                            $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
+                        }
+                        //todo?: adjust to get draft id for child-products like on function loadDraftFromQuoteItem
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else {
+            $productId = $printformerProduct->getProductId();
+            $pfProductId = $printformerProduct->getId();
+            $draftId = $this->getDraftId($pfProductId, $productId);
+            if (empty($draftId) || $this->draftIsAlreadyUsedInCart($draftId)) {
+                $draftId = null;
+            }
+        }
+
+        return $draftId;
+    }
+
 
     /**
      * @param integer $draftId
@@ -288,5 +356,45 @@ class Product extends AbstractHelper
         }
 
         return $qty;
+    }
+
+    /**
+     * To verify if current draft is already in any quote item handled
+     *
+     * @param $draftId
+     * @return bool
+     */
+    public function draftIsAlreadyUsedInCart(
+        $draftId
+    )
+    {
+        $quoteItems = $this->cart->getQuote()->getItems();
+        $result = false;
+
+        if (is_array($quoteItems)) {
+            foreach ($quoteItems as $quoteItem) {
+                if ($quoteItem->getProductType() == ConfigurableType::TYPE_CODE) {
+                    if ($quoteItem) {
+                        if ($quoteItem->getDraftId() == $draftId) {
+                            $result = true;
+                        }
+
+                        if (!empty($children = $quoteItem->getChildren())) {
+                            foreach ($children as $child) {
+                                if ($child->getData(InstallSchema::COLUMN_NAME_DRAFTID) == $draftId) {
+                                    $result = true;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if ($quoteItem->getDraftId() == $draftId) {
+                        $result = true;
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 }

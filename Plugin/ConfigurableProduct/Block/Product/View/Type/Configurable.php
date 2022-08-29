@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Plugin\ConfigurableProduct\Block\Product\View\Type;
 
 use Magento\ConfigurableProduct\Block\Product\View\Type\Configurable as Subject;
+use Magento\Framework\App\RequestInterface;
 use \Magento\Framework\Json\EncoderInterface;
 use \Magento\Framework\Json\DecoderInterface;
 use Magento\Store\Model\StoreManager;
@@ -41,6 +42,7 @@ class Configurable
     private StoreManager $storeManager;
     private ProductRepositoryInterface $productRepository;
     private Config $configHelper;
+    private RequestInterface $request;
 
     /**
      * @param EncoderInterface $encoder
@@ -59,7 +61,8 @@ class Configurable
         PrintformerProductHelper $printformerProductHelper,
         StoreManager $storeManager,
         ProductRepositoryInterface $productRepository,
-        Config $configHelper
+        Config $configHelper,
+        RequestInterface $request
     )
     {
         $this->encoder = $encoder;
@@ -70,6 +73,7 @@ class Configurable
         $this->storeManager = $storeManager;
         $this->productRepository = $productRepository;
         $this->configHelper = $configHelper;
+        $this->request = $request;
     }
 
     /**
@@ -96,8 +100,10 @@ class Configurable
                 $draftIds = [];
                 foreach ($pfProducts as $pfProduct) {
                     $draftId = $this->printformerProductHelper->getDraftId($pfProduct->getId(), $pfProduct->getProductId());
-                    if (!empty($draftId)) {
-                        array_push($draftIds, $draftId);
+                    if (!$this->printformerProductHelper->draftIsAlreadyUsedInCart($draftId) || $this->request->getModuleName() == 'checkout') {
+                        if (!empty($draftId)) {
+                            array_push($draftIds, $draftId);
+                        }
                     }
                 }
 
