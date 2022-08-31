@@ -314,6 +314,30 @@ class Session extends AbstractHelper
     }
 
     /**
+     * @param string $draftId
+     * @return bool
+     */
+    public function unsetSessionUniqueIdByDraftId(string $draftId)
+    {
+        $resultDeleteSuccess = false;
+        $draftProcess = $this->draftFactory->create();
+        $draftCollection = $draftProcess->getCollection()
+            ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+        $lastItem = $draftCollection->getLastItem();
+        $productId = $lastItem->getProductId();
+        $pfProductId = $lastItem->getPrintformerProductId();
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        if (!empty($sessionUniqueIds) && !empty($productId)){
+            if (!empty($pfProductId)) {
+                unset($sessionUniqueIds[$productId][$pfProductId]);
+                $resultDeleteSuccess = true;
+            }
+        }
+        $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+        return $resultDeleteSuccess;
+    }
+
+    /**
      * Remove the current session-unique id for concrete product-id from session
      *
      * @param $productId

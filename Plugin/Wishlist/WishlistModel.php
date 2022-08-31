@@ -7,7 +7,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Wishlist\Model\Wishlist;
 use Rissc\Printformer\Setup\InstallSchema;
 use Rissc\Printformer\Helper as Helper;
-use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 
 class WishlistModel
 {
@@ -24,22 +24,22 @@ class WishlistModel
     /**
      * @var Session
      */
-    protected $session;
+    protected $sessionHelper;
 
     /**
      * WishlistModel constructor.
      * @param Registry $registry
      * @param StoreManagerInterface $storeManager
-     * @param Session $session
+     * @param SessionHelper $sessionHelper
      */
     public function __construct(
         Registry $registry,
         StoreManagerInterface $storeManager,
-        Session $session
+        SessionHelper $sessionHelper
     ) {
         $this->registry = $registry;
         $this->storeManager = $storeManager;
-        $this->session = $session;
+        $this->sessionHelper = $sessionHelper;
     }
 
     /**
@@ -74,20 +74,22 @@ class WishlistModel
             $buyRequest = new \Magento\Framework\DataObject();
         }
 
+        $draftId = $this->sessionHelper->getDraftId($productId, $storeId);
         if ($buyRequest->getData('_processing_params')) {
-            $existDraftId = $buyRequest
+            $draftId = $buyRequest
                 ->getData('_processing_params')
                 ->getData('current_config')
                 ->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-            if ($existDraftId) {
-                $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $existDraftId);
+            if ($draftId) {
+                $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
             }
-        } elseif ($this->session->getDraftId($productId, $storeId)) {
+        } elseif (!empty($draftId)) {
             $buyRequest->setData(
                 InstallSchema::COLUMN_NAME_DRAFTID,
-                $this->session->getDraftId($productId, $storeId)
+                $draftId
             );
-            $this->session->unsetDraftId($productId, $storeId);
+            $this->sessionHelper->unsetSessionUniqueIdByDraftId($draftId);
+            $this->sessionHelper->unsetDraftId($productId, $storeId);
         }
     }
 
