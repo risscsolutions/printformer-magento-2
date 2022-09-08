@@ -113,6 +113,21 @@ class Product extends AbstractHelper
     }
 
     /**
+     * @param string $printformerProductId
+     * @param string $storeId
+     * @return array
+     */
+    public function getCatalogProductPrintformerProductsByPrintformerProductId($printformerProductId, $storeId)
+    {
+        $connection = $this->resourceConnection->getConnection();
+        $select = $connection->select()
+            ->from('catalog_product_printformer_product')
+            ->where('printformer_product_id = ?', $printformerProductId)
+            ->where('store_id = ?', $storeId);
+        return $connection->fetchAll($select);
+    }
+
+    /**
      * @param     $productId
      * @param int $storeId
      *
