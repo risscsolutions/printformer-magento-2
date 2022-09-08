@@ -31,5 +31,11 @@
          action="printformer/group/rights"
          resource="Rissc_Printformer::group"
     />
+    <add id="Rissc_Printformer::products" title="Products"
+         module="Rissc_Printformer" sortOrder="10"
+         resource="Rissc_Printformer::products"
+         action="printformer/products/index"
+         parent="Rissc_Printformer::module"
+    />
 </menu>
 </config>
