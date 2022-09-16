@@ -84,6 +84,25 @@ class ConfigurableProduct extends AbstractHelper
     }
 
     /**
+     * @param $storeId
+     */
+    public function setStoreId($storeId): void
+    {
+        $this->storeId = $storeId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStoreId(): int
+    {
+        if (!$this->storeId) {
+            $this->setStoreId(Store::DEFAULT_STORE_ID);
+        }
+        return $this->storeId;
+    }
+
+    /**
      * @return boolean
      */
     public function isConfigManageStockEnabled(): bool

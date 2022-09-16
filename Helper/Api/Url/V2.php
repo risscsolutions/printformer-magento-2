@@ -103,7 +103,8 @@ class V2 extends AbstractHelper implements VersionInterface
         $this->_catalogHelper = $catalogHelper;
 
         try {
-            $storeId = $this->getStoreId();
+            $storeId = $storeManager->getStore()->getId();
+            $this->setStoreId($storeId);
             $apiKey = $this->_config->getClientApiKey($storeId);
             if (!empty($apiKey)) {
                 $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
@@ -115,11 +116,21 @@ class V2 extends AbstractHelper implements VersionInterface
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
+     */
+    public function setStoreId($storeId)
+    {
+        $this->_storeId = $storeId;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function getStoreId()
     {
-        return $this->_storeManager->getStore()->getId();
+        return $this->_storeId;
     }
 
     /**
@@ -295,6 +306,9 @@ class V2 extends AbstractHelper implements VersionInterface
     protected function _getProductCallbackUrl($product, $params = [], $storeId = 0, $encodeUrl = true)
     {
         $product = $this->_catalogHelper->prepareProduct($product);
+        if ($storeId > 0) {
+            $product->setStoreId($storeId);
+        }
 
         if (isset($params['quote_id']) && $product->getId()) {
             $referrerParams['id'] = $params['quote_id'];
@@ -420,7 +434,7 @@ class V2 extends AbstractHelper implements VersionInterface
         $expirationDate = $this->_config->getExpireDate();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($expirationDate);
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
@@ -441,7 +455,7 @@ class V2 extends AbstractHelper implements VersionInterface
         $expirationDate = $this->_config->getExpireDate();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->expiresAt($expirationDate);
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
@@ -465,12 +479,13 @@ class V2 extends AbstractHelper implements VersionInterface
             $obj = ObjectManager::getInstance();
             $externalReviewUserHelper = $obj->create('\Mgo\WebService\Helper\ExternalReviewUser');
             $storeId = $externalReviewUserHelper->getStoreIdFromReviewByReviewHash($reviewId);
-            $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
+            $reviewEditUrl = $this->setStoreId($storeId)->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
         } else {
             // not an mgo project
             $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
             $storeId = $this->_storeId;
         }
+        $this->_config->setStoreId($storeId);
         $client = $this->_config->getClientIdentifier($storeId);
         $identifier = bin2hex(random_bytes(16));
         $issuedAt = new DateTimeImmutable();

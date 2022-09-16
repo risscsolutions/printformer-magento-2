@@ -81,9 +81,28 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
+    public function setStoreId($storeId)
+    {
+        $this->_storeId = $storeId;
+        $this->getVersionHelper()->setStoreId($storeId);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getStoreId()
+    {
+        return $this->_storeId;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
     {
-        return $this->getVersionHelper()->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
     }
 
     /**
@@ -91,7 +110,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getPrintformerBaseUrl()
     {
-        return $this->getVersionHelper()->getPrintformerBaseUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPrintformerBaseUrl();
     }
 
     /**
@@ -99,7 +118,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getUser()
     {
-        return $this->getVersionHelper()->getUser();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUser();
     }
 
     /**
@@ -107,7 +126,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraft($draftHash = null, $quoteId = null)
     {
-        return $this->getVersionHelper()->getDraft($draftHash, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDraft($draftHash, $quoteId);
     }
 
     /**
@@ -115,7 +134,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getEditor($draftHash, $user = null, $params = [])
     {
-        return $this->getVersionHelper()->getEditor($draftHash, $user, $params);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getEditor($draftHash, $user, $params);
     }
 
     /**
@@ -123,7 +142,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAuth()
     {
-        return $this->getVersionHelper()->getAuth();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAuth();
     }
 
     /**
@@ -131,7 +150,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraftProcessing($draftHashes = [], $quoteId = null)
     {
-        return $this->getVersionHelper()->getDraftProcessing($draftHashes, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDraftProcessing($draftHashes, $quoteId);
     }
 
     /**
@@ -153,7 +172,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getThumbnail($draftHash, $uniqueGetParam = 1)
     {
-        $thumbnailUrl = $this->getVersionHelper()->getThumbnail($draftHash);
+        $thumbnailUrl = $this->getVersionHelper()->setStoreId($this->getStoreId())->getThumbnail($draftHash);
         if ($uniqueGetParam) {
             $thumbnailUrl = $this->appendUniqueGetParam($thumbnailUrl);
         }
@@ -165,7 +184,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getPDF($draftHash, $quoteId = null)
     {
-        return $this->getVersionHelper()->getPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPDF($draftHash, $quoteId);
     }
 
     /**
@@ -173,7 +192,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getPreviewPDF($draftHash, $quoteId = null)
     {
-        return $this->getVersionHelper()->getPreviewPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPreviewPDF($draftHash, $quoteId);
     }
 
     /**
@@ -181,7 +200,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getProducts()
     {
-        return $this->getVersionHelper()->getProducts();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getProducts();
     }
 
     /**
@@ -189,7 +208,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminProducts()
     {
-        return $this->getVersionHelper()->getAdminProducts();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminProducts();
     }
 
     /**
@@ -197,7 +216,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminPDF($draftHash, $quoteId)
     {
-        return $this->getVersionHelper()->getAdminPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminPDF($draftHash, $quoteId);
     }
 
     /**
@@ -205,7 +224,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminPreviewPDF($draftHash, $quoteId)
     {
-        return $this->getVersionHelper()->getAdminPreviewPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminPreviewPDF($draftHash, $quoteId);
     }
 
     /**
@@ -213,7 +232,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminEditor($draftHash, array $params = null, $referrer = null)
     {
-        return $this->getVersionHelper()->getAdminEditor($draftHash, $params, $referrer);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminEditor($draftHash, $params, $referrer);
     }
 
     /**
@@ -221,7 +240,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminDraft($draftHash, $quoteId)
     {
-        return $this->getVersionHelper()->getAdminDraft($draftHash, $quoteId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getAdminDraft($draftHash, $quoteId);
     }
 
     /**
@@ -229,7 +248,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraftDelete($draftHash)
     {
-        return $this->getVersionHelper()->getDraftDelete($draftHash);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDraftDelete($draftHash);
     }
 
     /**
@@ -237,7 +256,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraftUpdate($draftHash)
     {
-        return $this->getVersionHelper()->getDraftUpdate($draftHash);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDraftUpdate($draftHash);
     }
 
     /**
@@ -245,7 +264,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraftUsagePageInfo($draftHash, $pageInfo)
     {
-        return $this->getVersionHelper()->getDraftUsagePageInfo($draftHash, $pageInfo);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDraftUsagePageInfo($draftHash, $pageInfo);
     }
 
     /**
@@ -273,7 +292,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getReplicateDraftId($oldDraftId)
     {
-        return $this->getVersionHelper()->getReplicateDraftId($oldDraftId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
     }
 
     /**
@@ -281,7 +300,7 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getUploadDraftId($draftId)
     {
-        return $this->getVersionHelper()->getUploadDraftId($draftId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUploadDraftId($draftId);
     }
 
     /**
@@ -289,82 +308,82 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDerivat($fileId)
     {
-        return $this->getVersionHelper()->getDerivat($fileId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getDerivat($fileId);
     }
 
     public function createReviewPDF($reviewId)
     {
-        return $this->getVersionHelper()->createReviewPDF($reviewId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
     }
 
     public function getReviewPdf($reviewId)
     {
-        return $this->getVersionHelper()->getReviewPdf($reviewId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
     }
 
     public function getPagePlannerUrl()
     {
-        return $this->getVersionHelper()->getPagePlannerUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerUrl();
     }
 
     public function getReviewStartUrl()
     {
-        return $this->getVersionHelper()->getReviewStartUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewStartUrl();
     }
 
     public function getReviewEditUrl($reviewId)
     {
-        return $this->getVersionHelper()->getReviewEditUrl($reviewId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditUrl($reviewId);
     }
 
     public function getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl)
     {
-        return $this->getVersionHelper()->getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl);
     }
 
     public function createIdmlPackage($draftId)
     {
-        return $this->getVersionHelper()->createIdmlPackage($draftId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->createIdmlPackage($draftId);
     }
 
     public function getIdmlPackage($draftId)
     {
-        return $this->getVersionHelper()->getIdmlPackage($draftId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
     }
 
     public function getPagePlannerApproveUrl()
     {
-        return $this->getVersionHelper()->getPagePlannerApproveUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
     }
 
     public function getReviewUserAddUrl($reviewId)
     {
-        return $this->getVersionHelper()->getReviewUserAddUrl($reviewId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserAddUrl($reviewId);
     }
 
     public function getReviewUserDeleteUrl($reviewId)
     {
-        return $this->getVersionHelper()->getReviewUserDeleteUrl($reviewId);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getReviewUserDeleteUrl($reviewId);
     }
 
     public function getPagePlannerDeleteUrl()
     {
-        return $this->getVersionHelper()->getPagePlannerDeleteUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getPagePlannerDeleteUrl();
     }
 
     public function getUserData($identifier)
     {
-        return $this->getVersionHelper()->getUserData($identifier);
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUserData($identifier);
     }
 
     public function getUploadFileUrl()
     {
-        return $this->getVersionHelper()->getUploadFileUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getUploadFileUrl();
     }
 
     public function getProductFeedUrl()
     {
-        return $this->getVersionHelper()->getProductFeedUrl();
+        return $this->getVersionHelper()->setStoreId($this->getStoreId())->getProductFeedUrl();
     }
 
 }

@@ -56,8 +56,9 @@ class Sync extends Action
     public function execute()
     {
         $storeId = $this->getRequest()->getParam('store_id', \Magento\Store\Model\Store::DEFAULT_STORE_ID);
+
         try {
-            if (!$this->config->isEnabled()) {
+            if (!$this->config->setStoreId($storeId)->isEnabled()) {
                 throw new \Exception(__('Module disabled.'));
             }
 

@@ -179,6 +179,9 @@ class Api extends AbstractHelper
         $this->draftResource = $draftResource;
         $this->context = $context;
 
+        $this->_urlHelper->setStoreId($this->getStoreId());
+        $this->_config->setStoreId($this->getStoreId());
+
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
 
@@ -199,7 +202,19 @@ class Api extends AbstractHelper
      */
     public function getStoreId()
     {
-        return $this->_storeManager->getStore()->getId();
+        return $this->_storeId;
+    }
+
+    /**
+     * @param int $storeId
+     *
+     * @return $this
+     */
+    public function setStoreId(int $storeId)
+    {
+        $this->_storeId = $storeId;
+
+        return $this;
     }
 
     /**
@@ -212,10 +227,10 @@ class Api extends AbstractHelper
         }
         if (!isset($this->_httpClients[$storeId])) {
             $this->_httpClients[$storeId] = new Client([
-                'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
+                'base_url' => $this->apiUrl()->setStoreId($storeId)->getPrintformerBaseUrl(),
                 'headers' => [
                   'Accept' => 'application/json',
-                  'Authorization' => 'Bearer ' . $this->_config->getClientApiKey(),
+                  'Authorization' => 'Bearer ' . $this->_config->setStoreId($storeId)->getClientApiKey(),
                 ]
             ]);
         }
@@ -246,7 +261,7 @@ class Api extends AbstractHelper
     {
         $transfer = $this->_config->isDataTransferEnabled();
         if ($customer->getPrintformerIdentification() !== null) {
-            $apiUrl = $this->apiUrl()->getUserData($customer->getPrintformerIdentification());
+            $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData($customer->getPrintformerIdentification());
 
             $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
             $response = $this->getHttpClient()->get($apiUrl);
@@ -262,7 +277,7 @@ class Api extends AbstractHelper
                 }
 
                 if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
-                    $url = $this->apiUrl()->getUserData(
+                    $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUserData(
                         $customer->getPrintformerIdentification()
                     );
 
@@ -375,6 +390,8 @@ class Api extends AbstractHelper
      */
     public function apiUrl()
     {
+        $this->_urlHelper->setStoreId($this->getStoreId());
+
         return $this->_urlHelper;
     }
 
@@ -384,7 +401,7 @@ class Api extends AbstractHelper
      */
     public function createUser($customer = null)
     {
-        $url = $this->apiUrl()->getUser();
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getUser();
 
         $transfer = $this->_config->isDataTransferEnabled();
         $requestData = [];
@@ -422,7 +439,7 @@ class Api extends AbstractHelper
      */
     public function createDraftHash($masterId, $userIdentifier, $storeId, $params = [])
     {
-        $url = $this->apiUrl()->getDraft();
+        $url = $this->apiUrl()->setStoreId($storeId)->getDraft();
 
         $requestData = [
             'json' => [
@@ -462,6 +479,7 @@ class Api extends AbstractHelper
     public function updateDraftHash($draftHash, $orderId, $storeId = null)
     {
         $url = $this->_urlHelper
+            ->setStoreId($this->_storeManager->getStore()->getId())
             ->getDraftUpdate($draftHash);
 
         $requestData = [
@@ -498,6 +516,7 @@ class Api extends AbstractHelper
 
         if (!$storedDraftPageInfo) {
             $apiUrl = $this->_urlHelper
+                ->setStoreId($this->_storeManager->getStore()->getId())
                 ->getDraftUsagePageInfo($draftHash, $pageInfo);
 
             $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
@@ -538,7 +557,7 @@ class Api extends AbstractHelper
 
             //generate temporary pdf-url for temporary file to upload into printformer api
             $baseUrl = $this->getStoreManager()->getStore()->getBaseUrl();
-            $apiUrl = $this->apiUrl()->getUploadDraftId($draftId);
+            $apiUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getUploadDraftId($draftId);
 
             $filePathUrl = $baseUrl.DirectoryList::PUB.DIRECTORY_SEPARATOR.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
             $callBackUrl = $this->getUploadCallbackUrl($draftId);
@@ -599,7 +618,7 @@ class Api extends AbstractHelper
             $this->_sessionHelper->removeDraftFromCache($oldDraftId);
         }
 
-        $url = $this->apiUrl()->getReplicateDraftId($oldDraftId);
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getReplicateDraftId($oldDraftId);
 
         $createdEntry = $this->_logHelper->createGetEntry($url);
         $response = $this->getHttpClient()->get($url);
@@ -625,7 +644,7 @@ class Api extends AbstractHelper
     public function getPrintformerDraft($draftHash, $forceUpdate = false)
     {
         if (!$this->_sessionHelper->hasDraftInCache($draftHash) || $forceUpdate) {
-            $url = $this->apiUrl()->getDraft($draftHash);
+            $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft($draftHash);
 
             $createdEntry = $this->_logHelper->createGetEntry($url);
             $response = $this->getHttpClient()->get($url);
@@ -933,7 +952,7 @@ class Api extends AbstractHelper
     public function setAsyncOrdered($draftIds, $storeId = null)
     {
         try {
-            $draftProcessingUrl = $this->apiUrl()->getDraftProcessing($draftIds);
+            $draftProcessingUrl = $this->apiUrl()->setStoreId($this->getStoreId())->setStoreId($this->_storeManager->getStore()->getId())->getDraftProcessing($draftIds);
 
             $stateChangedNotifyUrl = $this->_urlBuilder->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS;
             $requestData = [
@@ -1118,9 +1137,9 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
             ->withClaim('user', $userIdentifier)
-            ->expiresAt($this->_config->getExpireDate());
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $postFields = [
@@ -1131,9 +1150,9 @@ class Api extends AbstractHelper
         ];
 
         try {
-            $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash, 0);
+            $thumbnailUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getThumbnail($draftHash, 0);
             $httpClient = new Client([
-                'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
+                'base_url' => $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl(),
                 'headers' => [
                     'Accept' => 'application/json'
                 ]
@@ -1169,11 +1188,11 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->expiresAt($this->_config->getExpireDate());
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $pdfUrl = $this->apiUrl()->getPDF($draftHash);
+        $pdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPDF($draftHash);
         $postFields = [
             'jwt' => $JWT
         ];
@@ -1190,7 +1209,7 @@ class Api extends AbstractHelper
      */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
-        $url = $this->apiUrl()->getPrintformerBaseUrl().'/api-ext/draft/claim';
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl().'/api-ext/draft/claim';
 
         $requestData = [
             'json' => [
@@ -1221,7 +1240,7 @@ class Api extends AbstractHelper
             ]
         ];
 
-        $url = $this->apiUrl()->getPrintformerBaseUrl() . '/api-ext/user/' . $userIdentifierOne . '/merge';
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getPrintformerBaseUrl() . '/api-ext/user/' . $userIdentifierOne . '/merge';
 
         $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
         $response = $this->getHttpClient()->post($url, $requestData);
@@ -1237,7 +1256,7 @@ class Api extends AbstractHelper
      */
     public function updatePrintformerDraft($draftHash, $dataParams = [])
     {
-        $url = $this->apiUrl()->getDraft($draftHash);
+        $url = $this->apiUrl()->setStoreId($this->getStoreId())->getDraft($draftHash);
         $requestData = [
             'json' => $dataParams
         ];
@@ -1283,11 +1302,11 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->expiresAt($this->_config->getExpireDate());
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $derivateDownloadLink = $this->apiUrl()->getDerivat($fileId);
+        $derivateDownloadLink = $this->apiUrl()->setStoreId($this->getStoreId())->getDerivat($fileId);
 
         $postFields = [
             'jwt' => $JWT
@@ -1306,11 +1325,11 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->expiresAt($this->_config->getExpireDate());
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $createReviewPdfUrl = $this->apiUrl()->createReviewPDF($reviewId);
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->createReviewPDF($reviewId);
 
         $postFields = [
             'jwt' => $JWT
@@ -1329,11 +1348,11 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->expiresAt($this->_config->getExpireDate());
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $createReviewPdfUrl = $this->apiUrl()->getReviewPdf($reviewId);
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getReviewPdf($reviewId);
 
         $postFields = [
             'jwt' => $JWT
@@ -1352,11 +1371,11 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->expiresAt($this->_config->getExpireDate());
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $getIdmlPackage = $this->apiUrl()->getIdmlPackage($draftId);
+        $getIdmlPackage = $this->apiUrl()->setStoreId($this->getStoreId())->getIdmlPackage($draftId);
 
         $postFields = [
             'jwt' => $JWT
@@ -1375,11 +1394,11 @@ class Api extends AbstractHelper
         $issuedAt = new DateTimeImmutable();
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->expiresAt($this->_config->getExpireDate());
+            ->withClaim('client', $this->_config->setStoreId($this->getStoreId())->getClientIdentifier())
+            ->expiresAt($this->_config->setStoreId($this->getStoreId())->getExpireDate());
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $createReviewPdfUrl = $this->apiUrl()->getPagePlannerApproveUrl();
+        $createReviewPdfUrl = $this->apiUrl()->setStoreId($this->getStoreId())->getPagePlannerApproveUrl();
 
         $postFields = [
             'jwt' => $JWT

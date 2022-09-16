@@ -59,9 +59,12 @@ class Webtoken extends Action
 
         $rowDraftHash = $this->getRequest()->getParam('draft_id');
         $rowOrderItemId = $this->getRequest()->getParam('order_item_Id');
+        $rowStoreId = $this->getRequest()->getParam('store_id');
 
         /** @var Draft $row */
         $referrerUrl = null;
+        $storeId = $rowStoreId;
+        $this->apiHelper->setStoreId($storeId);
 
         if($orderItemId = $rowOrderItemId) {
         /** @var OrderItem $orderItem */

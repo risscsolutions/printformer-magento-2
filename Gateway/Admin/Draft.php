@@ -98,6 +98,7 @@ class Draft
 
         if (!is_null($lastItem) && !empty($draftIds)) {
             $url = $this->urlHelper
+                ->setStoreId($lastItem->getPrintformerStoreid())
                 ->getDraftProcessing($draftIds, $order->getQuoteId());
 
             $historyData['request_data'] = json_encode([
@@ -191,6 +192,7 @@ class Draft
 
         if (!is_null($lastItem) && !empty($draftIds)) {
             $url = $this->urlHelper
+                ->setStoreId($lastItem->getPrintformerStoreid())
                 ->getDraftProcessing();
 
             $historyData['api_url'] = $url;
