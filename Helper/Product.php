@@ -2,26 +2,23 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Catalog\Api\ProductAttributeRepositoryInterface as ProductAttributeRepository;
 use Magento\Catalog\Model\ProductRepository;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableProductModel;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
-use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
-use Magento\Framework\App\RequestInterface;
-use Rissc\Printformer\Helper\Config;
-use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Setup\InstallSchema;
-use Magento\Checkout\Model\Cart;
-use Magento\Wishlist\Model\Item as WishlistItem;
-
 
 class Product extends AbstractHelper
 {
@@ -59,12 +56,12 @@ class Product extends AbstractHelper
      * @var Config
      */
     private Config $configHelper;
-    private \Rissc\Printformer\Helper\Session $sessionHelper;
-    private Cart $cart;
-    private WishlistItem $wishlistItem;
+    private Session $sessionHelper;
+    private ProductAttributeRepository $productAttributeRepository;
+    private ConfigurableProductModel $configurableProduct;
+    const COLUMN_NAME_DRAFTID = InstallSchema::COLUMN_NAME_DRAFTID;
 
     /**
-     * Product constructor.
      * @param ProductFactory $productFactory
      * @param ResourceProduct $resource
      * @param ResourceConnection $resourceConnection
@@ -73,6 +70,7 @@ class Product extends AbstractHelper
      * @param ProductRepository $catalogProductRepository
      * @param DraftFactory $draftFactory
      * @param Config $configHelper
+     * @param Session $sessionHelper
      */
     public function __construct(
         ProductFactory $productFactory,
@@ -83,10 +81,11 @@ class Product extends AbstractHelper
         ProductRepository $catalogProductRepository,
         DraftFactory $draftFactory,
         Config $configHelper,
-        Session $sessionHelper,
-        Cart $cart,
-        WishlistItem $wishlistItem
+        SessionHelper $sessionHelper,
+        ProductAttributeRepository $productAttributeRepository,
+        ConfigurableProductModel $configurableProduct
     ) {
+        parent::__construct($context);
         $this->productFactory = $productFactory;
         $this->resource = $resource;
         $this->resourceConnection = $resourceConnection;
@@ -95,10 +94,8 @@ class Product extends AbstractHelper
         $this->draftFactory = $draftFactory;
         $this->configHelper = $configHelper;
         $this->sessionHelper = $sessionHelper;
-        $this->cart = $cart;
-        $this->wishlistItem = $wishlistItem;
-
-        parent::__construct($context);
+        $this->productAttributeRepository = $productAttributeRepository;
+        $this->configurableProduct = $configurableProduct;
     }
 
     /**
@@ -260,63 +257,6 @@ class Product extends AbstractHelper
         return $draftId;
     }
 
-    /**
-     * Get Draft id depends by your request / position from where request is sent.
-     *
-     * @return string
-     */
-    public function searchAndLoadDraftId(PrintformerProduct $printformerProduct)
-    {
-        $draftId = null;
-        $productId = $this->_request->getParam('product_id');
-        // Get draft ID on cart product edit page
-        if ($this->_request->getActionName() == 'configure' && $this->_request->getParam('id') && $this->_request->getParam('product_id')) {
-            $quoteItem = null;
-            $wishlistItem = null;
-            $id = (int)$this->_request->getParam('id');
-            $productId = (int)$this->_request->getParam('product_id');
-            if ($id) {
-                switch ($this->_request->getModuleName()) {
-                    case 'checkout':
-                        $quoteItem = $this->cart->getQuote()->getItemById($id);
-                        if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                            if ($quoteItem->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
-                                $children = $quoteItem->getChildren();
-                                if (!empty($children)) {
-                                    $firstChild = $children[0];
-                                    if (!empty($firstChild)) {
-                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getProductId(), $printformerProduct->getId());
-                                    }
-                                }
-                            } else {
-                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
-                            }
-                        }
-                        break;
-                    case 'wishlist':
-                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
-                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
-                            //todo?: change logic to create/get/load correct draft for correct draft-id * maybe complete logic in helper
-                            $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
-                        }
-                        //todo?: adjust to get draft id for child-products like on function loadDraftFromQuoteItem
-                        break;
-                    default:
-                        break;
-                }
-            }
-        } else {
-            $productId = $printformerProduct->getProductId();
-            $pfProductId = $printformerProduct->getId();
-            $draftId = $this->getDraftId($pfProductId, $productId);
-            if (empty($draftId) || $this->draftIsAlreadyUsedInCart($draftId)) {
-                $draftId = null;
-            }
-        }
-
-        return $draftId;
-    }
-
 
     /**
      * @param integer $draftId
@@ -359,42 +299,141 @@ class Product extends AbstractHelper
     }
 
     /**
-     * To verify if current draft is already in any quote item handled
-     *
-     * @param $draftId
-     * @return bool
+     * @param string $draftIds
+     * @return DataObject[]
      */
-    public function draftIsAlreadyUsedInCart(
-        $draftId
-    )
+    public function loadDraftItemsByIds(string $draftIds): array
     {
-        $quoteItems = $this->cart->getQuote()->getItems();
+        /** @var Draft $draftFactory */
+        $draftFactory = $this->draftFactory->create();
+        $draftCollection = $draftFactory->getCollection();
+        $draftCollection->addFieldToFilter('draft_id', ['in' => $draftIds]);
+        return $draftCollection->getItems();
+    }
+
+    /**
+     * Get attribute code by attribute id
+     *
+     * @param int $id
+     * @return false|string
+     */
+    public function getAttributeCode(int $id)
+    {
         $result = false;
+        try {
+            $result = $this->productAttributeRepository->get($id)->getAttributeCode();
+        } catch (NoSuchEntityException $e) {
+        }
+        return $result;
+    }
 
-        if (is_array($quoteItems)) {
-            foreach ($quoteItems as $quoteItem) {
-                if ($quoteItem->getProductType() == ConfigurableType::TYPE_CODE) {
-                    if ($quoteItem) {
-                        if ($quoteItem->getDraftId() == $draftId) {
-                            $result = true;
-                        }
+    /**
+     * @param $mainProduct
+     * @return array
+     */
+    public function getConfigurableAndChildrens($mainProduct)
+    {
+        if ($mainProduct->getTypeId() === ConfigurableProductModel::TYPE_CODE) {
+            $childProducts = $mainProduct->getTypeInstance()->getUsedProducts($mainProduct);
+            foreach ($childProducts as $simpleProductKey => $simpleProduct) {
+                $_attributes = $mainProduct->getTypeInstance(true)->getConfigurableAttributes($mainProduct);
+                $attributesPair = [];
+                foreach ($_attributes as $_attribute) {
+                    $attributeId = (int)$_attribute->getAttributeId();
+                    $attributeCode = $this->getAttributeCode($attributeId);
+                    $attributesPair[$attributeId] = (int)$simpleProduct->getData($attributeCode);
+                }
+                $childProducts[$simpleProductKey]->setData('super_attributes', $attributesPair);
+                $allProducts = $childProducts;
+                array_unshift($allProducts, $mainProduct);
+            }
+        } else {
+            $allProducts = [];
+            $allProducts[] = $mainProduct;
+        }
 
-                        if (!empty($children = $quoteItem->getChildren())) {
-                            foreach ($children as $child) {
-                                if ($child->getData(InstallSchema::COLUMN_NAME_DRAFTID) == $draftId) {
-                                    $result = true;
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    if ($quoteItem->getDraftId() == $draftId) {
-                        $result = true;
+        return $allProducts;
+    }
+
+    /**
+     * @param $product
+     * @return array
+     */
+    public function getChildrens(ProductModel $product)
+    {
+        $resultChildProducts = [];
+        if ($product->getTypeId() === ConfigurableProductModel::TYPE_CODE) {
+            $resultChildProducts = $product->getTypeInstance()->getUsedProducts($product);
+        }
+
+        return $resultChildProducts;
+    }
+
+    /**
+     * @param string $draftId
+     * @return false
+     */
+    public function getPfProductIdByDraftId($draftId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem = $draftCollection->getLastItem();
+            $printformerProductId = $lastItem->getPrintformerProductId();
+        } catch (\Exception $e) {
+        }
+        return $printformerProductId;
+    }
+
+    /**
+     * @param string $draftId
+     * @return DataObject|false
+     */
+    public function getDraftById($draftId)
+    {
+        $resultItem = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $resultItem = $draftCollection->getLastItem();
+        } catch (\Exception $e) {
+        }
+        return $resultItem;
+    }
+
+    /**
+     * @param string $draftField
+     * @return void
+     */
+    public function getSessionUniqueId(string $draftField)
+    {
+        $draftHashArray = explode(',', $draftField ?? '');
+        foreach($draftHashArray as $draftHash) {
+            $draftItem = $this->getDraftById($draftHash);
+            if ($draftItem) {
+                $pfProductId = $draftItem->getData('printformer_product_id');
+                $productId = $draftItem->getData('product_id');
+                if(!empty($productId) && !empty($pfProductId)) {
+                    $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                    if (!isset($uniqueId)) {
+                        $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
                     }
                 }
             }
         }
+    }
 
-        return $result;
+    /**
+     * @param ProductModel $configurableProduct
+     * @param array $superAttributes
+     * @return ProductModel|null
+     */
+    public function getChildProduct(ProductModel $configurableProduct, array $superAttributes)
+    {
+        $childProduct = $this->configurableProduct->getProductByAttributes($superAttributes, $configurableProduct);
+        return $childProduct;
     }
 }

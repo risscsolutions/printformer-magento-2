@@ -61,8 +61,6 @@ class Plugin
                     $newDraft = $this->_apiHelper->generateNewReplicateDraft($oldDraftId);
                     if (!empty($newDraft)) {
                         $newDraftId = $newDraft->getDraftId();
-                        //todo: update drafts ids with new draft id in buy-request (implode & set logic)
-//                        $buyRequest->setData('printformer_draftid', $newDraftId);
                         $relations = $buyRequest->getData('draft_hash_relations');
                         if (!empty($relations[$newDraft->getPrintformerProductId()])) {
                             $relations[$newDraft->getPrintformerProductId()] = $newDraftId;

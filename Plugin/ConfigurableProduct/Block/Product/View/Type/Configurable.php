@@ -7,10 +7,11 @@ use Magento\Framework\App\RequestInterface;
 use \Magento\Framework\Json\EncoderInterface;
 use \Magento\Framework\Json\DecoderInterface;
 use Magento\Store\Model\StoreManager;
-use Rissc\Printformer\Helper\Config;
-use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Media as MediaHelper;
+use Rissc\Printformer\Helper\Cart as CartHelper;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 
 class Configurable
@@ -26,9 +27,9 @@ class Configurable
     private DecoderInterface $decoder;
 
     /**
-     * @var Media
+     * @var MediaHelper
      */
-    private Media $mediaHelper;
+    private MediaHelper $mediaHelper;
 
     /**
      * @var PrintformerBlock
@@ -41,8 +42,9 @@ class Configurable
     private PrintformerProductHelper $printformerProductHelper;
     private StoreManager $storeManager;
     private ProductRepositoryInterface $productRepository;
-    private Config $configHelper;
+    private ConfigHelper $configHelper;
     private RequestInterface $request;
+    private CartHelper $cartHelper;
 
     /**
      * @param EncoderInterface $encoder
@@ -56,13 +58,14 @@ class Configurable
     public function __construct(
         EncoderInterface $encoder,
         DecoderInterface $decoder,
-        Media $mediaHelper,
+        MediaHelper $mediaHelper,
         PrintformerBlock $printformerBlock,
         PrintformerProductHelper $printformerProductHelper,
         StoreManager $storeManager,
         ProductRepositoryInterface $productRepository,
-        Config $configHelper,
-        RequestInterface $request
+        ConfigHelper $configHelper,
+        RequestInterface $request,
+        CartHelper $cartHelper
     )
     {
         $this->encoder = $encoder;
@@ -74,6 +77,7 @@ class Configurable
         $this->productRepository = $productRepository;
         $this->configHelper = $configHelper;
         $this->request = $request;
+        $this->cartHelper = $cartHelper;
     }
 
     /**
@@ -96,19 +100,30 @@ class Configurable
                     $this->storeManager->getStore()->getId()
                 );
 
-
                 $draftIds = [];
-                foreach ($pfProducts as $pfProduct) {
-                    $draftId = $this->printformerProductHelper->getDraftId($pfProduct->getId(), $pfProduct->getProductId());
-                    if (!$this->printformerProductHelper->draftIsAlreadyUsedInCart($draftId) || $this->request->getModuleName() == 'checkout') {
+                if ($this->request->getModuleName() == 'wishlist') {
+                    $id = (int)$this->request->getParam('id');
+                    $wishlistItem = $this->cartHelper->getWishlistItemModel()->loadWithOptions($id);
+                    if ($wishlistItem) {
+                        $buyRequest = $wishlistItem->getBuyRequest();
+                        $draftIds = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                        $draftIds = explode(',', $draftIds ?? '');
+                    }
+                } else {
+                    foreach ($pfProducts as $pfProduct) {
+                        $draftId = $this->printformerProductHelper->getDraftId($pfProduct->getId(), $pfProduct->getProductId());
                         if (!empty($draftId)) {
-                            array_push($draftIds, $draftId);
+                            if (!$this->cartHelper->draftIsAlreadyUsedInCart($draftId) || $this->request->getModuleName() == 'checkout') {
+                                if (!empty($draftId)) {
+                                    array_push($draftIds, $draftId);
+                                }
+                            }
                         }
                     }
                 }
 
                 if (!empty($draftIds)){
-                    $draftItem = $this->mediaHelper->loadDraftImagesToChildCollection($draftIds, $images);
+                    $draftItem = $this->mediaHelper->loadDraftImagesToAdditionalImages($draftIds, $images);
                     if (!empty($draftItem)){
                         $images = $draftItem->getItems();
 

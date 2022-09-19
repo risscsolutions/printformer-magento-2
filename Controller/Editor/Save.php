@@ -11,7 +11,6 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Api\Url;
@@ -232,7 +231,7 @@ class Save extends Action
         $draftProcess = $this->_draftFactory->create()->load($draftProcessId);
 
         if ($this->getRequest()->getParam('updateWishlistItemOptions') != 'wishlist/index/updateItemOptions') {
-            $this->_sessionHelper->setDraftId($product->getId(), $draftProcess->getDraftId(), $storeId);
+            $this->_sessionHelper->setDraftId($product->getId(), $draftProcess->getPrintformerProductId(),  $draftProcess->getDraftId(), $storeId);
         }
 
         /** @var Session $session */
