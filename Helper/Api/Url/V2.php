@@ -154,7 +154,7 @@ class V2 extends AbstractHelper implements VersionInterface
     {
         $resultBaseUrl = '';
         $baseUrl = $this->scopeConfig->getValue(
-            'printformer/version2group/v2url',
+            Config::XML_PATH_V2_URL,
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );

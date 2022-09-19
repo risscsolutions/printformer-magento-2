@@ -43,7 +43,7 @@
                     </depends>
                 </field>
                 <!--disabled new feature: show editor on configurable product page -> default-value=false -> to enable set showInDefault=1 showInWebsite=1 -->
-                <field id="show_editor_button_on_configurable_product_page" translate="label" type="select" sortOrder="58" showInDefault="0" showInWebsite="0" showInStore="0">
+                <field id="hide_editor_button_on_configurable_product_page" translate="label" type="select" sortOrder="58" showInDefault="0" showInWebsite="0" showInStore="0">
                     <label>Show editor button on product page for configurable products</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>

@@ -13,6 +13,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\ScopeInterface;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\ProductFactory;
@@ -103,19 +104,28 @@ class Product extends AbstractHelper
      *
      * @param $productId
      * @param int $storeId
-     * @param bool $includeDefaultStoreInWhereSelect
+     * @param bool $useDefaultStore
      * @param array $childProductIds
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, bool $includeDefaultStoreInWhereSelect = true, array $childProductIds = [])
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [])
     {
         $connection = $this->resourceConnection->getConnection();
 
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
 
-        if ($includeDefaultStoreInWhereSelect && $storeId !== 0){
-            $select->where("store_id IN (". 0 . "," . $storeId .")");
+        $useDefaultStore = true;
+        $apiUrl = $this->scopeConfig->getValue($this->configHelper::XML_PATH_V2_URL,ScopeInterface::SCOPE_WEBSITES,$storeId);
+        $apiKey = $this->scopeConfig->getValue($this->configHelper::XML_PATH_V2_API_KEY,ScopeInterface::SCOPE_WEBSITES,$storeId);
+        $apiIdentifier = $this->scopeConfig->getValue($this->configHelper::XML_PATH_V2_IDENTIFIER,ScopeInterface::SCOPE_WEBSITES,$storeId);
+
+        if (!empty($apiUrl) && !empty($apiKey) && !empty($apiIdentifier)) {
+            $useDefaultStore = false;
+        }
+
+        if ($useDefaultStore){
+            $select->where("store_id = 0");
         } else {
             $select->where('store_id = ?', intval($storeId));
         }
@@ -142,7 +152,7 @@ class Product extends AbstractHelper
     {
         $printformerProducts = [];
 
-        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, true, $childProductIds) as $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, $childProductIds) as $row) {
             $printformerProduct = $this->productFactory->create();
             $this->resource->load($printformerProduct, $row['printformer_product_id']);
 
@@ -209,7 +219,7 @@ class Product extends AbstractHelper
         $catalogProductPrintformerProducts = [];
 
         $childProductIds = [];
-        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, true, $childProductIds) as $i => $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, $childProductIds) as $i => $row) {
             $catalogProductPrintformerProducts[$i] = new DataObject();
             $catalogProductPrintformerProducts[$i]->setCatalogProductPrintformerProduct(new DataObject($row));
 
