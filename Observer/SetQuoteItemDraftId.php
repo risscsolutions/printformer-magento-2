@@ -4,41 +4,45 @@ namespace Rissc\Printformer\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Quote\Model\Quote\Item;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Session;
 use Rissc\Printformer\Setup\InstallSchema;
 
 class SetQuoteItemDraftId implements ObserverInterface
 {
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     protected $logger;
 
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $storeManager;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $configHelper;
 
     /**
-     * @var \Rissc\Printformer\Helper\Session
+     * @var Session
      */
     protected $sessionHelper;
 
     /**
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Rissc\Printformer\Helper\Config $configHelper
-     * @param \Rissc\Printformer\Helper\Session $sessionHelper
+     * @param LoggerInterface $logger
+     * @param StoreManagerInterface $storeManager
+     * @param Config $configHelper
+     * @param Session $sessionHelper
      */
     public function __construct(
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Rissc\Printformer\Helper\Config $configHelper,
-        \Rissc\Printformer\Helper\Session $sessionHelper
+        LoggerInterface $logger,
+        StoreManagerInterface $storeManager,
+        Config $configHelper,
+        Session $sessionHelper
     ) {
         $this->logger = $logger;
         $this->storeManager = $storeManager;
@@ -61,16 +65,22 @@ class SetQuoteItemDraftId implements ObserverInterface
              */
             $item = $observer->getEvent()->getData('quote_item');
             if (!($item instanceof Item)
-                || !isset($item->getBuyRequest()['printformer_draftid'])) {
+                || !isset($item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID])) {
                 return;
             }
-            $storeId = $this->storeManager->getStore()->getId();
-            $draftIds = $item->getBuyRequest()['printformer_draftid'];
 
+            if ($item->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+                $childProduct = $item->getChildren();
+                if (is_array($childProduct) && !empty($childProduct)) {
+                    $item = $childProduct[0];
+                }
+            }
+
+            $storeId = $this->storeManager->getStore()->getId();
+            $draftIds = $item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID];
             $item = $this->configHelper->setDraftsOnItemType($item, $draftIds);
             $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-
-            $this->sessionHelper->unsetDraftId($item->getProduct()->getId(), $storeId);
+            $this->sessionHelper->unsetDraftIds($item->getProduct()->getId(), $storeId);
         } catch (\Exception $e) {
             $this->logger->critical($e);
         }

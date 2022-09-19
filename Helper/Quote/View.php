@@ -2,9 +2,7 @@
 namespace Rissc\Printformer\Helper\Quote;
 
 use Magento\Framework\App\Helper\Context;
-use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\StoreManagerInterface;
 use Rissc\Printformer\Helper\Api\Url as UrlHelper;
@@ -12,6 +10,7 @@ use Magento\Backend\Model\UrlInterface as BackendUrlInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\App\Area;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Setup\InstallSchema;
 
 class View
     extends AbstractHelper
@@ -104,8 +103,8 @@ class View
         $product = $quoteItem->getProduct();
         $product->getResource()->load($product, $product->getId());
 
-        if (!empty($buyRequest->getData('printformer_draftid'))){
-            $draftHashes = explode(',', $buyRequest->getData('printformer_draftid') ?? '');
+        if (!empty($buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID))){
+            $draftHashes = explode(',', $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID) ?? '');
 
             foreach($draftHashes as $draftHash) {
                 $draftProcess = $this->_apiHelper->draftProcess($draftHash);

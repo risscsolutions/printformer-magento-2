@@ -286,7 +286,7 @@ class Media extends AbstractHelper
      * @param $result
      * @return mixed
      */
-    public function loadDraftImagesToNonChildCollection(
+    public function loadDraftImagesToMainImage(
         $draftIds,
         $result
     )
@@ -310,17 +310,17 @@ class Media extends AbstractHelper
                             $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
                             $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
                             $result->addItem(new DataObject([
-                                 'id' => $index + $counter,
-                                 'small_image_url' => $fullImagePreviewUrl,
-                                 'medium_image_url' => $fullImagePreviewUrl,
-                                 'large_image_url' => $fullImagePreviewUrl,
-                                 'is_main_image' => ($index + $counter == 0),
-                                 'file' => $imagePreviewFilePath,
-                                 'position' => 1,
-                                 'label' => 'Image Printformer',
-                                 'disabled' => 0,
-                                 'media_type' => 'image'
-                             ]));
+                                                                'id' => $index + $counter,
+                                                                'small_image_url' => $fullImagePreviewUrl,
+                                                                'medium_image_url' => $fullImagePreviewUrl,
+                                                                'large_image_url' => $fullImagePreviewUrl,
+                                                                'is_main_image' => ($index + $counter == 0),
+                                                                'file' => $imagePreviewFilePath,
+                                                                'position' => 1,
+                                                                'label' => 'Image Printformer',
+                                                                'disabled' => 0,
+                                                                'media_type' => 'image'
+                                                            ]));
                         } catch (\Exception $e) {
                             $this->_logger->error($e->getMessage());
                             $this->_logger->error($e->getTraceAsString());
@@ -342,7 +342,7 @@ class Media extends AbstractHelper
      * @param $result
      * @return mixed
      */
-    public function loadDraftImagesToChildCollection(
+    public function loadDraftImagesToAdditionalImages(
         $draftIds,
         $result
     )
@@ -396,7 +396,10 @@ class Media extends AbstractHelper
      * @param string $draftId
      * @return null|string
      */
-    private function getImagePreviewUrl(int $page, $draftId)
+    private function getImagePreviewUrl(
+        int $page,
+        $draftId
+    )
     {
         $url = null;
         if ($this->_config->isUseImagePreview() && $draftId) {
@@ -431,10 +434,10 @@ class Media extends AbstractHelper
                         'image_path' => $imageFilePath
                     ]);
                     imagedestroy($image);
-                    $this->draftImageCreated[$draftId.$page] = true;
+                    $this->draftImageCreated[$draftId . $page] = true;
                 }
 
-                $url = $this->getImageUrl($draftId, $page,false, 0);
+                $url = $this->getImageUrl($draftId, $page, false, 0);
             } catch (\Exception $e) {
                 $this->_logger->error($e->getMessage());
                 $this->_logger->error($e->getTraceAsString());

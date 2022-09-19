@@ -5,10 +5,9 @@ namespace Rissc\Printformer\Plugin\Catalog\Product\View;
 use Magento\Catalog\Block\Product\View\Gallery as SubjectGallery;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
-use Rissc\Printformer\Helper\Media;
+use Rissc\Printformer\Helper\Media as MediaHelper;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
-use Rissc\Printformer\Helper\Session;
-use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Cart as CartHelper;
 
 
 class Gallery
@@ -32,9 +31,8 @@ class Gallery
      * @var PrintformerProductHelper $printformerProductHelper
      */
     private PrintformerProductHelper $printformerProductHelper;
-    private Session $sessionHelper;
-    private Config $configHelper;
     private Configurable $configurable;
+    private CartHelper $cartHelper;
 
     /**
      * Gallery constructor.
@@ -43,19 +41,17 @@ class Gallery
      * @param PrintformerProductHelper $printformerProductHelper
      */
     public function __construct(
-        Media $mediaHelper,
+        MediaHelper $mediaHelper,
         PrintformerBlock $printformerBlock,
         PrintformerProductHelper $printformerProductHelper,
-        Session $sessionHelper,
-        Config $configHelper,
-        Configurable $configurable
+        Configurable $configurable,
+        CartHelper $cartHelper
     ) {
         $this->mediaHelper = $mediaHelper;
         $this->printformerBlock = $printformerBlock;
         $this->printformerProductHelper = $printformerProductHelper;
-        $this->sessionHelper = $sessionHelper;
-        $this->configHelper = $configHelper;
         $this->configurable = $configurable;
+        $this->cartHelper = $cartHelper;
     }
 
     /**
@@ -83,9 +79,11 @@ class Gallery
     public function afterGetGalleryImages(SubjectGallery $gallery, $result)
     {
         $product = $gallery->getProduct();
-        $draftIds = $this->getDraftIds($product->getId(), $product->getStore()->getId(), $product->getTypeId());
 
-        $this->mediaHelper->loadDraftImagesToNonChildCollection($draftIds, $result);
+        $draftIds = $this->getDraftIds($product->getId(), $product->getStore()->getId(), $product->getTypeId());
+        if (!empty($draftIds)){
+            $this->mediaHelper->loadDraftImagesToMainImage($draftIds, $result);
+        }
 
         return $result;
     }
@@ -103,7 +101,8 @@ class Gallery
         $catalogProductPrintformerProducts = $this->printformerBlock->getCatalogProductPrintformerProducts($productId, $storeId);
 
         foreach($catalogProductPrintformerProducts as $catalogProductPrintformerProduct) {
-            $draftId = $this->printformerBlock->getDraftId($catalogProductPrintformerProduct->getPrintformerProduct());
+            $pfProduct = $catalogProductPrintformerProduct->getPrintformerProduct();
+            $draftId = $this->cartHelper->searchAndLoadDraftId($pfProduct);
             if (!empty($draftId)) {
                 $draftIds[] = $draftId;
             }

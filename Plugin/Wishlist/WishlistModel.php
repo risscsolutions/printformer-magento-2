@@ -2,12 +2,14 @@
 
 namespace Rissc\Printformer\Plugin\Wishlist;
 
+use Magento\Catalog\Model\Product as ProductModel;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
 use Magento\Framework\Registry;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Wishlist\Model\Wishlist;
-use Rissc\Printformer\Setup\InstallSchema;
 use Rissc\Printformer\Helper as Helper;
-use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Helper\Product as productHelper;
 
 class WishlistModel
 {
@@ -22,24 +24,27 @@ class WishlistModel
     protected $storeManager;
 
     /**
-     * @var Session
+     * @var SessionHelper
      */
-    protected $session;
+    protected $sessionHelper;
+    private productHelper $productHelper;
 
     /**
      * WishlistModel constructor.
      * @param Registry $registry
      * @param StoreManagerInterface $storeManager
-     * @param Session $session
+     * @param SessionHelper $sessionHelper
      */
     public function __construct(
         Registry $registry,
         StoreManagerInterface $storeManager,
-        Session $session
+        SessionHelper $sessionHelper,
+        ProductHelper $productHelper
     ) {
         $this->registry = $registry;
         $this->storeManager = $storeManager;
-        $this->session = $session;
+        $this->sessionHelper = $sessionHelper;
+        $this->productHelper = $productHelper;
     }
 
     /**
@@ -50,16 +55,10 @@ class WishlistModel
      */
     public function beforeAddNewItem(
         Wishlist $subject,
-        $product,
+        ProductModel $product,
         $buyRequest = null,
         $forciblySetQty = false
     ) {
-        if ($product instanceof \Magento\Catalog\Model\Product) {
-            $productId = $product->getId();
-        } else {
-            $productId = (int)$product;
-        }
-
         if (isset($buyRequest) && $buyRequest->getStoreId()) {
             $storeId = $buyRequest->getStoreId();
         } else {
@@ -74,20 +73,38 @@ class WishlistModel
             $buyRequest = new \Magento\Framework\DataObject();
         }
 
-        if ($buyRequest->getData('_processing_params')) {
-            $existDraftId = $buyRequest
-                ->getData('_processing_params')
-                ->getData('current_config')
-                ->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-            if ($existDraftId) {
-                $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $existDraftId);
+        if ($product->getTypeId() === ConfigurableType::TYPE_CODE) {
+            $product = $this->productHelper->getChildProduct($product, $buyRequest->getSuperAttribute());
+        }
+
+        $productId = $product->getId();
+        $drafts = $this->sessionHelper->getDraftIdsByProductId($productId);
+        if (!empty($drafts[$productId])) {
+            foreach ($drafts[$productId] as $draftKey => $draftValue) {
+                $printformerProductId = $draftKey;
+                if ($buyRequest->getData('_processing_params')) {
+                    $draftId = $buyRequest
+                        ->getData('_processing_params')
+                        ->getData('current_config')
+                        ->getData($this->productHelper::COLUMN_NAME_DRAFTID);
+                    if ($draftId) {
+                        $buyRequest->setData($this->productHelper::COLUMN_NAME_DRAFTID, $draftId);
+                    }
+                } elseif (!empty($draftValue)) {
+                    $draftIdsStored = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
+                    if (!empty($draftIdsStored)){
+                        $draftIds = $draftIdsStored . ',' . $draftValue;
+                    } else {
+                        $draftIds = $draftValue;
+                    }
+                    $buyRequest->setData(
+                        $this->productHelper::COLUMN_NAME_DRAFTID,
+                        $draftIds
+                    );
+                    $this->sessionHelper->unsetSessionUniqueIdByDraftId($draftValue);
+                    $this->sessionHelper->unsetDraftId($productId, $printformerProductId, $storeId);
+                }
             }
-        } elseif ($this->session->getDraftId($productId, $storeId)) {
-            $buyRequest->setData(
-                InstallSchema::COLUMN_NAME_DRAFTID,
-                $this->session->getDraftId($productId, $storeId)
-            );
-            $this->session->unsetDraftId($productId, $storeId);
         }
     }
 
@@ -99,9 +116,9 @@ class WishlistModel
     public function afterAddNewItem(Wishlist $subject, $result)
     {
         if (!is_string($result)) {
-            $value = $result->getBuyRequest()->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+            $value = $result->getBuyRequest()->getData($this->productHelper::COLUMN_NAME_DRAFTID);
             $option = array(
-                'code' => InstallSchema::COLUMN_NAME_DRAFTID,
+                'code' => $this->productHelper::COLUMN_NAME_DRAFTID,
                 'value' => $value,
                 'product_id' => $result->getProductId()
             );

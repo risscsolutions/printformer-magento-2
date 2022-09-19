@@ -19,7 +19,7 @@ use Magento\Wishlist\Model\Item;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
-use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Helper\Cart as CartHelper;
 use Magento\Checkout\Model\Cart;
 use Rissc\Printformer\Helper\Session;
 use Magento\Wishlist\Model\Item as WishListItem;
@@ -31,10 +31,10 @@ use Magento\Wishlist\Model\Item as WishListItem;
 class Configurable extends parentConfigurable
 {
     private PrintformerProductHelper $printformerProductHelper;
-    private Config $configHelper;
     private Session $sessionHelper;
     private Cart $cart;
     private WishListItem $wishlistItem;
+    private CartHelper $cartHelper;
 
     public function __construct(
         Context $context,
@@ -48,10 +48,10 @@ class Configurable extends parentConfigurable
         SwatchData $swatchHelper,
         Media $swatchMediaHelper,
         PrintformerProductHelper $printformerProductHelper,
-        Config $configHelper,
         Session $sessionHelper,
         Cart $cart,
         WishListItem $wishlistItem,
+        CartHelper $cartHelper,
         array $data = [],
         SwatchAttributesProvider $swatchAttributesProvider = null,
         UrlBuilder $imageUrlBuilder = null
@@ -60,10 +60,10 @@ class Configurable extends parentConfigurable
 
         parent::__construct($context, $arrayUtils, $jsonEncoder, $helper, $catalogProduct, $currentCustomer, $priceCurrency, $configurableAttributeData, $swatchHelper, $swatchMediaHelper, $data, $swatchAttributesProvider, $imageUrlBuilder);
         $this->printformerProductHelper = $printformerProductHelper;
-        $this->configHelper = $configHelper;
         $this->sessionHelper = $sessionHelper;
         $this->cart = $cart;
         $this->wishlistItem = $wishlistItem;
+        $this->cartHelper = $cartHelper;
     }
 
     /**
@@ -104,38 +104,37 @@ class Configurable extends parentConfigurable
                     case 'checkout':
                         $quoteItem = $this->cart->getQuote()->getItemById($id);
                         if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                            if ($quoteItem->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+                            if ($quoteItem->getProductType() === Config::CONFIGURABLE_TYPE_CODE) {
                                 $children = $quoteItem->getChildren();
                                 if (!empty($children)) {
                                     $firstChild = $children[0];
                                     if (!empty($firstChild)) {
-                                        $draftId = $this->configHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getProductId(), $printformerProduct->getId());
+                                        $draftId = $this->cartHelper->loadDraftFromQuoteItem($firstChild, $printformerProduct->getProductId(), $printformerProduct->getId());
                                     }
                                 }
                             } else {
-                                $draftId = $this->configHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
+                                $draftId = $this->cartHelper->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
                             }
                         }
                         break;
                     case 'wishlist':
                         $wishlistItem = $this->wishlistItem->loadWithOptions($id);
                         if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
-                            $draftId = $wishlistItem->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID)->getValue();
+                            $draftId = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID)->getValue();
                         }
-                        //todo?: adjust to get draft id for child-products like on function loadDraftFromQuoteItem
                         break;
                     default:
                         break;
                 }
-            }
-        } else {
-            $productId = $printformerProduct->getProductId();
-            $pfProductId = $printformerProduct->getId();
-            $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
-            if ($sessionUniqueId) {
-                $uniqueIdExplode = explode(':', $sessionUniqueId ?? '');
-                if (isset($uniqueIdExplode[1]) && $uniqueIdExplode[1] == $productId) {
+            } else {
+                $productId = $printformerProduct->getProductId();
+                $pfProductId = $printformerProduct->getId();
+                $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                if ($sessionUniqueId) {
                     $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
+                    if ($this->cartHelper->draftIsAlreadyUsedInCart($draftId)) {
+                        $draftId = null;
+                    }
                 }
             }
         }
@@ -150,7 +149,7 @@ class Configurable extends parentConfigurable
     {
         $product = $this->getProduct();
 
-        if ($product->getTypeId() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+        if ($product->getTypeId() === Config::CONFIGURABLE_TYPE_CODE) {
             $childProducts = $product->getTypeInstance()->getUsedProducts($product);
             $childProductIds = [];
             foreach ($childProducts as $simpleProduct) {

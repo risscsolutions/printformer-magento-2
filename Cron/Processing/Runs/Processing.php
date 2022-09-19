@@ -7,7 +7,7 @@ use Rissc\Printformer\Helper\Api;
 use Magento\Sales\Model\ResourceModel\Order\Item\Collection as ItemCollection;
 use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollectionFactory;
 use Rissc\Printformer\Helper\Config as PrintformerConfig;
-
+use Rissc\Printformer\Setup\InstallSchema;
 
 /**
  * Class Processing
@@ -108,7 +108,7 @@ abstract class Processing
         $unprocessedPrintformerOrderItems = $unprocessedPrintformerOrderItemDraftsCollection->getItems();
         if (!empty($unprocessedPrintformerOrderItems)){
             foreach ($unprocessedPrintformerOrderItems as $orderItem) {
-                if(!empty($draftId = $orderItem['printformer_draftid'])){
+                if(!empty($draftId = $orderItem[InstallSchema::COLUMN_NAME_DRAFTID])){
                     try {
                         $storeId = $orderItem['store_id'];
 

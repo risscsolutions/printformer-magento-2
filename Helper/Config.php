@@ -3,19 +3,14 @@ namespace Rissc\Printformer\Helper;
 
 use DateInterval;
 use DateTimeImmutable;
-use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
-use Magento\Framework\DataObject;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Rissc\Printformer\Helper\Session as SessionHelper;
-use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
-use Rissc\Printformer\Model\DraftFactory;
 
 class Config extends AbstractHelper
 {
@@ -88,37 +83,25 @@ class Config extends AbstractHelper
     protected $storeId;
 
     /**
-     * @var CustomerSession
-     */
-    protected $_customerSession;
-
-    /**
      * @var EncryptorInterface
      */
     private $encryptor;
-    private DraftFactory $draftFactory;
 
     /**
-     * Config constructor.
      * @param Context $context
      * @param StoreManagerInterface $storeManager
-     * @param CustomerSession $customerSession
      * @param EncryptorInterface $encryptor
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
-        CustomerSession $customerSession,
-        EncryptorInterface $encryptor,
-        DraftFactory $draftFactory
+        EncryptorInterface $encryptor
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
         $this->storeId = $this->storeManager->getStore()->getId();
-        $this->_customerSession = $customerSession;
         $this->encryptor = $encryptor;
-        $this->draftFactory = $draftFactory;
     }
 
     /**
@@ -818,24 +801,6 @@ class Config extends AbstractHelper
     }
 
     /**
-     * Check if product is a child-product
-     *
-     * @param $item
-     * @return bool
-     */
-    public function isItemChildSimpleOfConfigurable($item): bool
-    {
-        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
-            $childItems = $item->getChildren();
-            if (!empty($childItems)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * @return string
      */
     public function isDataTransferEnabled()
@@ -845,67 +810,5 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );
-    }
-
-    /**
-     * @param string $draftIds
-     * @return DataObject[]
-     */
-    public function loadDraftItemsByIds(string $draftIds): array
-    {
-        /** @var Draft $draftFactory */
-        $draftFactory = $this->draftFactory->create();
-        $draftCollection = $draftFactory->getCollection();
-        $draftCollection->addFieldToFilter('draft_id', ['in' => $draftIds]);
-        return $draftCollection->getItems();
-    }
-
-    /**
-     * Load draftId from buy-Request of quote-Item
-     * @param $quoteItem
-     * @param int $productId
-     * @param int $printformerProductId
-     * @return false|string
-     */
-    public function loadDraftFromQuoteItem(
-        $quoteItem,
-        int $productId,
-        int $printformerProductId
-    )
-    {
-        $resultDraft = false;
-        if (($productId && $productId == $quoteItem->getProduct()->getId()) || (empty($productId))) {
-            $quoteItemDraftsField = $quoteItem->getData(SessionHelper::SESSION_KEY_PRINTFORMER_DRAFTID);
-            $quoteItemDraftsCollectionItems = $this->loadDraftItemsByIds($quoteItemDraftsField);
-
-            foreach ($quoteItemDraftsCollectionItems as $quoteItemCollectionItem) {
-                if ($quoteItemCollectionItem->getProductId() == $productId && $quoteItemCollectionItem->getPrintformerProductId() == $printformerProductId) {
-                    $resultDraft = $quoteItemCollectionItem->getDraftId();
-                }
-            }
-        }
-
-        return $resultDraft;
-    }
-
-    public function updateDraftHashRelations(
-        $draftHashRelations,
-        $productId,
-        $printformerProductId,
-        $draftId
-    )
-    {
-        if (is_array($draftHashRelations)) {
-            if(isset($draftHashRelations[$productId])) {
-                $draftHashRelationsProduct = $draftHashRelations[$productId];
-            }
-            if (!isset($draftHashRelationsProduct)) {
-                $draftHashRelations[$productId] = [];
-            }
-            if (is_array($draftHashRelations[$productId])){
-                $draftHashRelations[$productId][$printformerProductId] = $draftId;
-            }
-        }
-        return $draftHashRelations;
     }
 }

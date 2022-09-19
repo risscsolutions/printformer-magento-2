@@ -93,6 +93,20 @@ define([
                                 $('#printformer_draftid').prop('value', draftIds);
                                 $widget.element.parents('.product-info-main').find('[data-action="add-to-wishlist"]').data('post').data.printformer_draftid = draftIds;
                             }
+
+                            let dataPfTemplateDraftContainer = $(':visible[data-pf-template-container]').children('[data-pf-draft]');
+                            let addBtnSelector = '#product-addtocart-button, #product-updatecart-button';
+                            if (dataPfTemplateDraftContainer.length === 0) {
+                                $(addBtnSelector).prop('disabled', false)
+                            } else {
+                                $(addBtnSelector).prop('disabled', true)
+
+                                $.each(dataPfTemplateDraftContainer, function(index, dataPfTemplate){
+                                    if ($(dataPfTemplate).data('pf-draft') === 'active'){
+                                        $(addBtnSelector).prop('disabled', false)
+                                    }
+                                }, addBtnSelector);
+                            }
                         }
                     }, checkedOptionIds);
 

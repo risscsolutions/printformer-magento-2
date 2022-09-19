@@ -2,10 +2,13 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Catalog\Api\ProductAttributeRepositoryInterface as ProductAttributeRepository;
 use Magento\Catalog\Model\ProductRepository;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableProductModel;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
@@ -14,9 +17,8 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
-use Magento\Framework\App\RequestInterface;
-use Rissc\Printformer\Helper\Config;
-use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Setup\InstallSchema;
 
 class Product extends AbstractHelper
 {
@@ -54,10 +56,12 @@ class Product extends AbstractHelper
      * @var Config
      */
     private Config $configHelper;
-    private \Rissc\Printformer\Helper\Session $sessionHelper;
+    private Session $sessionHelper;
+    private ProductAttributeRepository $productAttributeRepository;
+    private ConfigurableProductModel $configurableProduct;
+    const COLUMN_NAME_DRAFTID = InstallSchema::COLUMN_NAME_DRAFTID;
 
     /**
-     * Product constructor.
      * @param ProductFactory $productFactory
      * @param ResourceProduct $resource
      * @param ResourceConnection $resourceConnection
@@ -66,6 +70,7 @@ class Product extends AbstractHelper
      * @param ProductRepository $catalogProductRepository
      * @param DraftFactory $draftFactory
      * @param Config $configHelper
+     * @param Session $sessionHelper
      */
     public function __construct(
         ProductFactory $productFactory,
@@ -76,8 +81,11 @@ class Product extends AbstractHelper
         ProductRepository $catalogProductRepository,
         DraftFactory $draftFactory,
         Config $configHelper,
-        Session $sessionHelper
+        SessionHelper $sessionHelper,
+        ProductAttributeRepository $productAttributeRepository,
+        ConfigurableProductModel $configurableProduct
     ) {
+        parent::__construct($context);
         $this->productFactory = $productFactory;
         $this->resource = $resource;
         $this->resourceConnection = $resourceConnection;
@@ -86,8 +94,8 @@ class Product extends AbstractHelper
         $this->draftFactory = $draftFactory;
         $this->configHelper = $configHelper;
         $this->sessionHelper = $sessionHelper;
-
-        parent::__construct($context);
+        $this->productAttributeRepository = $productAttributeRepository;
+        $this->configurableProduct = $configurableProduct;
     }
 
     /**
@@ -303,5 +311,144 @@ class Product extends AbstractHelper
         }
 
         return $qty;
+    }
+
+    /**
+     * @param string $draftIds
+     * @return DataObject[]
+     */
+    public function loadDraftItemsByIds(string $draftIds): array
+    {
+        /** @var Draft $draftFactory */
+        $draftFactory = $this->draftFactory->create();
+        $draftCollection = $draftFactory->getCollection();
+        $draftCollection->addFieldToFilter('draft_id', ['in' => $draftIds]);
+        return $draftCollection->getItems();
+    }
+
+    /**
+     * Get attribute code by attribute id
+     *
+     * @param int $id
+     * @return false|string
+     */
+    public function getAttributeCode(int $id)
+    {
+        $result = false;
+        try {
+            $result = $this->productAttributeRepository->get($id)->getAttributeCode();
+        } catch (NoSuchEntityException $e) {
+        }
+        return $result;
+    }
+
+    /**
+     * @param $mainProduct
+     * @return array
+     */
+    public function getConfigurableAndChildrens($mainProduct)
+    {
+        if ($mainProduct->getTypeId() === ConfigurableProductModel::TYPE_CODE) {
+            $childProducts = $mainProduct->getTypeInstance()->getUsedProducts($mainProduct);
+            foreach ($childProducts as $simpleProductKey => $simpleProduct) {
+                $_attributes = $mainProduct->getTypeInstance(true)->getConfigurableAttributes($mainProduct);
+                $attributesPair = [];
+                foreach ($_attributes as $_attribute) {
+                    $attributeId = (int)$_attribute->getAttributeId();
+                    $attributeCode = $this->getAttributeCode($attributeId);
+                    $attributesPair[$attributeId] = (int)$simpleProduct->getData($attributeCode);
+                }
+                $childProducts[$simpleProductKey]->setData('super_attributes', $attributesPair);
+                $allProducts = $childProducts;
+                array_unshift($allProducts, $mainProduct);
+            }
+        } else {
+            $allProducts = [];
+            $allProducts[] = $mainProduct;
+        }
+
+        return $allProducts;
+    }
+
+    /**
+     * @param $product
+     * @return array
+     */
+    public function getChildrens(ProductModel $product)
+    {
+        $resultChildProducts = [];
+        if ($product->getTypeId() === ConfigurableProductModel::TYPE_CODE) {
+            $resultChildProducts = $product->getTypeInstance()->getUsedProducts($product);
+        }
+
+        return $resultChildProducts;
+    }
+
+    /**
+     * @param string $draftId
+     * @return false
+     */
+    public function getPfProductIdByDraftId($draftId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem = $draftCollection->getLastItem();
+            $printformerProductId = $lastItem->getPrintformerProductId();
+        } catch (\Exception $e) {
+        }
+        return $printformerProductId;
+    }
+
+    /**
+     * @param string $draftId
+     * @return DataObject|false
+     */
+    public function getDraftById($draftId)
+    {
+        $resultItem = false;
+        try {
+            $draftProcess = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $resultItem = $draftCollection->getLastItem();
+        } catch (\Exception $e) {
+        }
+        return $resultItem;
+    }
+
+    /**
+     * @param string $draftField
+     * @return void
+     */
+    public function getSessionUniqueId(string $draftField)
+    {
+        $draftHashArray = explode(',', $draftField ?? '');
+        foreach($draftHashArray as $draftHash) {
+            $draftItem = $this->getDraftById($draftHash);
+            if ($draftItem) {
+                $pfProductId = $draftItem->getData('printformer_product_id');
+                $productId = $draftItem->getData('product_id');
+                if(!empty($productId) && !empty($pfProductId)) {
+                    $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                    if (!isset($uniqueId)) {
+                        $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param ProductModel $configurableProduct
+     * @param array $superAttributes
+     * @return ProductModel|null
+     */
+    public function getChildProduct(ProductModel $configurableProduct, array $superAttributes)
+    {
+        $childProduct = $this->configurableProduct->getProductByAttributes($superAttributes, $configurableProduct);
+        return $childProduct;
     }
 }

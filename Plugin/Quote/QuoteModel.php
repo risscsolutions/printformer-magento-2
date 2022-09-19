@@ -2,6 +2,8 @@
 
 namespace Rissc\Printformer\Plugin\Quote;
 
+use Magento\Catalog\Model\Product;
+use Magento\Framework\DataObject;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\Quote as SubjectQuote;
@@ -10,7 +12,8 @@ use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Setup\InstallSchema;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Api as ApiHelper;
-use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Cart as CartHelper;
 use Magento\Framework\Registry;
 
 class QuoteModel
@@ -35,11 +38,9 @@ class QuoteModel
      */
     protected $_apiHelper;
 
-    /**
-     * @var Config
-     */
-    private Config $configHelper;
     private Registry $registry;
+
+    private CartHelper $cartHelper;
 
     /**
      * QuoteModel constructor.
@@ -47,7 +48,6 @@ class QuoteModel
      * @param Session $session
      * @param LoggerInterface $logger
      * @param ApiHelper $apiHelper
-     * @param Config $configHelper
      * @param Registry $registry
      */
     public function __construct(
@@ -55,22 +55,22 @@ class QuoteModel
         Session $session,
         LoggerInterface $logger,
         ApiHelper $apiHelper,
-        Config $configHelper,
-        Registry $registry
+        Registry $registry,
+        CartHelper $cartHelper
     ) {
         $this->storeManager = $storeManager;
         $this->session = $session;
         $this->logger = $logger;
         $this->_apiHelper = $apiHelper;
-        $this->configHelper = $configHelper;
         $this->registry = $registry;
+        $this->cartHelper = $cartHelper;
     }
 
     /**
      * @param SubjectQuote $subject
      * @param \Closure $proceed
-     * @param \Magento\Catalog\Model\Product $product
-     * @param null|float|\Magento\Framework\DataObject $buyRequest
+     * @param Product $product
+     * @param null|float|DataObject $buyRequest
      * @param $processMode
      * @return Item|mixed|string
      * @throws \Exception
@@ -78,11 +78,11 @@ class QuoteModel
     public function aroundAddProduct(
         SubjectQuote $subject,
         \Closure $proceed,
-        \Magento\Catalog\Model\Product $product,
+        Product $product,
         $buyRequest = null,
         $processMode = \Magento\Catalog\Model\Product\Type\AbstractType::PROCESS_MODE_FULL
     ) {
-        if(!$buyRequest instanceof \Magento\Framework\DataObject)
+        if(!$buyRequest instanceof DataObject)
             return $proceed($product, $buyRequest, $processMode);
 
         $currentOrder = $this->registry->registry('current_order');
@@ -124,9 +124,7 @@ class QuoteModel
                 }
 
                 if ($draftProcess->getId()) {
-                    //todo?: maybe check for getsession-unique-id before set by product and draft
-                    $this->session->loadSessionUniqueId($draftProcess->getProductId(), $draftProcess->getPrintformerProductId(), $draftProcess->getDraftId());
-                    $draftHashRelations = $this->configHelper->updateDraftHashRelations(
+                    $draftHashRelations = $this->cartHelper->updateDraftHashRelations(
                         $draftHashRelations,
                         $draftProcess->getProductId(),
                         $draftProcess->getPrintformerProductId(),
@@ -174,7 +172,7 @@ class QuoteModel
         $this->loadPrintformerDataByQuoteItem($item);
 
         //load pf-data for child-product-item
-        if($item->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+        if($item->getProductType() === ConfigHelper::CONFIGURABLE_TYPE_CODE) {
             $childItems = $item->getChildren();
             if (!empty($childItems)) {
                 $firstChildItem = $childItems[0];
@@ -206,7 +204,7 @@ class QuoteModel
                             $newDraftHashField = implode(',', $newDraftHashes);
                             $quoteItem->setData(InstallSchema::COLUMN_NAME_DRAFTID, $newDraftHashField);
                             $quoteItem->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-                            $this->session->unsetDraftId($quoteItem->getProduct()->getId(), $storeId);
+                            $this->session->unsetDraftIds($quoteItem->getProduct()->getId(), $storeId);
                         }
                     }
                 }
