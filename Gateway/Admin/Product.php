@@ -363,7 +363,7 @@ class Product
      *
      * @return PrintformerProduct
      */
-    public function addPrintformerProduct(array $data, string $intent, int $storeId)
+    public function addPrintformerProduct(array $data, string $intent, int $storeId = 0)
     {
         /** @var PrintformerProduct $pfProduct */
         $pfProduct = $this->printformerProductFactory->create();
@@ -376,7 +376,8 @@ class Product
             ->setMd5(null)
             ->setIntent($intent)
             ->setCreatedAt(time())
-            ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
+            ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null)
+            ->setStoreId($storeId);
 
         return $pfProduct;
     }
