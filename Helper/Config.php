@@ -19,6 +19,7 @@ class Config extends AbstractHelper
 
     const XML_PATH_V2_API_KEY                       = 'printformer/version2group/v2apiKey';
     const XML_PATH_V2_IDENTIFIER                    = 'printformer/version2group/v2identifier';
+    const XML_PATH_V2_URL                           = 'printformer/version2group/v2url';
 
     const XML_PATH_CONFIG_ENABLED                   = 'printformer/general/enabled';
     const XML_PATH_CONFIG_HOST                      = 'printformer/general/remote_host';
@@ -46,7 +47,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
-    const XML_PATH_CONFIG_SHOW_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/show_editor_button_on_configurable_product_page';
+    const XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/hide_editor_button_on_configurable_product_page';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
 
@@ -731,10 +732,10 @@ class Config extends AbstractHelper
     /**
      * @return bool
      */
-    public function showEditorButtonOnConfigurableProductPage()
+    public function hideEditorButtonOnConfigurableProductPage()
     {
         return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_SHOW_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE,
+            self::XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE,
             ScopeInterface::SCOPE_STORES,
             $this->getStoreId()
         );

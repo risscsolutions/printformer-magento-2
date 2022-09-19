@@ -53,7 +53,7 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
         $this->url = $context->getUrlBuilder();
         $this->config = $config;
         $this->_scopeConfig = $scopeConfig;
-        $this->printformerUrl = $this->_scopeConfig->getValue('printformer/version2group/v2url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        $this->printformerUrl = $this->_scopeConfig->getValue($config::XML_PATH_V2_URL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getPrintformerUrl() {

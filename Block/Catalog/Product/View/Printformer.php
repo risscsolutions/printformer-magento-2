@@ -947,7 +947,7 @@ class Printformer extends AbstractView
      */
     public function canShowEditorButtonOnProductPage($product)
     {
-        if ($product->getTypeId() === ConfigurableType::TYPE_CODE && !$this->configHelper->showEditorButtonOnConfigurableProductPage()) {
+        if ($product->getTypeId() === ConfigurableType::TYPE_CODE && $this->configHelper->hideEditorButtonOnConfigurableProductPage()) {
             return false;
         }
 
