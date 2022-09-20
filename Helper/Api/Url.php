@@ -367,4 +367,8 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->getProductFeedUrl();
     }
 
+    public function getClientName()
+    {
+        return $this->getVersionHelper()->getClientName();
+    }
 }
