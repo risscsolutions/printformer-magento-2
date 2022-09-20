@@ -7,6 +7,7 @@ use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Rissc\Printformer\Gateway\Admin\Product;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Api;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class Sync extends Action
@@ -30,6 +31,7 @@ class Sync extends Action
      * @var ScopeConfigInterface
      */
     protected $_scopeConfig;
+    private Api $apiHelper;
 
     /**
      * Sync constructor.
@@ -44,27 +46,41 @@ class Sync extends Action
         ScopeConfigInterface $scopeConfig,
         JsonFactory $resultJsonFactory,
         Product $gateway,
-        Config $config
+        Config $config,
+        Api $apiHelper
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
         $this->gateway = $gateway;
         $this->config = $config;
         $this->_scopeConfig = $scopeConfig;
+        $this->apiHelper = $apiHelper;
         parent::__construct($context);
     }
 
     public function execute()
     {
         $storeId = $this->getRequest()->getParam('store_id', \Magento\Store\Model\Store::DEFAULT_STORE_ID);
-        try {
-            if (!$this->config->isEnabled()) {
-                throw new \Exception(__('Module disabled.'));
-            }
 
-            $this->gateway->syncProducts($storeId);
-            $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.')];
-        } catch (\Exception $e) {
-            $response = ['error' => 'true', 'message' => $e->getMessage()];
+        try {
+            $url = $this->apiHelper->apiUrl()->getClientName();
+            $httpClient = $this->apiHelper->getHttpClient();
+
+            $response = $httpClient->get($url);
+            $response = json_decode($response->getBody(), true);
+            $name = $response['data']['name'];
+
+            try {
+                if (!$this->config->isEnabled()) {
+                    throw new \Exception(__('Module disabled.'));
+                }
+
+                $this->gateway->syncProducts($storeId);
+                $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.').'<br>'.__('Mandator:').$name];
+            } catch (\Exception $e) {
+                $response = ['error' => 'true', 'message' => $e->getMessage()];
+            }
+        } catch (\Exception $e){
+            $response = ['error' => 'true', 'message' => __('Error setting name client configuration. Empty Response. Url: ' . $url)];
         }
         $this->_actionFlag->set('', self::FLAG_NO_POST_DISPATCH, true);
         $resultJson = $this->resultJsonFactory->create();
