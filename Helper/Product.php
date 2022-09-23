@@ -116,9 +116,9 @@ class Product extends AbstractHelper
             ->from('catalog_product_printformer_product');
 
         $useDefaultStore = true;
-        $apiUrl = $this->scopeConfig->getValue($this->configHelper::XML_PATH_V2_URL,ScopeInterface::SCOPE_WEBSITES,$storeId);
-        $apiKey = $this->scopeConfig->getValue($this->configHelper::XML_PATH_V2_API_KEY,ScopeInterface::SCOPE_WEBSITES,$storeId);
-        $apiIdentifier = $this->scopeConfig->getValue($this->configHelper::XML_PATH_V2_IDENTIFIER,ScopeInterface::SCOPE_WEBSITES,$storeId);
+        $apiUrl = $this->configHelper->getClientUrl();
+        $apiKey = $this->configHelper->getClientApiKey();
+        $apiIdentifier = $this->configHelper->getClientIdentifier();
 
         if (!empty($apiUrl) && !empty($apiKey) && !empty($apiIdentifier)) {
             $useDefaultStore = false;

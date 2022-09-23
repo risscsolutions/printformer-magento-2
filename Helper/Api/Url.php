@@ -89,9 +89,9 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getPrintformerBaseUrl()
+    public function getPrintformerBaseUrl($storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getPrintformerBaseUrl();
+        return $this->getVersionHelper()->getPrintformerBaseUrl($storeId, $websiteId);
     }
 
     /**
@@ -367,8 +367,8 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->getProductFeedUrl();
     }
 
-    public function getClientName()
+    public function getClientName($storeId = false, $websiteId = false, $forceChainedIds = false)
     {
-        return $this->getVersionHelper()->getClientName();
+        return $this->getVersionHelper()->getClientName($storeId, $websiteId, $forceChainedIds);
     }
 }

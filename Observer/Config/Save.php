@@ -2,17 +2,17 @@
 
 namespace Rissc\Printformer\Observer\Config;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Store\Model\ScopeInterface;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\Cache\TypeListInterface;
-
-
 class Save implements ObserverInterface
 {
     /**
@@ -49,21 +49,25 @@ class Save implements ObserverInterface
 
     /**
      * @param Observer $observer
-     * @throws Exception
+     * @return void
+     * @throws GuzzleException
      */
     public function execute(Observer $observer)
     {
-        $url = $this->_apiHelper->apiUrl()->getClientName();
-        $httpClient = $this->_apiHelper->getHttpClient();
-
-        $response = $httpClient->get($url);
-        $response = json_decode($response->getBody(), true);
-        $name = $response['data']['name'];
-        if (empty($name)) {
+        $resultName = '';
+        try {
+            $storeId = false;
+            $websiteId = $observer->getWebsite();
+            $url = $this->_apiHelper->apiUrl()->getClientName($storeId, $websiteId);
+            $httpClient = $this->_apiHelper->getHttpClient($storeId, $websiteId);
+            $response = $httpClient->get($url);
+            $response = json_decode($response->getBody(), true);
+            $resultName = $response['data']['name'];
+        } catch (\Exception $exception) {
             $message = __('Error setting name client configuration. Empty Response. Url: ' . $url);
             $this->logger->debug($message);
-            throw new Exception($message);
         }
+
         $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
         $scopeId = 0;
 
@@ -72,7 +76,7 @@ class Save implements ObserverInterface
             $scope = ScopeInterface::SCOPE_WEBSITES;
             $scopeId = $website;
         }
-        $this->configWriter->save('printformer/version2group/v2clientName', $name, $scope, $scopeId);
+        $this->configWriter->save(ConfigHelper::XML_PATH_V2_NAME, $resultName, $scope, $scopeId);
         $this->cacheTypeList->cleanType('config');
     }
 

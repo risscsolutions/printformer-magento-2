@@ -6,8 +6,12 @@ use DateTimeImmutable;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\Website;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Rissc\Printformer\Setup\InstallSchema;
@@ -20,6 +24,7 @@ class Config extends AbstractHelper
     const XML_PATH_V2_API_KEY                       = 'printformer/version2group/v2apiKey';
     const XML_PATH_V2_IDENTIFIER                    = 'printformer/version2group/v2identifier';
     const XML_PATH_V2_URL                           = 'printformer/version2group/v2url';
+    const XML_PATH_V2_NAME                           = 'printformer/version2group/v2clientName';
 
     const XML_PATH_CONFIG_ENABLED                   = 'printformer/general/enabled';
     const XML_PATH_CONFIG_HOST                      = 'printformer/general/remote_host';
@@ -50,6 +55,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/hide_editor_button_on_configurable_product_page';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
+    const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
     const XML_PATH_CONFIG_FORMAT_NOTICE_TEXT        = 'printformer/format/notice_text';
@@ -72,6 +78,8 @@ class Config extends AbstractHelper
 
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
     const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
+
+    public const XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED = 'cataloginventory/item_options/manage_stock';
 
     /**
      * @var StoreManagerInterface
@@ -101,40 +109,87 @@ class Config extends AbstractHelper
     ) {
         parent::__construct($context);
         $this->storeManager = $storeManager;
-        $this->storeId = $this->storeManager->getStore()->getId();
         $this->encryptor = $encryptor;
     }
 
     /**
      * @return int
      */
-    public function getStoreId()
+    public function getStoreIdFromRequest()
     {
-        return $this->storeManager->getStore()->getId();
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isEnabled()
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $params = $this->_request->getParams();
+        return $this->_request->getParam('store_id', Store::DEFAULT_STORE_ID);
     }
 
     /**
      * @return int
      */
-    public function getDisplayMode()
+    public function getWebsiteIdFromRequest()
     {
-        return intval($this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_DISPLAY_MODE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        ));
+        $params = $this->_request->getParams();
+        return $this->_request->getParam('website_id');
+    }
+
+    /**
+     * @param $config
+     * @return bool
+     */
+    public function getConfigValue($config, $isSetFlag = false, $storeId = false, $websiteId = false, $forceChainedIds = false)
+    {
+        $resultValue = false;
+
+        if ((!is_numeric($storeId) && !is_numeric($websiteId))) {
+            $storeId = $this->getStoreIdFromRequest();
+            $websiteId = $this->getWebsiteIdFromRequest();
+        }
+
+        if ($websiteId) {
+            $scope = ScopeInterface::SCOPE_WEBSITE;
+        } else {
+            $scope = ScopeInterface::SCOPE_STORE;
+        }
+
+        if ($scope == ScopeInterface::SCOPE_WEBSITE) {
+            $scopeId = $websiteId;
+        } else {
+            $scopeId = $storeId;
+        }
+
+        if ($scope !== false && $scopeId !== false) {
+            if ($isSetFlag) {
+                $resultValue = $this->scopeConfig->isSetFlag(
+                    $config,
+                    $scope,
+                    $scopeId
+                );
+            } else {
+                $resultValue = $this->scopeConfig->getValue(
+                    $config,
+                    $scope,
+                    $scopeId
+                );
+            }
+        }
+
+        return $resultValue;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isEnabled($storeId = false, $websiteId = false)
+    {
+        $isEnabledResult = false;
+
+        return $this->getConfigValue(self::XML_PATH_CONFIG_ENABLED, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return int
+     */
+    public function getDisplayMode($storeId = false, $websiteId = false)
+    {
+        return intval($this->getConfigValue(self::XML_PATH_CONFIG_DISPLAY_MODE, false, $storeId, $websiteId));
     }
 
     /**
@@ -158,258 +213,170 @@ class Config extends AbstractHelper
      *
      * @throws \Exception
      */
-    public function isFullscreenButtonEnabled()
+    public function isFullscreenButtonEnabled($storeId = false, $websiteId = false)
     {
-        return $this->isFrameEnabled() && $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_FRAME_FULLSCREEN,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->isFrameEnabled() && $this->getConfigValue(self::XML_PATH_CONFIG_FRAME_FULLSCREEN, true, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getHost()
+    public function getHost($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_HOST,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_HOST, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getLicense()
+    public function getLicense($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_LICENSE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_LICENSE, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getSecret()
+    public function getSecret($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_SECRET,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_SECRET, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getLocale()
+    public function getLocale($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_LOCALE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_LOCALE, false, $storeId, $websiteId);
     }
 
     /**
      * @return array
      */
-    public function getOrderStatus()
+    public function getOrderStatus($storeId = false, $websiteId = false)
     {
-        return explode(',', $this->scopeConfig->getValue(
-                self::XML_PATH_CONFIG_STATUS,
-                ScopeInterface::SCOPE_STORES,
-                $this->getStoreId()
-            ) ?? ''
-        );
+        $configValue = $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID, false, $storeId, $websiteId);
+        return explode(',', $configValue ?? '');
     }
 
     /**
      * @return int
      */
-    public function getOrderDraftUpdate($storeId = null)
+    public function getOrderDraftUpdate($storeId = false, $websiteId = false)
     {
-        if (!$storeId){
-            $storeId = $this->getStoreId();
-        }
-
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_DRAFT_UPDATE,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE, false, $storeId, $websiteId);
     }
 
     /**
      * @return mixed
      */
-    public function getOrderDraftUpdateOrderId()
+    public function getOrderDraftUpdateOrderId($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID,
-            ScopeInterface::SCOPE_STORE,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID, false, $storeId, $websiteId);
     }
 
     /**
      * @return bool
      */
-    public function getRedirectProductOnCancel()
+    public function getRedirectProductOnCancel($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_REDIRECT_ON_CANCEL,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        ) == '1';
+        return $this->getConfigValue(self::XML_PATH_CONFIG_REDIRECT_ON_CANCEL, false, $storeId, $websiteId) == '1';
     }
 
     /**
      * @return string
      */
-    public function getConfigRedirect()
+    public function getConfigRedirect($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_REDIRECT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_REDIRECT, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getRedirectAlt()
+    public function getRedirectAlt($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_REDIRECT_URL,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_REDIRECT_URL, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getOpenEditorPreviewText()
+    public function getOpenEditorPreviewText($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_OPEN_EDITOR_PREVIEW_TEXT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_OPEN_EDITOR_PREVIEW_TEXT, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function isAllowSkipConfig()
+    public function isAllowSkipConfig($storeId = false, $websiteId = false)
     {
-        return intval($this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_SKIP_CONFIG,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        ));
+        return intval($this->getConfigValue(self::XML_PATH_CONFIG_SKIP_CONFIG, false, $storeId, $websiteId));
     }
 
     /**
      * @return string
      */
-    public function getGuestWishlistHint()
+    public function getGuestWishlistHint($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_WISHLIST_HINT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_WISHLIST_HINT, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function isUseImagePreview()
+    public function isUseImagePreview($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_IMAGE_PREVIEW,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_IMAGE_PREVIEW, true, $storeId, $websiteId);
     }
 
     /**
      * @return int
      */
-    public function getImagePreviewWidth()
+    public function getImagePreviewWidth($storeId = false, $websiteId = false)
     {
-        return (int)$this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_IMAGE_PREVIEW_WIDTH,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return (int)$this->getConfigValue(self::XML_PATH_CONFIG_IMAGE_PREVIEW_WIDTH, false, $storeId, $websiteId);
     }
 
     /**
      * @return int
      */
-    public function getImagePreviewHeight()
+    public function getImagePreviewHeight($storeId = false, $websiteId = false)
     {
-        return (int)$this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return (int)$this->getConfigValue(self::XML_PATH_CONFIG_IMAGE_PREVIEW_HEIGHT, false, $storeId, $websiteId);
     }
 
     /**
      * @return int
      */
-    public function getImageThumbnailWidth()
+    public function getImageThumbnailWidth($storeId = false, $websiteId = false)
     {
-        return (int)$this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_IMAGE_THUMB_WIDTH,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return (int)$this->getConfigValue(self::XML_PATH_CONFIG_IMAGE_THUMB_WIDTH, false, $storeId, $websiteId);
     }
 
     /**
      * @return int
      */
-    public function getImageThumbnailHeight()
+    public function getImageThumbnailHeight($storeId = false, $websiteId = false)
     {
-        return (int)$this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_IMAGE_THUMB_HEIGHT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return (int)$this->getConfigValue(self::XML_PATH_CONFIG_IMAGE_THUMB_HEIGHT, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getEditText()
+    public function getEditText($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_EDIT_TEXT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_EDIT_TEXT, false, $storeId, $websiteId);
     }
 
     /**
      * @return DateTimeImmutable
      */
-    public function getExpireDate(): DateTimeImmutable
+    public function getExpireDate($storeId = false, $websiteId = false): DateTimeImmutable
     {
-        $days = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_EXPIRE_DATE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $days = $this->getConfigValue(self::XML_PATH_CONFIG_EXPIRE_DATE, false, $storeId, $websiteId);
 
         $dateTimeImmutable = new DateTimeImmutable();
         $expireDateTimeImmutable = $dateTimeImmutable;
@@ -427,13 +394,9 @@ class Config extends AbstractHelper
     /**
      * @return DateTimeImmutable
      */
-    public function getExpireDateTimeStamp(): string
+    public function getExpireDateTimeStamp($storeId = false, $websiteId = false): string
     {
-        $days = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_EXPIRE_DATE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $days = $this->getConfigValue(self::XML_PATH_CONFIG_EXPIRE_DATE, false, $storeId, $websiteId);
 
         return (new \DateTime())->add(\DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
     }
@@ -441,49 +404,41 @@ class Config extends AbstractHelper
     /**
      * @return string
      */
-    public function getButtonText()
+    public function getButtonText($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_BUTTON_TEXT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_BUTTON_TEXT, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getButtonCss()
+    public function getUploadTemplateId($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_BUTTON_CSS,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function isFormatChangeNotice()
+    public function getButtonCss($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_BUTTON_CSS, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getCloseNoticeText()
+    public function isFormatChangeNotice($storeId = false, $websiteId = false)
     {
-        $text = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_CLOSE_NOTICE_TEXT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCloseNoticeText($storeId = false, $websiteId = false)
+    {
+        $text = $this->getConfigValue(self::XML_PATH_CONFIG_CLOSE_NOTICE_TEXT, false, $storeId, $websiteId);
 
         if($text == "") {
             $text = 'Are you sure?';
@@ -495,184 +450,124 @@ class Config extends AbstractHelper
     /**
      * @return string
      */
-    public function getFormatNoticeText()
+    public function getFormatNoticeText($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_FORMAT_NOTICE_TEXT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_NOTICE_TEXT, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getFormatQueryParameter()
+    public function getFormatQueryParameter($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_FORMAT_QUERY_PARAMETER,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_QUERY_PARAMETER, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function isFormatAttributeEnabled()
+    public function isFormatAttributeEnabled($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_FORMAT_ATTRIBUTE_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_ATTRIBUTE_ENABLED, true, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getFormatAttributeName()
+    public function getFormatAttributeName($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_FORMAT_ATTRIBUTE_NAME,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_ATTRIBUTE_NAME, false, $storeId, $websiteId);
     }
 
     /**
      * @return array
      */
-    public function getFormatAttributeValues()
+    public function getFormatAttributeValues($storeId = false, $websiteId = false)
     {
-        $value = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_FORMAT_ATTRIBUTE_VALUES,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $value = $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_ATTRIBUTE_VALUES, false, $storeId, $websiteId);
         return unserialize($value);
     }
 
     /**
      * @return string
      */
-    public function isFormatOptionEnabled()
+    public function isFormatOptionEnabled($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_FORMAT_OPTION_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_OPTION_ENABLED, true, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getFormatOptionName()
+    public function getFormatOptionName($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_FORMAT_OPTION_NAME,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_OPTION_NAME, false, $storeId, $websiteId);
     }
 
     /**
      * @return array
      */
-    public function getFormatOptionValues()
+    public function getFormatOptionValues($storeId = false, $websiteId = false)
     {
-        $value = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_FORMAT_OPTION_VALUES,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $value = $this->getConfigValue(self::XML_PATH_CONFIG_FORMAT_OPTION_VALUES, false, $storeId, $websiteId);
         return unserialize($value);
     }
 
     /**
      * @return string
      */
-    public function getColorQueryParameter()
+    public function getColorQueryParameter($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_COLOR_QUERY_PARAMETER,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_QUERY_PARAMETER, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function isColorAttributeEnabled()
+    public function isColorAttributeEnabled($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_COLOR_ATTRIBUTE_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_ATTRIBUTE_ENABLED, true, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getColorAttributeName()
+    public function getColorAttributeName($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_COLOR_ATTRIBUTE_NAME,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_ATTRIBUTE_NAME, false, $storeId, $websiteId);
     }
 
     /**
      * @return array
      */
-    public function getColorAttributeValues()
+    public function getColorAttributeValues($storeId = false, $websiteId = false)
     {
-        $value = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_COLOR_ATTRIBUTE_VALUES,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $value = $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_ATTRIBUTE_VALUES, false, $storeId, $websiteId);
         return unserialize($value);
     }
 
     /**
      * @return string
      */
-    public function isColorOptionEnabled()
+    public function isColorOptionEnabled($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_COLOR_OPTION_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_OPTION_ENABLED, true, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getColorOptionName()
+    public function getColorOptionName($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_COLOR_OPTION_NAME,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_OPTION_NAME, false, $storeId, $websiteId);
     }
 
     /**
      * @return array
      */
-    public function getColorOptionValues()
+    public function getColorOptionValues($storeId = false, $websiteId = false)
     {
-        $value = $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_COLOR_OPTION_VALUES,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $value = $this->getConfigValue(self::XML_PATH_CONFIG_COLOR_OPTION_VALUES, false, $storeId, $websiteId);
         return unserialize($value);
     }
 
@@ -680,18 +575,10 @@ class Config extends AbstractHelper
      * @param int $storeId
      * @return mixed
      */
-    public function getClientApiKey($storeId = null)
+    public function getClientApiKey($storeId = false, $websiteId = false)
     {
         $decryptedKey = null;
-        if ($storeId === null) {
-            $storeId = $this->getStoreId();
-        }
-
-        $encryptedKey = $this->scopeConfig->getValue(
-            self::XML_PATH_V2_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $storeId
-        );
+        $encryptedKey = $this->getConfigValue(self::XML_PATH_V2_API_KEY, false, $storeId, $websiteId);
 
         if (!empty($encryptedKey)){
             $decryptedKey = $this->encryptor->decrypt($encryptedKey);
@@ -703,54 +590,47 @@ class Config extends AbstractHelper
     /**
      * @return string
      */
-    public function getClientIdentifier($storeId = null)
+    public function getClientIdentifier($storeId = false, $websiteId = false)
     {
-        if ($storeId === null) {
-            $storeId = $this->getStoreId();
-        }
-
-
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_V2_IDENTIFIER,
-            ScopeInterface::SCOPE_STORES,
-            $storeId
-        );
-    }
-
-    /**
-     * @return bool
-     */
-    public function isDeleteButtonEnabled()
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_SHOW_DELETE_BUTTON,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
-    }
-
-    /**
-     * @return bool
-     */
-    public function hideEditorButtonOnConfigurableProductPage()
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_V2_IDENTIFIER, false, $storeId, $websiteId);
     }
 
     /**
      * @return string
      */
-    public function getDeleteConfirmText()
+    public function getClientUrl($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CONFIG_DELETE_CONFIRM_TEXT,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        $clientUrl = $this->getConfigValue(self::XML_PATH_V2_URL, false, $storeId, $websiteId);
+        $resultClientUrl = '';
+        if (!empty($clientUrl)) {
+            $resultClientUrl = rtrim($clientUrl, "/");
+        }
+
+        return $resultClientUrl;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeleteButtonEnabled($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_SHOW_DELETE_BUTTON, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hideEditorButtonOnConfigurableProductPage($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeleteConfirmText($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_DELETE_CONFIRM_TEXT, false, $storeId, $websiteId);
     }
 
     /**
@@ -804,12 +684,16 @@ class Config extends AbstractHelper
     /**
      * @return string
      */
-    public function isDataTransferEnabled()
+    public function isDataTransferEnabled($storeId = false, $websiteId = false)
     {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_CONFIG_TRANSFER_USER_DATA,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
+        return $this->getConfigValue(self::XML_PATH_CONFIG_TRANSFER_USER_DATA, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isConfigManageStockEnabled(): bool
+    {
+        return $this->getConfigValue(self::XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED, false);
     }
 }
