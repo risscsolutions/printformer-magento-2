@@ -15,6 +15,7 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\ProductFactory;
+use Rissc\Printformer\Helper\Config;
 
 /**
  * Class ConfigurableProduct
@@ -22,8 +23,6 @@ use Magento\Catalog\Model\ProductFactory;
  */
 class ConfigurableProduct extends AbstractHelper
 {
-    public const XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED = 'cataloginventory/item_options/manage_stock';
-
     /**
      * @var ConfigurableResource
      */
@@ -50,6 +49,7 @@ class ConfigurableProduct extends AbstractHelper
     protected $storeId;
     private ProductRepositoryInterface $productRepository;
     private ProductFactory $productFactory;
+    private Config $configHelper;
 
     /**
      * ConfigurableProduct constructor.
@@ -67,7 +67,8 @@ class ConfigurableProduct extends AbstractHelper
         Attribute $attributeFactory,
         StoreManagerInterface $storeManager,
         ProductRepositoryInterface $productRepository,
-        ProductFactory $productFactory
+        ProductFactory $productFactory,
+        Config $configHelper
     ) {
         $this->resourceConfigurable = $resourceConfigurable;
         $this->configurable = $configurable;
@@ -75,24 +76,13 @@ class ConfigurableProduct extends AbstractHelper
         $this->storeManager = $storeManager;
         $this->productRepository = $productRepository;
         $this->productFactory = $productFactory;
+        $this->configHelper = $configHelper;
         //set store id
         try {
             $this->storeId = $this->storeManager->getStore()->getId();
         } catch (NoSuchEntityException $e) {
         }
         parent::__construct($context);
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isConfigManageStockEnabled(): bool
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED,
-            ScopeInterface::SCOPE_STORES,
-            $this->getStoreId()
-        );
     }
 
     /**
@@ -198,7 +188,7 @@ class ConfigurableProduct extends AbstractHelper
         );
         $productCollection->addAttributeToSelect('_inv_item.manage_stock');
 
-        $configManageStock = $this->isConfigManageStockEnabled();
+        $configManageStock = $this->configHelper->isConfigManageStockEnabled();
         //nested where for core-config-manage-stock filter handling
         if ($configManageStock) {
             $productCollection->getSelect()->where('

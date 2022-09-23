@@ -146,8 +146,7 @@ class Draft
         $this->_httpClient = $this->getGuzzleClient();
 
         try {
-            $storeId = $storeManager->getStore()->getId();
-            $apiKey = $this->_config->getClientApiKey($storeId);
+            $apiKey = $this->_config->getClientApiKey();
             if (!empty($apiKey)) {
                 $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
             }
@@ -160,17 +159,10 @@ class Draft
      */
     public function getClientApiKey()
     {
-        if ($this->apiKey === null) {
-            $encryptedKey = $this->_scopeConfig->getValue(Config::XML_PATH_V2_API_KEY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-
-            if (!empty($encryptedKey)){
-                $decryptedKey = $this->encryptor->decrypt($encryptedKey);
-                if (!empty($decryptedKey)){
-                    $this->apiKey = $decryptedKey;
-                }
-            }
+        $apiKey = $this->_config->getClientApiKey();
+        if (!empty($apiKey)){
+            $this->apiKey = $apiKey;
         }
-
         return $this->apiKey;
     }
 
@@ -222,11 +214,6 @@ class Draft
     public function setUserIdentifier($userIdentifier)
     {
         $this->userIdentifier = $userIdentifier;
-    }
-
-    public function getClientIdentifier()
-    {
-        return $this->_scopeConfig->getValue('printformer/version2group/v2identifier', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**

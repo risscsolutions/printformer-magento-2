@@ -8,6 +8,7 @@ use Magento\Framework\Registry;
 use Magento\Framework\Data\FormFactory;
 use Magento\Backend\Block\Widget\Form\Generic;
 use Magento\Backend\Block\Widget\Tab\TabInterface;
+use Rissc\Printformer\Helper\Config;
 
 class PrintformerIdentifier extends Generic implements TabInterface
 {
@@ -15,6 +16,7 @@ class PrintformerIdentifier extends Generic implements TabInterface
      * @var CustomerFactory
      */
     protected $_customerFactory;
+    private Config $configHelper;
 
     /**
      * Crossmedia constructor.
@@ -29,9 +31,11 @@ class PrintformerIdentifier extends Generic implements TabInterface
         Registry $registry,
         FormFactory $formFactory,
         CustomerFactory $customerFactory,
+        Config $configHelper,
         array $data = []
     ) {
         $this->_customerFactory = $customerFactory;
+        $this->configHelper = $configHelper;
         parent::__construct($context, $registry, $formFactory, $data);
     }
 
@@ -42,7 +46,7 @@ class PrintformerIdentifier extends Generic implements TabInterface
      */
     public function canShowTab()
     {
-        return $this->_scopeConfig->isSetFlag(\Rissc\Printformer\Helper\Config::XML_PATH_CONFIG_ENABLED);
+        return $this->configHelper->isEnabled();
     }
 
     /**

@@ -287,13 +287,11 @@ class Order extends Api
      */
     public function getTemplateIdentifier($storeId)
     {
-        $templateIdentifier = $this->scopeConfig->getValue('printformer/general/printformer_upload_template_id', ScopeInterface::SCOPE_STORES, $storeId);
-        $defaultTemplateIdentifier = $this->scopeConfig->getValue('printformer/general/printformer_upload_template_id', ScopeInterface::SCOPE_STORES, 0);
-        if (!isset($templateIdentifier) && isset($defaultTemplateIdentifier)){
-            $templateIdentifier = $defaultTemplateIdentifier;
-        } elseif(!isset($templateIdentifier) && !isset($defaultTemplateIdentifier)) {
+        $templateIdentifier = $this->_config->getUploadTemplateId();
+        if (empty($templateIdentifier)) {
             $templateIdentifier = 0;
         }
+
         return $templateIdentifier;
     }
 
