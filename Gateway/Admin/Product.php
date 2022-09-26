@@ -132,12 +132,12 @@ class Product
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function syncProducts($storeId = Store::DEFAULT_STORE_ID)
+    public function syncProducts($storeId = false, $websiteId = false)
     {
         $storeIds = [];
         if ($storeId == Store::DEFAULT_STORE_ID) {
-            $defaultApiSecret = $this->configHelper->getClientApiKey();
-            $defaultRemoteHost = $this->urlHelper->getAdminProducts();
+            $defaultApiSecret = $this->configHelper->getClientApiKey(1,1);
+            $defaultRemoteHost = $this->urlHelper->getAdminProducts(1,1);
             /** @var Website $website */
             foreach ($this->_websiteRepository->getList() as $website) {
                 /** @var Store $store */
@@ -154,9 +154,8 @@ class Product
         }
         $errors = [];
 
-        $url = $this->urlHelper->getAdminProducts();
-
-        $apiKey = $this->configHelper->getClientApiKey($storeId);
+        $url = $this->urlHelper->getAdminProducts($storeId, $websiteId);
+        $apiKey = $this->configHelper->getClientApiKey($storeId, $websiteId);
 
         if (empty($apiKey)) {
             throw new Exception(__('There are no available credentials for this website. Please check your settings in admin section.'));

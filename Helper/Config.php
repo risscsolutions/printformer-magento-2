@@ -134,7 +134,7 @@ class Config extends AbstractHelper
      * @param $config
      * @return bool
      */
-    public function getConfigValue($config, $isSetFlag = false, $storeId = false, $websiteId = false, $forceChainedIds = false)
+    public function getConfigValue($config, $isSetFlag = false, $storeId = false, $websiteId = false)
     {
         $resultValue = false;
 
@@ -179,8 +179,6 @@ class Config extends AbstractHelper
      */
     public function isEnabled($storeId = false, $websiteId = false)
     {
-        $isEnabledResult = false;
-
         return $this->getConfigValue(self::XML_PATH_CONFIG_ENABLED, true, $storeId, $websiteId);
     }
 
@@ -592,6 +590,10 @@ class Config extends AbstractHelper
      */
     public function getClientIdentifier($storeId = false, $websiteId = false)
     {
+        if ($storeId === false && $websiteId === false) {
+            $storeId = $this->storeManager->getStore()->getId();
+            $websiteId = $this->storeManager->getWebsite()->getId();
+        }
         return $this->getConfigValue(self::XML_PATH_V2_IDENTIFIER, false, $storeId, $websiteId);
     }
 
@@ -600,6 +602,10 @@ class Config extends AbstractHelper
      */
     public function getClientUrl($storeId = false, $websiteId = false)
     {
+        if ($storeId === false && $websiteId === false) {
+            $storeId = $this->storeManager->getStore()->getId();
+            $websiteId = $this->storeManager->getWebsite()->getId();
+        }
         $clientUrl = $this->getConfigValue(self::XML_PATH_V2_URL, false, $storeId, $websiteId);
         $resultClientUrl = '';
         if (!empty($clientUrl)) {

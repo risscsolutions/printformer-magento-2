@@ -182,6 +182,15 @@ class Api extends AbstractHelper
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
 
+        try {
+            $storeId = $storeManager->getStore()->getId();
+            $apiKey = $this->_config->getClientApiKey($storeId);
+            if (!empty($apiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+            }
+        } catch (NoSuchEntityException $e) {
+        }
+
         parent::__construct($context);
     }
 
@@ -198,6 +207,11 @@ class Api extends AbstractHelper
      */
     public function getHttpClient($storeId = false, $websiteId = false)
     {
+        if ($storeId == false && $websiteId == false){
+            $storeId = $this->getStoreManager()->getStore()->getId();
+            $websiteId = $this->getStoreManager()->getWebsite()->getId();
+        }
+
         if (!isset($this->_httpClients[$storeId])) {
             $this->_httpClients[$storeId] = new Client([
                 'base_url' => $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId),

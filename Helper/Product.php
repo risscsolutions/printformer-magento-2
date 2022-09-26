@@ -108,20 +108,20 @@ class Product extends AbstractHelper
      * @param array $childProductIds
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [])
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [], $additionalDefaultFilter = true)
     {
         $connection = $this->resourceConnection->getConnection();
 
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
 
-        $useDefaultStore = true;
-        $apiUrl = $this->configHelper->getClientUrl();
-        $apiKey = $this->configHelper->getClientApiKey();
-        $apiIdentifier = $this->configHelper->getClientIdentifier();
+        $apiKey = $this->configHelper->getClientApiKey($storeId);
 
-        if (!empty($apiUrl) && !empty($apiKey) && !empty($apiIdentifier)) {
-            $useDefaultStore = false;
+        $useDefaultStore = false;
+        if ($additionalDefaultFilter) {
+            if (!empty($apiKey)) {
+                $useDefaultStore = false;
+            }
         }
 
         if ($useDefaultStore){
@@ -187,7 +187,7 @@ class Product extends AbstractHelper
      */
     public function getCatalogProductPrintformerProductsArray($productId, $storeId = 0)
     {
-        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId);
+        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, [], false);
 
         foreach($result as &$row) {
             $printformerProduct = $this->productFactory->create();

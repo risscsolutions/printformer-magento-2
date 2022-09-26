@@ -143,10 +143,12 @@ class Draft
         $this->encryptor = $encryptor;
         $this->_config = $config;
         $this->_urlHelper->initVersionHelper();
-        $this->_httpClient = $this->getGuzzleClient();
+        $storeId = $storeManager->getStore()->getId();
+        $websiteId = $storeManager->getWebsite()->getId();
+        $this->_httpClient = $this->getGuzzleClient($storeId, $websiteId);
 
         try {
-            $apiKey = $this->_config->getClientApiKey();
+            $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
             if (!empty($apiKey)) {
                 $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
             }
@@ -157,9 +159,9 @@ class Draft
     /**
      * @return mixed
      */
-    public function getClientApiKey()
+    public function getClientApiKey($storeId, $websiteId)
     {
-        $apiKey = $this->_config->getClientApiKey();
+        $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
         if (!empty($apiKey)){
             $this->apiKey = $apiKey;
         }
@@ -265,7 +267,7 @@ class Draft
     /**
      * @return Client
      */
-    protected function getGuzzleClient()
+    protected function getGuzzleClient($storeId, $websiteId)
     {
         $url = $this->_urlHelper->getDraft();
 
@@ -273,7 +275,7 @@ class Draft
             'Content-Type:' => 'application/json',
             'Accept' => 'application/json'
         ];
-        $header['Authorization'] = 'Bearer ' . $this->getClientApiKey();
+        $header['Authorization'] = 'Bearer ' . $this->getClientApiKey($storeId, $websiteId);
 
         return new Client([
             'base_uri' => $url,
