@@ -91,6 +91,7 @@ class Configurable
     {
         if ($this->configHelper->isUseImagePreview()) {
             $config = $this->decoder->decode($result);
+            $config['filterConfigurableProduct'] = $this->configHelper->filterForConfigurableProduct();
             foreach ($config['images'] as $productId => $image) {
                 $product = $this->productRepository->getById($productId);
                 $images = $product->getMediaGalleryImages();

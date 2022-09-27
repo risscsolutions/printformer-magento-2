@@ -941,19 +941,6 @@ class Printformer extends AbstractView
         return $this->configHelper->isDeleteButtonEnabled();
     }
 
-    /**
-     * @param $product
-     * @return bool
-     */
-    public function canShowEditorButtonOnProductPage($product)
-    {
-        if ($product->getTypeId() === ConfigurableType::TYPE_CODE && $this->configHelper->hideEditorButtonOnConfigurableProductPage()) {
-            return false;
-        }
-
-        return true;
-    }
-
     public function getDeleteConfirmText()
     {
         return $this->configHelper->getDeleteConfirmText();

@@ -193,6 +193,20 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="filter_for_default_store" translate="label" type="select" sortOrder="210" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Use Default Store filter to get Printformer Products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="filter_for_configurable_product" translate="label" type="select" sortOrder="210" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Use Configurable Product filter to get Printformer Products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
             </group>
             <group id="draft" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Additional Draft Configuration</label>

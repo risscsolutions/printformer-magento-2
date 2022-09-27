@@ -108,21 +108,13 @@ class Product extends AbstractHelper
      * @param array $childProductIds
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [], $additionalDefaultFilter = true)
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [])
     {
         $connection = $this->resourceConnection->getConnection();
 
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
-
-        $apiKey = $this->configHelper->getClientApiKey($storeId);
-
-        $useDefaultStore = false;
-        if ($additionalDefaultFilter) {
-            if (!empty($apiKey)) {
-                $useDefaultStore = false;
-            }
-        }
+        $useDefaultStore = $this->configHelper->filterForDefaultStore();
 
         if ($useDefaultStore){
             $select->where("store_id = 0");
@@ -187,7 +179,7 @@ class Product extends AbstractHelper
      */
     public function getCatalogProductPrintformerProductsArray($productId, $storeId = 0)
     {
-        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, [], false);
+        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, []);
 
         foreach($result as &$row) {
             $printformerProduct = $this->productFactory->create();
@@ -343,7 +335,7 @@ class Product extends AbstractHelper
      */
     public function getConfigurableAndChildrens($mainProduct)
     {
-        if ($mainProduct->getTypeId() === ConfigurableProductModel::TYPE_CODE) {
+        if ($mainProduct->getTypeId() === ConfigurableProductModel::TYPE_CODE && !$this->configHelper->filterForConfigurableProduct()) {
             $childProducts = $mainProduct->getTypeInstance()->getUsedProducts($mainProduct);
             foreach ($childProducts as $simpleProductKey => $simpleProduct) {
                 $_attributes = $mainProduct->getTypeInstance(true)->getConfigurableAttributes($mainProduct);

@@ -52,10 +52,12 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
-    const XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/hide_editor_button_on_configurable_product_page';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
+
+    const XML_PATH_CONFIG_FILTER_FOR_DEFAULT_STORE = 'printformer/general/filter_for_default_store';
+    const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
     const XML_PATH_CONFIG_FORMAT_NOTICE_TEXT        = 'printformer/format/notice_text';
@@ -624,11 +626,31 @@ class Config extends AbstractHelper
     }
 
     /**
+     * @param $storeId
+     * @param $websiteId
      * @return bool
      */
-    public function hideEditorButtonOnConfigurableProductPage($storeId = false, $websiteId = false)
+    public function filterForDefaultStore($storeId = false, $websiteId = false)
     {
-        return $this->getConfigValue(self::XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE, true, $storeId, $websiteId);
+        if ($storeId === false && $websiteId === false) {
+            $storeId = $this->storeManager->getStore()->getId();
+            $websiteId = $this->storeManager->getWebsite()->getId();
+        }
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_DEFAULT_STORE, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function filterForConfigurableProduct($storeId = false, $websiteId = false)
+    {
+        if ($storeId === false && $websiteId === false) {
+            $storeId = $this->storeManager->getStore()->getId();
+            $websiteId = $this->storeManager->getWebsite()->getId();
+        }
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
     }
 
     /**
