@@ -56,7 +56,8 @@ class SetQuoteItemDraftId implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        if (!$this->configHelper->isEnabled()) {
+        $storeId = $this->storeManager->getStore()->getId();
+        if (!$this->configHelper->isEnabled($storeId)) {
             return;
         }
         try {

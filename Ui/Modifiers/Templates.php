@@ -106,12 +106,12 @@ class Templates implements ModifierInterface
      */
     public function modifyData(array $data)
     {
-        if (!$this->configHelper->isEnabled()) {
+        $storeId = $this->locator->getProduct()->getStoreId();
+        $productId = $this->locator->getProduct()->getId();
+
+        if (!$this->configHelper->isEnabled($storeId)) {
             return $data;
         }
-
-        $productId = $this->locator->getProduct()->getId();
-        $storeId = $this->locator->getProduct()->getStoreId();
 
         $data[$productId]['printformer'][self::DATA_SCOPE] = [];
         $this->_session->setPrintformerTemplatesStoreId($storeId);

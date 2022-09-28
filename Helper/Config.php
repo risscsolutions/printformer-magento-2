@@ -119,22 +119,50 @@ class Config extends AbstractHelper
      */
     public function getStoreIdFromRequest()
     {
-        $params = $this->_request->getParams();
-        return $this->_request->getParam('store_id', Store::DEFAULT_STORE_ID);
+        return $this->_request->getParam('store_id');
+    }
+
+    /**
+     * @return int
+      */
+    public function getWebsiteIdFromRequest()
+    {
+        return $this->_request->getParam('website_id');
     }
 
     /**
      * @return int
      */
-    public function getWebsiteIdFromRequest()
+    public function getStoreIdFromStoreManager()
     {
-        $params = $this->_request->getParams();
-        return $this->_request->getParam('website_id');
+        $result = false;
+        try {
+            $result = $this->storeManager->getStore()->getId();
+        } catch (NoSuchEntityException $e) {
+        }
+        return $result;
+
+    }
+
+    /**
+     * @return int
+     */
+    public function getWebsiteIdFromStoreManager()
+    {
+        $result = false;
+        try {
+             $result = $this->storeManager->getWebsite()->getId();
+        } catch (LocalizedException $e) {
+        }
+        return $result;
     }
 
     /**
      * @param $config
-     * @return bool
+     * @param $isSetFlag
+     * @param $storeId
+     * @param $websiteId
+     * @return bool|mixed
      */
     public function getConfigValue($config, $isSetFlag = false, $storeId = false, $websiteId = false)
     {
@@ -144,6 +172,16 @@ class Config extends AbstractHelper
             $storeId = $this->getStoreIdFromRequest();
             $websiteId = $this->getWebsiteIdFromRequest();
         }
+
+        if ((!is_numeric($storeId) && !is_numeric($websiteId))) {
+            $storeId = $this->getStoreIdFromStoreManager();
+            $websiteId = $this->getWebsiteIdFromStoreManager();
+        }
+
+        if ((!is_numeric($storeId) && !is_numeric($websiteId))) {
+            $storeId = Store::DEFAULT_STORE_ID;
+        }
+
 
         if (str_contains($config, 'printformer/version2group')) {
             if ($this->filterForDefaultStore($storeId, $websiteId)) {
@@ -599,10 +637,6 @@ class Config extends AbstractHelper
      */
     public function getClientIdentifier($storeId = false, $websiteId = false)
     {
-        if ($storeId === false && $websiteId === false) {
-            $storeId = $this->storeManager->getStore()->getId();
-            $websiteId = $this->storeManager->getWebsite()->getId();
-        }
         return $this->getConfigValue(self::XML_PATH_V2_IDENTIFIER, false, $storeId, $websiteId);
     }
 
@@ -611,10 +645,6 @@ class Config extends AbstractHelper
      */
     public function getClientUrl($storeId = false, $websiteId = false)
     {
-        if ($storeId === false && $websiteId === false) {
-            $storeId = $this->storeManager->getStore()->getId();
-            $websiteId = $this->storeManager->getWebsite()->getId();
-        }
         $clientUrl = $this->getConfigValue(self::XML_PATH_V2_URL, false, $storeId, $websiteId);
         $resultClientUrl = '';
         if (!empty($clientUrl)) {
@@ -639,10 +669,6 @@ class Config extends AbstractHelper
      */
     public function filterForDefaultStore($storeId = false, $websiteId = false)
     {
-        if ($storeId === false && $websiteId === false) {
-            $storeId = $this->storeManager->getStore()->getId();
-            $websiteId = $this->storeManager->getWebsite()->getId();
-        }
         return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_DEFAULT_STORE, true, $storeId, $websiteId);
     }
 
@@ -653,10 +679,6 @@ class Config extends AbstractHelper
      */
     public function filterForConfigurableProduct($storeId = false, $websiteId = false)
     {
-        if ($storeId === false && $websiteId === false) {
-            $storeId = $this->storeManager->getStore()->getId();
-            $websiteId = $this->storeManager->getWebsite()->getId();
-        }
         return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
     }
 
