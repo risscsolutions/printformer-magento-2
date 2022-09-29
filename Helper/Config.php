@@ -679,7 +679,7 @@ class Config extends AbstractHelper
      */
     public function getDraftIdsFromSpecificItemType($item)
     {
-        if($this->configHelper->useChildProduct($item->getProductType())) {
+        if($this->useChildProduct($item->getProductType())) {
             $childItems = $item->getChildren();
             if (!empty($childItems)) {
                 $firstChildItem = $childItems[0];
