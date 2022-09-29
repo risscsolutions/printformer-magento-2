@@ -329,7 +329,7 @@ class Product extends AbstractHelper
      */
     public function getConfigurableAndChildrens($mainProduct)
     {
-        if ($mainProduct->getTypeId() === ConfigurableProductModel::TYPE_CODE && !$this->configHelper->filterForConfigurableProduct()) {
+        if ($this->configHelper->useChildProduct($mainProduct->getTypeId())) {
             $childProducts = $mainProduct->getTypeInstance()->getUsedProducts($mainProduct);
             foreach ($childProducts as $simpleProductKey => $simpleProduct) {
                 $_attributes = $mainProduct->getTypeInstance(true)->getConfigurableAttributes($mainProduct);
