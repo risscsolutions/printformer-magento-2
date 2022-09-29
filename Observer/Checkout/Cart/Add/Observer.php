@@ -7,6 +7,7 @@ use \Magento\Customer\Model\Session as CustomerSession;
 use \Magento\Catalog\Model\Session as CatalogSession;
 use \Rissc\Printformer\Controller\Editor\Save;
 use Rissc\Printformer\Helper\Session;
+use Rissc\Printformer\Helper\Config;
 
 class Observer
     implements ObserverInterface
@@ -17,6 +18,7 @@ class Observer
     /** @var CatalogSession */
     protected $_catalogSession;
     private Session $sessionHelper;
+    private Config $configHelper;
 
     /**
      * Observer constructor.
@@ -28,12 +30,14 @@ class Observer
     public function __construct(
         CustomerSession $_customerSession,
         CatalogSession $_catalogSession,
-        Session $sessionHelper
+        Session $sessionHelper,
+        Config $configHelper
     )
     {
         $this->_customerSession = $_customerSession;
         $this->_catalogSession = $_catalogSession;
         $this->sessionHelper = $sessionHelper;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -46,8 +50,15 @@ class Observer
         $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
         $product = $observer->getData('product');
         if (isset($product)){
-            if ($quoteChildren = $observer->getQuoteItem()->getChildren()) {
-                $productId = $quoteChildren[0]['product']->getData('entity_id');
+            $productItem = $observer->getQuoteItem();
+            if ($this->configHelper->useChildProduct($productItem->getProductType())) {
+                $quoteChildren = $productItem->getChildren();
+                if (is_array($quoteChildren) && !empty($quoteChildren) && !empty($quoteChildren[0])){
+                    $firstProduct = $quoteChildren[0]['product'];
+                    if (!empty($firstProduct)) {
+                        $productId = $firstProduct->getData('entity_id');
+                    }
+                }
             } else {
                 $productId = $product->getData('entity_id');
             }

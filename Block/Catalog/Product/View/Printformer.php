@@ -254,7 +254,7 @@ class Printformer extends AbstractView
 
         $printformerProducts = [];
 
-        if ($product->getTypeId() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+        if ($this->configHelper->useChildProduct($product->getTypeId())) {
             $childProducts = $product->getTypeInstance()->getUsedProducts($product);
             $childProductIds = [];
             foreach ($childProducts as $simpleProductKey => $simpleProduct) {
@@ -702,7 +702,7 @@ class Printformer extends AbstractView
                         $quoteItem = $this->cart->getQuote()->getItemById($id);
                         $product = $quoteItem->getProduct();
                         $buyRequest = $quoteItem->getBuyRequest();
-                        if ($product->getTypeId() === Config::CONFIGURABLE_TYPE_CODE) {
+                        if ($this->configHelper->useChildProduct($product->getTypeId())) {
                             $children = $quoteItem->getChildren();
                             foreach ($children as $child) {
                                 $buyRequest = $child->getBuyRequest();

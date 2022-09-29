@@ -35,6 +35,7 @@ class Configurable extends parentConfigurable
     private Cart $cart;
     private WishListItem $wishlistItem;
     private CartHelper $cartHelper;
+    private Config $configHelper;
 
     public function __construct(
         Context $context,
@@ -52,6 +53,7 @@ class Configurable extends parentConfigurable
         Cart $cart,
         WishListItem $wishlistItem,
         CartHelper $cartHelper,
+        Config $configHelper,
         array $data = [],
         SwatchAttributesProvider $swatchAttributesProvider = null,
         UrlBuilder $imageUrlBuilder = null
@@ -64,6 +66,7 @@ class Configurable extends parentConfigurable
         $this->cart = $cart;
         $this->wishlistItem = $wishlistItem;
         $this->cartHelper = $cartHelper;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -104,7 +107,7 @@ class Configurable extends parentConfigurable
                     case 'checkout':
                         $quoteItem = $this->cart->getQuote()->getItemById($id);
                         if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                            if ($quoteItem->getProductType() === Config::CONFIGURABLE_TYPE_CODE) {
+                            if ($this->configHelper->useChildProduct($quoteItem->getProductType())) {
                                 $children = $quoteItem->getChildren();
                                 if (!empty($children)) {
                                     $firstChild = $children[0];
@@ -149,7 +152,7 @@ class Configurable extends parentConfigurable
     {
         $product = $this->getProduct();
 
-        if ($product->getTypeId() === Config::CONFIGURABLE_TYPE_CODE) {
+        if ($this->configHelper->useChildProduct($product->getTypeId())) {
             $childProducts = $product->getTypeInstance()->getUsedProducts($product);
             $childProductIds = [];
             foreach ($childProducts as $simpleProduct) {

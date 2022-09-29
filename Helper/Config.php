@@ -56,7 +56,6 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
-    const XML_PATH_CONFIG_FILTER_FOR_DEFAULT_STORE = 'printformer/general/filter_for_default_store';
     const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
@@ -667,16 +666,6 @@ class Config extends AbstractHelper
      * @param $websiteId
      * @return bool
      */
-    public function filterForDefaultStore($storeId = false, $websiteId = false)
-    {
-        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_DEFAULT_STORE, true, $storeId, $websiteId);
-    }
-
-    /**
-     * @param $storeId
-     * @param $websiteId
-     * @return bool
-     */
     public function filterForConfigurableProduct($storeId = false, $websiteId = false)
     {
         return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
@@ -698,7 +687,7 @@ class Config extends AbstractHelper
      */
     public function getDraftIdsFromSpecificItemType($item)
     {
-        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+        if($this->configHelper->useChildProduct($item->getProductType())) {
             $childItems = $item->getChildren();
             if (!empty($childItems)) {
                 $firstChildItem = $childItems[0];
@@ -722,7 +711,7 @@ class Config extends AbstractHelper
      */
     public function setDraftsOnItemType($item, $draftIds): Item
     {
-        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+        if($this->useChildProduct($item->getProductType())) {
             $childItems = $item->getChildren();
             if (!empty($childItems)){
                 $firstChildItem = $childItems[0];
@@ -752,5 +741,20 @@ class Config extends AbstractHelper
     public function isConfigManageStockEnabled(): bool
     {
         return $this->getConfigValue(self::XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED, false);
+    }
+
+    /**
+     * Function to verify if simple (child) or configurable (parent) product is used.
+     * @param string $productType
+     * @return bool
+     */
+    public function useChildProduct(string $productType): bool
+    {
+        if($productType === $this::CONFIGURABLE_TYPE_CODE && !$this->filterForConfigurableProduct()) {
+            $result = true;
+        } else {
+            $result = false;
+        }
+        return $result;
     }
 }

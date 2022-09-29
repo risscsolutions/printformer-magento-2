@@ -70,7 +70,7 @@ class SetQuoteItemDraftId implements ObserverInterface
                 return;
             }
 
-            if ($item->getProductType() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+            if ($this->configHelper->useChildProduct($item->getProductType())) {
                 $childProduct = $item->getChildren();
                 if (is_array($childProduct) && !empty($childProduct)) {
                     $item = $childProduct[0];

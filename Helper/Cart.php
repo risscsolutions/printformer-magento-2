@@ -16,6 +16,7 @@ class Cart extends AbstractHelper
     private Product $productHelper;
     private CartModel $cartModel;
     private WishlistItemModel $wishlistItemModel;
+    private Config $configHelper;
 
     /**
      * @param Context $context
@@ -27,12 +28,14 @@ class Cart extends AbstractHelper
         Context $context,
         ProductHelper $productHelper,
         CartModel $cartModel,
-        WishlistItemModel $wishlistItemModel
+        WishlistItemModel $wishlistItemModel,
+        ConfigHelper $configHelper
     ) {
         parent::__construct($context);
         $this->productHelper = $productHelper;
         $this->cartModel = $cartModel;
         $this->wishlistItemModel = $wishlistItemModel;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -92,24 +95,6 @@ class Cart extends AbstractHelper
     }
 
     /**
-     * Check if product is a child-product
-     *
-     * @param $item
-     * @return bool
-     */
-    public function isItemChildSimpleOfConfigurable($item): bool
-    {
-        if($item->getProductType() === ConfigHelper::CONFIGURABLE_TYPE_CODE) {
-            $childItems = $item->getChildren();
-            if (!empty($childItems)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Get Draft id depends by your request / position from where request is sent.
      *
      * @return string
@@ -129,7 +114,7 @@ class Cart extends AbstractHelper
                     case 'checkout':
                         $quoteItem = $this->cartModel->getQuote()->getItemById($id);
                         if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                            if ($quoteItem->getProductType() === ConfigHelper::CONFIGURABLE_TYPE_CODE) {
+                            if ($this->configHelper->useChildProduct($quoteItem->getProductType())) {
                                 $children = $quoteItem->getChildren();
                                 if (!empty($children)) {
                                     $firstChild = $children[0];
