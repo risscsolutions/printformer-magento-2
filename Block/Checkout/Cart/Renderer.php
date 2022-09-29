@@ -3,8 +3,6 @@
 namespace Rissc\Printformer\Block\Checkout\Cart;
 
 use Magento\Catalog\Block\Product\Image;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Catalog\Helper\Product\Configuration;
 use Magento\Checkout\Model\Session;

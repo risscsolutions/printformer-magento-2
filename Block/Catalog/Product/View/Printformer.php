@@ -25,7 +25,6 @@ use Rissc\Printformer\Helper\Cart as cartHelper;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Helper\ConfigurableProduct as ConfigurableProductHelper;
 use Psr\Log\LoggerInterface;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
 
 class Printformer extends AbstractView
 {

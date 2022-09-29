@@ -5,7 +5,6 @@ namespace Rissc\Printformer\Plugin\Checkout\Model;
 use Magento\Catalog\Helper\Image;
 use Magento\Catalog\Model\Product\Configuration\Item\ItemResolverInterface;
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;

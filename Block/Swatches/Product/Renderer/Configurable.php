@@ -15,7 +15,6 @@ use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Swatches\Helper\Data as SwatchData;
 use Magento\Swatches\Helper\Media;
 use Magento\Swatches\Model\SwatchAttributesProvider;
-use Magento\Wishlist\Model\Item;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;

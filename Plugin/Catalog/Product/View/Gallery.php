@@ -9,7 +9,6 @@ use Rissc\Printformer\Helper\Media as MediaHelper;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 use Rissc\Printformer\Helper\Cart as CartHelper;
 
-
 class Gallery
 {
     /**
