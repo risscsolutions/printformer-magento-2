@@ -287,15 +287,6 @@ class Config extends AbstractHelper
     }
 
     /**
-     * @return array
-     */
-    public function getOrderStatus($storeId = false, $websiteId = false)
-    {
-        $configValue = $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID, false, $storeId, $websiteId);
-        return explode(',', $configValue ?? '');
-    }
-
-    /**
      * @return int
      */
     public function getOrderDraftUpdate($storeId = false, $websiteId = false)
@@ -309,6 +300,14 @@ class Config extends AbstractHelper
     public function getOrderDraftUpdateOrderId($storeId = false, $websiteId = false)
     {
         return $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID, false, $storeId, $websiteId);
+    }
+
+    /**
+     * @return array
+     */
+    public function getOrderStatus($storeId = false, $websiteId = false)
+    {
+        return explode(',',$this->getConfigValue(self::XML_PATH_CONFIG_STATUS, false, $storeId, $websiteId) ?? '');
     }
 
     /**
