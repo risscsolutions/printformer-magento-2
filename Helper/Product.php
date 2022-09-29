@@ -113,13 +113,8 @@ class Product extends AbstractHelper
 
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
-        $useDefaultStore = $this->configHelper->filterForDefaultStore();
 
-        if ($useDefaultStore){
-            $select->where("store_id = 0");
-        } else {
-            $select->where('store_id = ?', intval($storeId));
-        }
+        $select->where('store_id = ?', intval($storeId));
 
         if (!empty($childProductIds)){
             array_unshift($childProductIds, $productId);

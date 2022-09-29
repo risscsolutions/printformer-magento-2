@@ -181,14 +181,6 @@ class Config extends AbstractHelper
             $storeId = Store::DEFAULT_STORE_ID;
         }
 
-
-        if (str_contains($config, 'printformer/version2group')) {
-            if ($this->filterForDefaultStore($storeId, $websiteId)) {
-                $storeId = 0;
-                $websiteId = 0;
-            }
-        }
-
         if ($websiteId) {
             $scope = ScopeInterface::SCOPE_WEBSITE;
         } else {
