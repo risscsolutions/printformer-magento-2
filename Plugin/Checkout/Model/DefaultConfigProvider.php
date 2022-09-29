@@ -81,13 +81,15 @@ class DefaultConfigProvider
         $result
     )
     {
-        try {
-            $quote = $this->checkoutSession->getQuote();
-        } catch (NoSuchEntityException|LocalizedException $e) {
-        }
-        if (isset($quote)) {
-            $quoteId = $quote->getId();
-            $result['imageData'] = $this->getImages($quoteId);
+        if ($this->configHelper->isUseImagePreview()){
+            try {
+                $quote = $this->checkoutSession->getQuote();
+            } catch (NoSuchEntityException|LocalizedException $e) {
+            }
+            if (isset($quote)) {
+                $quoteId = $quote->getId();
+                $result['imageData'] = $this->getImages($quoteId);
+            }
         }
 
         return $result;

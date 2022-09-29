@@ -673,7 +673,7 @@ class Api extends AbstractHelper
         $expirationDateTimeStamp = $this->_config->getExpireDateTimeStamp();
         $requestData = [
             'apiKey' => $this->_config->getClientApiKey($this->getStoreId()),
-            'storeId' => $this->_config->getClientApiKey($this->getStoreId())
+            'storeId' => $this->getStoreId()
         ];
         $data = [
             'draftId' => $draftHash,

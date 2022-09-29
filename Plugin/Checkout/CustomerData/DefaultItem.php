@@ -51,11 +51,13 @@ class DefaultItem
     {
         $result = $proceed($item);
 
-        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($item);
-        if (!empty($draftIds)) {
-            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
-            if (isset($imageUrl)){
-                $result['product_image']['src'] = $imageUrl;
+        if ($this->configHelper->isUseImagePreview()) {
+            $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($item);
+            if (!empty($draftIds)) {
+                $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+                if (isset($imageUrl)){
+                    $result['product_image']['src'] = $imageUrl;
+                }
             }
         }
 

@@ -8,6 +8,7 @@ use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock
 use Rissc\Printformer\Helper\Media as MediaHelper;
 use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 use Rissc\Printformer\Helper\Cart as CartHelper;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
 
 class Gallery
 {
@@ -32,6 +33,7 @@ class Gallery
     private PrintformerProductHelper $printformerProductHelper;
     private Configurable $configurable;
     private CartHelper $cartHelper;
+    private ConfigHelper $configHelper;
 
     /**
      * Gallery constructor.
@@ -44,13 +46,15 @@ class Gallery
         PrintformerBlock $printformerBlock,
         PrintformerProductHelper $printformerProductHelper,
         Configurable $configurable,
-        CartHelper $cartHelper
+        CartHelper $cartHelper,
+        ConfigHelper $configHelper
     ) {
         $this->mediaHelper = $mediaHelper;
         $this->printformerBlock = $printformerBlock;
         $this->printformerProductHelper = $printformerProductHelper;
         $this->configurable = $configurable;
         $this->cartHelper = $cartHelper;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -79,9 +83,11 @@ class Gallery
     {
         $product = $gallery->getProduct();
 
-        $draftIds = $this->getDraftIds($product->getId(), $product->getStore()->getId(), $product->getTypeId());
-        if (!empty($draftIds)){
-            $this->mediaHelper->loadDraftImagesToMainImage($draftIds, $result);
+        if ($this->configHelper->isUseImagePreview()) {
+            $draftIds = $this->getDraftIds($product->getId(), $product->getStore()->getId(), $product->getTypeId());
+            if (!empty($draftIds)){
+                $this->mediaHelper->loadDraftImagesToMainImage($draftIds, $result);
+            }
         }
 
         return $result;

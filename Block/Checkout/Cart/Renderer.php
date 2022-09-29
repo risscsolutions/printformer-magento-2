@@ -94,12 +94,14 @@ class Renderer extends ItemRenderer
     public function getImage($product, $imageId, $attributes = []): Image
     {
         $result = parent::getImage($product, $imageId, $attributes);
-        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($this->getItem());
 
-        if ($draftIds) {
-            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
-            if (isset($imageUrl)) {
-                $result->setImageUrl($imageUrl);
+        if ($this->configHelper->isUseImagePreview()) {
+            $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($this->getItem());
+            if ($draftIds) {
+                $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+                if (isset($imageUrl)) {
+                    $result->setImageUrl($imageUrl);
+                }
             }
         }
 
