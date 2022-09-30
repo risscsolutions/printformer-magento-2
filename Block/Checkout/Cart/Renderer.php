@@ -10,7 +10,7 @@ use Magento\Catalog\Block\Product\ImageBuilder;
 use Magento\Framework\Url\Helper\Data;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Module\Manager;
-use Magento\Checkout\Block\Cart\Item\Renderer as ItemRenderer;
+use Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable as ItemRenderer;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\View\Element\Message\InterpretationStrategyInterface;
 use Rissc\Printformer\Helper\Api\Url;
