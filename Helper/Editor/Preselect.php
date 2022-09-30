@@ -14,7 +14,25 @@ class Preselect extends AbstractHelper
             'qty' => ['value' => $formData['qty']]
         ];
 
+        $preselectedOptions['super_attribute'] = !empty($formData['super_attribute']) ? $this->realignOptions
+        ($formData['super_attribute']) : [];
         return $preselectedOptions;
+    }
+
+    /**
+     * @param array $options
+     *
+     * @return array
+     */
+    protected function realignOptions(array $options)
+    {
+        $allignedOptions = [];
+        foreach($options as $optionId => $optionValue)
+        {
+            $allignedOptions[$optionId] = ['value' => $optionValue];
+        }
+
+        return $allignedOptions;
     }
 
     protected function _getOptionsArray($options)
