@@ -659,7 +659,9 @@ class Config extends AbstractHelper
      */
     public function filterForConfigurableProduct($storeId = false, $websiteId = false)
     {
-        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
+        return true;
+        //todo: fix for future (some issues found with other config product_image_preview=no)
+//        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
     }
 
     /**
