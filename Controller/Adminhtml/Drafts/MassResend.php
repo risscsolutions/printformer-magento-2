@@ -97,7 +97,9 @@ class MassResend extends AbstractController
                             }
                             $draftHashes = explode(',', $item->getPrintformerDraftid() ?? '');
                             foreach($draftHashes as $draftHash) {
-                                $draftIds[] = $draftHash;
+                                if (!empty($draftHash)) {
+                                    $draftIds[] = $draftHash;
+                                }
                             }
                         }
 
