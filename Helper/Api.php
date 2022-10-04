@@ -33,6 +33,7 @@ use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
 
 class Api extends AbstractHelper
 {
@@ -120,6 +121,7 @@ class Api extends AbstractHelper
     private Configuration $jwtConfig;
     private DraftResource $draftResource;
     private Context $context;
+    private Config $configHelper;
 
     /**
      * @param Context $context
@@ -158,7 +160,8 @@ class Api extends AbstractHelper
         TimezoneInterface $timezone,
         OrderItemRepositoryInterface $orderItemRepository,
         LogHelper $_logHelper,
-        DraftResource $draftResource
+        DraftResource $draftResource,
+        ConfigHelper $configHelper
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -178,6 +181,7 @@ class Api extends AbstractHelper
         $this->_logHelper = $_logHelper;
         $this->draftResource = $draftResource;
         $this->context = $context;
+        $this->configHelper = $configHelper;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -880,7 +884,7 @@ class Api extends AbstractHelper
      * @return DataObject|Draft
      * @throws Exception
      */
-    protected function getDraftProcess(
+    public function getDraftProcess(
         $draftHash = null,
         $productId = null,
         $intent = null,
@@ -927,6 +931,23 @@ class Api extends AbstractHelper
         $process->getResource()->load($process, $processId);
 
         return $process;
+    }
+
+    /**
+     * Return Boolean to specify if Order-State is permitted corresponding to the pf-configuration
+     *
+     * @param $status
+     * @return bool
+     */
+    public function isOrderStateValidToProcess($status): bool
+    {
+        if (in_array($status, $this->configHelper->getOrderStatus())) {
+            $resultStatusOrderCanBeProcessed = true;
+        } else {
+            $resultStatusOrderCanBeProcessed = false;
+        }
+
+        return $resultStatusOrderCanBeProcessed;
     }
 
     /**
@@ -1396,7 +1417,7 @@ class Api extends AbstractHelper
      * @param $customer
      * @return string
      */
-    protected function loadPrintformerIdentifierOnCustomer($customer)
+    public function loadPrintformerIdentifierOnCustomer($customer)
     {
         $customerUserIdentifier = $this->createUser($customer);
         $connection = $customer->getResource()->getConnection();
