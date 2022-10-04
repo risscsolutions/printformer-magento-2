@@ -1,19 +1,10 @@
 <?php
 namespace Rissc\Printformer\Helper;
 
+use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Downloadable\Model\Link;
-use Magento\Framework\Filesystem;
-use Magento\Framework\UrlInterface;
 use Magento\Customer\Model\CustomerFactory;
-use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
-use Magento\Customer\Model\Session as CustomerSession;
-use Rissc\Printformer\Helper\Api\Url as UrlHelper;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\Backend\Model\Session as AdminSession;
-use Rissc\Printformer\Helper\Log as LogHelper;
-use Rissc\Printformer\Model\DraftFactory;
 use Magento\Customer\Model\Customer;
-use Magento\Framework\App\Helper\Context;
 use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Sales\Model\ResourceModel\Order\Item\Collection as ItemCollection;
 use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollectionFactory;
@@ -24,15 +15,16 @@ use Magento\Sales\Api\OrderItemRepositoryInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Downloadable\Model\Product\Type;
+use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Helper\Config as PrintformerConfig;
-use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
-use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
+use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
 
 /**
  * Class Order
  * @package Rissc\Printformer\Helper
  */
-class Order extends Api
+class Order extends AbstractHelper
 {
     /**
      * @var ItemCollection
@@ -65,61 +57,60 @@ class Order extends Api
     private $itemFactory;
 
     /**
-     * @param Context $context
-     * @param CustomerSession $customerSession
-     * @param UrlHelper $urlHelper
-     * @param StoreManagerInterface $storeManager
-     * @param DraftFactory $draftFactory
-     * @param Session $sessionHelper
-     * @param Config $config
-     * @param CustomerFactory $customerFactory
-     * @param CustomerResource $customerResource
-     * @param AdminSession $adminSession
-     * @param PrintformerProductAttributes $printformerProductAttributes
-     * @param Filesystem $filesystem
+     * @var Api
+     */
+    private Api $apiHelper;
+
+    /**
+     * @var OrderItemRepositoryInterface
+     */
+    private OrderItemRepositoryInterface $orderItemRepository;
+
+    /**
+     * @var CustomerFactory
+     */
+    private CustomerFactory $_customerFactory;
+
+    /**
+     * @var Config
+     */
+    private Config $configHelper;
+
+    /**
      * @param ItemCollectionFactory $itemCollectionFactory
      * @param OrderRepositoryInterface $orderRepository
-     * @param OrderItemRepositoryInterface $orderItemRepository
      * @param ProductRepositoryInterface $productRepository
      * @param Product $product
      * @param Config $printformerConfig
-     * @param UrlInterface $urlBuilder
      * @param ItemFactory $itemFactory
-     * @param TimezoneInterface $timezone
+     * @param OrderItemRepositoryInterface $orderItemRepository
+     * @param Api $apiHelper
+     * @param CustomerFactory $_customerFactory
+     * @param Config $configHelper
      */
     public function __construct(
-        Context $context,
-        CustomerSession $customerSession,
-        UrlHelper $urlHelper,
-        StoreManagerInterface $storeManager,
-        DraftFactory $draftFactory,
-        Session $sessionHelper,
-        Config $config,
-        CustomerFactory $customerFactory,
-        CustomerResource $customerResource,
-        AdminSession $adminSession,
-        PrintformerProductAttributes $printformerProductAttributes,
-        Filesystem $filesystem,
         ItemCollectionFactory $itemCollectionFactory,
         OrderRepositoryInterface $orderRepository,
         ProductRepositoryInterface $productRepository,
         Product $product,
         PrintformerConfig $printformerConfig,
-        UrlInterface $urlBuilder,
         ItemFactory $itemFactory,
-        TimezoneInterface $timezone,
         OrderItemRepositoryInterface $orderItemRepository,
-        LogHelper $log,
-        DraftResource $draftResource
+        ApiHelper $apiHelper,
+        CustomerFactory $_customerFactory,
+        ConfigHelper $configHelper
     )
     {
-        parent::__construct($context, $customerSession, $urlHelper, $storeManager, $draftFactory, $sessionHelper, $config, $customerFactory, $customerResource, $adminSession, $printformerProductAttributes, $filesystem, $urlBuilder, $itemFactory, $timezone, $orderItemRepository, $log, $draftResource);
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->orderRepository = $orderRepository;
         $this->productRepository = $productRepository;
         $this->product = $product;
         $this->printformerConfig = $printformerConfig;
         $this->itemFactory = $itemFactory;
+        $this->apiHelper = $apiHelper;
+        $this->orderItemRepository = $orderItemRepository;
+        $this->_customerFactory = $_customerFactory;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -130,7 +121,7 @@ class Order extends Api
      */
     public function checkItemByDraftHash($draftHash)
     {
-        $process = $this->getDraftProcess($draftHash);
+        $process = $this->apiHelper->getDraftProcess($draftHash);
         $orderItemId = $process->getOrderItemId();
         if (!empty($orderItemId)) {
             $collection = $this->itemCollectionFactory->create();
@@ -185,7 +176,7 @@ class Order extends Api
                 if (!isset($printformerUserIdentifier) && !empty($customerId)){
                     $customer = $this->getCustomerById($customerId);
                     if (!empty($customer)){
-                        $printformerUserIdentifier = $this->loadPrintformerIdentifierOnCustomer($customer);
+                        $printformerUserIdentifier = $this->apiHelper->loadPrintformerIdentifierOnCustomer($customer);
                     }
                 }
 
@@ -206,7 +197,7 @@ class Order extends Api
                             foreach ($links as $link) {
                                 $linkFile = $link->getLinkFile();
                                 if ($link->getId() && $linkFile) {
-                                    $draftProcess = $this->uploadDraftProcess(
+                                    $draftProcess = $this->apiHelper->uploadDraftProcess(
                                         null,
                                         0,
                                         $productId,
@@ -286,7 +277,7 @@ class Order extends Api
      */
     public function getTemplateIdentifier($storeId)
     {
-        $templateIdentifier = $this->_config->getUploadTemplateId();
+        $templateIdentifier = $this->configHelper->getUploadTemplateId();
         if (empty($templateIdentifier)) {
             $templateIdentifier = 0;
         }
