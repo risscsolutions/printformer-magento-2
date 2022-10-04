@@ -52,10 +52,11 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_TEXT               = 'printformer/general/config_button_text';
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
-    const XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE = 'printformer/general/hide_editor_button_on_configurable_product_page';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
+
+    const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
     const XML_PATH_CONFIG_FORMAT_NOTICE_TEXT        = 'printformer/format/notice_text';
@@ -117,30 +118,67 @@ class Config extends AbstractHelper
      */
     public function getStoreIdFromRequest()
     {
-        $params = $this->_request->getParams();
-        return $this->_request->getParam('store_id', Store::DEFAULT_STORE_ID);
+        return $this->_request->getParam('store_id');
+    }
+
+    /**
+     * @return int
+      */
+    public function getWebsiteIdFromRequest()
+    {
+        return $this->_request->getParam('website_id');
     }
 
     /**
      * @return int
      */
-    public function getWebsiteIdFromRequest()
+    public function getStoreIdFromStoreManager()
     {
-        $params = $this->_request->getParams();
-        return $this->_request->getParam('website_id');
+        $result = false;
+        try {
+            $result = $this->storeManager->getStore()->getId();
+        } catch (NoSuchEntityException $e) {
+        }
+        return $result;
+
+    }
+
+    /**
+     * @return int
+     */
+    public function getWebsiteIdFromStoreManager()
+    {
+        $result = false;
+        try {
+             $result = $this->storeManager->getWebsite()->getId();
+        } catch (LocalizedException $e) {
+        }
+        return $result;
     }
 
     /**
      * @param $config
-     * @return bool
+     * @param $isSetFlag
+     * @param $storeId
+     * @param $websiteId
+     * @return bool|mixed
      */
-    public function getConfigValue($config, $isSetFlag = false, $storeId = false, $websiteId = false, $forceChainedIds = false)
+    public function getConfigValue($config, $isSetFlag = false, $storeId = false, $websiteId = false)
     {
         $resultValue = false;
 
         if ((!is_numeric($storeId) && !is_numeric($websiteId))) {
             $storeId = $this->getStoreIdFromRequest();
             $websiteId = $this->getWebsiteIdFromRequest();
+        }
+
+        if ((!is_numeric($storeId) && !is_numeric($websiteId))) {
+            $storeId = $this->getStoreIdFromStoreManager();
+            $websiteId = $this->getWebsiteIdFromStoreManager();
+        }
+
+        if ((!is_numeric($storeId) && !is_numeric($websiteId))) {
+            $storeId = Store::DEFAULT_STORE_ID;
         }
 
         if ($websiteId) {
@@ -179,8 +217,6 @@ class Config extends AbstractHelper
      */
     public function isEnabled($storeId = false, $websiteId = false)
     {
-        $isEnabledResult = false;
-
         return $this->getConfigValue(self::XML_PATH_CONFIG_ENABLED, true, $storeId, $websiteId);
     }
 
@@ -251,15 +287,6 @@ class Config extends AbstractHelper
     }
 
     /**
-     * @return array
-     */
-    public function getOrderStatus($storeId = false, $websiteId = false)
-    {
-        $configValue = $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID, false, $storeId, $websiteId);
-        return explode(',', $configValue ?? '');
-    }
-
-    /**
      * @return int
      */
     public function getOrderDraftUpdate($storeId = false, $websiteId = false)
@@ -273,6 +300,14 @@ class Config extends AbstractHelper
     public function getOrderDraftUpdateOrderId($storeId = false, $websiteId = false)
     {
         return $this->getConfigValue(self::XML_PATH_CONFIG_DRAFT_UPDATE_ORDER_ID, false, $storeId, $websiteId);
+    }
+
+    /**
+     * @return array
+     */
+    public function getOrderStatus($storeId = false, $websiteId = false)
+    {
+        return explode(',',$this->getConfigValue(self::XML_PATH_CONFIG_STATUS, false, $storeId, $websiteId) ?? '');
     }
 
     /**
@@ -618,11 +653,15 @@ class Config extends AbstractHelper
     }
 
     /**
+     * @param $storeId
+     * @param $websiteId
      * @return bool
      */
-    public function hideEditorButtonOnConfigurableProductPage($storeId = false, $websiteId = false)
+    public function filterForConfigurableProduct($storeId = false, $websiteId = false)
     {
-        return $this->getConfigValue(self::XML_PATH_CONFIG_HIDE_EDITOR_BUTTON_ON_CONFIGURABLE_PRODUCT_PAGE, true, $storeId, $websiteId);
+        return true;
+        //todo: fix for future (some issues found with other config product_image_preview=no)
+//        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
     }
 
     /**
@@ -641,7 +680,7 @@ class Config extends AbstractHelper
      */
     public function getDraftIdsFromSpecificItemType($item)
     {
-        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+        if($this->useChildProduct($item->getProductType())) {
             $childItems = $item->getChildren();
             if (!empty($childItems)) {
                 $firstChildItem = $childItems[0];
@@ -665,7 +704,7 @@ class Config extends AbstractHelper
      */
     public function setDraftsOnItemType($item, $draftIds): Item
     {
-        if($item->getProductType() === $this::CONFIGURABLE_TYPE_CODE) {
+        if($this->useChildProduct($item->getProductType())) {
             $childItems = $item->getChildren();
             if (!empty($childItems)){
                 $firstChildItem = $childItems[0];
@@ -695,5 +734,20 @@ class Config extends AbstractHelper
     public function isConfigManageStockEnabled(): bool
     {
         return $this->getConfigValue(self::XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED, false);
+    }
+
+    /**
+     * Function to verify if simple (child) or configurable (parent) product is used.
+     * @param string $productType
+     * @return bool
+     */
+    public function useChildProduct(string $productType): bool
+    {
+        if($productType === $this::CONFIGURABLE_TYPE_CODE && !$this->filterForConfigurableProduct()) {
+            $result = true;
+        } else {
+            $result = false;
+        }
+        return $result;
     }
 }

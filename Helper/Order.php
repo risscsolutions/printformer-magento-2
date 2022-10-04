@@ -4,7 +4,6 @@ namespace Rissc\Printformer\Helper;
 use Magento\Downloadable\Model\Link;
 use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 use Magento\Customer\Model\Session as CustomerSession;

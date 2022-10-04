@@ -2,7 +2,6 @@
 namespace Rissc\Printformer\Plugin\Customer\Section\Load;
 
 use Magento\Customer\Controller\Section\Load;
-use Magento\Framework\DataObject;
 use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Quote\Model\Quote;

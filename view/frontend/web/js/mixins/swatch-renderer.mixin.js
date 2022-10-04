@@ -46,7 +46,9 @@ define([
                 let checkedOptions = $('#product-options-wrapper').find('[aria-checked="true"]')
                 let clickedOptionId = $($this).data('option-id');
                 let pfTemplateContainer = $('[data-pf-template-container]');
-                if (allAttributesChecked) {
+
+                var filterConfigurableProduct = this.options.jsonConfig.filterConfigurableProduct;
+                if (allAttributesChecked && filterConfigurableProduct === false) {
                     // console.log("All attributes checked, Show correct template for simple product");
                     $(pfTemplateContainer).each(function (index, element) {
                         let allCheckedOptionIdsFound = true;
@@ -110,9 +112,9 @@ define([
                         }
                     }, checkedOptionIds);
 
-                } else if (checkedOptions.length > 0) {
+                } else if (checkedOptions.length > 0 && filterConfigurableProduct === false) {
                     $('[data-product-type]').hide();
-                } else if (checkedOptions.length === 0) {
+                } else if (checkedOptions.length === 0 || filterConfigurableProduct === true) {
                     $('[data-product-type][data-product-type="simple"]').hide();
                     $('[data-product-type="configurable"][data-product-type]').show('');
                 }

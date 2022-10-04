@@ -49,7 +49,6 @@ class Attribute
 
     public function execute()
     {
-        $storeId = $this->getRequest()->getParam('store_id', Store::DEFAULT_STORE_ID);
         $attributeCode = $this->getRequest()->getParam('code', Store::DEFAULT_STORE_ID);
         try {
             if (!$this->config->isEnabled()) {

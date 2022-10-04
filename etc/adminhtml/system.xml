@@ -42,11 +42,6 @@
                         <field id="redirect_after_config">1</field>
                     </depends>
                 </field>
-                <!--disabled new feature: show editor on configurable product page -> default-value=false -> to enable set showInDefault=1 showInWebsite=1 -->
-                <field id="hide_editor_button_on_configurable_product_page" translate="label" type="select" sortOrder="58" showInDefault="0" showInWebsite="0" showInStore="0">
-                    <label>Show editor button on product page for configurable products</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
                 <field id="redirect_on_cancel" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Redirect to product detail page on cancel</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -189,6 +184,13 @@
                 <field id="sync_button" translate="button_label" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="0">
                     <button_label>Synchronize templates</button_label>
                     <frontend_model>Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\Sync</frontend_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="filter_for_configurable_product" translate="label" type="select" sortOrder="210" showInDefault="0" showInWebsite="0" showInStore="0">
+                    <label>Use Configurable Product filter to get Printformer Products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>

@@ -41,6 +41,7 @@ class QuoteModel
     private Registry $registry;
 
     private CartHelper $cartHelper;
+    private ConfigHelper $configHelper;
 
     /**
      * QuoteModel constructor.
@@ -56,7 +57,8 @@ class QuoteModel
         LoggerInterface $logger,
         ApiHelper $apiHelper,
         Registry $registry,
-        CartHelper $cartHelper
+        CartHelper $cartHelper,
+        ConfigHelper $configHelper
     ) {
         $this->storeManager = $storeManager;
         $this->session = $session;
@@ -64,6 +66,7 @@ class QuoteModel
         $this->_apiHelper = $apiHelper;
         $this->registry = $registry;
         $this->cartHelper = $cartHelper;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -172,7 +175,7 @@ class QuoteModel
         $this->loadPrintformerDataByQuoteItem($item);
 
         //load pf-data for child-product-item
-        if($item->getProductType() === ConfigHelper::CONFIGURABLE_TYPE_CODE) {
+        if($this->configHelper->useChildProduct($item->getProductType())) {
             $childItems = $item->getChildren();
             if (!empty($childItems)) {
                 $firstChildItem = $childItems[0];

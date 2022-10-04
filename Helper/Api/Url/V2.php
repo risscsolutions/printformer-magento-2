@@ -105,6 +105,16 @@ class V2 extends AbstractHelper implements VersionInterface
         $this->_config = $config;
         $this->_customerSession = $customerSession;
         $this->_catalogHelper = $catalogHelper;
+
+        try {
+            $storeId = $this->getStoreId();
+            $apiKey = $this->_config->getClientApiKey($storeId);
+            if (!empty($apiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+            }
+        } catch (NoSuchEntityException $e) {
+        }
+
         parent::__construct($context);
     }
 
@@ -153,6 +163,10 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getPrintformerBaseUrl($storeId = false, $websiteId = false)
     {
+        if ($storeId === false && $websiteId === false) {
+            $storeId = $this->_storeManager->getStore()->getId();
+            $websiteId = $this->_storeManager->getWebsite()->getId();
+        }
         return $this->_config->getClientUrl($storeId, $websiteId);
     }
 
@@ -398,18 +412,18 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getProducts()
+    public function getProducts($storeId = false, $websiteId = false)
     {
-        return $this->getPrintformerBaseUrl() .
+        return $this->getPrintformerBaseUrl($storeId, $websiteId) .
             self::API_GET_PRODUCTS;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAdminProducts()
+    public function getAdminProducts($storeId = false, $websiteId = false)
     {
-        return $this->getProducts();
+        return $this->getProducts($storeId, $websiteId);
     }
 
     /**
@@ -642,8 +656,8 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * @return string
      */
-    public function getClientName($storeId = false, $websiteId = false, $forceChainedIds = false)
+    public function getClientName($storeId = false, $websiteId = false)
     {
-        return $this->getPrintformerBaseUrl($storeId, $websiteId, $forceChainedIds) . self::API_CLIENT_NAME;
+        return $this->getPrintformerBaseUrl($storeId, $websiteId) . self::API_CLIENT_NAME;
     }
 }

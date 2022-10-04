@@ -460,12 +460,17 @@ define([
             }
 
             let dataPfTemplateDraftContainer = $(':visible[data-pf-template-container]').children('[data-pf-draft]');
+
             if (dataPfTemplateDraftContainer.length === 0) {
-                this.addBtnEnable();
-            } else if (dataPfTemplateDraftContainer.data('pf-draft') === 'active'){
                 this.addBtnEnable();
             } else {
                 this.addBtnDisable();
+                var addBtn = this.addBtn;
+                $.each(dataPfTemplateDraftContainer, function (index, pfTemplate) {
+                    if ($(pfTemplate).data('pf-draft') === 'active'){
+                        addBtn.prop('disabled', false);
+                    }
+                }, addBtn);
             }
         },
 

@@ -25,7 +25,6 @@ use Rissc\Printformer\Helper\Cart as cartHelper;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Helper\ConfigurableProduct as ConfigurableProductHelper;
 use Psr\Log\LoggerInterface;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
 
 class Printformer extends AbstractView
 {
@@ -254,7 +253,7 @@ class Printformer extends AbstractView
 
         $printformerProducts = [];
 
-        if ($product->getTypeId() === $this->configHelper::CONFIGURABLE_TYPE_CODE) {
+        if ($this->configHelper->useChildProduct($product->getTypeId())) {
             $childProducts = $product->getTypeInstance()->getUsedProducts($product);
             $childProductIds = [];
             foreach ($childProducts as $simpleProductKey => $simpleProduct) {
@@ -702,7 +701,7 @@ class Printformer extends AbstractView
                         $quoteItem = $this->cart->getQuote()->getItemById($id);
                         $product = $quoteItem->getProduct();
                         $buyRequest = $quoteItem->getBuyRequest();
-                        if ($product->getTypeId() === Config::CONFIGURABLE_TYPE_CODE) {
+                        if ($this->configHelper->useChildProduct($product->getTypeId())) {
                             $children = $quoteItem->getChildren();
                             foreach ($children as $child) {
                                 $buyRequest = $child->getBuyRequest();
@@ -939,19 +938,6 @@ class Printformer extends AbstractView
         }
 
         return $this->configHelper->isDeleteButtonEnabled();
-    }
-
-    /**
-     * @param $product
-     * @return bool
-     */
-    public function canShowEditorButtonOnProductPage($product)
-    {
-        if ($product->getTypeId() === ConfigurableType::TYPE_CODE && $this->configHelper->hideEditorButtonOnConfigurableProductPage()) {
-            return false;
-        }
-
-        return true;
     }
 
     public function getDeleteConfirmText()

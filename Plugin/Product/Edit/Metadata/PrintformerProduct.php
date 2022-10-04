@@ -75,7 +75,8 @@ class PrintformerProduct
      */
     public function afterModifyMeta(CustomOptions $subject, $meta)
     {
-        if(!$this->printformerConfigHelper->isEnabled() || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
+        $storeId = $this->locator->getStore()->getId();
+        if(!$this->printformerConfigHelper->isEnabled($storeId) || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
             return $meta;
 
         $meta['printformer_products'] = [
@@ -159,11 +160,11 @@ class PrintformerProduct
      */
     public function afterModifyData(CustomOptions $subject, $meta)
     {
-        if(!$this->printformerConfigHelper->isEnabled() || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
+        $storeId = $this->locator->getProduct()->getStoreId();
+        $productId = $this->locator->getProduct()->getId();
+        if(!$this->printformerConfigHelper->isEnabled($storeId) || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
             return $meta;
 
-        $productId = $this->locator->getProduct()->getId();
-        $storeId = $this->locator->getProduct()->getStoreId();
         $printformerProducts = [];
         $i = 0;
         foreach($this->productHelper->getCatalogProductPrintformerProductsArray($productId, $storeId) as $product) {

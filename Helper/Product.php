@@ -13,7 +13,6 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Store\Model\ScopeInterface;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Model\ProductFactory;
@@ -115,20 +114,7 @@ class Product extends AbstractHelper
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
 
-        $useDefaultStore = true;
-        $apiUrl = $this->configHelper->getClientUrl();
-        $apiKey = $this->configHelper->getClientApiKey();
-        $apiIdentifier = $this->configHelper->getClientIdentifier();
-
-        if (!empty($apiUrl) && !empty($apiKey) && !empty($apiIdentifier)) {
-            $useDefaultStore = false;
-        }
-
-        if ($useDefaultStore){
-            $select->where("store_id = 0");
-        } else {
-            $select->where('store_id = ?', intval($storeId));
-        }
+        $select->where('store_id = ?', intval($storeId));
 
         if (!empty($childProductIds)){
             array_unshift($childProductIds, $productId);
@@ -202,7 +188,7 @@ class Product extends AbstractHelper
      */
     public function getCatalogProductPrintformerProductsArray($productId, $storeId = 0)
     {
-        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId);
+        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, []);
 
         foreach($result as &$row) {
             $printformerProduct = $this->productFactory->create();
@@ -358,7 +344,7 @@ class Product extends AbstractHelper
      */
     public function getConfigurableAndChildrens($mainProduct)
     {
-        if ($mainProduct->getTypeId() === ConfigurableProductModel::TYPE_CODE) {
+        if ($this->configHelper->useChildProduct($mainProduct->getTypeId())) {
             $childProducts = $mainProduct->getTypeInstance()->getUsedProducts($mainProduct);
             foreach ($childProducts as $simpleProductKey => $simpleProduct) {
                 $_attributes = $mainProduct->getTypeInstance(true)->getConfigurableAttributes($mainProduct);

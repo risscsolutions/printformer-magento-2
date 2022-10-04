@@ -187,9 +187,9 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getAdminProducts()
+    public function getAdminProducts($storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getAdminProducts();
+        return $this->getVersionHelper()->getAdminProducts($storeId, $websiteId);
     }
 
     /**
@@ -367,8 +367,8 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->getProductFeedUrl();
     }
 
-    public function getClientName($storeId = false, $websiteId = false, $forceChainedIds = false)
+    public function getClientName($storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getClientName($storeId, $websiteId, $forceChainedIds);
+        return $this->getVersionHelper()->getClientName($storeId, $websiteId);
     }
 }

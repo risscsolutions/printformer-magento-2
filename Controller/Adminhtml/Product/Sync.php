@@ -59,28 +59,29 @@ class Sync extends Action
 
     public function execute()
     {
-        $storeId = $this->getRequest()->getParam('store_id', \Magento\Store\Model\Store::DEFAULT_STORE_ID);
+        $storeId = $this->getRequest()->getParam('store_id', false);
+        $websiteId = $this->getRequest()->getParam('website_id', false);
 
         try {
-            $url = $this->apiHelper->apiUrl()->getClientName();
-            $httpClient = $this->apiHelper->getHttpClient();
-
-            $response = $httpClient->get($url);
-            $response = json_decode($response->getBody(), true);
-            $name = $response['data']['name'];
+            if (!$this->config->isEnabled($storeId, $websiteId)) {
+                throw new \Exception(__('Module disabled.'));
+            }
 
             try {
-                if (!$this->config->isEnabled()) {
-                    throw new \Exception(__('Module disabled.'));
-                }
+                $url = $this->apiHelper->apiUrl()->getClientName($storeId, $websiteId);
+                $httpClient = $this->apiHelper->getHttpClient($storeId, $websiteId);
 
-                $this->gateway->syncProducts($storeId);
+                $response = $httpClient->get($url);
+                $response = json_decode($response->getBody(), true);
+                $name = $response['data']['name'];
+
+                $this->gateway->syncProducts($storeId, $websiteId);
                 $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.').'<br>'.__('Mandator:').$name];
             } catch (\Exception $e) {
-                $response = ['error' => 'true', 'message' => $e->getMessage()];
+                $response = ['error' => 'true', 'message' => __('Error setting name client configuration. Empty Response. Url: ' . $url)];
             }
         } catch (\Exception $e){
-            $response = ['error' => 'true', 'message' => __('Error setting name client configuration. Empty Response. Url: ' . $url)];
+            $response = ['error' => 'true', 'message' => $e->getMessage()];
         }
         $this->_actionFlag->set('', self::FLAG_NO_POST_DISPATCH, true);
         $resultJson = $this->resultJsonFactory->create();

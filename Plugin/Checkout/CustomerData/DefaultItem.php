@@ -3,7 +3,6 @@
 namespace Rissc\Printformer\Plugin\Checkout\CustomerData;
 
 use Magento\Checkout\CustomerData\DefaultItem as SubjectDefaultItem;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Quote\Api\Data\CartItemInterface;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
@@ -52,11 +51,13 @@ class DefaultItem
     {
         $result = $proceed($item);
 
-        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($item);
-        if (!empty($draftIds)) {
-            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
-            if (isset($imageUrl)){
-                $result['product_image']['src'] = $imageUrl;
+        if ($this->configHelper->isUseImagePreview()) {
+            $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($item);
+            if (!empty($draftIds)) {
+                $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+                if (isset($imageUrl)){
+                    $result['product_image']['src'] = $imageUrl;
+                }
             }
         }
 

@@ -3,8 +3,6 @@
 namespace Rissc\Printformer\Block\Checkout\Cart;
 
 use Magento\Catalog\Block\Product\Image;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Catalog\Helper\Product\Configuration;
 use Magento\Checkout\Model\Session;
@@ -12,7 +10,7 @@ use Magento\Catalog\Block\Product\ImageBuilder;
 use Magento\Framework\Url\Helper\Data;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Module\Manager;
-use Magento\Checkout\Block\Cart\Item\Renderer as ItemRenderer;
+use Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable as ItemRenderer;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\View\Element\Message\InterpretationStrategyInterface;
 use Rissc\Printformer\Helper\Api\Url;
@@ -96,12 +94,14 @@ class Renderer extends ItemRenderer
     public function getImage($product, $imageId, $attributes = []): Image
     {
         $result = parent::getImage($product, $imageId, $attributes);
-        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($this->getItem());
 
-        if ($draftIds) {
-            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
-            if (isset($imageUrl)) {
-                $result->setImageUrl($imageUrl);
+        if ($this->configHelper->isUseImagePreview()) {
+            $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($this->getItem());
+            if ($draftIds) {
+                $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+                if (isset($imageUrl)) {
+                    $result->setImageUrl($imageUrl);
+                }
             }
         }
 
