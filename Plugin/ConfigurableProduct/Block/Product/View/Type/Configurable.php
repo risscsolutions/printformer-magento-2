@@ -103,12 +103,15 @@ class Configurable
 
                 $draftIds = [];
                 if ($this->request->getModuleName() == 'wishlist') {
-                    $id = (int)$this->request->getParam('id');
-                    $wishlistItem = $this->cartHelper->getWishlistItemModel()->loadWithOptions($id);
-                    if ($wishlistItem) {
-                        $buyRequest = $wishlistItem->getBuyRequest();
-                        $draftIds = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                        $draftIds = explode(',', $draftIds ?? '');
+                    try {
+                        $id = (int)$this->request->getParam('id');
+                        $wishlistItem = $this->cartHelper->getWishlistItemModel()->loadWithOptions($id);
+                        if ($wishlistItem) {
+                            $buyRequest = $wishlistItem->getBuyRequest();
+                            $draftIds = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                            $draftIds = explode(',', $draftIds ?? '');
+                        }
+                    } catch (\Exception $e) {
                     }
                 } else {
                     foreach ($pfProducts as $pfProduct) {

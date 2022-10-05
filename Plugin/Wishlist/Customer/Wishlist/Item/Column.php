@@ -50,16 +50,18 @@ class Column
      */
     public function afterGetImage(SubjectColumn $subject, $result)
     {
-        $item = $subject->getItem();
-        if($item) {
-            $option = $item->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID);
-            if($option) {
-                $draftField = $option->getValue();
-                if ($draftField) {
-                    $drafts = explode(',', $draftField ?? '');
-                    foreach ($drafts as $draftId) {
-                        $imageUrl = $this->mediaHelper->getImageUrl($draftId);
-                        $result->setData('image_url', $imageUrl);
+        if ($this->config->isUseImagePreview()) {
+            $item = $subject->getItem();
+            if($item) {
+                $option = $item->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID);
+                if($option) {
+                    $draftField = $option->getValue();
+                    if ($draftField) {
+                        $drafts = explode(',', $draftField ?? '');
+                        foreach ($drafts as $draftId) {
+                            $imageUrl = $this->mediaHelper->getImageUrl($draftId);
+                            $result->setData('image_url', $imageUrl);
+                        }
                     }
                 }
             }

@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Lcobucci\JWT\Exception;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -182,23 +183,33 @@ class Session extends AbstractHelper
 
     public function getDraftIdsByProductId(string $productId)
     {
-        $sessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
         $resultDraftIds = [];
-        if (is_array($sessionUniqueIds) && !empty($sessionUniqueIds)){
-            $sessionUniqueIds = implode(",", $sessionUniqueIds);
-            $draftProcess = $this->draftFactory->create();
-            $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('session_unique_id', ['in' => $sessionUniqueIds]);
-            $items = $draftCollection->getItems();
-            if (!empty($items)) {
-                foreach ($items as $item) {
-                    $productId = $item->getProductId();
-                    $printformerProductId = $item->getPrintformerProductId();
-                    if (!isset($resultDraftIds[$productId]))
-                        $resultDraftIds[$productId] = [];
-                    $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+        try {
+            $sessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
+            if (is_array($sessionUniqueIds) && !empty($sessionUniqueIds)){
+                foreach ($sessionUniqueIds as $sessionUniqueId) {
+                    if (is_array($sessionUniqueId)){
+                        $sessionUniqueIds = implode(",", $sessionUniqueId);
+                    } else {
+                        $sessionUniqueIds = implode(",", $sessionUniqueIds);
+                    }
+                }
+
+                $draftProcess = $this->draftFactory->create();
+                $draftCollection = $draftProcess->getCollection()
+                    ->addFieldToFilter('session_unique_id', ['in' => $sessionUniqueIds]);
+                $items = $draftCollection->getItems();
+                if (!empty($items)) {
+                    foreach ($items as $item) {
+                        $productId = $item->getProductId();
+                        $printformerProductId = $item->getPrintformerProductId();
+                        if (!isset($resultDraftIds[$productId]))
+                            $resultDraftIds[$productId] = [];
+                        $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+                    }
                 }
             }
+        } catch (\Exception $e) {
         }
 
         return $resultDraftIds;

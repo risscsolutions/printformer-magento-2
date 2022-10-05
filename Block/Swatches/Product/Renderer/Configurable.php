@@ -120,9 +120,12 @@ class Configurable extends parentConfigurable
                         }
                         break;
                     case 'wishlist':
-                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
-                        if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
-                            $draftId = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID)->getValue();
+                        try {
+                            $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                            if ($wishlistItem && $productId == $wishlistItem->getProductId()) {
+                                $draftId = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID)->getValue();
+                            }
+                        } catch(\Exception $e){
                         }
                         break;
                     default:

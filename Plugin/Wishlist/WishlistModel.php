@@ -115,18 +115,21 @@ class WishlistModel
      */
     public function afterAddNewItem(Wishlist $subject, $result)
     {
-        if (!is_string($result)) {
-            $value = $result->getBuyRequest()->getData($this->productHelper::COLUMN_NAME_DRAFTID);
-            $option = array(
-                'code' => $this->productHelper::COLUMN_NAME_DRAFTID,
-                'value' => $value,
-                'product_id' => $result->getProductId()
-            );
-            $result->addOption($option)->saveItemOptions();
-            $this->registry->register(
-                Helper\Config::REGISTRY_KEY_WISHLIST_NEW_ITEM_ID,
-                $result->getData('wishlist_item_id')
-            );
+        try {
+            if (!is_string($result)) {
+                $value = $result->getBuyRequest()->getData($this->productHelper::COLUMN_NAME_DRAFTID);
+                $option = array(
+                    'code' => $this->productHelper::COLUMN_NAME_DRAFTID,
+                    'value' => $value,
+                    'product_id' => $result->getProductId()
+                );
+                $result->addOption($option)->saveItemOptions();
+                $this->registry->register(
+                    Helper\Config::REGISTRY_KEY_WISHLIST_NEW_ITEM_ID,
+                    $result->getData('wishlist_item_id')
+                );
+            }
+        } catch (\Exception $e) {
         }
         return $result;
     }
