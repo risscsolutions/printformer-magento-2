@@ -180,12 +180,16 @@ class Cart extends AbstractHelper
      */
     public function draftIsAlreadyUsed($draftId)
     {
-        $inCartUsage = $this->draftIsAlreadyUsedInCart($draftId);
-        $inWishlistUsage = $this->draftIsAlreadyUsedInWishlist($draftId);
-        if ($inCartUsage || $inWishlistUsage) {
-            $resultIsInUsage = true;
-        } else {
-            $resultIsInUsage = false;
+        $resultIsInUsage = false;
+        try {
+            $inCartUsage = $this->draftIsAlreadyUsedInCart($draftId);
+            $inWishlistUsage = $this->draftIsAlreadyUsedInWishlist($draftId);
+            if ($inCartUsage || $inWishlistUsage) {
+                $resultIsInUsage = true;
+            } else {
+                $resultIsInUsage = false;
+            }
+        } catch (\Exception $e) {
         }
         return $resultIsInUsage;
     }
@@ -194,12 +198,15 @@ class Cart extends AbstractHelper
     {
         $items = $this->wishlistItemModel->getCollection()->getItems();
         $result = false;
-        foreach ($items as $item) {
-            $buyRequest = $item->getBuyRequest();
-            $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
-            if (str_contains($draftField, $draftId)) {
-                $result = true;
+        try {
+            foreach ($items as $item) {
+                $buyRequest = $item->getBuyRequest();
+                $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
+                if (str_contains($draftField, $draftId)) {
+                    $result = true;
+                }
             }
+        } catch(\Exception $e){
         }
         return $result;
     }
@@ -253,13 +260,17 @@ class Cart extends AbstractHelper
      */
     public function draftIsAlreadyUsedInCurrentWishlist($draftId)
     {
-        $id = (int)$this->_request->getParam('id');
-        $wishlistItem = $this->wishlistItemModel->loadWithOptions($id);
-        $buyRequest = $wishlistItem->getBuyRequest();
-        $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
         $result = false;
-        if (str_contains($draftField, $draftId)) {
-            $result = true;
+        try {
+            $id = (int)$this->_request->getParam('id');
+            $wishlistItem = $this->wishlistItemModel->loadWithOptions($id);
+            $buyRequest = $wishlistItem->getBuyRequest();
+            $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
+
+            if (str_contains($draftField, $draftId)) {
+                $result = true;
+            }
+        } catch (\Exception $e) {
         }
         return $result;
     }

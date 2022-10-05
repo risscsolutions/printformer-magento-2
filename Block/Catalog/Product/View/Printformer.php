@@ -715,12 +715,15 @@ class Printformer extends AbstractView
                         }
                         break;
                     case 'wishlist':
-                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
-                        $buyRequest = $wishlistItem->getBuyRequest();
-                        $draftField = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                        $draftHashArray = explode(',', $draftField ?? '');
-                        foreach($draftHashArray as $draftHash) {
-//                            $this->printformerProductHelper->getSessionUniqueId($draftHash);
+                        try {
+                            $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                            $buyRequest = $wishlistItem->getBuyRequest();
+                            $draftField = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                            $draftHashArray = explode(',', $draftField ?? '');
+                            foreach($draftHashArray as $draftHash) {
+//                              $this->printformerProductHelper->getSessionUniqueId($draftHash);
+                            }
+                        } catch(\Exception $e){
                         }
                         break;
                     default:
