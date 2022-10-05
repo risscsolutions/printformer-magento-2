@@ -202,8 +202,10 @@ class Cart extends AbstractHelper
             foreach ($items as $item) {
                 $buyRequest = $item->getBuyRequest();
                 $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
-                if (str_contains($draftField, $draftId)) {
-                    $result = true;
+                if (!empty($draftField) && !empty($draftId)) {
+                    if (str_contains($draftField, $draftId)) {
+                        $result = true;
+                    }
                 }
             }
         } catch(\Exception $e){
@@ -267,8 +269,10 @@ class Cart extends AbstractHelper
             $buyRequest = $wishlistItem->getBuyRequest();
             $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
 
-            if (str_contains($draftField, $draftId)) {
-                $result = true;
+            if (!empty($draftField) && !empty($draftId)) {
+                if (str_contains($draftField, $draftId)) {
+                    $result = true;
+                }
             }
         } catch (\Exception $e) {
         }
