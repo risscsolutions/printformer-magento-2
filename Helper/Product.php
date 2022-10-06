@@ -406,16 +406,18 @@ class Product extends AbstractHelper
      */
     public function getSessionUniqueId(string $draftField)
     {
-        $draftHashArray = explode(',', $draftField ?? '');
-        foreach($draftHashArray as $draftHash) {
-            $draftItem = $this->getDraftById($draftHash);
-            if ($draftItem) {
-                $pfProductId = $draftItem->getData('printformer_product_id');
-                $productId = $draftItem->getData('product_id');
-                if(!empty($productId) && !empty($pfProductId)) {
-                    $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
-                    if (!isset($uniqueId)) {
-                        $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
+        if (!empty($draftField)) {
+            $draftHashArray = explode(',', $draftField);
+            foreach($draftHashArray as $draftHash) {
+                $draftItem = $this->getDraftById($draftHash);
+                if ($draftItem) {
+                    $pfProductId = $draftItem->getData('printformer_product_id');
+                    $productId = $draftItem->getData('product_id');
+                    if(!empty($productId) && !empty($pfProductId)) {
+                        $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                        if (!isset($uniqueId)) {
+                            $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
+                        }
                     }
                 }
             }

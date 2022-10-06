@@ -97,7 +97,7 @@ class Renderer extends ItemRenderer
 
         if ($this->configHelper->isUseImagePreview()) {
             $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($this->getItem());
-            if ($draftIds) {
+            if (!empty($draftIds)) {
                 $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
                 if (isset($imageUrl)) {
                     $result->setImageUrl($imageUrl);

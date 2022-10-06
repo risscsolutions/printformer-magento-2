@@ -93,7 +93,7 @@ class QuoteModel
 
         $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
         if (!empty($draftIds)) {
-            $draftHashArray = explode(',', $draftIds ?? '');
+            $draftHashArray = explode(',', $draftIds);
 
             $draftHashRelations = [];
             $newDraftHashArray = [];
