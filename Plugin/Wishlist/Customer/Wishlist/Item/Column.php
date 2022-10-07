@@ -56,8 +56,8 @@ class Column
                 $option = $item->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID);
                 if($option) {
                     $draftField = $option->getValue();
-                    if ($draftField) {
-                        $drafts = explode(',', $draftField ?? '');
+                    if (!empty($draftField)) {
+                        $drafts = explode(',', $draftField );
                         foreach ($drafts as $draftId) {
                             $imageUrl = $this->mediaHelper->getImageUrl($draftId);
                             $result->setData('image_url', $imageUrl);

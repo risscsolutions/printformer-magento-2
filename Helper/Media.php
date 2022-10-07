@@ -401,7 +401,7 @@ class Media extends AbstractHelper
     )
     {
         $url = null;
-        if ($this->_config->isUseImagePreview() && $draftId) {
+        if ($this->_config->isUseImagePreview() && !empty($draftId)) {
             try {
                 $filePath = $this->getImageFilePath($draftId, $page, false);
                 if (!file_exists($filePath) || !is_array(getimagesize($filePath))) {
@@ -456,13 +456,15 @@ class Media extends AbstractHelper
     {
         $result = false;
         if ($this->_config->isUseImagePreview()) {
-            $draftIds = explode(',', $draftIds ?? '')[0];
-            try {
-                if (!file_exists($this->getImageFilePath($draftIds, 1, true))) {
-                    $this->createThumbnail($draftIds);
+            if (!empty($draftIds)){
+                $draftIds = explode(',', $draftIds)[0];
+                try {
+                    if (!file_exists($this->getImageFilePath($draftIds, 1, true))) {
+                        $this->createThumbnail($draftIds);
+                    }
+                    $result = $this->getImageUrl($draftIds, 1, true);
+                } catch (AlreadyExistsException|FileSystemException|NoSuchEntityException $e) {
                 }
-                $result = $this->getImageUrl($draftIds, 1, true);
-            } catch (AlreadyExistsException|FileSystemException|NoSuchEntityException $e) {
             }
         }
 

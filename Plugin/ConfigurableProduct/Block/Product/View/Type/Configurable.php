@@ -109,7 +109,9 @@ class Configurable
                         if ($wishlistItem) {
                             $buyRequest = $wishlistItem->getBuyRequest();
                             $draftIds = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                            $draftIds = explode(',', $draftIds ?? '');
+                            if (!empty($draftIds)) {
+                                $draftIds = explode(',', $draftIds);
+                            }
                         }
                     } catch (\Exception $e) {
                     }

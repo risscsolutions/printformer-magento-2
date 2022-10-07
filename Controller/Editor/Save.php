@@ -143,8 +143,11 @@ class Save extends Action
             $apiHelper = ObjectManager::getInstance()->get(Api::class);
 
             if ($apiHelper->config()->isUseImagePreview()) {
-                $this->_mediaHelper->createPreview($draft->getData('draft_id'), 1);
-                $this->_mediaHelper->createThumbnail($draft->getData('draft_id'), 1);
+                $draftIds = $draft->getData('draft_id');
+                if (!empty($draftIds)) {
+                    $this->_mediaHelper->createPreview($draftIds, 1);
+                    $this->_mediaHelper->createThumbnail($draftIds, 1);
+                }
             }
 
             $draftData = $apiHelper->getPrintformerDraft($draft->getDraftId(), true);

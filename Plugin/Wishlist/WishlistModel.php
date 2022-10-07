@@ -10,6 +10,7 @@ use Magento\Wishlist\Model\Wishlist;
 use Rissc\Printformer\Helper as Helper;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Product as productHelper;
+use Rissc\Printformer\Helper\Config as configHelper;
 
 class WishlistModel
 {
@@ -28,6 +29,7 @@ class WishlistModel
      */
     protected $sessionHelper;
     private productHelper $productHelper;
+    private configHelper $configHelper;
 
     /**
      * WishlistModel constructor.
@@ -39,12 +41,14 @@ class WishlistModel
         Registry $registry,
         StoreManagerInterface $storeManager,
         SessionHelper $sessionHelper,
-        ProductHelper $productHelper
+        ProductHelper $productHelper,
+        ConfigHelper $configHelper
     ) {
         $this->registry = $registry;
         $this->storeManager = $storeManager;
         $this->sessionHelper = $sessionHelper;
         $this->productHelper = $productHelper;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -73,8 +77,13 @@ class WishlistModel
             $buyRequest = new \Magento\Framework\DataObject();
         }
 
-        if ($product->getTypeId() === ConfigurableType::TYPE_CODE) {
-            $product = $this->productHelper->getChildProduct($product, $buyRequest->getSuperAttribute());
+        if (!$this->configHelper->filterForConfigurableProduct()) {
+            if ($product->getTypeId() === ConfigurableType::TYPE_CODE) {
+                $childproduct = $this->productHelper->getChildProduct($product, $buyRequest->getSuperAttribute());
+                if (!empty($childproduct)){
+                    $product = $childproduct;
+                }
+            }
         }
 
         $productId = $product->getId();
