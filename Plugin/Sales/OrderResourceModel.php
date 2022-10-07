@@ -73,12 +73,22 @@ class OrderResourceModel
         $this->external = $external;
     }
 
+    /**
+     * @param Order $orderResourceModel
+     * @param AbstractDb $result
+     * @param OrderModel $orderModel
+     * @return AbstractDb|void
+     */
     public function afterSave(Order $orderResourceModel, AbstractDb $result, OrderModel $orderModel)
     {
+        $processingPermitted = false;
+        $draftIds = [];
+        $orderItems = [];
+
         try {
-            $draftIds = [];
-            $orderItems = [];
             $incrementOrderId = $orderModel->getIncrementId();
+            $processingPermitted = $this->api->isOrderStateValidToProcess($orderModel->getStatus());
+
             foreach ($orderModel->getAllItems() as $item) {
                 if($item->getProductType() == 'downloadable'){
                     array_push($orderItems, $item->getId());
@@ -118,15 +128,17 @@ class OrderResourceModel
                 $draftIds = array_unique($draftIds);
             }
 
-            if (in_array($orderModel->getStatus(), $this->config->getOrderStatus())) {
+            if ($processingPermitted) {
                 $this->api->setAsyncOrdered($draftIds);
             }
         } catch (\Exception $e) {
             $this->logger->critical($e);
         } finally {
-            if (isset($draftIds) && !empty($draftIds)){
-                foreach ($draftIds as $draftId) {
-                    $this->api->setProcessingStateOnOrderItemByDraftId($draftId, $this->api::ProcessingStateAfterOrder);
+            if ($processingPermitted) {
+                if (isset($draftIds) && !empty($draftIds)){
+                    foreach ($draftIds as $draftId) {
+                        $this->api->setProcessingStateOnOrderItemByDraftId($draftId, $this->api::ProcessingStateAfterOrder);
+                    }
                 }
             }
         }

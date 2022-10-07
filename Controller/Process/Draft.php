@@ -7,6 +7,7 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Order;
+use Rissc\Printformer\Helper\Api;
 use Magento\Framework\Filesystem;
 
 /**
@@ -36,6 +37,7 @@ class Draft extends Action
      * @var Order
      */
     private $order;
+    private Api $apiHelper;
 
     /**
      * @param Context $context
@@ -49,7 +51,8 @@ class Draft extends Action
         JsonFactory $jsonFactory,
         LoggerInterface $logger,
         Filesystem $filesystem,
-        Order $order
+        Order $order,
+        Api $apiHelper
     )
     {
         parent::__construct($context);
@@ -57,6 +60,7 @@ class Draft extends Action
         $this->logger = $logger;
         $this->filesystem = $filesystem;
         $this->order = $order;
+        $this->apiHelper = $apiHelper;
     }
 
     public function execute()
@@ -75,7 +79,7 @@ class Draft extends Action
                 $fullAbsoluteFilePath = $absoluteMediaPath.$filePath;
                 if (file_exists($fullAbsoluteFilePath)){
                     $directoryWriteInstance->delete($filePath);
-                    $folders = DirectoryList::TMP.DIRECTORY_SEPARATOR.$this->order::API_UPLOAD_INTENT.DIRECTORY_SEPARATOR;
+                    $folders = DirectoryList::TMP.DIRECTORY_SEPARATOR.$this->apiHelper::API_UPLOAD_INTENT.DIRECTORY_SEPARATOR;
                     $oldParentTmpDraftDir = $absoluteMediaPath.$folders.$draftHash;
                     if (file_exists($oldParentTmpDraftDir)){
                         $scan = scandir($oldParentTmpDraftDir);
@@ -96,7 +100,7 @@ class Draft extends Action
             $this->logger->debug('upload drafts to process found:'.implode(",", $draftToSync));
 
             if ($this->order->checkItemByDraftHash($draftHash)) {
-                $this->order->setAsyncOrdered($draftToSync);
+                $this->apiHelper->setAsyncOrdered($draftToSync);
             }
 
             http_response_code(200);
@@ -107,7 +111,7 @@ class Draft extends Action
         } finally {
             if (isset($draftToSync) && !empty($draftToSync)){
                 foreach ($draftToSync as $draftId) {
-                    $this->order->setProcessingStateOnOrderItemByDraftId($draftId, $this->order::ProcessingStateAfterUploadCallback);
+                    $this->apiHelper->setProcessingStateOnOrderItemByDraftId($draftId, $this->apiHelper::ProcessingStateAfterUploadCallback);
                 }
             }
         }
