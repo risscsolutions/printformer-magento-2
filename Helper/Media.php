@@ -285,12 +285,12 @@ class Media extends AbstractHelper
      *
      * @param $draftIds
      * @param ProductModel $product
-     * @param $result
-     * @return mixed
+     * @param Collection $result
+     * @return Collection
      */
     public function loadDraftImagesToMainImage(
         $draftIds,
-        $product,
+        ProductModel $product,
         Collection $result
     )
     {
