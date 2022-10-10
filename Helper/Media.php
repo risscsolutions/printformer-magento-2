@@ -2,8 +2,10 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Magento\Catalog\Model\Product as ProductModel;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Data\Collection;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\FileSystemException;
@@ -281,19 +283,39 @@ class Media extends AbstractHelper
     /**
      * Add draft-image-item to image-collection
      *
-     * @param $draftId
+     * @param $draftIds
+     * @param ProductModel $product
      * @param $result
      * @return mixed
      */
     public function loadDraftImagesToMainImage(
         $draftIds,
-        $result
+        $product,
+        Collection $result
     )
     {
         if ($this->_config->isUseImagePreview()) {
             if (!empty($draftIds)) {
-                $counter = 0;
-                $result->removeAllItems();
+                //load all images from product
+                $items = $product->getMediaGalleryImages()->getItems();
+
+                //remove all already loaded pf images because on multiple getGalleryImages-call the image from cache
+                //does not work for printformer images
+                foreach ($items as $itemKey => $item) {
+                    if ($item['label'] === 'Image Printformer') {
+                        $result->removeItemByKey($itemKey);
+                    }
+                }
+
+                //on multiple calls always set counter to last origin product image + 1
+                if (!empty($items)) {
+                    $lastItem = array_pop($items);
+                    if ($lastItem) {
+                        if ($lastItemId = $lastItem->getId()) {
+                            $counter = $lastItemId + 1;
+                        }
+                    }
+                }
 
                 foreach ($draftIds as $draftIdKey => $draftId) {
                     $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
@@ -309,17 +331,18 @@ class Media extends AbstractHelper
                             $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
                             $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
                             $result->addItem(new DataObject([
-                                                                'id' => $index + $counter,
-                                                                'small_image_url' => $fullImagePreviewUrl,
-                                                                'medium_image_url' => $fullImagePreviewUrl,
-                                                                'large_image_url' => $fullImagePreviewUrl,
-                                                                'is_main_image' => ($index + $counter == 0),
-                                                                'file' => $imagePreviewFilePath,
-                                                                'position' => 1,
-                                                                'label' => 'Image Printformer',
-                                                                'disabled' => 0,
-                                                                'media_type' => 'image'
-                                                            ]));
+                                'id' => $index + $counter,
+                                'small_image_url' => $fullImagePreviewUrl,
+                                'medium_image_url' => $fullImagePreviewUrl,
+                                'large_image_url' => $fullImagePreviewUrl,
+                                'is_main_image' => ($index + $counter == 0),
+                                'file' => 'Image Printformer',
+                                'path' => $imagePreviewFilePath,
+                                'position' => 1,
+                                'label' => 'Image Printformer',
+                                'disabled' => 0,
+                                'media_type' => 'image'
+                            ]));
                         } catch (\Exception $e) {
                             $this->_logger->error($e->getMessage());
                             $this->_logger->error($e->getTraceAsString());
