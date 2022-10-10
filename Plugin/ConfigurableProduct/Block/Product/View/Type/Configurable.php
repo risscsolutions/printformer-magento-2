@@ -94,7 +94,7 @@ class Configurable
             $config['filterConfigurableProduct'] = $this->configHelper->filterForConfigurableProduct();
             foreach ($config['images'] as $productId => $image) {
                 $product = $this->productRepository->getById($productId);
-                $images = $product->getMediaGalleryImages();
+                $simpleProductImages = $product->getMediaGalleryImages();
 
                 $pfProducts = $this->printformerProductHelper->getPrintformerProductsForFrontendConfigurationLogic(
                     $productId,
@@ -129,16 +129,12 @@ class Configurable
                 }
 
                 if (!empty($draftIds)){
-                    $draftItem = $this->mediaHelper->loadDraftImagesToAdditionalImages($draftIds, $images);
+                    $draftItem = $this->mediaHelper->loadDraftImagesToAdditionalImages($draftIds, $simpleProductImages);
                     if (!empty($draftItem)){
-                        $images = $draftItem->getItems();
+                        $simpleProductImages = $draftItem->getItems();
 
-                        if (!empty($images)) {
-                            $config['images'][$productId] = [];
-                        }
-
-                        foreach ($images as $image) {
-                            $config['images'][$productId][] = $image->getData();
+                        foreach ($simpleProductImages as $simpleProductImage) {
+                            $config['images'][$productId][] = $simpleProductImage->getData();
                         }
                     }
                 }
