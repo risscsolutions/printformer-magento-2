@@ -372,7 +372,6 @@ class Media extends AbstractHelper
         if ($this->_config->isUseImagePreview()) {
             if (!empty($draftIds)) {
                 $counter = 0;
-                $result->removeAllItems();
 
                 foreach ($draftIds as $draftIdKey => $draftId) {
                     $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);

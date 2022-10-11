@@ -54,11 +54,12 @@ class Cart extends AbstractHelper
         $resultDraft = false;
         if (($productId && $productId == $quoteItem->getProduct()->getId()) || (empty($productId))) {
             $quoteItemDraftsField = $quoteItem->getData(SessionHelper::SESSION_KEY_PRINTFORMER_DRAFTID);
-            $quoteItemDraftsCollectionItems = $this->productHelper->loadDraftItemsByIds($quoteItemDraftsField);
-
-            foreach ($quoteItemDraftsCollectionItems as $quoteItemCollectionItem) {
-                if ($quoteItemCollectionItem->getProductId() == $productId && $quoteItemCollectionItem->getPrintformerProductId() == $printformerProductId) {
-                    $resultDraft = $quoteItemCollectionItem->getDraftId();
+            if (!empty($quoteItemDraftsField)) {
+                $quoteItemDraftsCollectionItems = $this->productHelper->loadDraftItemsByIds($quoteItemDraftsField);
+                foreach ($quoteItemDraftsCollectionItems as $quoteItemCollectionItem) {
+                    if ($quoteItemCollectionItem->getProductId() == $productId && $quoteItemCollectionItem->getPrintformerProductId() == $printformerProductId) {
+                        $resultDraft = $quoteItemCollectionItem->getDraftId();
+                    }
                 }
             }
         }
@@ -287,5 +288,13 @@ class Cart extends AbstractHelper
     public function getWishlistItemModel(): WishlistItemModel
     {
         return $this->wishlistItemModel;
+    }
+
+    /**
+     * @return CartModel
+     */
+    public function getCartItemModel(): CartModel
+    {
+        return $this->cartModel;
     }
 }
