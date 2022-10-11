@@ -514,7 +514,7 @@ class Api extends AbstractHelper
             $this->_sessionHelper->setDraftPageInfo($draftHash, $response['data']);
             $result =  $response['data'];
         } else {
-            $result = $storedDraftPageInfo;
+            $result = $storedDraftPageInfo[$draftHash];
         }
 
         return $result;

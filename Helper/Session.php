@@ -185,15 +185,9 @@ class Session extends AbstractHelper
     {
         $resultDraftIds = [];
         try {
-            $sessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
-            if (is_array($sessionUniqueIds) && !empty($sessionUniqueIds)){
-                foreach ($sessionUniqueIds as $sessionUniqueId) {
-                    if (is_array($sessionUniqueId)){
-                        $sessionUniqueIds = implode(",", $sessionUniqueId);
-                    } else {
-                        $sessionUniqueIds = implode(",", $sessionUniqueIds);
-                    }
-                }
+            $originSessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
+            if (is_array($originSessionUniqueIds) && !empty($originSessionUniqueIds)){
+                $sessionUniqueIds = implode(",", $originSessionUniqueIds);
 
                 $draftProcess = $this->draftFactory->create();
                 $draftCollection = $draftProcess->getCollection()

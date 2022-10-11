@@ -319,7 +319,7 @@ class Media extends AbstractHelper
 
                 foreach ($draftIds as $draftIdKey => $draftId) {
                     $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-                    $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+                    $pages = $printformerDraft['pages'] ?? 1;
 
                     for ($index = 0; $index < $pages; $index++) {
                         try {
@@ -372,11 +372,10 @@ class Media extends AbstractHelper
         if ($this->_config->isUseImagePreview()) {
             if (!empty($draftIds)) {
                 $counter = 0;
-                $result->removeAllItems();
 
                 foreach ($draftIds as $draftIdKey => $draftId) {
                     $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-                    $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+                    $pages = $printformerDraft['pages'] ?? 1;
 
                     for ($index = 0; $index < $pages; $index++) {
                         try {
