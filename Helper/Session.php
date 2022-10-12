@@ -184,26 +184,29 @@ class Session extends AbstractHelper
     public function getDraftIdsByProductId(string $productId)
     {
         $resultDraftIds = [];
-        try {
-            $originSessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
-            if (is_array($originSessionUniqueIds) && !empty($originSessionUniqueIds)){
-                $sessionUniqueIds = implode(",", $originSessionUniqueIds);
 
+        $originSessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
+        if (!empty($originSessionUniqueIds)){
+            $sessionUniqueIds = implode(",", $originSessionUniqueIds);
+            if (!empty($sessionUniqueIds)) {
                 $draftProcess = $this->draftFactory->create();
                 $draftCollection = $draftProcess->getCollection()
                     ->addFieldToFilter('session_unique_id', ['in' => $sessionUniqueIds]);
                 $items = $draftCollection->getItems();
                 if (!empty($items)) {
                     foreach ($items as $item) {
-                        $productId = $item->getProductId();
-                        $printformerProductId = $item->getPrintformerProductId();
-                        if (!isset($resultDraftIds[$productId]))
-                            $resultDraftIds[$productId] = [];
-                        $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+                        if (!empty($item)) {
+                            $productId = $item->getProductId();
+                            $printformerProductId = $item->getPrintformerProductId();
+                            if(!empty($printformerProductId) && !empty($productId)) {
+                                if (!isset($resultDraftIds[$productId]))
+                                    $resultDraftIds[$productId] = [];
+                                $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+                            }
+                        }
                     }
                 }
             }
-        } catch (\Exception $e) {
         }
 
         return $resultDraftIds;
@@ -271,20 +274,20 @@ class Session extends AbstractHelper
      * Get unique id from session for the unique-ids-entry with corresponding product-id
      *
      * @param $productId
-     * @return string|null
+     * @return array
      */
-    public function getSessionUniqueIdsByProductId($productId)
+    public function getSessionUniqueIdsByProductId($productId): array
     {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-
         if (!empty($sessionUniqueIds) && !empty($productId)){
             if (isset($sessionUniqueIds[$productId])) {
-                if (isset($sessionUniqueIds[$productId])) {
-                    $sessionUniqueIds = $sessionUniqueIds[$productId];
-                }
+                $sessionUniqueIds = $sessionUniqueIds[$productId];
             }
         }
 
+        if (empty($sessionUniqueIds)) {
+            $sessionUniqueIds = [];
+        }
         return $sessionUniqueIds;
     }
 
