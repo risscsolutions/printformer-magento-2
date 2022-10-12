@@ -252,9 +252,9 @@ class ConfigurableProduct extends AbstractHelper
     /**
      * @param $superAttributes
      * @param $parentProductId
-     * @return \Magento\Catalog\Model\Product
+     * @return \Magento\Catalog\Model\Product|null
      */
-    public function getChildProductBySuperAttributes($superAttributes, $parentProductId): \Magento\Catalog\Model\Product
+    public function getChildProductBySuperAttributes($superAttributes, $parentProductId): \Magento\Catalog\Model\Product | null
     {
         $parentProduct = $this->productFactory->create()->load($parentProductId);
         return $this->configurable->getProductByAttributes($superAttributes, $parentProduct);

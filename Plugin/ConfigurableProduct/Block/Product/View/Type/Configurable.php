@@ -122,8 +122,10 @@ class Configurable
                             $buyRequestSuperAttribute = $buyRequest->getData('super_attribute');
                             if (!empty($buyRequestSuperAttribute)) {
                                 $childProductFromBuyRequest = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute, $parentProductId);
-                                if ($childProductFromBuyRequest->getId() != $productId) {
-                                    $draftIds = null;
+                                if (!empty($childProductFromBuyRequest)) {
+                                    if ($childProductFromBuyRequest->getId() != $productId) {
+                                        $draftIds = null;
+                                    }
                                 }
                             }
                         }
