@@ -87,17 +87,15 @@ class Plugin
                 }
 
                 if (!empty($draftFromBuyRequest)) {
-                    $draftIds = explode(',', $draftFromBuyRequest);
-
-                    $foreachCount = 0;
-
+                    $productId = $item->getProduct()->getId();
                     $userIdentifier = $this->_apiHelper->getUserIdentifier();
                     if ($userIdentifier != $customer->getPrintformerIdentification()) {
                         $userIdentifier = $customer->getPrintformerIdentification();
                     }
-                    $productId = $item->getProduct()->getId();
 
+                    $draftIds = explode(',', $draftFromBuyRequest);
                     $resultDraftIds = [];
+                    $foreachCount = 0;
                     foreach ($draftIds as $draftId) {
                         /** @var Draft $draftProcess */
                         $draftProcess = $this->_apiHelper->draftProcess($draftId);
