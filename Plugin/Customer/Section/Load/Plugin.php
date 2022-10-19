@@ -87,30 +87,43 @@ class Plugin
                 }
 
                 if (!empty($draftFromBuyRequest)) {
-                    $draftIds = explode(',', $draftFromBuyRequest);
+                    $productId = $item->getProduct()->getId();
+                    $userIdentifier = $this->_apiHelper->getUserIdentifier();
+                    if ($userIdentifier != $customer->getPrintformerIdentification()) {
+                        $userIdentifier = $customer->getPrintformerIdentification();
+                    }
 
+                    $draftIds = explode(',', $draftFromBuyRequest);
+                    $resultDraftIds = [];
+                    $foreachCount = 0;
                     foreach ($draftIds as $draftId) {
                         /** @var Draft $draftProcess */
                         $draftProcess = $this->_apiHelper->draftProcess($draftId);
                         if (!$draftProcess->getId()) {
+                            $resultDraftIds[] = $draftId;
                             continue;
                         }
 
-                        $userIdentifier = $this->_apiHelper->getUserIdentifier();
-                        if ($userIdentifier != $customer->getPrintformerIdentification()) {
-                            $userIdentifier = $customer->getPrintformerIdentification();
-                        }
-
                         if (!$draftProcess->getCustomerId()) {
-                            $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId());
-                            $draftId = $replicateDraft->getDraftId();
-                            $productId = $item->getProduct()->getId();
+                            $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId(), $userIdentifier);
+                            $newDraftId = $replicateDraft->getDraftId();
                             $pfProductId = $replicateDraft->getPrintformerProductId();
-                            $item->setPrintformerDraftid($draftId);
-                            $this->sessionHelper->removeSessionUniqueIdFromSession($productId, $pfProductId);
-                            $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
-                            $item->save();
+                            $resultDraftIds[] = $newDraftId;
+
+                            if ($foreachCount >= 0) {
+                                $this->sessionHelper->removeSessionUniqueIdFromSession($productId, $pfProductId);
+                                $foreachCount++;
+                            }
+                            $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $newDraftId);
+                        } else {
+                            $resultDraftIds[] = $draftId;
                         }
+                    }
+
+                    if (!empty($resultDraftIds)) {
+                        $draftIdField = implode(',', $resultDraftIds);
+                        $item->setPrintformerDraftid($draftIdField);
+                        $item->save();
                     }
                 }
             }
