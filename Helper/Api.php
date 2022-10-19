@@ -1048,9 +1048,11 @@ class Api extends AbstractHelper
 
     /**
      * @param $draftId
+     * @param $customerId
+     * @param $userIdentifier
      * @return false|Draft
      */
-    public function generateNewReplicateDraft($draftId, $customerId = null)
+    public function generateNewReplicateDraft($draftId, $customerId = null, $userIdentifier = null)
     {
         $result = false;
         $oldDraftId = $draftId;
@@ -1071,6 +1073,10 @@ class Api extends AbstractHelper
 
                 if (isset($customerId)) {
                     $draftData['customer_id'] = $customerId;
+                }
+
+                if (isset($userIdentifier)) {
+                    $draftData['user_identifier'] = $userIdentifier;
                 }
 
                 $newDraftProcess->addData($draftData);
