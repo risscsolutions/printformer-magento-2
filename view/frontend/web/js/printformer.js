@@ -321,14 +321,9 @@ define([
                     $('.loader-ring-message').hide();
                     $('#printformer-main-frame').show()
                 });
-
-                $(this.form).off();
             }
 
-            if (!this.options.isAddToCartRedirect) {
-                $(this.form).off();
-            }
-
+            $(this.form).off();
             $(this.form).submit();
         },
 
