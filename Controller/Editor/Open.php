@@ -226,19 +226,21 @@ class Open extends Action
         }
 
         /**
-         * Show an error if product id was not set
-         */
-        if (!$productId) {
-            $this->_die(__('We could not determine the right Parameters. Please try again.'));
-        }
-
-        /**
          * Open Editor in a frame if the display mode is set to "Shop Frame"
          * and we don't have a parameter set to override the config check
          */
         if (!$overrideFrameConfig && $this->_apiHelper->config()->isFrameEnabled()) {
             return $this->initShopFrame();
         }
+
+        /**
+         * Show an error if product id was not set
+         */
+        if (!$productId) {
+            $this->_die(__('We could not determine the right Parameters. Please try again.'));
+        }
+
+
 
         /**
          * Load product and save intent to session data
@@ -355,15 +357,15 @@ class Open extends Action
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
         $draftProcess->addData([
-                                   'draft_id' => $draftId,
-                                   'store_id' => $storeId,
-                                   'intent' => $intent,
-                                   'session_unique_id' => $sessionUniqueId,
-                                   'product_id' => $product->getId(),
-                                   'customer_id' => $customerId,
-                                   'user_identifier' => $userIdentifier,
-                                   'created_at' => time()
-                               ]);
+            'draft_id' => $draftId,
+            'store_id' => $storeId,
+            'intent' => $intent,
+            'session_unique_id' => $sessionUniqueId,
+            'product_id' => $product->getId(),
+            'customer_id' => $customerId,
+            'user_identifier' => $userIdentifier,
+            'created_at' => time()
+        ]);
         $draftProcess->getResource()->save($draftProcess);
 
         if (!$draftProcess->getId()) {
