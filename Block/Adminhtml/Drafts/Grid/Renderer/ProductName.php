@@ -56,7 +56,7 @@ class ProductName extends AbstractRenderer
         if ($row->getProductId()) {
             $product = $this->_productRepository->getById($row->getProductId());
             if ($product->getName()) {
-                $html = "<h3>" . $product->getName() . "</h3>";
+                $html = $product->getName() . "</br>";
                 if ($row->getSuperAttribute() && $product->getTypeId() == Configurable::TYPE_CODE) {
                     $superAttribute = $this->serializer->unserialize($row->getSuperAttribute());
                     $productAttributeOptions = $this->configurable->getConfigurableAttributesAsArray($product);
