@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Helper;
 
 use DateTimeImmutable;
+use GuzzleHttp\Exception\GuzzleException;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -458,6 +459,38 @@ class Api extends AbstractHelper
         }
 
         return $response['data']['draftHash'];
+    }
+
+    /**
+     * @param $userIdentifier
+     * @param $drafts
+     * @param $storeId
+     * @return bool
+     */
+    public function mergeUsers($originUserIdentifier, $tempUserIdentifier, $storeId = null)
+    {
+        if (!isset($storeId) || !is_numeric($storeId)) {
+            $storeId = $this->configHelper->searchForStoreId();
+        }
+
+        $url = $this->apiUrl()->getMergeUser($originUserIdentifier);
+
+        $requestData = [
+            'json' => [
+                'source_user_identifier' => $tempUserIdentifier
+            ]
+        ];
+
+        $result = false;
+        try {
+            $response = $this->getHttpClient($storeId)->post($url, $requestData);
+            $responseBody = $response->getBody();
+            $response = json_decode($responseBody, true);
+            $result = $response;
+        } catch (GuzzleException $e) {
+        }
+
+        return $result;
     }
 
     /**

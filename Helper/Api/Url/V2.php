@@ -26,6 +26,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_UPDATE_DRAFT = '/api-ext/draft/{draftId}';
     const API_GET_DRAFT_USAGE_PAGE_INFO = '/api-ext/draft/{draftId}/{usage}/page-info';
     const API_REPLICATE_DRAFT = '/api-ext/draft/{draftId}/replicate';
+    const API_MERGE_USERS = '/api-ext/user/{user}/merge';
     const API_UPLOAD_DRAFT = '/api-ext/draft/{draftId}/upload';
     const API_DRAFT_PROCESSING = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
@@ -203,6 +204,14 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getReplicateDraftId($oldDraftId)
     {
         return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::API_REPLICATE_DRAFT);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMergeUsers($originUserIdentifier)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace('{user}', $originUserIdentifier, self::API_MERGE_USERS);
     }
 
     /**

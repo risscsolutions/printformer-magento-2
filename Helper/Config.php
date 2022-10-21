@@ -157,6 +157,24 @@ class Config extends AbstractHelper
     }
 
     /**
+     * @return int
+     */
+    public function searchForStoreId() : int
+    {
+        $storeId = $this->getStoreIdFromRequest();
+
+        if (!is_numeric($storeId)) {
+            $storeId = $this->getStoreIdFromStoreManager();
+        }
+
+        if (!is_numeric($storeId)) {
+            $storeId = Store::DEFAULT_STORE_ID;
+        }
+
+        return $storeId;
+    }
+
+    /**
      * @param $config
      * @param $isSetFlag
      * @param $storeId

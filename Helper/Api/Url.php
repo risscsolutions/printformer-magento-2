@@ -279,6 +279,14 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
+    public function getMergeUser($originUserIdentifier)
+    {
+        return $this->getVersionHelper()->getMergeUsers($originUserIdentifier);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getUploadDraftId($draftId)
     {
         return $this->getVersionHelper()->getUploadDraftId($draftId);
