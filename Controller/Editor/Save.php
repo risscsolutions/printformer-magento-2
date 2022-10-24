@@ -175,7 +175,15 @@ class Save extends Action
                     ->setController('index')
                     ->forward('add');
             } elseif ($redirectAddToCart && $this->getRequest()->getParam('is_edit') != '1') {
-                $params['product'] = $product->getId();
+                $productId = $product->getId();
+                if ($product->getTypeId() === Type::TYPE_SIMPLE) {
+                    $parentProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId, $storeId);
+                    if (!empty($parentProduct)) {
+                        $productId = $parentProduct->getId();
+                    }
+                }
+
+                $params['product'] = $productId;
                 $params['printformer_unique_session_id'] = $uniqueID;
                 $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
                     ->setParams($this->prepareAddToCartParams($params))
@@ -185,11 +193,10 @@ class Save extends Action
             } else { // redirect to product page
                 if ($this->getRequest()->getParam('is_edit') == '1') {
                     $productId = $this->getRequest()->getParam('edit_product');
-
                     if ($product->getTypeId() === Type::TYPE_SIMPLE) {
-                        $product = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(), $storeId);
-                        if (!empty($product)) {
-                            $productId = $product->getId();
+                        $parentProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId, $storeId);
+                        if (!empty($parentProduct)) {
+                            $productId = $parentProduct->getId();
                         }
                     }
 
