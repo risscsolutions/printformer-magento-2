@@ -371,4 +371,9 @@ class Url extends AbstractHelper implements VersionInterface
     {
         return $this->getVersionHelper()->getClientName($storeId, $websiteId);
     }
+
+    public function getDefaultClientName($storeId)
+    {
+        return $this->getVersionHelper()->setStoreId($storeId)->getClientName();
+    }
 }

@@ -230,6 +230,26 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @param $storeId
+     * @return Client
+     */
+    public function getDefaultHttpClient($storeId)
+    {
+        if (!isset($this->_httpClients[$storeId])) {
+            $this->_httpClients[$storeId] = new Client([
+                'base_url' => $this->apiUrl()->setStoreId($storeId)->getPrintformerBaseUrl(),
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->_config->setStoreId($storeId)->getClientApiKey(),
+                ]
+            ]);
+        }
+
+        return $this->_httpClients[$storeId];
+    }
+
+
+    /**
      * @return Config
      */
     public function config()
