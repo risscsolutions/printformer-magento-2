@@ -39,7 +39,7 @@ class Url extends AbstractHelper implements VersionInterface
 
     public function getDefaultClientName()
     {
-        return $this->getVersionHelper()->setStoreId(self::ADMIN_SCOPE)->getClientName();
+        return $this->getVersionHelper()->getClientName(self::ADMIN_SCOPE);
     }
 
     /**
