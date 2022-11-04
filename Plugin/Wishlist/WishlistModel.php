@@ -2,8 +2,13 @@
 
 namespace Rissc\Printformer\Plugin\Wishlist;
 
+use Magento\Catalog\Model\Product;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product as ProductModel;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
+use Magento\Framework\DataObject;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Wishlist\Model\Wishlist;
@@ -30,6 +35,7 @@ class WishlistModel
     protected $sessionHelper;
     private productHelper $productHelper;
     private configHelper $configHelper;
+    private ProductRepositoryInterface $productRepository;
 
     /**
      * WishlistModel constructor.
@@ -42,24 +48,26 @@ class WishlistModel
         StoreManagerInterface $storeManager,
         SessionHelper $sessionHelper,
         ProductHelper $productHelper,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        ProductRepositoryInterface $productRepository
     ) {
         $this->registry = $registry;
         $this->storeManager = $storeManager;
         $this->sessionHelper = $sessionHelper;
         $this->productHelper = $productHelper;
         $this->configHelper = $configHelper;
+        $this->productRepository = $productRepository;
     }
 
     /**
      * @param Wishlist $subject
-     * @param $product
+     * @param int|Product $product
      * @param null $buyRequest
      * @param bool $forciblySetQty
      */
     public function beforeAddNewItem(
         Wishlist $subject,
-        ProductModel $product,
+        int|ProductModel $product,
         $buyRequest = null,
         $forciblySetQty = false
     ) {
@@ -69,13 +77,23 @@ class WishlistModel
             $storeId = $this->storeManager->getStore()->getId();
         }
 
+        if (!$product instanceof Product) {
+            $productId = (int)$product;
+            try {
+                /** @var Product $product */
+                $product = $this->productRepository->getById($productId, false, $storeId);
+            } catch (NoSuchEntityException $e) {
+                throw new LocalizedException(__('Cannot specify product.'));
+            }
+        }
+
         if ($this->configHelper->useDraftInWishlist($storeId)) {
             if (is_string($buyRequest)) {
-                $buyRequest = new \Magento\Framework\DataObject(unserialize($buyRequest));
+                $buyRequest = new DataObject(unserialize($buyRequest));
             } elseif (is_array($buyRequest)) {
-                $buyRequest = new \Magento\Framework\DataObject($buyRequest);
-            } elseif (!$buyRequest instanceof \Magento\Framework\DataObject) {
-                $buyRequest = new \Magento\Framework\DataObject();
+                $buyRequest = new DataObject($buyRequest);
+            } elseif (!$buyRequest instanceof DataObject) {
+                $buyRequest = new DataObject();
             }
 
             if (!$this->configHelper->filterForConfigurableProduct()) {
