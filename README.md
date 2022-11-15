@@ -18,4 +18,4 @@
   - php - 8.1
   - mysql - 8.0.28
 
-**All relevant changes are noted in our [Changelog]**(CHANGELOG.md) 
+**All relevant changes are noted in our [Changelog](CHANGELOG.md)** 
