@@ -19,6 +19,8 @@
                 <order_status>pending</order_status>
                 <redirect_on_cancel>1</redirect_on_cancel>
                 <transfer_user_data>0</transfer_user_data>
+                <filter_for_configurable_product>1</filter_for_configurable_product>
+                <use_draft_in_wishlist>0</use_draft_in_wishlist>
             </general>
             <draft>
                 <draft_update>0</draft_update>

@@ -124,7 +124,10 @@ class Configurable extends parentConfigurable
                         if (!empty($wishlistItem)) {
                             $wishlistProductId = $wishlistItem->getProductId();
                             if (!empty($wishlistProductId) && $productId == $wishlistProductId) {
-                                $draftId = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID)->getValue();
+                                $option = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                                if (!empty($option)) {
+                                    $draftId = $option->getValue();
+                                }
                             }
                         }
                         break;
