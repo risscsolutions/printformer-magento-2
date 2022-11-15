@@ -1,3 +1,5 @@
+[<img src="view/adminhtml/web/images/rissc_logo_2020.png" width="100" height="100">](https://www.rissc.de/web2print-mit-magento2/)
+
 ## Rissc Printformer Extension and Magento 2
 
 ### Installation
