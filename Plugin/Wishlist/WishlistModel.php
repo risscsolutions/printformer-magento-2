@@ -71,7 +71,15 @@ class WishlistModel
         $buyRequest = null,
         $forciblySetQty = false
     ) {
-        if (isset($buyRequest) && $buyRequest->getStoreId()) {
+        if (is_string($buyRequest)) {
+            $buyRequest = new DataObject(unserialize($buyRequest));
+        } elseif (is_array($buyRequest)) {
+            $buyRequest = new DataObject($buyRequest);
+        } elseif (!$buyRequest instanceof DataObject) {
+            $buyRequest = new DataObject();
+        }
+
+        if ($buyRequest->getStoreId()) {
             $storeId = $buyRequest->getStoreId();
         } else {
             $storeId = $this->storeManager->getStore()->getId();
@@ -88,14 +96,6 @@ class WishlistModel
         }
 
         if ($this->configHelper->useDraftInWishlist($storeId)) {
-            if (is_string($buyRequest)) {
-                $buyRequest = new DataObject(unserialize($buyRequest));
-            } elseif (is_array($buyRequest)) {
-                $buyRequest = new DataObject($buyRequest);
-            } elseif (!$buyRequest instanceof DataObject) {
-                $buyRequest = new DataObject();
-            }
-
             if (!$this->configHelper->filterForConfigurableProduct()) {
                 if ($product->getTypeId() === ConfigurableType::TYPE_CODE) {
                     $childproduct = $this->productHelper->getChildProduct($product, $buyRequest->getSuperAttribute());
@@ -107,34 +107,7 @@ class WishlistModel
 
             if (!empty($product)){
                 $productId = $product->getId();
-                $drafts = $this->sessionHelper->getDraftIdsByProductId($productId);
-                if (!empty($drafts[$productId])) {
-                    foreach ($drafts[$productId] as $draftKey => $draftValue) {
-                        $printformerProductId = $draftKey;
-                        if ($buyRequest->getData('_processing_params')) {
-                            $draftId = $buyRequest
-                                ->getData('_processing_params')
-                                ->getData('current_config')
-                                ->getData($this->productHelper::COLUMN_NAME_DRAFTID);
-                            if ($draftId) {
-                                $buyRequest->setData($this->productHelper::COLUMN_NAME_DRAFTID, $draftId);
-                            }
-                        } elseif (!empty($draftValue)) {
-                            $draftIdsStored = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
-                            if (!empty($draftIdsStored)){
-                                $draftIds = $draftIdsStored . ',' . $draftValue;
-                            } else {
-                                $draftIds = $draftValue;
-                            }
-                            $buyRequest->setData(
-                                $this->productHelper::COLUMN_NAME_DRAFTID,
-                                $draftIds
-                            );
-                            $this->sessionHelper->unsetSessionUniqueIdByDraftId($draftValue);
-                            $this->sessionHelper->unsetDraftId($productId, $printformerProductId, $storeId);
-                        }
-                    }
-                }
+                $this->sessionHelper->loadDraftsForBuyRequest($productId, $storeId, $buyRequest);
             }
         }
     }

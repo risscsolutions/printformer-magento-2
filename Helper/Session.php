@@ -181,7 +181,7 @@ class Session extends AbstractHelper
         return $uniqueId;
     }
 
-    public function getDraftIdsByProductId(string $productId)
+    public function loadDraftIdsFromSession(string $productId): array
     {
         $resultDraftIds = [];
 
@@ -210,6 +210,48 @@ class Session extends AbstractHelper
         }
 
         return $resultDraftIds;
+    }
+
+    /**
+     * @param $productId
+     * @param $storeId
+     * @param $buyRequest
+     * @return void
+     */
+    public function loadDraftsForBuyRequest($productId, $storeId, $buyRequest): void
+    {
+        $buyRequestDraftFieldData = $buyRequest->getData($this::SESSION_KEY_PRINTFORMER_DRAFTID);
+        if(empty($buyRequestDraftFieldData)) {
+            $draftField = $this->loadDraftIdsFromSession($productId);
+        }
+
+        if (!empty($draftField[$productId])) {
+            foreach ($draftField[$productId] as $draftKey => $draftValue) {
+                $printformerProductId = $draftKey;
+                if ($buyRequest->getData('_processing_params')) {
+                    $draftId = $buyRequest
+                        ->getData('_processing_params')
+                        ->getData('current_config')
+                        ->getData($this::SESSION_KEY_PRINTFORMER_DRAFTID);
+                    if ($draftId) {
+                        $buyRequest->setData($this::SESSION_KEY_PRINTFORMER_DRAFTID, $draftId);
+                    }
+                } elseif (!empty($draftValue)) {
+                    $draftIdsStored = $buyRequest->getData($this::SESSION_KEY_PRINTFORMER_DRAFTID);
+                    if (!empty($draftIdsStored)){
+                        $draftIds = $draftIdsStored . ',' . $draftValue;
+                    } else {
+                        $draftIds = $draftValue;
+                    }
+                    $buyRequest->setData(
+                        $this::SESSION_KEY_PRINTFORMER_DRAFTID,
+                        $draftIds
+                    );
+                    $this->unsetSessionUniqueIdByDraftId($draftValue);
+                    $this->unsetDraftId($productId, $printformerProductId, $storeId);
+                }
+            }
+        }
     }
 
     /**
