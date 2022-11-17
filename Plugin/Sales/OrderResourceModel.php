@@ -98,9 +98,9 @@ class OrderResourceModel
                     continue;
                 }
 
-                $draftIds = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                if (!empty($draftIds)){
-                    $itemDraftIds = explode(',', $draftIds);
+                $printDraftIds = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                if (!empty($printDraftIds)){
+                    $itemDraftIds = explode(',', $printDraftIds);
                     foreach ($itemDraftIds as $draftId) {
                         $draftIds[] = $draftId;
                         $this->draftFactory
