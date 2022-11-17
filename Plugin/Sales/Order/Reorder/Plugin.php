@@ -45,12 +45,12 @@ class Plugin
     /**
      * @param Cart $subject
      * @param Closure $originalAddProduct
-     * @param int|Product $product
+     * @param Product $product
      * @param $buyRequest
      * @return mixed
      * @throws AlreadyExistsException
      */
-    public function aroundAddProduct(Cart $subject, Closure $originalAddProduct, int|Product $product, $buyRequest)
+    public function aroundAddProduct(Cart $subject, Closure $originalAddProduct, Product $product, $buyRequest)
     {
         if ($this->_registry->registry('printformer_is_reorder')) {
             $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
