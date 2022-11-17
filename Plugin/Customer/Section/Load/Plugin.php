@@ -79,6 +79,7 @@ class Plugin
             $quote = $this->_quoteFactory->create();
             $this->_quoteResource->loadByCustomerId($quote, $customer->getId());
 
+            $guestUserIdentifiers = [];
             /** @var Quote\Item $item */
             foreach ($quote->getAllItems() as $item) {
                 $draftFromBuyRequest = $item->getPrintformerDraftid();
@@ -87,8 +88,12 @@ class Plugin
                 }
 
                 if (!empty($draftFromBuyRequest)) {
-                    $draftIds = explode(',', $draftFromBuyRequest);
+                    $loggedUserIdentifier = $this->_apiHelper->getUserIdentifier();
+                    if ($loggedUserIdentifier != $customer->getPrintformerIdentification()) {
+                        $loggedUserIdentifier = $customer->getPrintformerIdentification();
+                    }
 
+                    $draftIds = explode(',', $draftFromBuyRequest);
                     foreach ($draftIds as $draftId) {
                         /** @var Draft $draftProcess */
                         $draftProcess = $this->_apiHelper->draftProcess($draftId);
@@ -96,20 +101,14 @@ class Plugin
                             continue;
                         }
 
-                        $userIdentifier = $this->_apiHelper->getUserIdentifier();
-                        if ($userIdentifier != $customer->getPrintformerIdentification()) {
-                            $userIdentifier = $customer->getPrintformerIdentification();
-                        }
-
-                        if (!$draftProcess->getCustomerId()) {
-                            $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId());
-                            $draftId = $replicateDraft->getDraftId();
-                            $productId = $item->getProduct()->getId();
-                            $pfProductId = $replicateDraft->getPrintformerProductId();
-                            $item->setPrintformerDraftid($draftId);
-                            $this->sessionHelper->removeSessionUniqueIdFromSession($productId, $pfProductId);
-                            $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
-                            $item->save();
+                        $userIdentifierUsedInDraft = $draftProcess->getUserIdentifier();
+                        if (!$draftProcess->getCustomerId() && $userIdentifierUsedInDraft !== $loggedUserIdentifier) {
+                            if (!in_array($userIdentifierUsedInDraft, $guestUserIdentifiers)) {
+                                $this->_apiHelper->mergeUsers($loggedUserIdentifier, $userIdentifierUsedInDraft);
+                                $guestUserIdentifiers[] = $userIdentifierUsedInDraft;
+                            }
+                            $draftProcess->setData('user_identifier', $loggedUserIdentifier);
+                            $draftProcess->save();
                         }
                     }
                 }
