@@ -321,9 +321,13 @@ class Session extends AbstractHelper
     public function getSessionUniqueIdsByProductId($productId): array
     {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        if (!empty($sessionUniqueIds) && !empty($productId)){
-            if (isset($sessionUniqueIds[$productId])) {
+        if (!empty($sessionUniqueIds)){
+            $sessionUniqueIdsShifted = $sessionUniqueIds;
+            $sessionUniqueIdsShifted = array_shift($sessionUniqueIdsShifted);
+            if (empty($sessionUniqueIdsShifted) && !empty($sessionUniqueIds[$productId])) {
                 $sessionUniqueIds = $sessionUniqueIds[$productId];
+            } else {
+                $sessionUniqueIds = $sessionUniqueIdsShifted;
             }
         }
 
