@@ -12,6 +12,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -135,13 +136,18 @@ class Add extends AbstractIndex implements HttpPostActionInterface
         }
 
         $itemId = (int)$this->getRequest()->getParam('item');
-        $item = $this->cart->getQuote()->getItemById($itemId);
-        if (!$item) {
-            throw new LocalizedException(
-                __("The cart item doesn't exist.")
-            );
+        $item = false;
+        if ($itemId) {
+            $item = $this->cart->getQuote()->getItemById($itemId);
+            if (!$item) {
+                throw new LocalizedException(
+                    __("The cart item doesn't exist.")
+                );
+            }
+            $productId = $item->getProductId();
+        } else {
+            $productId = isset($requestParams['product']) ? (int)$requestParams['product'] : null;
         }
-        $productId = $item->getProductId();
 
         if (!$productId) {
             $resultRedirect->setPath('*/');
@@ -161,7 +167,11 @@ class Add extends AbstractIndex implements HttpPostActionInterface
         }
 
         try {
-            $buyRequest = $item->getBuyRequest();
+            if ($item) {
+                $buyRequest = $item->getBuyRequest();
+            } else {
+                $buyRequest = new DataObject($requestParams);
+            }
             $result = $wishlist->addNewItem($productId, $buyRequest);
 
             if (is_string($result)) {
