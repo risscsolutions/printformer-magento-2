@@ -4,11 +4,11 @@
         <tab id="rissc_extensions" translate="label" sortOrder="110" class="admin__page-rissc-tab">
             <label>Rissc Extensions</label>
         </tab>
-        <section id="printformer" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+        <section id="printformer" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Printformer</label>
             <tab>rissc_extensions</tab>
             <resource>Rissc_Printformer::config</resource>
-            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>General</label>
                 <field id="rissc_printformer_extension" showInDefault="1" showInStore="0" showInWebsite="0" sortOrder="0" translate="label" type="text">
                     <label>Rissc Printformer Extension Version</label>
@@ -42,7 +42,7 @@
                         <field id="redirect_after_config">1</field>
                     </depends>
                 </field>
-                <field id="redirect_on_cancel" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="redirect_on_cancel" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Redirect to product detail page on cancel</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
@@ -84,19 +84,19 @@
                         <field id="display_mode">2</field>
                     </depends>
                 </field>
-                <field id="guest_wishlist_hint" translate="label" type="textarea" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="guest_wishlist_hint" translate="label" type="textarea" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Wishlist Hint Text for Guest Users</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="cart_edit_text" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="cart_edit_text" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>"Edit" Text in Cart</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="expire_date" translate="label" type="text" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="expire_date" translate="label" type="text" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Printfile ExpireDate (days)</label>
                     <depends>
                         <field id="enabled">1</field>
@@ -137,7 +137,7 @@
                         <field id="product_image_preview">1</field>
                     </depends>
                 </field>
-                <field id="config_button_text" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="config_button_text" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Design Button Text</label>
                     <depends>
                         <field id="enabled">1</field>
@@ -149,19 +149,19 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="close_text" translate="label" type="text" sortOrder="160" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="close_text" translate="label" type="text" sortOrder="160" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>"Editor Close" Notice Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="open_editor_preview_text" translate="label" type="text" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="open_editor_preview_text" translate="label" type="text" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Open Editor Preview Text</label>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="delete_confirm_text" translate="label" type="text" sortOrder="190" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="delete_confirm_text" translate="label" type="text" sortOrder="190" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Delete confirm text</label>
                     <depends>
                         <field id="enabled">1</field>
@@ -203,7 +203,7 @@
                     </depends>
                 </field>
             </group>
-            <group id="draft" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="draft" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>Additional Draft Configuration</label>
                 <field id="draft_update" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Update draft after order save</label>
@@ -222,7 +222,7 @@
                     </depends>
                 </field>
             </group>
-            <group id="version2group" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="version2group" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                 <label>API Credentials</label>
                 <field id="v2url" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Remote host</label>
@@ -252,7 +252,7 @@
                 <label>Information</label>
                 <frontend_model>Rissc\Printformer\Block\Adminhtml\Group\Markdown\Readme</frontend_model>
             </group>
-            <group id="changelog" translate="label" type="text" sortOrder="9999" showInDefault="0" showInWebsite="0"
+            <group id="changelog" translate="label" type="text" sortOrder="9999" showInDefault="1" showInWebsite="1"
                    showInStore="0">
                 <comment><![CDATA[]]></comment>
                 <label>Changelog</label>
