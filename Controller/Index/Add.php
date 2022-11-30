@@ -21,10 +21,11 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\App\Response\RedirectInterface;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Wishlist\Controller\AbstractIndex;
 use Magento\Wishlist\Controller\WishlistProviderInterface;
+use Magento\Wishlist\Controller\AbstractIndex;
 use Magento\Checkout\Model\Cart as CheckoutCart;
 use Magento\Wishlist\Helper\Data as WishlistHelper;
+use Magento\Checkout\Helper\Cart as CartHelper;
 
 /**
  * Override the wishlist-add controller
@@ -72,6 +73,11 @@ class Add extends AbstractIndex implements HttpPostActionInterface
     private WishlistHelper $wishlistHelper;
 
     /**
+     * @var CartHelper
+     */
+    private CartHelper $cartHelper;
+
+    /**
      * @param Context $context
      * @param Session $customerSession
      * @param WishlistProviderInterface $wishlistProvider
@@ -79,6 +85,7 @@ class Add extends AbstractIndex implements HttpPostActionInterface
      * @param Validator $formKeyValidator
      * @param CheckoutCart $checkoutCart
      * @param WishlistHelper $wishlistHelper
+     * @param CartHelper $cartHelper
      * @param RedirectInterface|null $redirect
      * @param UrlInterface|null $urlBuilder
      */
@@ -90,6 +97,7 @@ class Add extends AbstractIndex implements HttpPostActionInterface
         Validator $formKeyValidator,
         CheckoutCart $checkoutCart,
         WishlistHelper $wishlistHelper,
+        CartHelper $cartHelper,
         RedirectInterface $redirect = null,
         UrlInterface $urlBuilder = null
     ) {
@@ -99,6 +107,7 @@ class Add extends AbstractIndex implements HttpPostActionInterface
         $this->formKeyValidator = $formKeyValidator;
         $this->cart = $checkoutCart;
         $this->wishlistHelper = $wishlistHelper;
+        $this->cartHelper = $cartHelper;
         $this->redirect = $redirect ?: ObjectManager::getInstance()->get(RedirectInterface::class);
         $this->urlBuilder = $urlBuilder ?: ObjectManager::getInstance()->get(UrlInterface::class);
         parent::__construct($context);
@@ -174,13 +183,20 @@ class Add extends AbstractIndex implements HttpPostActionInterface
             }
             $result = $wishlist->addNewItem($productId, $buyRequest);
 
+            if ($itemId) {
+                $this->cart->getQuote()->removeItem($itemId);
+                $this->cart->save();
+            }
+
             if (is_string($result)) {
                 throw new LocalizedException(__($result));
             }
+
             if ($wishlist->isObjectNew()) {
                 $this->wishlistHelper->calculate();
                 $wishlist->save();
             }
+
             $this->_eventManager->dispatch(
                 'wishlist_add_product',
                 ['wishlist' => $wishlist, 'product' => $product, 'item' => $result]
@@ -222,8 +238,8 @@ class Add extends AbstractIndex implements HttpPostActionInterface
 
             return $resultJson;
         }
-        $resultRedirect->setPath('*', ['wishlist_id' => $wishlist->getId()]);
 
+        $resultRedirect->setUrl($this->cartHelper->getCartUrl());
         return $resultRedirect;
     }
 }
