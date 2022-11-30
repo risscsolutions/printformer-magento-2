@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [100.9.1] - 30-11-2022
+### Added
+- Adding logic for simple products to assign printformer templates. The setting to activate is 
+"Use Configurable Product filter to get Printformer Products" = "no" - default is yes/disabled (WEM-1690)
+- Added config "Save draft on wishlist" and logic to add drafts into wishlist-item 
+and move between cart-item and wishlist-item (WEM-1874, WEM-1690, WEM-1940)
+### Fixed
+- Multiple printformer products on same product can be assigned and used in checkout process correctly (WEM-1690)
+- Preselection after editor exit is adjusted for default magento swatches renderer js file, (magento 2.4.5 can still 
+produce issues cause this swatches renderer file is broken in magento c.e. 2.4.5 (WEM-1749)
+- After draft creation from guest user, when we switch to other user, we have exceptions caused by different draft-owner
+when, entering draft again. This is fixed now with printformer merge identifier command to transfer all rights from 
+guest user identifier to logged user identifier (WEM-1750)
+
 ## [100.8.70] - 14-11-2022
 ### Fixed
 - After redirect to product on stage konfig / version buttons remains disabled - WEM-1866
