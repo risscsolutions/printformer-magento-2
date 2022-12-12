@@ -2,7 +2,9 @@
 namespace Rissc\Printformer\Helper;
 
 use DateInterval;
+use DateTime;
 use DateTimeImmutable;
+use Exception;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\EncryptorInterface;
@@ -81,6 +83,8 @@ class Config extends AbstractHelper
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
     const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
 
+    const XML_PATH_CONFIG_SEARCH_TEMPLATES_ON_DEFAULT_STORE_CONFIG = 'printformer/general/search_templates_on_default_store_config';
+
     public const XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED = 'cataloginventory/item_options/manage_stock';
 
     /**
@@ -102,7 +106,7 @@ class Config extends AbstractHelper
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param EncryptorInterface $encryptor
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function __construct(
         Context $context,
@@ -266,7 +270,7 @@ class Config extends AbstractHelper
     /**
      * @return bool
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function isFullscreenButtonEnabled($storeId = false, $websiteId = false)
     {
@@ -438,7 +442,7 @@ class Config extends AbstractHelper
         try {
             $dateTimeInterval = new DateInterval('P' . $days . 'D');
             $expireDateTimeImmutable = $dateTimeImmutable->add($dateTimeInterval);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_logger->warning('invalid datetime interval format, please verify');
         }
 
@@ -452,7 +456,7 @@ class Config extends AbstractHelper
     {
         $days = $this->getConfigValue(self::XML_PATH_CONFIG_EXPIRE_DATE, false, $storeId, $websiteId);
 
-        return (new \DateTime())->add(\DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
+        return (new DateTime())->add(DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
     }
 
     /**
@@ -776,5 +780,53 @@ class Config extends AbstractHelper
             $result = false;
         }
         return $result;
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function searchTemplatesOnDefaultStoreConfig($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_SEARCH_TEMPLATES_ON_DEFAULT_STORE_CONFIG, true, $storeId, $websiteId);
+    }
+
+    /**
+     * Function to verify if for a given store id the filter with default store can ne used.
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function defaultStoreTemplatesCanBeUsed(int $storeId): bool
+    {
+        $isApiKeyEquivalentToDefault = $this->isApiKeyEquivalentToDefault($storeId);
+        $searchTemplatesOnDefaultStoreConfig = $this->searchTemplatesOnDefaultStoreConfig($storeId);
+
+        if ($isApiKeyEquivalentToDefault && $searchTemplatesOnDefaultStoreConfig) {
+            $defaultStoreTemplatesCanBeUsed = true;
+        } else {
+            $defaultStoreTemplatesCanBeUsed = false;
+        }
+
+        return $defaultStoreTemplatesCanBeUsed;
+    }
+
+    /**
+     * Function to check if the api-key of a given store is equivalent to the stored default key
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function isApiKeyEquivalentToDefault(int $storeId)
+    {
+        $storeApiKey = $this->getClientApiKey($storeId);
+        $defaultApiKey = $this->getClientApiKey(STORE::DEFAULT_STORE_ID);
+
+        if ($storeApiKey == $defaultApiKey) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
