@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Exception;
 use Magento\Catalog\Model\Product as ProductModel;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface as ProductAttributeRepository;
 use Magento\Catalog\Model\ProductRepository;
@@ -19,6 +20,7 @@ use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Setup\InstallSchema;
+use Magento\Store\Model\Store;
 
 class Product extends AbstractHelper
 {
@@ -107,14 +109,23 @@ class Product extends AbstractHelper
      * @param array $childProductIds
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [])
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [], $defaultStoreTemplatesCanBeUsedOnFrontend = true)
     {
         $connection = $this->resourceConnection->getConnection();
 
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
 
-        $select->where('store_id = ?', intval($storeId));
+        if ($defaultStoreTemplatesCanBeUsedOnFrontend) {
+            $defaultStoreCanBeUsed = $this->configHelper->defaultStoreTemplatesCanBeUsed($storeId);
+            if ($defaultStoreCanBeUsed) {
+                $select->where('store_id IN ('.STORE::DEFAULT_STORE_ID.', ?)', intval($storeId));
+            } else {
+                $select->where('store_id = ?', intval($storeId));
+            }
+        } else {
+            $select->where('store_id = ?', intval($storeId));
+        }
 
         if (!empty($childProductIds)){
             array_unshift($childProductIds, $productId);
@@ -173,7 +184,7 @@ class Product extends AbstractHelper
      */
     public function getCatalogProductPrintformerProductsArray($productId, $storeId = 0)
     {
-        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, []);
+        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, [], false);
 
         foreach($result as &$row) {
             $printformerProduct = $this->productFactory->create();
@@ -378,7 +389,7 @@ class Product extends AbstractHelper
                 ->addFieldToFilter('draft_id', ['eq' => $draftId]);
             $lastItem = $draftCollection->getLastItem();
             $printformerProductId = $lastItem->getPrintformerProductId();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
         return $printformerProductId;
     }
@@ -395,7 +406,7 @@ class Product extends AbstractHelper
             $draftCollection = $draftProcess->getCollection()
                 ->addFieldToFilter('draft_id', ['eq' => $draftId]);
             $resultItem = $draftCollection->getLastItem();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
         return $resultItem;
     }
