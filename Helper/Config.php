@@ -82,7 +82,7 @@ class Config extends AbstractHelper
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
     const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
 
-    const XML_PATH_CONFIG_SEARCH_TEMPLATES_ON_DEFAULT_STORE_CONFIG = 'printformer/general/search_templates_on_default_store_config';
+    const XML_PATH_CONFIG_USE_ALL_STORES_DEFAULT_TEMPLATES_IF_NO_TEMPLATES_ASSIGNED_ON_STORE = 'printformer/general/use_all_stores_default_templates_if_no_templates_assigned_on_store';
 
     public const XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED = 'cataloginventory/item_options/manage_stock';
 
@@ -760,9 +760,9 @@ class Config extends AbstractHelper
      * @param $websiteId
      * @return bool
      */
-    public function searchTemplatesOnDefaultStoreConfig($storeId = false, $websiteId = false)
+    public function useDefaultTemplatesIfStoreTemplatesMissing($storeId = false, $websiteId = false)
     {
-        return $this->getConfigValue(self::XML_PATH_CONFIG_SEARCH_TEMPLATES_ON_DEFAULT_STORE_CONFIG, true, $storeId, $websiteId);
+        return $this->getConfigValue(self::XML_PATH_CONFIG_USE_ALL_STORES_DEFAULT_TEMPLATES_IF_NO_TEMPLATES_ASSIGNED_ON_STORE, true, $storeId, $websiteId);
     }
 
     /**
@@ -774,9 +774,9 @@ class Config extends AbstractHelper
     public function defaultStoreTemplatesCanBeUsed(int $storeId): bool
     {
         $isApiKeyEquivalentToDefault = $this->isApiKeyEquivalentToDefault($storeId);
-        $searchTemplatesOnDefaultStoreConfig = $this->searchTemplatesOnDefaultStoreConfig($storeId);
+        $defaultStoreTemplatesCanBeUsed = $this->useDefaultTemplatesIfStoreTemplatesMissing($storeId);
 
-        if ($isApiKeyEquivalentToDefault && $searchTemplatesOnDefaultStoreConfig) {
+        if ($isApiKeyEquivalentToDefault && $defaultStoreTemplatesCanBeUsed) {
             $defaultStoreTemplatesCanBeUsed = true;
         } else {
             $defaultStoreTemplatesCanBeUsed = false;
