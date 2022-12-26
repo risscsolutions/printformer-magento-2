@@ -744,9 +744,11 @@ class Api extends AbstractHelper
                 ]);
             }
 
+            $userIdentifier = $this->getUserIdentifier();
+
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($masterId, $userIdentifier, $storeId, $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -760,7 +762,7 @@ class Api extends AbstractHelper
                     'session_unique_id' => $sessionUniqueId,
                     'product_id' => $productId,
                     'customer_id' => $customerId,
-                    'user_identifier' => $this->getUserIdentifier(),
+                    'user_identifier' => $userIdentifier,
                     'created_at' => time(),
                     'printformer_product_id' => $printformerProductId,
                     'color_variation' => $colorVariation
