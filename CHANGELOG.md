@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [100.8.72] - 26-12-2022
+### Fixed
+- Fix api duplicate process userIdentifier - WEM-1964
+- Fix Debug bug constructor - WEM-1960
+  <br>
+
 ## [100.8.71] - 13-12-2022
 ### Fixed
 - Fix sales plugin checkout error - WEM-1895 & WEM-1972
