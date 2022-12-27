@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Class CsrfValidatorSkip
+ *
  * @package Rissc\Printformer\Plugin
  */
 class CsrfValidatorSkip
@@ -21,7 +22,8 @@ class CsrfValidatorSkip
 
     /**
      * CsrfValidatorSkip constructor.
-     * @param LoggerInterface $logger
+     *
+     * @param   LoggerInterface  $logger
      */
     public function __construct(LoggerInterface $logger)
     {
@@ -30,20 +32,23 @@ class CsrfValidatorSkip
 
 
     /**
-     * @param CsrfValidator $subject
-     * @param Closure $proceed
-     * @param RequestInterface $request
-     * @param ActionInterface $action
+     * @param   CsrfValidator     $subject
+     * @param   Closure           $proceed
+     * @param   RequestInterface  $request
+     * @param   ActionInterface   $action
      */
     public function aroundValidate(
         $subject,
         Closure $proceed,
         $request,
         $action
-    )
-    {
-        if (strpos($request->getPathInfo(), 'printformer/process/draft') != false) {
-            $this->logger->debug('Callback post-request for draft processing registered: '.$request->getUriString());
+    ) {
+        if (strpos($request->getPathInfo(), 'printformer/process/draft')
+            != false
+        ) {
+            $this->logger->debug('Callback post-request for draft processing registered: '
+                .$request->getUriString());
+
             return; // Skip CSRF check
         }
         if (strpos($request->getPathInfo(), 'printformer/upload') != false) {

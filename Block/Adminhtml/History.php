@@ -7,6 +7,16 @@ use Magento\Framework\View\Element\BlockInterface;
 
 class History extends Container implements BlockInterface
 {
+    public function toHtml()
+    {
+        /** @var History\Grid\Info $infoBlock */
+        $infoBlock = $this->getLayout()
+            ->createBlock('Rissc\Printformer\Block\Adminhtml\History\Grid\Info');
+        $infoBlock->setTemplate('Rissc_Printformer::history/grid/info.phtml');
+
+        return parent::toHtml().$infoBlock->toHtml();
+    }
+
     protected function _construct()
     {
         $this->_controller = 'adminhtml_history';
@@ -15,13 +25,5 @@ class History extends Container implements BlockInterface
         parent::_construct();
 
         $this->removeButton('add');
-    }
-
-    public function toHtml()
-    {
-        /** @var History\Grid\Info $infoBlock */
-        $infoBlock = $this->getLayout()->createBlock('Rissc\Printformer\Block\Adminhtml\History\Grid\Info');
-        $infoBlock->setTemplate('Rissc_Printformer::history/grid/info.phtml');
-        return parent::toHtml() . $infoBlock->toHtml();
     }
 }

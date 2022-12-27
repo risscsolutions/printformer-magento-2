@@ -10,36 +10,37 @@ class Preselect extends AbstractHelper
     {
         $preselectedOptions = [
             'product' => $formData['product'],
-            'options' => !empty($formData['options']) ? $this->_getOptionsArray($formData['options']) : [],
-            'qty' => ['value' => $formData['qty']]
+            'options' => !empty($formData['options'])
+                ? $this->_getOptionsArray($formData['options']) : [],
+            'qty'     => ['value' => $formData['qty']],
         ];
 
-        $preselectedOptions['super_attribute'] = !empty($formData['super_attribute']) ? $this->realignOptions
+        $preselectedOptions['super_attribute']
+            = !empty($formData['super_attribute']) ? $this->realignOptions
         ($formData['super_attribute']) : [];
+
         return $preselectedOptions;
     }
 
-    /**
-     * @param array $options
-     *
-     * @return array
-     */
-    protected function realignOptions(array $options)
+    protected function _getOptionsArray($options)
     {
         $allignedOptions = [];
-        foreach($options as $optionId => $optionValue)
-        {
+        foreach ($options as $optionId => $optionValue) {
             $allignedOptions[$optionId] = ['value' => $optionValue];
         }
 
         return $allignedOptions;
     }
 
-    protected function _getOptionsArray($options)
+    /**
+     * @param   array  $options
+     *
+     * @return array
+     */
+    protected function realignOptions(array $options)
     {
         $allignedOptions = [];
-        foreach($options as $optionId => $optionValue)
-        {
+        foreach ($options as $optionId => $optionValue) {
             $allignedOptions[$optionId] = ['value' => $optionValue];
         }
 

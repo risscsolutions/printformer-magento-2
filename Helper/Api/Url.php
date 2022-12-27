@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Helper\Api;
 
 use Magento\Catalog\Api\Data\ProductInterface;
@@ -20,7 +21,7 @@ class Url extends AbstractHelper implements VersionInterface
     /** @var StoreManagerInterface */
     protected $_storeManager;
 
-    /** @var Config  */
+    /** @var Config */
     protected $config;
 
     protected $_storeId = 0;
@@ -31,7 +32,7 @@ class Url extends AbstractHelper implements VersionInterface
         Config $config
     ) {
         $this->_storeManager = $storeManager;
-        $this->config = $config;
+        $this->config        = $config;
 
         parent::__construct($context);
     }
@@ -57,16 +58,18 @@ class Url extends AbstractHelper implements VersionInterface
     }
 
     /**
-     * @param bool $isV2Api
-     *
-     * @return $this
+     * {@inheritdoc}
      */
-    public function initVersionHelper()
-    {
-        $objm = ObjectManager::getInstance();
-        $this->_versionHelper = $objm->create(V2Helper::class);
-
-        return $this;
+    public function getEditorEntry(
+        $productId,
+        $masterId,
+        $draftHash,
+        $params = [],
+        $intent = null,
+        $user = null
+    ) {
+        return $this->getVersionHelper()->getEditorEntry($productId, $masterId,
+            $draftHash, $params, $intent, $user);
     }
 
     public function getVersionHelper()
@@ -79,11 +82,16 @@ class Url extends AbstractHelper implements VersionInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @param   bool  $isV2Api
+     *
+     * @return $this
      */
-    public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
+    public function initVersionHelper()
     {
-        return $this->getVersionHelper()->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
+        $objm = ObjectManager::getInstance();
+        $this->_versionHelper = $objm->create(V2Helper::class);
+
+        return $this;
     }
 
     /**
@@ -91,7 +99,8 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getPrintformerBaseUrl($storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getPrintformerBaseUrl($storeId, $websiteId);
+        return $this->getVersionHelper()->getPrintformerBaseUrl($storeId,
+            $websiteId);
     }
 
     /**
@@ -131,24 +140,14 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraftProcessing($draftHashes = [], $quoteId = null)
     {
-        return $this->getVersionHelper()->getDraftProcessing($draftHashes, $quoteId);
+        return $this->getVersionHelper()->getDraftProcessing($draftHashes,
+            $quoteId);
     }
 
     /**
-     * @param $url
-     * @return string
-     */
-    public function appendUniqueGetParam($url)
-    {
-        $permittedChars = '0123456789abcdefghijklmnopqrstuvwxyz';
-        $randomGetParam = substr(str_shuffle($permittedChars), 0, 20);
-        $url = $url.'?CacheId='.$randomGetParam;
-        return $url;
-    }
-
-    /**
-     * @param string $draftHash
-     * @param int $uniqueGetParam
+     * @param   string  $draftHash
+     * @param   int     $uniqueGetParam
+     *
      * @return string
      */
     public function getThumbnail($draftHash, $uniqueGetParam = 1)
@@ -157,7 +156,22 @@ class Url extends AbstractHelper implements VersionInterface
         if ($uniqueGetParam) {
             $thumbnailUrl = $this->appendUniqueGetParam($thumbnailUrl);
         }
+
         return $thumbnailUrl;
+    }
+
+    /**
+     * @param $url
+     *
+     * @return string
+     */
+    public function appendUniqueGetParam($url)
+    {
+        $permittedChars = '0123456789abcdefghijklmnopqrstuvwxyz';
+        $randomGetParam = substr(str_shuffle($permittedChars), 0, 20);
+        $url            = $url.'?CacheId='.$randomGetParam;
+
+        return $url;
     }
 
     /**
@@ -189,7 +203,8 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminProducts($storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getAdminProducts($storeId, $websiteId);
+        return $this->getVersionHelper()->getAdminProducts($storeId,
+            $websiteId);
     }
 
     /**
@@ -205,15 +220,20 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getAdminPreviewPDF($draftHash, $quoteId)
     {
-        return $this->getVersionHelper()->getAdminPreviewPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getAdminPreviewPDF($draftHash,
+            $quoteId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAdminEditor($draftHash, array $params = null, $referrer = null)
-    {
-        return $this->getVersionHelper()->getAdminEditor($draftHash, $params, $referrer);
+    public function getAdminEditor(
+        $draftHash,
+        array $params = null,
+        $referrer = null
+    ) {
+        return $this->getVersionHelper()->getAdminEditor($draftHash, $params,
+            $referrer);
     }
 
     /**
@@ -245,27 +265,32 @@ class Url extends AbstractHelper implements VersionInterface
      */
     public function getDraftUsagePageInfo($draftHash, $pageInfo)
     {
-        return $this->getVersionHelper()->getDraftUsagePageInfo($draftHash, $pageInfo);
+        return $this->getVersionHelper()->getDraftUsagePageInfo($draftHash,
+            $pageInfo);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
-    {
+    public function getRedirect(
+        ProductInterface $product = null,
+        array $redirectParams = null
+    ) {
         if (!$redirectParams) {
             switch ($this->config->getConfigRedirect()) {
                 case Redirect::CONFIG_REDIRECT_URL_ALT:
                     return $this->config->getRedirectAlt();
                 case Redirect::CONFIG_REDIRECT_URL_CART:
-                    return $this->_urlBuilder->getUrl('checkout/cart', ['_use_rewrite' => true]);
+                    return $this->_urlBuilder->getUrl('checkout/cart',
+                        ['_use_rewrite' => true]);
                 case Redirect::CONFIG_REDIRECT_URL_PRODUCT:
                 default:
                     return $product->getUrlModel()->getUrl($product);
             }
         }
 
-        return $this->_urlBuilder->getUrl($redirectParams['controller'], $redirectParams['params']);
+        return $this->_urlBuilder->getUrl($redirectParams['controller'],
+            $redirectParams['params']);
     }
 
     /**
@@ -319,7 +344,8 @@ class Url extends AbstractHelper implements VersionInterface
 
     public function getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl)
     {
-        return $this->getVersionHelper()->getReviewEditAuth($reviewId, $userIdentifier, $callbackUrl);
+        return $this->getVersionHelper()->getReviewEditAuth($reviewId,
+            $userIdentifier, $callbackUrl);
     }
 
     public function createIdmlPackage($draftId)

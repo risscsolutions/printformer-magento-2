@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Setup;
 
 use Magento\Customer\Model\Customer;
@@ -22,7 +23,7 @@ class InstallData implements InstallDataInterface
     /**
      * Init
      *
-     * @param EavSetup $eavSetup
+     * @param   EavSetup  $eavSetup
      */
     public function __construct(EavSetup $eavSetup)
     {
@@ -32,8 +33,10 @@ class InstallData implements InstallDataInterface
     /**
      * {@inheritdoc}
      */
-    public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
-    {
+    public function install(
+        ModuleDataSetupInterface $setup,
+        ModuleContextInterface $context
+    ) {
         /**
          * Add attributes to the eav/attribute
          */
@@ -41,54 +44,53 @@ class InstallData implements InstallDataInterface
             \Magento\Catalog\Model\Product::ENTITY,
             'printformer_enabled',
             [
-                'group' => 'Printformer',
-                'type' => 'int',
-                'backend' => '',
-                'frontend' => '',
-                'label' => 'Enable Printformer',
-                'input' => 'select',
-                'class' => '',
-                'source' => 'Magento\Eav\Model\Entity\Attribute\Source\Boolean',
-                'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
-                'visible' => true,
-                'required' => false,
-                'user_defined' => false,
-                'default' => 0,
-                'searchable' => false,
-                'filterable' => false,
-                'comparable' => false,
-                'visible_on_front' => false,
+                'group'                   => 'Printformer',
+                'type'                    => 'int',
+                'backend'                 => '',
+                'frontend'                => '',
+                'label'                   => 'Enable Printformer',
+                'input'                   => 'select',
+                'class'                   => '',
+                'source'                  => 'Magento\Eav\Model\Entity\Attribute\Source\Boolean',
+                'global'                  => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                'visible'                 => true,
+                'required'                => false,
+                'user_defined'            => false,
+                'default'                 => 0,
+                'searchable'              => false,
+                'filterable'              => false,
+                'comparable'              => false,
+                'visible_on_front'        => false,
                 'used_in_product_listing' => true,
-                'unique' => false,
-                'apply_to' => ''
+                'unique'                  => false,
+                'apply_to'                => '',
             ]
         );
         $this->eavSetup->addAttribute(
             \Magento\Catalog\Model\Product::ENTITY,
             'printformer_product',
             [
-                'group' => 'Printformer',
-                'type' => 'int',
-                'backend' => '',
-                'frontend' => '',
-                'label' => 'Printformer Product',
-                'input' => 'select',
-                'class' => '',
-                'source' => 'Rissc\Printformer\Model\Product\Source',
-                'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
-                'visible' => true,
-                'required' => false,
-                'user_defined' => false,
-                'default' => false,
-                'searchable' => false,
-                'filterable' => false,
-                'comparable' => false,
-                'visible_on_front' => false,
+                'group'                   => 'Printformer',
+                'type'                    => 'int',
+                'backend'                 => '',
+                'frontend'                => '',
+                'label'                   => 'Printformer Product',
+                'input'                   => 'select',
+                'class'                   => '',
+                'source'                  => 'Rissc\Printformer\Model\Product\Source',
+                'global'                  => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_STORE,
+                'visible'                 => true,
+                'required'                => false,
+                'user_defined'            => false,
+                'default'                 => false,
+                'searchable'              => false,
+                'filterable'              => false,
+                'comparable'              => false,
+                'visible_on_front'        => false,
                 'used_in_product_listing' => true,
-                'unique' => false,
-                'apply_to' => ''
+                'unique'                  => false,
+                'apply_to'                => '',
             ]
         );
-
     }
 }

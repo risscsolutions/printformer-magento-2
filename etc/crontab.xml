@@ -1,10 +1,12 @@
 <?xml version="1.0" ?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="default">
         <job name="rissc_printformer_process_cron" instance="Rissc\Printformer\Cron\Processing\Cron" method="execute">
             <schedule>* * * * *</schedule>
         </job>
-        <job name="rissc_printformer_images_cleanup_cron" instance="Rissc\Printformer\Cron\CleanDesignImages" method="execute">
+        <job name="rissc_printformer_images_cleanup_cron" instance="Rissc\Printformer\Cron\CleanDesignImages"
+             method="execute">
             <schedule>* * * * *</schedule>
         </job>
     </group>

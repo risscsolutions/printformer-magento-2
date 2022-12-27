@@ -3,19 +3,20 @@
 namespace Rissc\Printformer\Block\Custom\Editor;
 
 use Magento\Catalog\Model\Product;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\AuthorizationInterface;
+use Magento\Framework\DataObject;
 use Magento\Framework\View\Element\Template;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
-use Rissc\Printformer\Helper\Api\Url;
-use Magento\Framework\DataObject;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Model\Draft;
-use Magento\Framework\AuthorizationInterface;
-use Magento\Framework\App\ObjectManager;
 
 /**
  * Class Link
+ *
  * @package Rissc\Printformer\Block\Custom\Editor
  */
 class Link
@@ -36,9 +37,9 @@ class Link
     /**
      * Link constructor.
      *
-     * @param Template\Context $context
-     * @param Url $urlHelper
-     * @param array $data
+     * @param   Template\Context  $context
+     * @param   Url               $urlHelper
+     * @param   array             $data
      */
     public function __construct(
         Template\Context $context,
@@ -48,9 +49,9 @@ class Link
         array $data = []
     ) {
         parent::__construct($context, $data);
-        $this->_urlHelper = $urlHelper;
-        $this->_apiHelper = $apiHelper;
-        $this->_objManager = ObjectManager::getInstance();
+        $this->_urlHelper     = $urlHelper;
+        $this->_apiHelper     = $apiHelper;
+        $this->_objManager    = ObjectManager::getInstance();
         $this->_authorization = $authorization;
     }
 
@@ -93,43 +94,35 @@ class Link
      */
     public function getDraftURL($draftID)
     {
-        return $this->_urlBuilder->getUrl('printformer/drafts/index', ['filter' => base64_encode('draft_id=' . $draftID)]);
+        return $this->_urlBuilder->getUrl('printformer/drafts/index',
+            ['filter' => base64_encode('draft_id='.$draftID)]);
     }
 
     /**
-     * @param DataObject $item
+     * @param   DataObject  $item
      *
      * @return string
      */
     public function getPdfUrl(DataObject $item, $draftHash)
     {
-        return $this->_urlHelper->getAdminPdf($draftHash, $item->getOrder()->getQuoteId());
+        return $this->_urlHelper->getAdminPdf($draftHash,
+            $item->getOrder()->getQuoteId());
     }
 
     /**
-     * @param DataObject $item
+     * @param   DataObject  $item
      *
      * @return string
      */
     public function getPreviewPdfUrl(DataObject $item, $draftHash)
     {
-        return $this->_urlHelper->getAdminPreviewPDF($draftHash, $item->getOrder()->getQuoteId());
+        return $this->_urlHelper->getAdminPreviewPDF($draftHash,
+            $item->getOrder()->getQuoteId());
     }
 
     /**
-     * @param $draftHash
-     *
-     * @return \Rissc\Printformer\Model\Draft
-     * @throws \Exception
-     */
-    public function getDraftProcess($draftHash)
-    {
-        return $this->_apiHelper->draftProcess($draftHash);
-    }
-
-    /**
-     * @param OrderItem|Item $item
-     * @param string $draftHash
+     * @param   OrderItem|Item  $item
+     * @param   string          $draftHash
      *
      * @return bool
      * @throws \Exception
@@ -158,6 +151,17 @@ class Link
         }
 
         return false;
+    }
+
+    /**
+     * @param $draftHash
+     *
+     * @return \Rissc\Printformer\Model\Draft
+     * @throws \Exception
+     */
+    public function getDraftProcess($draftHash)
+    {
+        return $this->_apiHelper->draftProcess($draftHash);
     }
 
     /**

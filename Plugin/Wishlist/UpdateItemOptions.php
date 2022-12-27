@@ -14,7 +14,8 @@ class UpdateItemOptions
 
     /**
      * UpdateItemOptions constructor.
-     * @param Registry $registry
+     *
+     * @param   Registry  $registry
      */
     public function __construct(
         Registry $registry
@@ -23,16 +24,18 @@ class UpdateItemOptions
     }
 
     /**
-     * @param SubjectUpdateItemOptions $subject
-     * @param $result
+     * @param   SubjectUpdateItemOptions  $subject
+     * @param                             $result
+     *
      * @return mixed
      */
     public function afterExecute(SubjectUpdateItemOptions $subject, $result)
     {
         $redirectUrl = $subject->getRequest()->getParam('redirect_url');
-        $newItemId = $this->registry->registry(\Rissc\Printformer\Helper\Config::REGISTRY_KEY_WISHLIST_NEW_ITEM_ID);
+        $newItemId
+                     = $this->registry->registry(\Rissc\Printformer\Helper\Config::REGISTRY_KEY_WISHLIST_NEW_ITEM_ID);
         if ($redirectUrl && $newItemId) {
-            $redirectUrl = $redirectUrl . 'id/' . $newItemId . '/';
+            $redirectUrl = $redirectUrl.'id/'.$newItemId.'/';
             $result->setUrl($redirectUrl);
         }
 

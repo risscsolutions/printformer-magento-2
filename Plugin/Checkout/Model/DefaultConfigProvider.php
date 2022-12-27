@@ -46,12 +46,12 @@ class DefaultConfigProvider
     private Media $mediaHelper;
 
     /**
-     * @param CheckoutSession $checkoutSession
-     * @param CartItemRepositoryInterface $itemRepository
-     * @param Image $imageHelper
-     * @param ItemResolverInterface $itemResolver
-     * @param Config $configHelper
-     * @param Media $mediaHelper
+     * @param   CheckoutSession              $checkoutSession
+     * @param   CartItemRepositoryInterface  $itemRepository
+     * @param   Image                        $imageHelper
+     * @param   ItemResolverInterface        $itemResolver
+     * @param   Config                       $configHelper
+     * @param   Media                        $mediaHelper
      */
     public function __construct(
         CheckoutSession $checkoutSession,
@@ -60,34 +60,35 @@ class DefaultConfigProvider
         ItemResolverInterface $itemResolver,
         Config $configHelper,
         Media $mediaHelper
-    )
-    {
+    ) {
         $this->checkoutSession = $checkoutSession;
-        $this->itemRepository = $itemRepository;
-        $this->configHelper = $configHelper;
-        $this->mediaHelper = $mediaHelper;
-        $this->imageHelper = $imageHelper ?: ObjectManager::getInstance()->get(Image::class);
-        $this->itemResolver = $itemResolver ?: ObjectManager::getInstance()->get(ItemResolverInterface::class);
+        $this->itemRepository  = $itemRepository;
+        $this->configHelper    = $configHelper;
+        $this->mediaHelper     = $mediaHelper;
+        $this->imageHelper     = $imageHelper
+            ?: ObjectManager::getInstance()->get(Image::class);
+        $this->itemResolver    = $itemResolver
+            ?: ObjectManager::getInstance()->get(ItemResolverInterface::class);
     }
 
 
     /**
      * @param $subject
      * @param $result
+     *
      * @return mixed
      */
     public function afterGetConfig(
         $subject,
         $result
-    )
-    {
-        if ($this->configHelper->isUseImagePreview()){
+    ) {
+        if ($this->configHelper->isUseImagePreview()) {
             try {
                 $quote = $this->checkoutSession->getQuote();
             } catch (NoSuchEntityException|LocalizedException $e) {
             }
             if (isset($quote)) {
-                $quoteId = $quote->getId();
+                $quoteId             = $quote->getId();
                 $result['imageData'] = $this->getImages($quoteId);
             }
         }
@@ -103,15 +104,17 @@ class DefaultConfigProvider
         $items = $this->itemRepository->getList($quoteId);
         /** @var Item $cartItem */
         foreach ($items as $cartItem) {
-            $itemData[$cartItem->getItemId()] = $this->getProductImageData($cartItem);
+            $itemData[$cartItem->getItemId()]
+                = $this->getProductImageData($cartItem);
         }
+
         return $itemData;
     }
 
     /**
      * Get product image data
      *
-     * @param Item $cartItem
+     * @param   Item  $cartItem
      *
      * @return array
      */
@@ -122,22 +125,25 @@ class DefaultConfigProvider
             'mini_cart_product_thumbnail'
         );
 
-        $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($cartItem);
+        $draftIds
+            = $this->configHelper->getDraftIdsFromSpecificItemType($cartItem);
         if (!empty($draftIds)) {
-            $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+            $imageUrl
+                = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
         }
 
-        if (!isset($imageUrl)){
+        if (!isset($imageUrl)) {
             $imageUrl = $imageHelper->getUrl();
         }
 
 
         $imageData = [
-            'src' => $imageUrl,
-            'alt' => $imageHelper->getLabel(),
-            'width' => $imageHelper->getWidth(),
+            'src'    => $imageUrl,
+            'alt'    => $imageHelper->getLabel(),
+            'width'  => $imageHelper->getWidth(),
             'height' => $imageHelper->getHeight(),
         ];
+
         return $imageData;
     }
 }

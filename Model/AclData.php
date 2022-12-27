@@ -33,19 +33,24 @@ class AclData implements AclDataInterface
 
     /**
      * AclData constructor.
-     * @param string|array $data
+     *
+     * @param   string|array  $data
      */
     public function __construct(
         $data = null
     ) {
-        if(is_string($data)) {
+        if (is_string($data)) {
             $data = json_decode($data, true);
         }
-        $this->action = isset($data['action']) ? $data['action'] : '';
-        $this->entityType = isset($data['entityType']) ? $data['entityType'] : '';
-        $this->entityIdentifier = isset($data['entityIdentifier']) ? $data['entityIdentifier'] : '';
-        $this->userIdentifier = isset($data['userIdentifier']) ? $data['userIdentifier'] : '';
-        $this->allowAction = isset($data['allowAction']) ? $data['allowAction'] : false;
+        $this->action           = isset($data['action']) ? $data['action'] : '';
+        $this->entityType       = isset($data['entityType'])
+            ? $data['entityType'] : '';
+        $this->entityIdentifier = isset($data['entityIdentifier'])
+            ? $data['entityIdentifier'] : '';
+        $this->userIdentifier   = isset($data['userIdentifier'])
+            ? $data['userIdentifier'] : '';
+        $this->allowAction      = isset($data['allowAction'])
+            ? $data['allowAction'] : false;
     }
 
     /**
@@ -62,11 +67,11 @@ class AclData implements AclDataInterface
     public function toArray()
     {
         return [
-            'action' => $this->getAction(),
-            'entityType' => $this->getEntityType(),
+            'action'           => $this->getAction(),
+            'entityType'       => $this->getEntityType(),
             'entityIdentifier' => $this->getEntityIdentifier(),
-            'userIdentifier' => $this->getUserIdentifier(),
-            'allowAction' => $this->getAllowAction()
+            'userIdentifier'   => $this->getUserIdentifier(),
+            'allowAction'      => $this->getAllowAction(),
         ];
     }
 
@@ -79,12 +84,14 @@ class AclData implements AclDataInterface
     }
 
     /**
-     * @param string $action
+     * @param   string  $action
+     *
      * @return $this
      */
     public function setAction($action)
     {
         $this->action = $action;
+
         return $this;
     }
 
@@ -97,12 +104,14 @@ class AclData implements AclDataInterface
     }
 
     /**
-     * @param string $entityType
+     * @param   string  $entityType
+     *
      * @return $this
      */
     public function setEntityType($entityType)
     {
         $this->entityType = $entityType;
+
         return $this;
     }
 
@@ -115,12 +124,14 @@ class AclData implements AclDataInterface
     }
 
     /**
-     * @param string $entityIdentifier
+     * @param   string  $entityIdentifier
+     *
      * @return $this
      */
     public function setEntityIdentifier($entityIdentifier)
     {
         $this->entityIdentifier = $entityIdentifier;
+
         return $this;
     }
 
@@ -133,12 +144,14 @@ class AclData implements AclDataInterface
     }
 
     /**
-     * @param string $userIdentifier
+     * @param   string  $userIdentifier
+     *
      * @return $this
      */
     public function setUserIdentifier($userIdentifier)
     {
         $this->userIdentifier = $userIdentifier;
+
         return $this;
     }
 
@@ -151,12 +164,14 @@ class AclData implements AclDataInterface
     }
 
     /**
-     * @param bool $allowAction
+     * @param   bool  $allowAction
+     *
      * @return $this
      */
     public function setAllowAction($allowAction)
     {
         $this->allowAction = $allowAction;
+
         return $this;
     }
 }

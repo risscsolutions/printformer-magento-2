@@ -2,25 +2,43 @@
 // @codingStandardsIgnoreFile
 ?>
 <?php
-$_htmlId = $block->getHtmlId() ? $block->getHtmlId() : '_' . uniqid();
+$_htmlId  = $block->getHtmlId() ? $block->getHtmlId() : '_'.uniqid();
 $_colspan = $block->isAddAfter() ? 2 : 1;
 ?>
-<div class="design_theme_ua_regexp" id="grid<?php /* @escapeNotVerified */ echo $_htmlId; ?>">
+<div class="design_theme_ua_regexp" id="grid<?php
+/* @escapeNotVerified */
+
+echo $_htmlId; ?>">
     <div class="admin__control-table-wrapper">
         <table class="admin__control-table">
             <thead>
             <tr>
-                <?php foreach ($block->getColumns() as $columnName => $column): ?>
-                    <th><?php /* @escapeNotVerified */ echo $column['label']; ?></th>
-                <?php endforeach;?>
-                    <th class="col-actions" colspan="<?php /* @escapeNotVerified */ echo $_colspan; ?>">Action</th>
+                <?php
+                foreach ($block->getColumns() as $columnName => $column): ?>
+                    <th><?php
+                        /* @escapeNotVerified */
+                        echo $column['label']; ?></th>
+                <?php
+                endforeach; ?>
+                <th class="col-actions" colspan="<?php
+                /* @escapeNotVerified */
+
+                echo $_colspan; ?>">Action
+                </th>
             </tr>
             </thead>
-            <tbody id="addRow<?php /* @escapeNotVerified */ echo $_htmlId; ?>"></tbody>
+            <tbody id="addRow<?php
+            /* @escapeNotVerified */
+
+            echo $_htmlId; ?>"></tbody>
             <tfoot>
-                <tr>
-                    <td style="display:none" colspan="<?php echo count($block->getColumns())+$_colspan; ?>" class="col-actions-add"><?php echo /* @escapeNotVerified */ __('Loading...') ?></td>
-                </tr>
+            <tr>
+                <td style="display:none" colspan="<?php
+                echo count($block->getColumns()) + $_colspan; ?>"
+                    class="col-actions-add"><?php
+                    echo /* @escapeNotVerified */
+                    __('Loading...') ?></td>
+            </tr>
             </tfoot>
         </table>
     </div>
@@ -31,21 +49,39 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
             'prototype'
         ], function (mageTemplate) {
         // create row creator
-        window.arrayRow<?php /* @escapeNotVerified */ echo $_htmlId ?> = {
+        window.arrayRow<?php
+        /* @escapeNotVerified */
+
+        echo $_htmlId ?> = {
 
             // define row prototypeJS template
             template: mageTemplate(
                 '<tr id="<%- _id %>">'
-                <?php foreach ($block->getColumns() as $columnName => $column): ?>
+                <?php
+        foreach ($block->getColumns() as $columnName => $column): ?>
                     + '<td>'
-                    + '<?php /* @escapeNotVerified */ echo $block->renderCellTemplate($columnName)?>'
+                    + '<?php
+            /* @escapeNotVerified */
+            echo $block->renderCellTemplate($columnName) ?>'
                     + '<\/td>'
-                <?php endforeach; ?>
+                <?php
+        endforeach; ?>
 
-                <?php if ($block->isAddAfter()): ?>
-                    + '<td><button class="action-add" type="button" id="addAfterBtn<%- _id %>"><span><?php /* @escapeNotVerified */ echo __('Add after'); ?><\/span><\/button><\/td>'
-                <?php endif; ?>
-                    + '<td class="col-actions"><button onclick="arrayRow<?php /* @escapeNotVerified */ echo $_htmlId ?>.del(\'<%- _id %>\')" class="action-delete" type="button"><span><?php /* @escapeNotVerified */ echo __('Delete'); ?><\/span><\/button><\/td>'
+                <?php
+        if ($block->isAddAfter()): ?>
+                    + '<td><button class="action-add" type="button" id="addAfterBtn<%- _id %>"><span><?php
+            /* @escapeNotVerified */
+            echo __('Add after'); ?><\/span><\/button><\/td>'
+                <?php
+        endif; ?>
+                    + '<td class="col-actions"><button onclick="arrayRow<?php
+        /* @escapeNotVerified */
+
+        echo $_htmlId ?>
+        .del(\'<%- _id %>\')" class="action-delete" type="button"><span><?php
+        /* @escapeNotVerified */
+
+        echo __('Delete'); ?><\/span><\/button><\/td>'
                 +'<\/tr>'
             ),
 
@@ -59,10 +95,14 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
                 } else {
                     var d = new Date();
                     templateValues = {
-                        <?php foreach ($block->getColumns() as $columnName => $column): ?>
-                            <?php /* @escapeNotVerified */ echo $columnName ?>: '',
+                        <?php
+        foreach ($block->getColumns() as $columnName => $column): ?>
+            <?php
+            /* @escapeNotVerified */
+            echo $columnName ?>: '',
                             'option_extra_attrs': {},
-                        <?php endforeach; ?>
+                        <?php
+        endforeach; ?>
                         _id: '_' + d.getTime() + '_' + d.getMilliseconds() + '_' + Math.random()
                     };
                 }
@@ -71,7 +111,10 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
                 if (insertAfterId) {
                     Element.insert($(insertAfterId), {after: this.template(templateValues)});
                 } else {
-                    Element.insert($('addRow<?php /* @escapeNotVerified */ echo $_htmlId ?>'), {bottom: this.template(templateValues)});
+                    Element.insert($('addRow<?php
+        /* @escapeNotVerified */
+
+        echo $_htmlId ?>'), {bottom: this.template(templateValues)});
                 }
 
                 // Fill controls with data
@@ -85,9 +128,11 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
                 }
 
                 // Add event for {addAfterBtn} button
-                <?php if ($block->isAddAfter()): ?>
+                <?php
+        if ($block->isAddAfter()): ?>
                     Event.observe('addAfterBtn' + templateValues._id, 'click', this.add.bind(this, false, templateValues._id));
-                <?php endif; ?>
+                <?php
+        endif; ?>
             },
 
             del: function(rowId) {
@@ -98,22 +143,33 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
         // add existing rows
         <?php
         foreach ($block->getArrayRows() as $_rowId => $_row) {
-            /* @escapeNotVerified */ echo "arrayRow{$_htmlId}.add(" . $_row->toJson() . ");\n";
+            /* @escapeNotVerified */
+            echo "arrayRow{$_htmlId}.add(".$_row->toJson().");\n";
         }
         ?>
 
         // Toggle the grid availability, if element is disabled (depending on scope)
-        <?php if ($block->getElement()->getDisabled()):?>
-        toggleValueElements({checked: true}, $('grid<?php /* @escapeNotVerified */ echo $_htmlId; ?>').parentNode);
-            <?php endif;?>
+        <?php
+        if ($block->getElement()->getDisabled()): ?>
+        toggleValueElements({checked: true}, $('grid<?php
+            /* @escapeNotVerified */
+            echo $_htmlId; ?>').parentNode);
+            <?php
+        endif; ?>
         });
 
         //@todo refactor - use prototype AJAX
         require([
              'jquery'
         ], function ($) {
-            var attributeNameInputElId = '#' + '<?php /* @escapeNotVerified */ echo $block->getElement()->getId(); ?>'.replace('values', 'name');
-            var attributeValuesContainerElId = '#row_' + '<?php /* @escapeNotVerified */ echo $block->getElement()->getId(); ?>';
+            var attributeNameInputElId = '#' + '<?php
+        /* @escapeNotVerified */
+
+        echo $block->getElement()->getId(); ?>'.replace('values', 'name');
+            var attributeValuesContainerElId = '#row_' + '<?php
+        /* @escapeNotVerified */
+
+        echo $block->getElement()->getId(); ?>';
             $(attributeNameInputElId).change(function(e){
                 $(attributeValuesContainerElId + ' .action-delete').each(function(){
                     $(this).click();
@@ -125,7 +181,8 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
                 }
 
                 $.ajax({
-                    url: '<?php echo $block->getAjaxUrlTemplate() ?>'.replace('%code%', attributeCode),
+                    url: '<?php
+        echo $block->getAjaxUrlTemplate() ?>'.replace('%code%', attributeCode),
                     beforeSend: function() {
                         $(attributeValuesContainerElId + ' tfoot tr td').show();
                         $(attributeNameInputElId).prop('disabled', true);
@@ -137,7 +194,10 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
                 }).done(function(response){
                     //@todo refactor
                     $.each(response.data, function(key, value){
-                        window.arrayRow<?php /* @escapeNotVerified */ echo $_htmlId ?>.add();
+                        window.arrayRow<?php
+        /* @escapeNotVerified */
+
+        echo $_htmlId ?>.add();
                         $(attributeValuesContainerElId + ' input[id$=_id]')
                             .last()
                             .val(key)
@@ -152,5 +212,6 @@ $_colspan = $block->isAddAfter() ? 2 : 1;
                 });
             });
         });
+
     </script>
 </div>

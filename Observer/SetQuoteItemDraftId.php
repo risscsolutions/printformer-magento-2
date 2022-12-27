@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Observer;
 
 use Magento\Framework\Event\Observer;
@@ -33,10 +34,10 @@ class SetQuoteItemDraftId implements ObserverInterface
     protected $sessionHelper;
 
     /**
-     * @param LoggerInterface $logger
-     * @param StoreManagerInterface $storeManager
-     * @param Config $configHelper
-     * @param Session $sessionHelper
+     * @param   LoggerInterface        $logger
+     * @param   StoreManagerInterface  $storeManager
+     * @param   Config                 $configHelper
+     * @param   Session                $sessionHelper
      */
     public function __construct(
         LoggerInterface $logger,
@@ -44,14 +45,15 @@ class SetQuoteItemDraftId implements ObserverInterface
         Config $configHelper,
         Session $sessionHelper
     ) {
-        $this->logger = $logger;
-        $this->storeManager = $storeManager;
-        $this->configHelper = $configHelper;
+        $this->logger        = $logger;
+        $this->storeManager  = $storeManager;
+        $this->configHelper  = $configHelper;
         $this->sessionHelper = $sessionHelper;
     }
 
     /**
-     * @param Observer $observer
+     * @param   Observer  $observer
+     *
      * @return void
      */
     public function execute(Observer $observer)
@@ -62,11 +64,12 @@ class SetQuoteItemDraftId implements ObserverInterface
         }
         try {
             /**
-             *@var Item $item
+             * @var Item $item
              */
             $item = $observer->getEvent()->getData('quote_item');
             if (!($item instanceof Item)
-                || !isset($item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID])) {
+                || !isset($item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID])
+            ) {
                 return;
             }
 
@@ -78,10 +81,13 @@ class SetQuoteItemDraftId implements ObserverInterface
             }
 
             $storeId = $this->storeManager->getStore()->getId();
-            $draftIds = $item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID];
-            $item = $this->configHelper->setDraftsOnItemType($item, $draftIds);
+            $draftIds
+                     = $item->getBuyRequest()[InstallSchema::COLUMN_NAME_DRAFTID];
+            $item    = $this->configHelper->setDraftsOnItemType($item,
+                $draftIds);
             $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
-            $this->sessionHelper->unsetDraftIds($item->getProduct()->getId(), $storeId);
+            $this->sessionHelper->unsetDraftIds($item->getProduct()->getId(),
+                $storeId);
         } catch (\Exception $e) {
             $this->logger->critical($e);
         }

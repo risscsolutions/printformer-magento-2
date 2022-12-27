@@ -15,8 +15,9 @@ class Rights extends Action
 
     /**
      * Show constructor.
-     * @param PageFactory    $pageFactory
-     * @param Context        $context
+     *
+     * @param   PageFactory  $pageFactory
+     * @param   Context      $context
      */
     public function __construct(
         PageFactory $pageFactory,
@@ -34,7 +35,8 @@ class Rights extends Action
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
         $resultPage = $this->pageFactory->create();
         $resultPage->setActiveMenu('Magento_Backend::other_settings');
-        $resultPage->getConfig()->getTitle()->prepend(__('Customer Group Rights'));
+        $resultPage->getConfig()->getTitle()
+            ->prepend(__('Customer Group Rights'));
 
         return $resultPage;
     }

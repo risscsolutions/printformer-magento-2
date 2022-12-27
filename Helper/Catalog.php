@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Helper;
 
 use Magento\Catalog\Model\Product;
@@ -24,14 +25,14 @@ class Catalog
         ProductFactory $productFactory,
         ProductResource $productResource
     ) {
-        $this->_productFactory = $productFactory;
+        $this->_productFactory  = $productFactory;
         $this->_productResource = $productResource;
 
         parent::__construct($context);
     }
 
     /**
-     * @param Product | int $product
+     * @param   Product | int  $product
      *
      * @return Product
      */

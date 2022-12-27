@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
-<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceBlock name="printformer_drafts.grid.container">
             <block class="Rissc\Printformer\Block\Adminhtml\Drafts\Grid" name="printformer_drafts.grid" as="grid">
                 <arguments>
                     <argument name="id" xsi:type="string">drafts</argument>
-                    <argument name="dataSource" xsi:type="object">Rissc\Printformer\Model\ResourceModel\Draft\Collection</argument>
+                    <argument name="dataSource" xsi:type="object">
+                        Rissc\Printformer\Model\ResourceModel\Draft\Collection
+                    </argument>
                     <argument name="default_sort" xsi:type="string">created_at</argument>
                     <argument name="default_dir" xsi:type="string">DESC</argument>
                     <argument name="save_parameters_in_session" xsi:type="string">1</argument>
@@ -26,7 +29,8 @@
                         </argument>
                     </arguments>
                 </block>
-                <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="printformer_drafts.grid.columnSet" as="grid.columnSet">
+                <block class="Magento\Backend\Block\Widget\Grid\ColumnSet" name="printformer_drafts.grid.columnSet"
+                       as="grid.columnSet">
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="created_at">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Date</argument>
@@ -45,7 +49,9 @@
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
                             <argument name="width" xsi:type="string">100px</argument>
-                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftEditor</argument>
+                            <argument name="renderer" xsi:type="string">
+                                Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftEditor
+                            </argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="order_item_id">
@@ -56,7 +62,9 @@
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
                             <argument name="width" xsi:type="string">100px</argument>
-                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\Order</argument>
+                            <argument name="renderer" xsi:type="string">
+                                Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\Order
+                            </argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="store_id">
@@ -77,7 +85,9 @@
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
                             <argument name="width" xsi:type="string">100px</argument>
-                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftStatus</argument>
+                            <argument name="renderer" xsi:type="string">
+                                Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftStatus
+                            </argument>
                         </arguments>
                     </block>
                 </block>

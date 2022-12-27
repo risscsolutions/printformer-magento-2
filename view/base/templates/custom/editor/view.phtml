@@ -1,70 +1,116 @@
 <?php
 /** @var $block \Rissc\Printformer\Block\Custom\Editor\Link */
 
-$quoteItem = $block->getQuoteItem();
-$product = $block->getProduct();
-$editorLink = $block->getEditorOpenLink();
+$quoteItem        = $block->getQuoteItem();
+$product          = $block->getProduct();
+$editorLink       = $block->getEditorOpenLink();
 $printformerBlock = $block->getPrintformerBlock();
-$draftHash = $block->getDraftHash();
-$isOrdered = $block->isOrdered($quoteItem, $draftHash);
+$draftHash        = $block->getDraftHash();
+$isOrdered        = $block->isOrdered($quoteItem, $draftHash);
 
 $quoteItemId = $quoteItem->getId();
 ?>
-<br />
-<div id="printformer_draftid_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>" style="width:
+<br/>
+<div id="printformer_draftid_<?php
+echo $quoteItemId; ?>_<?php
+echo $block->getData('pos_counter'); ?>" style="width:
 max-content">
-    <?php if (!$isOrdered): ?>
-        <button id="openEditor" href="<?php echo $editorLink; ?>" class="pf-link"><?php echo __('Open Editor');?></button>
+    <?php
+    if (!$isOrdered): ?>
+        <button id="openEditor" href="<?php
+        echo $editorLink; ?>" class="pf-link"><?php
+            echo __('Open Editor'); ?></button>
         <div id="info">
-            <br /><span>Draft ID: </span> <a href="<?php echo $block->getDraftURL($draftHash) ?>"> <?php echo $draftHash; ?></a>
-            <br /><button class="copy-draft-id" data-pos-counter="<?php echo $block->getData('pos_counter'); ?>"><?php echo __('Copy Draft ID'); ?></button>
-            <?php //Textarea for coping the draft id ?>
-            <textarea id="draftID_<?php echo $block->getData('pos_counter'); ?>" style="display: none"><?php echo $draftHash; ?></textarea>
+            <br/><span>Draft ID: </span> <a href="<?php
+            echo $block->getDraftURL($draftHash) ?>"> <?php
+                echo $draftHash; ?></a>
+            <br/>
+            <button class="copy-draft-id" data-pos-counter="<?php
+            echo $block->getData('pos_counter'); ?>"><?php
+                echo __('Copy Draft ID'); ?></button>
+            <?php
+            //Textarea for coping the draft id ?>
+            <textarea id="draftID_<?php
+            echo $block->getData('pos_counter'); ?>" style="display: none"><?php
+                echo $draftHash; ?></textarea>
         </div>
-    <?php endif; ?>
-    <?php if ($isOrdered): ?>
-        <?php if($block->canViewHighRes()): ?>
-            <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPdfUrl
-            ($quoteItem, $draftHash); ?>" download target="_blank">
-                <?php echo __('Save print-file'); ?>
+    <?php
+    endif; ?>
+    <?php
+    if ($isOrdered): ?>
+        <?php
+        if ($block->canViewHighRes()): ?>
+            <a class="action-default scalable action-save action-secondary"
+               href="<?php
+               echo $block->getPdfUrl
+               ($quoteItem, $draftHash); ?>" download target="_blank">
+                <?php
+                echo __('Save print-file'); ?>
             </a>
-        <?php else: ?>
-            <a class="action-default scalable action-save action-secondary" href="<?php echo $block->getPreviewPdfUrl
-            ($quoteItem, $draftHash); ?>" target="_blank">
-                <?php echo __('Show preview PDF'); ?>
+        <?php
+        else: ?>
+            <a class="action-default scalable action-save action-secondary"
+               href="<?php
+               echo $block->getPreviewPdfUrl
+               ($quoteItem, $draftHash); ?>" target="_blank">
+                <?php
+                echo __('Show preview PDF'); ?>
             </a>
-        <?php endif; ?>
-    <?php endif; ?>
+        <?php
+        endif; ?>
+    <?php
+    endif; ?>
 </div>
 
-<?php if (!$isOrdered): ?>
-<div class="printformer-editor-main"
-     id="printformer-editor-main_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>"
-     title="<?php echo $product->getName(); ?>">
-</div>
-<div id="printformer-editor-close_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>">
-    <p><?php echo __($printformerBlock->getCloseNoticeText()); ?></p>
-</div>
-<?php if($printformerBlock->isFormatChangeNotice()): ?>
-    <div id="printformer-editor-notice_<?php echo $quoteItemId; ?>_<?php echo $block->getData('pos_counter'); ?>">
-        <p><?php echo __($printformerBlock->getFormatNoticeText()); ?></p>
+<?php
+if (!$isOrdered): ?>
+    <div class="printformer-editor-main"
+         id="printformer-editor-main_<?php
+         echo $quoteItemId; ?>_<?php
+         echo $block->getData('pos_counter'); ?>"
+         title="<?php
+         echo $product->getName(); ?>">
     </div>
-<?php endif; ?>
-<script type="text/x-magento-init">
-    <?php echo json_encode([
-            '#printformer_draftid_' . $quoteItemId . '_' . $block->getData('pos_counter') => [
+    <div id="printformer-editor-close_<?php
+    echo $quoteItemId; ?>_<?php
+    echo $block->getData('pos_counter'); ?>">
+        <p><?php
+            echo __($printformerBlock->getCloseNoticeText()); ?></p>
+    </div>
+    <?php
+    if ($printformerBlock->isFormatChangeNotice()): ?>
+        <div id="printformer-editor-notice_<?php
+        echo $quoteItemId; ?>_<?php
+        echo $block->getData('pos_counter'); ?>">
+            <p><?php
+                echo __($printformerBlock->getFormatNoticeText()); ?></p>
+        </div>
+    <?php
+    endif; ?>
+    <script type="text/x-magento-init">
+    <?php
+        echo json_encode([
+            '#printformer_draftid_'.$quoteItemId.'_'
+            .$block->getData('pos_counter') => [
                 'Rissc_Printformer/js/custom-printformer' => [
-                    'editBtnSelector'       => '#printformer_draftid_' . $quoteItemId . '_' . $block->getData('pos_counter') . ' .pf-link',
-                    'editorMainSelector'    => '#printformer-editor-main_' . $quoteItemId . '_' . $block->getData('pos_counter'),
-                    'editorCloseSelector'   => '#printformer-editor-close_' . $quoteItemId . '_' . $block->getData('pos_counter'),
-                    'editorNoticeSelector'  => '#printformer-editor-notice_' . $quoteItemId . '_' . $block->getData('pos_counter'),
-                    'productTitle' => $product->getName()
-                ]
-            ]
+                    'editBtnSelector'      => '#printformer_draftid_'
+                        .$quoteItemId.'_'.$block->getData('pos_counter')
+                        .' .pf-link',
+                    'editorMainSelector'   => '#printformer-editor-main_'
+                        .$quoteItemId.'_'.$block->getData('pos_counter'),
+                    'editorCloseSelector'  => '#printformer-editor-close_'
+                        .$quoteItemId.'_'.$block->getData('pos_counter'),
+                    'editorNoticeSelector' => '#printformer-editor-notice_'
+                        .$quoteItemId.'_'.$block->getData('pos_counter'),
+                    'productTitle'         => $product->getName(),
+                ],
+            ],
         ]);
-    ?>
-</script>
-<?php endif; ?>
+        ?>
+
+    </script>
+<?php
+endif; ?>
 <script>
     require(['jquery', 'jquery/ui', 'domReady!'], function($){
         var copyBtn = $('.copy-draft-id');
@@ -91,4 +137,5 @@ max-content">
             });
         });
     });
+
 </script>

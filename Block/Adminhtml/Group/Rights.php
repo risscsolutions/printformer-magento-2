@@ -23,10 +23,11 @@ class Rights extends Template
 
     /**
      * Rights constructor.
-     * @param GroupCollection $groupCollection
-     * @param RightHelper $rightHelper
-     * @param Context $context
-     * @param array $data
+     *
+     * @param   GroupCollection  $groupCollection
+     * @param   RightHelper      $rightHelper
+     * @param   Context          $context
+     * @param   array            $data
      */
     public function __construct(
         GroupCollection $groupCollection,
@@ -35,12 +36,13 @@ class Rights extends Template
         array $data = []
     ) {
         $this->groupCollection = $groupCollection;
-        $this->rightHelper = $rightHelper;
+        $this->rightHelper     = $rightHelper;
         parent::__construct($context, $data);
     }
 
     /**
-     * @param Group $group
+     * @param   Group  $group
+     *
      * @return RightInterface
      */
     public function getRight(Group $group)

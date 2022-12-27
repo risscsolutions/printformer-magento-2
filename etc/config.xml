@@ -1,4 +1,5 @@
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <printformer>
             <general>
@@ -6,7 +7,8 @@
                 <locale>de_DE</locale>
                 <redirect_after_config>1</redirect_after_config>
                 <display_mode>0</display_mode>
-                <guest_wishlist_hint><![CDATA[You have to be registered to add this product to your Wishlist.]]></guest_wishlist_hint>
+                <guest_wishlist_hint>
+                    <![CDATA[You have to be registered to add this product to your Wishlist.]]></guest_wishlist_hint>
                 <cart_edit_text>Edit</cart_edit_text>
                 <expire_date>30</expire_date>
                 <processing_type>sync</processing_type>

@@ -3,10 +3,10 @@
 namespace Rissc\Printformer\Plugin\Wishlist\Customer\Wishlist\Item;
 
 use Magento\Wishlist\Block\Customer\Wishlist\Item\Column as SubjectColumn;
+use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Setup\InstallSchema;
-use Rissc\Printformer\Helper\Api\Url;
 
 class Column
 {
@@ -27,39 +27,43 @@ class Column
 
     /**
      * Column constructor.
-     * @param Config $config
-     * @param Url $urlHelper
-     * @param Media $mediaHelper
+     *
+     * @param   Config  $config
+     * @param   Url     $urlHelper
+     * @param   Media   $mediaHelper
      */
     public function __construct(
         Config $config,
         Url $urlHelper,
         Media $mediaHelper
     ) {
-        $this->config = $config;
-        $this->urlHelper = $urlHelper;
+        $this->config      = $config;
+        $this->urlHelper   = $urlHelper;
         $this->mediaHelper = $mediaHelper;
     }
 
     /**
      * Set image url for printformer item
      *
-     * @param SubjectColumn $subject
-     * @param $result
+     * @param   SubjectColumn  $subject
+     * @param                  $result
+     *
      * @return mixed
      */
     public function afterGetImage(SubjectColumn $subject, $result)
     {
         if ($this->config->isUseImagePreview()) {
             $item = $subject->getItem();
-            if($item) {
-                $option = $item->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID);
-                if($option) {
+            if ($item) {
+                $option
+                    = $item->getOptionByCode(InstallSchema::COLUMN_NAME_DRAFTID);
+                if ($option) {
                     $draftField = $option->getValue();
                     if (!empty($draftField)) {
-                        $drafts = explode(',', $draftField );
+                        $drafts = explode(',', $draftField);
                         foreach ($drafts as $draftId) {
-                            $imageUrl = $this->mediaHelper->getImageUrl($draftId);
+                            $imageUrl
+                                = $this->mediaHelper->getImageUrl($draftId);
                             $result->setData('image_url', $imageUrl);
                         }
                     }

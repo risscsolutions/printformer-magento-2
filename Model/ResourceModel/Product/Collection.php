@@ -2,7 +2,8 @@
 
 namespace Rissc\Printformer\Model\ResourceModel\Product;
 
-class Collection extends \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection
+class Collection extends
+    \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection
 {
     /**
      * {@inheritdoc}

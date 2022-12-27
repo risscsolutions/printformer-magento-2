@@ -1,26 +1,29 @@
 <?php
+
 namespace Rissc\Printformer\Setup;
 
+use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\Setup\InstallSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
-use Magento\Framework\DB\Ddl\Table;
 
 class InstallSchema implements InstallSchemaInterface
 {
-    const TABLE_NAME_DRAFT    = 'printformer_draft';
+    const TABLE_NAME_DRAFT = 'printformer_draft';
 
-    const TABLE_NAME_PRODUCT  = 'printformer_product';
+    const TABLE_NAME_PRODUCT = 'printformer_product';
     const COLUMN_NAME_DRAFTID = 'printformer_draftid';
-    const COLUMN_NAME_INTENT  = 'printformer_intent';
+    const COLUMN_NAME_INTENT = 'printformer_intent';
     const COLUMN_NAME_STOREID = 'printformer_storeid';
     const COLUMN_NAME_ORDERED = 'printformer_ordered';
 
     /**
      * {@inheritdoc}
      */
-    public function install(SchemaSetupInterface $setup, ModuleContextInterface $context)
-    {
+    public function install(
+        SchemaSetupInterface $setup,
+        ModuleContextInterface $context
+    ) {
         $installer = $setup;
         $installer->startSetup();
 
@@ -28,10 +31,10 @@ class InstallSchema implements InstallSchemaInterface
             $setup->getTable('quote_item'),
             self::COLUMN_NAME_DRAFTID,
             [
-                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
-                'length' => 32,
+                'type'     => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+                'length'   => 32,
                 'nullable' => true,
-                'comment' => 'Printformer Draft ID'
+                'comment'  => 'Printformer Draft ID',
             ]
         );
 
@@ -39,10 +42,10 @@ class InstallSchema implements InstallSchemaInterface
             $setup->getTable('quote_item'),
             self::COLUMN_NAME_STOREID,
             [
-                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
+                'type'     => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
                 'unsigned' => true,
                 'nullable' => false,
-                'comment' => 'Printformer Store ID'
+                'comment'  => 'Printformer Store ID',
             ]
         );
 
@@ -50,10 +53,10 @@ class InstallSchema implements InstallSchemaInterface
             $setup->getTable('sales_order_item'),
             self::COLUMN_NAME_DRAFTID,
             [
-                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
-                'length' => 32,
+                'type'     => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+                'length'   => 32,
                 'nullable' => true,
-                'comment' => 'Printformer Draft ID'
+                'comment'  => 'Printformer Draft ID',
             ]
         );
 
@@ -61,10 +64,10 @@ class InstallSchema implements InstallSchemaInterface
             $setup->getTable('sales_order_item'),
             self::COLUMN_NAME_STOREID,
             [
-                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
+                'type'     => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
                 'unsigned' => true,
                 'nullable' => false,
-                'comment' => 'Printformer Store ID'
+                'comment'  => 'Printformer Store ID',
             ]
         );
 
@@ -72,11 +75,11 @@ class InstallSchema implements InstallSchemaInterface
             $setup->getTable('sales_order_item'),
             self::COLUMN_NAME_ORDERED,
             [
-                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
+                'type'     => \Magento\Framework\DB\Ddl\Table::TYPE_SMALLINT,
                 'unsigned' => true,
                 'nullable' => false,
-                'default' => '0',
-                'comment' => 'Printformer Ordered'
+                'default'  => '0',
+                'comment'  => 'Printformer Ordered',
             ]
         );
 
@@ -86,11 +89,11 @@ class InstallSchema implements InstallSchemaInterface
             'id',
             \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
             null,
-            array (
+            array(
                 'identity' => true,
                 'nullable' => false,
-                'primary' => true,
-                'unsigned' => true
+                'primary'  => true,
+                'unsigned' => true,
             ),
             'Product ID'
         )->addColumn(
@@ -100,14 +103,15 @@ class InstallSchema implements InstallSchemaInterface
             [
                 'unsigned' => true,
                 'nullable' => false,
-                'primary' => true
+                'primary'  => true,
             ],
             'Store ID'
         )->addIndex(
             $installer->getIdxName(self::TABLE_NAME_PRODUCT, ['store_id']),
             ['store_id']
         )->addForeignKey(
-            $installer->getFkName(self::TABLE_NAME_PRODUCT, 'store_id', 'store', 'store_id'),
+            $installer->getFkName(self::TABLE_NAME_PRODUCT, 'store_id', 'store',
+                'store_id'),
             'store_id',
             $installer->getTable('store'),
             'store_id',
@@ -118,7 +122,7 @@ class InstallSchema implements InstallSchemaInterface
             255,
             [
                 'nullable' => false,
-                'unique' => false
+                'unique'   => false,
             ],
             'SKU'
         )->addColumn(
@@ -126,7 +130,7 @@ class InstallSchema implements InstallSchemaInterface
             \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
             255,
             [
-                'nullable' => false
+                'nullable' => false,
             ],
             'Name'
         )->addColumn(
@@ -147,7 +151,7 @@ class InstallSchema implements InstallSchemaInterface
             null,
             [
                 'nullable' => false,
-                'default' => '0',
+                'default'  => '0',
             ],
             'Status'
         )->addColumn(
@@ -168,7 +172,7 @@ class InstallSchema implements InstallSchemaInterface
             null,
             [
                 'nullable' => false,
-                'default' => \Magento\Framework\DB\Ddl\Table::TIMESTAMP_INIT
+                'default'  => \Magento\Framework\DB\Ddl\Table::TIMESTAMP_INIT,
             ],
             'Create At'
         );
@@ -180,11 +184,11 @@ class InstallSchema implements InstallSchemaInterface
             'id',
             \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
             null,
-            array (
+            array(
                 'identity' => true,
                 'nullable' => false,
-                'primary' => true,
-                'unsigned' => true
+                'primary'  => true,
+                'unsigned' => true,
             ),
             'Draft ID'
         )->addColumn(
@@ -198,7 +202,7 @@ class InstallSchema implements InstallSchemaInterface
             \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
             null,
             [
-                'unsigned' => true
+                'unsigned' => true,
             ],
             'Format Variation'
         )->addColumn(
@@ -206,7 +210,7 @@ class InstallSchema implements InstallSchemaInterface
             \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
             null,
             [
-                'unsigned' => true
+                'unsigned' => true,
             ],
             'Color Variation'
         )->addColumn(
@@ -225,24 +229,24 @@ class InstallSchema implements InstallSchemaInterface
             [
                 'unsigned' => true,
                 'nullable' => false,
-                'primary' => true
+                'primary'  => true,
             ],
             'Store ID'
         )->addColumn(
             'product_id',
             \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
             null,
-            array (
+            array(
                 'unsigned' => true,
                 'nullable' => false,
-                'primary' => true
+                'primary'  => true,
             ),
             'Product ID'
         )->addColumn(
             'qty',
             \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
             null,
-            array (
+            array(
                 'unsigned' => true,
                 'nullable' => false,
             ),
@@ -252,8 +256,8 @@ class InstallSchema implements InstallSchemaInterface
             \Magento\Framework\DB\Ddl\Table::TYPE_TIMESTAMP,
             null,
             [
-               'nullable' => false,
-               'default' => \Magento\Framework\DB\Ddl\Table::TIMESTAMP_INIT
+                'nullable' => false,
+                'default'  => \Magento\Framework\DB\Ddl\Table::TIMESTAMP_INIT,
             ],
             'Create At'
         )->addIndex(

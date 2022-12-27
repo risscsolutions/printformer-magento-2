@@ -27,35 +27,42 @@ class DefaultItem
 
     /**
      * DefaultItem constructor.
-     * @param Url $urlHelper
-     * @param Config $configHelper
-     * @param Media $mediaHelper
+     *
+     * @param   Url     $urlHelper
+     * @param   Config  $configHelper
+     * @param   Media   $mediaHelper
      */
     public function __construct(
         Url $urlHelper,
         Config $configHelper,
         Media $mediaHelper
     ) {
-        $this->urlHelper = $urlHelper;
+        $this->urlHelper    = $urlHelper;
         $this->configHelper = $configHelper;
-        $this->mediaHelper = $mediaHelper;
+        $this->mediaHelper  = $mediaHelper;
     }
 
     /**
-     * @param SubjectDefaultItem $defaultItem
-     * @param \Closure $proceed
-     * @param CartItemInterface $item
+     * @param   SubjectDefaultItem  $defaultItem
+     * @param   \Closure            $proceed
+     * @param   CartItemInterface   $item
+     *
      * @return mixed
      */
-    public function aroundGetItemData(SubjectDefaultItem $defaultItem, \Closure $proceed, CartItemInterface $item)
-    {
+    public function aroundGetItemData(
+        SubjectDefaultItem $defaultItem,
+        \Closure $proceed,
+        CartItemInterface $item
+    ) {
         $result = $proceed($item);
 
         if ($this->configHelper->isUseImagePreview()) {
-            $draftIds = $this->configHelper->getDraftIdsFromSpecificItemType($item);
+            $draftIds
+                = $this->configHelper->getDraftIdsFromSpecificItemType($item);
             if (!empty($draftIds)) {
-                $imageUrl = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
-                if (isset($imageUrl)){
+                $imageUrl
+                    = $this->mediaHelper->loadThumbsImageUrlByDraftId($draftIds);
+                if (isset($imageUrl)) {
                     $result['product_image']['src'] = $imageUrl;
                 }
             }

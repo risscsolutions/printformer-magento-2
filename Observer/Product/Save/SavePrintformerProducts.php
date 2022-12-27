@@ -22,19 +22,20 @@ class SavePrintformerProducts implements ObserverInterface
 
     /**
      * SavePrintformerProducts constructor.
-     * @param ManagerInterface $eventManager
-     * @param ResourceConnection $resourceConnection
+     *
+     * @param   ManagerInterface    $eventManager
+     * @param   ResourceConnection  $resourceConnection
      */
     public function __construct(
         ManagerInterface $eventManager,
         ResourceConnection $resourceConnection
     ) {
-        $this->eventManager = $eventManager;
+        $this->eventManager       = $eventManager;
         $this->resourceConnection = $resourceConnection;
     }
 
     /**
-     * @param Observer $observer
+     * @param   Observer  $observer
      */
     public function execute(Observer $observer)
     {
@@ -54,15 +55,19 @@ class SavePrintformerProducts implements ObserverInterface
 
         $data = [];
 
-        if(isset($params['printformer']['printformer_templates'])) {
-            foreach ($params['printformer']['printformer_templates'] as $record) {
-                if(is_array($record) && (!isset($record['is_delete']) || $record['is_delete'] != 1)) {
-                    $item = [
-                        'product_id' => $product->getId(),
+        if (isset($params['printformer']['printformer_templates'])) {
+            foreach ($params['printformer']['printformer_templates'] as $record)
+            {
+                if (is_array($record)
+                    && (!isset($record['is_delete'])
+                        || $record['is_delete'] != 1)
+                ) {
+                    $item   = [
+                        'product_id'             => $product->getId(),
                         'printformer_product_id' => $record['id'],
-                        'master_id' => $record['master_id'],
-                        'store_id' => $product->getStoreId(),
-                        'intent' => $record['intent']
+                        'master_id'              => $record['master_id'],
+                        'store_id'               => $product->getStoreId(),
+                        'intent'                 => $record['intent'],
                     ];
                     $data[] = $item;
                 }
@@ -72,16 +77,30 @@ class SavePrintformerProducts implements ObserverInterface
         $dataWrapper = new DataObject();
 
         $dataWrapper->setContent($data);
-        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before', ['controller' => $controller, 'product' => $product, 'insert_data' => $dataWrapper]);
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_before',
+            [
+                'controller'  => $controller,
+                'product'     => $product,
+                'insert_data' => $dataWrapper,
+            ]);
         $data = $dataWrapper->getContent();
 
         $connection->beginTransaction();
-        $connection->delete('catalog_product_printformer_product', ['product_id = ?' => $product->getId(), 'store_id = ?' => $product->getStoreId()]);
-        if(count($data) > 0) {
-            $connection->insertMultiple('catalog_product_printformer_product', $data);
+        $connection->delete('catalog_product_printformer_product', [
+            'product_id = ?' => $product->getId(),
+            'store_id = ?'   => $product->getStoreId(),
+        ]);
+        if (count($data) > 0) {
+            $connection->insertMultiple('catalog_product_printformer_product',
+                $data);
         }
         $connection->commit();
 
-        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after', ['controller' => $controller, 'product' => $product, 'insert_data' => $dataWrapper]);
+        $this->eventManager->dispatch('catalog_product_printformer_product_insert_after',
+            [
+                'controller'  => $controller,
+                'product'     => $product,
+                'insert_data' => $dataWrapper,
+            ]);
     }
 }

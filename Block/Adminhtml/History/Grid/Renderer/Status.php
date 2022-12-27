@@ -8,7 +8,8 @@ use Magento\Framework\DataObject;
 class Status extends AbstractRenderer
 {
     /**
-     * @param DataObject $row
+     * @param   DataObject  $row
+     *
      * @return \Magento\Framework\Phrase
      */
     public function render(DataObject $row)

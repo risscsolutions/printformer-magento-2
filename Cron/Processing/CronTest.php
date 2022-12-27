@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Cron\Processing;
 
 use Psr\Log\LoggerInterface;
@@ -6,6 +7,7 @@ use Rissc\Printformer\Cron\Processing\Runs\Test;
 
 /**
  * Class Processing
+ *
  * @package Rissc\Printformer\Cron
  */
 class CronTest
@@ -21,16 +23,15 @@ class CronTest
     private $test;
 
     /**
-     * @param LoggerInterface $logger
-     * @param Test $test
+     * @param   LoggerInterface  $logger
+     * @param   Test             $test
      */
     public function __construct(
         LoggerInterface $logger,
         Test $test
-    )
-    {
+    ) {
         $this->logger = $logger;
-        $this->test = $test;
+        $this->test   = $test;
     }
 
     /**

@@ -5,8 +5,8 @@ namespace Rissc\Printformer\Controller\Get;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Rissc\Printformer\Helper\Api;
-use Rissc\Printformer\Model\ResourceModel\Draft\CollectionFactory as DraftCollectionFactory;
 use Rissc\Printformer\Model\Draft as DraftModel;
+use Rissc\Printformer\Model\ResourceModel\Draft\CollectionFactory as DraftCollectionFactory;
 
 class Pdf extends Action
 {
@@ -18,16 +18,17 @@ class Pdf extends Action
 
     /**
      * Pdf constructor.
-     * @param Context $context
-     * @param DraftCollectionFactory $draftCollectionFactory
-     * @param Api $apiHelper
+     *
+     * @param   Context                 $context
+     * @param   DraftCollectionFactory  $draftCollectionFactory
+     * @param   Api                     $apiHelper
      */
     public function __construct(
         Context $context,
         DraftCollectionFactory $draftCollectionFactory,
         Api $apiHelper
     ) {
-        $this->_apiHelper = $apiHelper;
+        $this->_apiHelper              = $apiHelper;
         $this->_draftCollectionFactory = $draftCollectionFactory;
         parent::__construct($context);
     }
@@ -45,8 +46,10 @@ class Pdf extends Action
         $draft = $this->_apiHelper->draftProcess($draftId);
 
         if ($draftId == $draft->getDraftId()) {
-            $url = $this->_apiHelper->apiUrl()->getAdminPdf($draft->getDraftId(), $quoteId);
+            $url = $this->_apiHelper->apiUrl()
+                ->getAdminPdf($draft->getDraftId(), $quoteId);
             $this->_redirect($url);
+
             return;
         }
 

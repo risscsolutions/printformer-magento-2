@@ -4,8 +4,8 @@ namespace Rissc\Printformer\Helper\Api\Url;
 
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
-use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
@@ -87,11 +87,11 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * V2 constructor.
      *
-     * @param Context $context
-     * @param StoreManagerInterface $storeManager
-     * @param Config $config
-     * @param CustomerSession $customerSession
-     * @param CatalogHelper $catalogHelper
+     * @param   Context                $context
+     * @param   StoreManagerInterface  $storeManager
+     * @param   Config                 $config
+     * @param   CustomerSession        $customerSession
+     * @param   CatalogHelper          $catalogHelper
      */
     public function __construct(
         Context $context,
@@ -99,18 +99,19 @@ class V2 extends AbstractHelper implements VersionInterface
         Config $config,
         CustomerSession $customerSession,
         CatalogHelper $catalogHelper
-    )
-    {
-        $this->_storeManager = $storeManager;
-        $this->_config = $config;
+    ) {
+        $this->_storeManager    = $storeManager;
+        $this->_config          = $config;
         $this->_customerSession = $customerSession;
-        $this->_catalogHelper = $catalogHelper;
+        $this->_catalogHelper   = $catalogHelper;
 
         try {
             $storeId = $this->getStoreId();
-            $apiKey = $this->_config->getClientApiKey($storeId);
+            $apiKey  = $this->_config->getClientApiKey($storeId);
             if (!empty($apiKey)) {
-                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+                $this->jwtConfig
+                    = Configuration::forSymmetricSigner(new Sha256(),
+                    InMemory::plainText($apiKey));
             }
         } catch (NoSuchEntityException $e) {
         }
@@ -136,16 +137,15 @@ class V2 extends AbstractHelper implements VersionInterface
         $params = [],
         $intent = null,
         $user = null
-    )
-    {
+    ) {
         $baseParams = [
-            'master_id' => $masterId,
+            'master_id'  => $masterId,
             'product_id' => $productId,
-            'intent' => $intent
+            'intent'     => $intent,
         ];
         if ($draftHash !== null) {
             $baseParams = array_merge($baseParams, [
-                'draft_id' => $draftHash
+                'draft_id' => $draftHash,
             ]);
         }
 
@@ -153,9 +153,19 @@ class V2 extends AbstractHelper implements VersionInterface
             $baseParams['quote_id'] = $params['quote_id'];
         }
 
-        $baseUrl = $this->_urlBuilder->getUrl('printformer/editor/open', $baseParams);
+        $baseUrl = $this->_urlBuilder->getUrl('printformer/editor/open',
+            $baseParams);
 
-        return $baseUrl . (!empty($params) ? '?' . http_build_query($params) : '');
+        return $baseUrl.(!empty($params) ? '?'.http_build_query($params) : '');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUser()
+    {
+        return $this->getPrintformerBaseUrl().
+            self::API_CREATE_USER;
     }
 
     /**
@@ -164,37 +174,11 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getPrintformerBaseUrl($storeId = false, $websiteId = false)
     {
         if ($storeId === false && $websiteId === false) {
-            $storeId = $this->_storeManager->getStore()->getId();
+            $storeId   = $this->_storeManager->getStore()->getId();
             $websiteId = $this->_storeManager->getWebsite()->getId();
         }
+
         return $this->_config->getClientUrl($storeId, $websiteId);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getUser()
-    {
-        return $this->getPrintformerBaseUrl() .
-            self::API_CREATE_USER;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDraft(
-        $draftHash = null,
-        $quoteId = null
-    )
-    {
-        $draftUrl = $this->getPrintformerBaseUrl() .
-            self::API_CREATE_DRAFT;
-
-        if ($draftHash) {
-            return $draftUrl . '/' . $draftHash;
-        }
-
-        return $draftUrl;
     }
 
     /**
@@ -202,16 +186,104 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getReplicateDraftId($oldDraftId)
     {
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $oldDraftId, self::API_REPLICATE_DRAFT);
+        return $this->getPrintformerBaseUrl().str_replace('{draftId}',
+                $oldDraftId, self::API_REPLICATE_DRAFT);
     }
 
     /**
      * @param $draftId
+     *
      * @return string
      */
     public function getUploadDraftId($draftId)
     {
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftId, self::API_UPLOAD_DRAFT);
+        return $this->getPrintformerBaseUrl().str_replace('{draftId}', $draftId,
+                self::API_UPLOAD_DRAFT);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDraftProcessing(
+        $draftHashes = [],
+        $quoteId = null
+    ) {
+        return $this->getPrintformerBaseUrl().
+            self::API_DRAFT_PROCESSING;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getThumbnail($draftHash)
+    {
+        $draftHash = explode(',', $draftHash ?? '')[0];
+
+        return $this->getPrintformerBaseUrl().str_replace('{draftId}',
+                $draftHash, self::API_FILES_DRAFT_PNG);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createReviewPDF($reviewId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+        ];
+
+        return $this->getPrintformerBaseUrl()
+            .strtr(self::API_REVIEW_CREATE_REVIEW_PDF, $replaceString);
+    }
+
+    public function getReviewPdf($reviewId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+        ];
+
+        return $this->getPrintformerBaseUrl()
+            .strtr(self::API_REVIEW_GET_REVIEW_PDF, $replaceString);
+    }
+
+    public function createIdmlPackage($draftId)
+    {
+        return $this->getPrintformerBaseUrl().
+            str_replace('{draftId}', $draftId, self::API_REQUEST_IDML_PACKAGE);
+    }
+
+    public function getIdmlPackage($draftId)
+    {
+        return $this->getPrintformerBaseUrl().
+            str_replace('{draftId}', $draftId, self::API_GET_IDML_PACKAGE);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminProducts($storeId = false, $websiteId = false)
+    {
+        return $this->getProducts($storeId, $websiteId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProducts($storeId = false, $websiteId = false)
+    {
+        return $this->getPrintformerBaseUrl($storeId, $websiteId).
+            self::API_GET_PRODUCTS;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAdminEditor(
+        $draftHash,
+        array $params = null,
+        $referrer = null
+    ) {
+        return $this->getEditor($draftHash, null, $params);
     }
 
     /**
@@ -221,14 +293,13 @@ class V2 extends AbstractHelper implements VersionInterface
         $draftHash,
         $user = null,
         $params = []
-    )
-    {
-        $editorUrl = $this->getPrintformerBaseUrl() .
+    ) {
+        $editorUrl = $this->getPrintformerBaseUrl().
             self::EXT_EDITOR_PATH;
 
         $dataParams = [
-            'product_id' => $params['product_id'],
-            'draft_process' => $params['data']['draft_process']
+            'product_id'    => $params['product_id'],
+            'draft_process' => $params['data']['draft_process'],
         ];
 
         if (!empty($params['data']['quote_id'])) {
@@ -240,7 +311,7 @@ class V2 extends AbstractHelper implements VersionInterface
             $customCallbackUrl = $params['data']['callback_url'];
         }
 
-        $queryParams = [];
+        $queryParams             = [];
         $queryParams['callback'] = $this->_getCallbackUrl(
             $customCallbackUrl,
             $this->_storeManager->getStore()->getId(),
@@ -248,26 +319,19 @@ class V2 extends AbstractHelper implements VersionInterface
         );
 
         if ($this->_config->getRedirectProductOnCancel()) {
-            $queryParams['callback_cancel'] = $this->_getProductCallbackUrl(intval($params['product_id']), $params['data'], $this->_storeManager->getStore()->getId());
+            $queryParams['callback_cancel']
+                = $this->_getProductCallbackUrl(intval($params['product_id']),
+                $params['data'], $this->_storeManager->getStore()->getId());
         }
 
-        return $editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams);
+        return $editorUrl.'/'.$draftHash.'?'.http_build_query($queryParams);
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function getAuth()
-    {
-        return $this->getPrintformerBaseUrl() .
-            self::EXT_AUTH_PATH;
-    }
-
-    /**
-     * @param string $requestReferrer
-     * @param int $storeId
-     * @param array $params
-     * @param bool $encodeUrl
+     * @param   string  $requestReferrer
+     * @param   int     $storeId
+     * @param   array   $params
+     * @param   bool    $encodeUrl
      *
      * @return string
      */
@@ -276,8 +340,7 @@ class V2 extends AbstractHelper implements VersionInterface
         $storeId = 0,
         $params = [],
         $encodeUrl = true
-    )
-    {
+    ) {
         if ($requestReferrer != null) {
             $referrer = urldecode($requestReferrer);
         } else {
@@ -286,12 +349,13 @@ class V2 extends AbstractHelper implements VersionInterface
             ]);
 
             if (isset($params['quote_id']) && isset($params['product_id'])) {
-                $referrerParams['quote_id'] = $params['quote_id'];
+                $referrerParams['quote_id']     = $params['quote_id'];
                 $referrerParams['edit_product'] = $params['product_id'];
-                $referrerParams['is_edit'] = 1;
+                $referrerParams['is_edit']      = 1;
             }
 
-            $referrer = $this->_urlBuilder->getUrl('printformer/editor/save', $referrerParams);
+            $referrer = $this->_urlBuilder->getUrl('printformer/editor/save',
+                $referrerParams);
         }
 
         if ($encodeUrl) {
@@ -302,9 +366,9 @@ class V2 extends AbstractHelper implements VersionInterface
     }
 
     /**
-     * @param Product | int $product
-     * @param int $storeId
-     * @param bool $encodeUrl
+     * @param   Product | int  $product
+     * @param   int            $storeId
+     * @param   bool           $encodeUrl
      *
      * @return string
      */
@@ -313,15 +377,15 @@ class V2 extends AbstractHelper implements VersionInterface
         $params = [],
         $storeId = 0,
         $encodeUrl = true
-    )
-    {
+    ) {
         $product = $this->_catalogHelper->prepareProduct($product);
 
         if (isset($params['quote_id']) && $product->getId()) {
-            $referrerParams['id'] = $params['quote_id'];
+            $referrerParams['id']         = $params['quote_id'];
             $referrerParams['product_id'] = $product->getId();
 
-            $baseUrl = $this->_urlBuilder->getUrl('checkout/cart/configure', $referrerParams);
+            $baseUrl = $this->_urlBuilder->getUrl('checkout/cart/configure',
+                $referrerParams);
         } else {
             $baseUrl = $product->getProductUrl(null);
         }
@@ -336,117 +400,28 @@ class V2 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getDraftProcessing(
-        $draftHashes = [],
-        $quoteId = null
-    )
-    {
-        return $this->getPrintformerBaseUrl() .
-            self::API_DRAFT_PROCESSING;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getThumbnail($draftHash)
-    {
-        $draftHash = explode(',', $draftHash ?? '')[0];
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PNG);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPDF(
-        $draftHash,
-        $quoteid = null
-    )
-    {
-        return $this->getPrintformerBaseUrl() .
-            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PDF);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPreviewPDF(
-        $draftHash,
-        $quoteid = null
-    )
-    {
-        return $this->getPrintformerBaseUrl() .
-            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PREVIEW);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createReviewPDF($reviewId)
-    {
-        $replaceString = [
-            '{reviewId}' => $reviewId
-        ];
-        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_CREATE_REVIEW_PDF, $replaceString);
-    }
-
-    public function getReviewPdf($reviewId)
-    {
-        $replaceString = [
-            '{reviewId}' => $reviewId
-        ];
-        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_GET_REVIEW_PDF, $replaceString);
-    }
-
-    public function createIdmlPackage($draftId)
-    {
-        return $this->getPrintformerBaseUrl() .
-            str_replace('{draftId}', $draftId, self::API_REQUEST_IDML_PACKAGE);
-    }
-
-    public function getIdmlPackage($draftId)
-    {
-        return $this->getPrintformerBaseUrl() .
-            str_replace('{draftId}', $draftId, self::API_GET_IDML_PACKAGE);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getProducts($storeId = false, $websiteId = false)
-    {
-        return $this->getPrintformerBaseUrl($storeId, $websiteId) .
-            self::API_GET_PRODUCTS;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAdminProducts($storeId = false, $websiteId = false)
-    {
-        return $this->getProducts($storeId, $websiteId);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAdminEditor(
-        $draftHash,
-        array $params = null,
-        $referrer = null
-    )
-    {
-        return $this->getEditor($draftHash, null, $params);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getAdminDraft(
         $draftHash,
         $quoteId
-    )
-    {
+    ) {
         return $this->getDraft($draftHash);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDraft(
+        $draftHash = null,
+        $quoteId = null
+    ) {
+        $draftUrl = $this->getPrintformerBaseUrl().
+            self::API_CREATE_DRAFT;
+
+        if ($draftHash) {
+            return $draftUrl.'/'.$draftHash;
+        }
+
+        return $draftUrl;
     }
 
     /**
@@ -455,22 +430,33 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getAdminPDF(
         $draftHash,
         $quoteId
-    )
-    {
-        $issuedAt = new DateTimeImmutable();
+    ) {
+        $issuedAt       = new DateTimeImmutable();
         $expirationDate = $this->_config->getExpireDate();
-        $JWTBuilder = $this->jwtConfig->builder()
+        $JWTBuilder     = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->getClientIdentifier())
             ->expiresAt($expirationDate);
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
+        $JWT            = $JWTBuilder->getToken($this->jwtConfig->signer(),
+            $this->jwtConfig->signingKey())->toString();
 
-        $pdfUrl = $this->getPDF($draftHash);
+        $pdfUrl     = $this->getPDF($draftHash);
         $postFields = [
-            'jwt' => $JWT
+            'jwt' => $JWT,
         ];
 
-        return $pdfUrl . '?' . http_build_query($postFields);
+        return $pdfUrl.'?'.http_build_query($postFields);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPDF(
+        $draftHash,
+        $quoteid = null
+    ) {
+        return $this->getPrintformerBaseUrl().
+            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PDF);
     }
 
     /**
@@ -479,51 +465,67 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getAdminPreviewPDF(
         $draftHash,
         $quoteId
-    )
-    {
-        $issuedAt = new DateTimeImmutable();
+    ) {
+        $issuedAt       = new DateTimeImmutable();
         $expirationDate = $this->_config->getExpireDate();
-        $JWTBuilder = $this->jwtConfig->builder()
+        $JWTBuilder     = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
             ->withClaim('client', $this->_config->getClientIdentifier())
             ->expiresAt($expirationDate);
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
+        $JWT            = $JWTBuilder->getToken($this->jwtConfig->signer(),
+            $this->jwtConfig->signingKey())->toString();
 
-        $pdfUrl = $this->getPreviewPDF($draftHash);
+        $pdfUrl     = $this->getPreviewPDF($draftHash);
         $postFields = [
-            'jwt' => $JWT
+            'jwt' => $JWT,
         ];
 
-        return $pdfUrl . '?' . http_build_query($postFields);
+        return $pdfUrl.'?'.http_build_query($postFields);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPreviewPDF(
+        $draftHash,
+        $quoteid = null
+    ) {
+        return $this->getPrintformerBaseUrl().
+            str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PREVIEW);
     }
 
     public function getReviewEditAuth(
         $reviewId,
         $userIdentifier,
         $callbackUrl
-    )
-    {
+    ) {
         $calbackUrls = [
-            'redirect-url' => base64_encode($this->_storeManager->getStore()->getBaseUrl() . 'customer/account/'),
-            'submit-callback-url' => base64_encode(rtrim($this->_storeManager->getStore()->getBaseUrl(), '/') . '/' . $callbackUrl)
+            'redirect-url'        => base64_encode($this->_storeManager->getStore()
+                    ->getBaseUrl().'customer/account/'),
+            'submit-callback-url' => base64_encode(rtrim($this->_storeManager->getStore()
+                    ->getBaseUrl(), '/').'/'.$callbackUrl),
         ];
 
         // temporary fix for getting the correct review edit url with printformer_base_url for correct storeview
         if (class_exists('\Mgo\WebService\Helper\ExternalReviewUser')) {
-            $obj = ObjectManager::getInstance();
-            $externalReviewUserHelper = $obj->create('\Mgo\WebService\Helper\ExternalReviewUser');
-            $storeId = $externalReviewUserHelper->getStoreIdFromReviewByReviewHash($reviewId);
-            $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
+            $obj           = ObjectManager::getInstance();
+            $externalReviewUserHelper
+                           = $obj->create('\Mgo\WebService\Helper\ExternalReviewUser');
+            $storeId
+                           = $externalReviewUserHelper->getStoreIdFromReviewByReviewHash($reviewId);
+            $reviewEditUrl = $this->getReviewEditUrl($reviewId).'?'
+                .http_build_query($calbackUrls);
         } else {
             // not an mgo project
-            $reviewEditUrl = $this->getReviewEditUrl($reviewId) . '?' . http_build_query($calbackUrls);
-            $storeId = $this->_storeId;
+            $reviewEditUrl = $this->getReviewEditUrl($reviewId).'?'
+                .http_build_query($calbackUrls);
+            $storeId       = $this->_storeId;
         }
-        $client = $this->_config->getClientIdentifier($storeId);
-        $identifier = bin2hex(random_bytes(16));
-        $issuedAt = new DateTimeImmutable();
+        $client         = $this->_config->getClientIdentifier($storeId);
+        $identifier     = bin2hex(random_bytes(16));
+        $issuedAt       = new DateTimeImmutable();
         $expirationDate = $this->_config->getExpireDate();
-        $JWTBuilder = $this->jwtConfig->builder()
+        $JWTBuilder     = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
             ->withClaim('client', $client)
             ->withClaim('user', $userIdentifier)
@@ -531,13 +533,33 @@ class V2 extends AbstractHelper implements VersionInterface
             ->withClaim('redirect', $reviewEditUrl)
             ->expiresAt($expirationDate)
             ->withHeader('jti', $identifier);
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
+        $JWT            = $JWTBuilder->getToken($this->jwtConfig->signer(),
+            $this->jwtConfig->signingKey())->toString();
 
         $postFields = [
-            'jwt' => $JWT
+            'jwt' => $JWT,
         ];
 
-        return $this->getAuth() . '?' . http_build_query($postFields);
+        return $this->getAuth().'?'.http_build_query($postFields);
+    }
+
+    public function getReviewEditUrl($reviewId)
+    {
+        $replaceString = [
+            '{reviewId}' => $reviewId,
+        ];
+
+        return $this->getPrintformerBaseUrl().strtr(self::API_REVIEW_EDIT,
+                $replaceString);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAuth()
+    {
+        return $this->getPrintformerBaseUrl().
+            self::EXT_AUTH_PATH;
     }
 
     /**
@@ -545,7 +567,8 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getDraftDelete($draftHash)
     {
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_DELETE_DRAFT);
+        return $this->getPrintformerBaseUrl().str_replace('{draftId}',
+                $draftHash, self::API_DELETE_DRAFT);
     }
 
     /**
@@ -553,7 +576,8 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getDraftUpdate($draftHash)
     {
-        return $this->getPrintformerBaseUrl() . str_replace('{draftId}', $draftHash, self::API_UPDATE_DRAFT);
+        return $this->getPrintformerBaseUrl().str_replace('{draftId}',
+                $draftHash, self::API_UPDATE_DRAFT);
     }
 
     /**
@@ -562,16 +586,17 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getDraftUsagePageInfo(
         $draftHash,
         $usage
-    )
-    {
-        return $this->getPrintformerBaseUrl() . str_replace(array('{draftId}', '{usage}'), array($draftHash, $usage), self::API_GET_DRAFT_USAGE_PAGE_INFO);;
+    ) {
+        return $this->getPrintformerBaseUrl().str_replace(array(
+                '{draftId}',
+                '{usage}',
+            ), array($draftHash, $usage), self::API_GET_DRAFT_USAGE_PAGE_INFO);;
     }
 
     public function getRedirect(
         ProductInterface $product = null,
         array $redirectParams = null
-    )
-    {
+    ) {
         return '';
     }
 
@@ -580,7 +605,7 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getDerivat($fileId)
     {
-        return $this->getPrintformerBaseUrl() .
+        return $this->getPrintformerBaseUrl().
             str_replace('{fileId}', $fileId, self::API_FILES_DERIVATE_FILE);
     }
 
@@ -589,51 +614,47 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getPagePlannerUrl()
     {
-        return $this->getPrintformerBaseUrl() . self::API_DRAFT_SETUP;
+        return $this->getPrintformerBaseUrl().self::API_DRAFT_SETUP;
     }
 
     public function getReviewStartUrl()
     {
-        return $this->getPrintformerBaseUrl() . self::API_REVIEW_START;
-    }
-
-    public function getReviewEditUrl($reviewId)
-    {
-        $replaceString = [
-            '{reviewId}' => $reviewId
-        ];
-        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_EDIT, $replaceString);
+        return $this->getPrintformerBaseUrl().self::API_REVIEW_START;
     }
 
     public function getPagePlannerApproveUrl()
     {
-        return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_APPROVE;
+        return $this->getPrintformerBaseUrl().self::API_PAGE_PLANNER_APPROVE;
     }
 
     public function getReviewUserAddUrl($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId
+            '{reviewId}' => $reviewId,
         ];
-        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_ADD_USER, $replaceString);
+
+        return $this->getPrintformerBaseUrl().strtr(self::API_REVIEW_ADD_USER,
+                $replaceString);
     }
 
     public function getReviewUserDeleteUrl($reviewId)
     {
         $replaceString = [
-            '{reviewId}' => $reviewId
+            '{reviewId}' => $reviewId,
         ];
-        return $this->getPrintformerBaseUrl() . strtr(self::API_REVIEW_DELETE_USER, $replaceString);
+
+        return $this->getPrintformerBaseUrl()
+            .strtr(self::API_REVIEW_DELETE_USER, $replaceString);
     }
 
     public function getPagePlannerDeleteUrl()
     {
-        return $this->getPrintformerBaseUrl() . self::API_PAGE_PLANNER_DELETE;
+        return $this->getPrintformerBaseUrl().self::API_PAGE_PLANNER_DELETE;
     }
 
     public function getUserData($identifier)
     {
-        return $this->getPrintformerBaseUrl() .
+        return $this->getPrintformerBaseUrl().
             str_replace('{userId}', $identifier, self::API_GET_USER);
     }
 
@@ -642,7 +663,7 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getUploadFileUrl()
     {
-        return $this->getPrintformerBaseUrl() . self::API_FILE;
+        return $this->getPrintformerBaseUrl().self::API_FILE;
     }
 
     /**
@@ -650,7 +671,7 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getProductFeedUrl()
     {
-        return $this->getPrintformerBaseUrl() . self::API_PRODUCT_FEED;
+        return $this->getPrintformerBaseUrl().self::API_PRODUCT_FEED;
     }
 
     /**
@@ -658,6 +679,7 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getClientName($storeId = false, $websiteId = false)
     {
-        return $this->getPrintformerBaseUrl($storeId, $websiteId) . self::API_CLIENT_NAME;
+        return $this->getPrintformerBaseUrl($storeId, $websiteId)
+            .self::API_CLIENT_NAME;
     }
 }

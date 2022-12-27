@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
@@ -22,17 +23,17 @@ class SetDraftOrderItemId implements ObserverInterface
     protected $draftFactory;
 
     /**
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \Rissc\Printformer\Helper\Config $config
-     * @param \Rissc\Printformer\Model\DraftFactory $draftFactory
+     * @param   \Psr\Log\LoggerInterface               $logger
+     * @param   \Rissc\Printformer\Helper\Config       $config
+     * @param   \Rissc\Printformer\Model\DraftFactory  $draftFactory
      */
     public function __construct(
         \Psr\Log\LoggerInterface $logger,
         \Rissc\Printformer\Helper\Config $config,
         \Rissc\Printformer\Model\DraftFactory $draftFactory
     ) {
-        $this->logger = $logger;
-        $this->config = $config;
+        $this->logger       = $logger;
+        $this->config       = $config;
         $this->draftFactory = $draftFactory;
     }
 
@@ -50,10 +51,15 @@ class SetDraftOrderItemId implements ObserverInterface
              */
             $order = $observer->getData('order');
             foreach ($order->getAllItems() as $item) {
-                $draftIdsField = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                $draftIdsField
+                    = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                 if (!empty($draftIdsField)) {
-                    foreach(explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID)) as $draftId) {
-                        if (!empty($draftId)){
+                    foreach (
+                        explode(',',
+                            $item->getData(InstallSchema::COLUMN_NAME_DRAFTID))
+                        as $draftId
+                    ) {
+                        if (!empty($draftId)) {
                             $this->draftFactory
                                 ->create()
                                 ->load($draftId, 'draft_id')

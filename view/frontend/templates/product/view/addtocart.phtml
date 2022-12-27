@@ -1,14 +1,20 @@
 <?php
 /** @var $block \Magento\Catalog\Block\Product\View */
+
 ?>
-<?php $_product = $block->getProduct(); ?>
-<?php $buttonTitle = __('Add to Cart'); ?>
-<?php if ($_product->isSaleable()) :?>
+<?php
+$_product = $block->getProduct(); ?>
+<?php
+$buttonTitle = __('Add to Cart'); ?>
+<?php
+if ($_product->isSaleable()) : ?>
     <div class="box-tocart">
         <div class="fieldset">
-            <?php if ($block->shouldRenderQuantity()) :?>
+            <?php
+            if ($block->shouldRenderQuantity()) : ?>
                 <div class="field qty">
-                    <label class="label" for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
+                    <label class="label"
+                           for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
                     <div class="control">
                         <input type="number"
                                name="qty"
@@ -21,7 +27,8 @@
                         />
                     </div>
                 </div>
-            <?php endif; ?>
+            <?php
+            endif; ?>
             <div class="actions">
                 <button type="submit"
                         title="<?= $block->escapeHtmlAttr($buttonTitle) ?>"
@@ -33,11 +40,13 @@
             </div>
         </div>
     </div>
-<?php endif; ?>
+<?php
+endif; ?>
 <script type="text/x-magento-init">
     {
         "#product_addtocart_form": {
             "Rissc_Printformer/js/validate-product": {}
         }
     }
+
 </script>

@@ -5,18 +5,25 @@
 /**
  * @var $block \Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button\ResetPrintformerIdentifier
  */
+
 ?>
 <script type="text/javascript">
     require(['jquery', 'Magento_Ui/js/modal/confirm'], function ($, confirm) {
         $('#confirmation').on("click", function (event) {
             confirm({
-                content: "<?= __('Are you sure you want to delete the printformer identifiers ?')?>",
+                content: "<?= __('Are you sure you want to delete the printformer identifiers ?') ?>",
                 actions: {
                     confirm: function () {
                         var messageDiv = $('#printformer_reset_identifier_result');
-                        new Ajax.Request('<?php /* @escapeNotVerified */ echo $block->getAjaxUrl() ?>', {
+                        new Ajax.Request('<?php
+    /* @escapeNotVerified */
+
+    echo $block->getAjaxUrl() ?>', {
                             onSuccess: function (response) {
-                                var result = '<?php /* @escapeNotVerified */ echo __('Error') ?>';
+                                var result = '<?php
+    /* @escapeNotVerified */
+
+    echo __('Error') ?>';
                                 try {
                                     if (response.responseText.isJSON()) {
                                         response = response.responseText.evalJSON();
@@ -41,12 +48,16 @@
             });
         });
     });
+
 </script>
 
 <div class="actions">
-    <button class="action-printformer-reset-identifier" type="button" id="confirmation">
-        <span><?php echo $block->escapeHtml($block->getButtonLabel()) ?></span>
+    <button class="action-printformer-reset-identifier" type="button"
+            id="confirmation">
+        <span><?php
+            echo $block->escapeHtml($block->getButtonLabel()) ?></span>
     </button>
-    <div id="printformer_reset_identifier_result" class="message-validation hidden"></div>
+    <div id="printformer_reset_identifier_result"
+         class="message-validation hidden"></div>
 </div>
 

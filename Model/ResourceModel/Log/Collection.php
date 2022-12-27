@@ -1,7 +1,8 @@
 <?php
+
 namespace Rissc\Printformer\Model\ResourceModel\Log;
 
-use \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 class Collection
     extends AbstractCollection

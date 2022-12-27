@@ -11,8 +11,8 @@ use Magento\Framework\Json\Helper\Data as JsonHelper;
 class Add
 {
     /**
-     * @param SubjectAdd $subject
-     * @param \Magento\Framework\Controller\Result\Redirect | \Magento\Framework\App\Response\Http $result
+     * @param   SubjectAdd                                                                            $subject
+     * @param   \Magento\Framework\Controller\Result\Redirect | \Magento\Framework\App\Response\Http  $result
      *
      * @return \Magento\Framework\Controller\Result\Redirect
      */
@@ -32,12 +32,13 @@ class Add
         $productFactory = $objm->get(ProductFactory::class);
         /** @var ProductResource $productResource */
         $productResource = $objm->get(ProductResource::class);
-        $product = $productFactory->create();
-        $productResource->load($product, (int)$subject->getRequest()->getParam('product'));
+        $product         = $productFactory->create();
+        $productResource->load($product,
+            (int)$subject->getRequest()->getParam('product'));
 
         /** @var JsonHelper $jsonHelper */
         $jsonHelper = $objm->get(JsonHelper::class);
-        $content = [];
+        $content    = [];
         if ($result != null && is_string($result->getContent())) {
             $contentString = $result->getContent();
             if (!empty($contentString)) {

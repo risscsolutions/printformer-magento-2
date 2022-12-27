@@ -2,11 +2,11 @@
 
 namespace Rissc\Printformer\Controller\Delete;
 
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ObjectManager;
 use Rissc\Printformer\Helper\Session;
 
@@ -23,9 +23,8 @@ class Draft
         Context $context,
         ProductFactory $productFactory,
         ProductResource $productResource
-    )
-    {
-        $this->_productFactory = $productFactory;
+    ) {
+        $this->_productFactory  = $productFactory;
         $this->_productResource = $productResource;
 
         parent::__construct($context);
@@ -43,8 +42,8 @@ class Draft
             && isset($params['selected_product_draft_id'])
             && isset($params['printformer_product'])
         ) {
-            $productId = $params['selected_product_id'];
-            $draftId = $params['selected_product_draft_id'];
+            $productId            = $params['selected_product_id'];
+            $draftId              = $params['selected_product_draft_id'];
             $printformerProductId = $params['printformer_product'];
 
             $connection = $this->_productResource->getConnection();
@@ -55,22 +54,24 @@ class Draft
 
             if (!empty($draftId)) {
                 $connection->query("
-                DELETE FROM " . $connection->getTableName('printformer_draft') . "
-                WHERE `draft_id` = '" . $draftId . "';
+                DELETE FROM ".$connection->getTableName('printformer_draft')."
+                WHERE `draft_id` = '".$draftId."';
             ");
 
                 $sessionHelper->unsetCurrentIntent();
 
-                $sessionUniqueIds = $sessionHelper->getCustomerSession()->getSessionUniqueIds();
+                $sessionUniqueIds = $sessionHelper->getCustomerSession()
+                    ->getSessionUniqueIds();
                 if (isset($sessionUniqueIds[$productId][$printformerProductId])) {
                     unset($sessionUniqueIds[$productId][$printformerProductId]);
-                    $sessionHelper->getCustomerSession()->setData('session_unique_ids', $sessionUniqueIds);
+                    $sessionHelper->getCustomerSession()
+                        ->setData('session_unique_ids', $sessionUniqueIds);
                 }
                 $this->messageManager->addSuccessMessage(__('Draft has been successfully deleted.'));
             }
         }
 
-        header('Location: ' . $product->getProductUrl());
+        header('Location: '.$product->getProductUrl());
         exit();
     }
 }

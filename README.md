@@ -7,17 +7,17 @@
 - 1: Add module into app/code with corresponding namespace
 
 - 2: Make sure to require dependencies into composer.json: (compare composer.json's)
-  - lcobucci/jwt
-  - guzzlehttp/guzzle
-  - erusev/parsedown
+    - lcobucci/jwt
+    - guzzlehttp/guzzle
+    - erusev/parsedown
 
 - 3: Enable module "Rissc_Printformer" and run magento compilation steps / deployments
 
 ### Compatibility
 
-- Our module is tested with last magento version 
-  - magento/product-community-edition - 2.4.5
-  - php - 8.1
-  - mysql - 8.0.28
+- Our module is tested with last magento version
+    - magento/product-community-edition - 2.4.5
+    - php - 8.1
+    - mysql - 8.0.28
 
 **All relevant changes are noted in our [Changelog](CHANGELOG.md)** 

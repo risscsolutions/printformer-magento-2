@@ -17,36 +17,41 @@ class OrderModel
         LoggerInterface $logger
     ) {
         $this->cartRepository = $cartRepository;
-        $this->logger = $logger;
+        $this->logger         = $logger;
     }
 
     /**
      * Set printformer data to order item
      *
-     * @param Order $subject
+     * @param   Order  $subject
      */
     public function beforePlace(Order $subject)
     {
         try {
-            if(!$subject->getQuote()) {
+            if (!$subject->getQuote()) {
                 $quote = $this->cartRepository->get($subject->getQuoteId());
             } else {
                 $quote = $subject->getQuote();
             }
             $allItems = $quote->getAllItems();
-            if(count($allItems) > 0) {
+            if (count($allItems) > 0) {
                 /** @var \Magento\Sales\Model\Order\Item $item */
                 foreach ($subject->getAllItems() as $key => $item) {
                     /** @var \Magento\Quote\Model\Quote\Item $quoteItem */
-                    $keyId = $this->searchForItemId($item->getQuoteItemId(), $allItems);
+                    $keyId = $this->searchForItemId($item->getQuoteItemId(),
+                        $allItems);
                     $quoteItem = $allItems[$keyId];
-                    $draftId = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                    $draftId
+                        = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
                     if ($draftId) {
-                        $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftId);
+                        $item->setData(InstallSchema::COLUMN_NAME_DRAFTID,
+                            $draftId);
                     }
-                    $storeId = $quoteItem->getData(InstallSchema::COLUMN_NAME_STOREID);
+                    $storeId
+                        = $quoteItem->getData(InstallSchema::COLUMN_NAME_STOREID);
                     if ($storeId) {
-                        $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
+                        $item->setData(InstallSchema::COLUMN_NAME_STOREID,
+                            $storeId);
                     }
                 }
             }
@@ -58,14 +63,17 @@ class OrderModel
     /**
      * @param $sku
      * @param $array
+     *
      * @return int|string|null
      */
-    function searchForItemId($sku, $array) {
+    function searchForItemId($sku, $array)
+    {
         foreach ($array as $key => $val) {
             if ($val['item_id'] === $sku) {
                 return $key;
             }
         }
+
         return null;
     }
 }

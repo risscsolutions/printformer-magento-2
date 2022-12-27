@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Plugin\Customer\Section\Load;
 
 use Magento\Customer\Controller\Section\Load;
@@ -14,6 +15,7 @@ use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 
 /**
  * Class Plugin
+ *
  * @package Rissc\Printformer\Plugin\Customer\Section\Load
  */
 class Plugin
@@ -27,7 +29,7 @@ class Plugin
     /** @var QuoteResource */
     protected $_quoteResource;
 
-    /** @var ApiHelper  */
+    /** @var ApiHelper */
     protected $_apiHelper;
 
     /** @var DraftResource */
@@ -36,12 +38,12 @@ class Plugin
 
     /**
      * Plugin constructor.
-     * 
-     * @param CustomerSession $customerSession
-     * @param QuoteFactory $quoteFactory
-     * @param QuoteResource $quoteResource
-     * @param DraftResource $draftResource
-     * @param ApiHelper $apiHelper
+     *
+     * @param   CustomerSession  $customerSession
+     * @param   QuoteFactory     $quoteFactory
+     * @param   QuoteResource    $quoteResource
+     * @param   DraftResource    $draftResource
+     * @param   ApiHelper        $apiHelper
      */
     public function __construct(
         CustomerSession $customerSession,
@@ -52,16 +54,16 @@ class Plugin
         SessionHelper $sessionHelper
     ) {
         $this->_customerSession = $customerSession;
-        $this->_quoteFactory = $quoteFactory;
-        $this->_quoteResource = $quoteResource;
-        $this->_draftResource = $draftResource;
-        $this->_apiHelper = $apiHelper;
-        $this->sessionHelper = $sessionHelper;
+        $this->_quoteFactory    = $quoteFactory;
+        $this->_quoteResource   = $quoteResource;
+        $this->_draftResource   = $draftResource;
+        $this->_apiHelper       = $apiHelper;
+        $this->sessionHelper    = $sessionHelper;
     }
 
     /**
-     * @param GuestCartManagement $subject
-     * @param \Closure $oAssignCustomer
+     * @param   GuestCartManagement  $subject
+     * @param   \Closure             $oAssignCustomer
      *
      * @return boolean
      */
@@ -91,24 +93,34 @@ class Plugin
 
                     foreach ($draftIds as $draftId) {
                         /** @var Draft $draftProcess */
-                        $draftProcess = $this->_apiHelper->draftProcess($draftId);
+                        $draftProcess
+                            = $this->_apiHelper->draftProcess($draftId);
                         if (!$draftProcess->getId()) {
                             continue;
                         }
 
-                        $userIdentifier = $this->_apiHelper->getUserIdentifier();
-                        if ($userIdentifier != $customer->getPrintformerIdentification()) {
-                            $userIdentifier = $customer->getPrintformerIdentification();
+                        $userIdentifier
+                            = $this->_apiHelper->getUserIdentifier();
+                        if ($userIdentifier
+                            != $customer->getPrintformerIdentification()
+                        ) {
+                            $userIdentifier
+                                = $customer->getPrintformerIdentification();
                         }
 
                         if (!$draftProcess->getCustomerId()) {
-                            $replicateDraft = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(), $customer->getId());
-                            $draftId = $replicateDraft->getDraftId();
+                            $replicateDraft
+                                       = $this->_apiHelper->generateNewReplicateDraft($draftProcess->getDraftId(),
+                                $customer->getId());
+                            $draftId   = $replicateDraft->getDraftId();
                             $productId = $item->getProduct()->getId();
-                            $pfProductId = $replicateDraft->getPrintformerProductId();
+                            $pfProductId
+                                       = $replicateDraft->getPrintformerProductId();
                             $item->setPrintformerDraftid($draftId);
-                            $this->sessionHelper->removeSessionUniqueIdFromSession($productId, $pfProductId);
-                            $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
+                            $this->sessionHelper->removeSessionUniqueIdFromSession($productId,
+                                $pfProductId);
+                            $this->sessionHelper->loadSessionUniqueId($productId,
+                                $pfProductId, $draftId);
                             $item->save();
                         }
                     }

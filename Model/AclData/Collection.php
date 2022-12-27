@@ -20,12 +20,14 @@ class Collection
     }
 
     /**
-     * @param AclData $item
+     * @param   AclData  $item
+     *
      * @return $this
      */
     public function addItem(AclData $item)
     {
         $this->collection[] = $item;
+
         return $this;
     }
 
@@ -35,6 +37,14 @@ class Collection
     public function getItems()
     {
         return $this->collection;
+    }
+
+    /**
+     * @return string
+     */
+    public function toJson()
+    {
+        return json_encode($this->toArray());
     }
 
     /**
@@ -49,13 +59,5 @@ class Collection
         }
 
         return $result;
-    }
-
-    /**
-     * @return string
-     */
-    public function toJson()
-    {
-        return json_encode($this->toArray());
     }
 }

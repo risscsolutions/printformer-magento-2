@@ -1,10 +1,12 @@
 <?php
+
 namespace Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier\Data;
 
 use Magento\Catalog\Model\Locator\LocatorInterface;
 
 /**
  * Class Printformer
+ *
  * @package Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier\Data
  */
 class Printformer
@@ -16,7 +18,8 @@ class Printformer
 
     /**
      * Printformer constructor.
-     * @param LocatorInterface $locator
+     *
+     * @param   LocatorInterface  $locator
      */
     public function __construct(
         LocatorInterface $locator
@@ -31,6 +34,7 @@ class Printformer
      */
     public function isFilesCanBeTransferredToPrintformer()
     {
-        return (bool) $this->locator->getProduct()->getData('files_transfer_to_printformer');
+        return (bool)$this->locator->getProduct()
+            ->getData('files_transfer_to_printformer');
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Model\Api\Webservice;
 
 use Magento\Framework\Webapi\Rest\Request;
@@ -10,8 +11,7 @@ class AbstractService
 
     public function __construct(
         Request $_request
-    )
-    {
+    ) {
         $this->_request = $_request;
     }
 

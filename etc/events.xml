@@ -1,26 +1,31 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
     <event name="checkout_cart_product_add_after">
-        <observer name="printformer_draftid_add_quote_item" instance="Rissc\Printformer\Observer\SetQuoteItemDraftId" />
+        <observer name="printformer_draftid_add_quote_item" instance="Rissc\Printformer\Observer\SetQuoteItemDraftId"/>
     </event>
     <event name="checkout_cart_product_update_after">
-        <observer name="printformer_draftid_add_quote_item" instance="Rissc\Printformer\Observer\SetQuoteItemDraftId" />
+        <observer name="printformer_draftid_add_quote_item" instance="Rissc\Printformer\Observer\SetQuoteItemDraftId"/>
     </event>
     <event name="sales_model_service_quote_submit_before">
-        <observer name="printformer_draftid_submit_quote_before" instance="Rissc\Printformer\Observer\SetOrderItemDraftId"/>
+        <observer name="printformer_draftid_submit_quote_before"
+                  instance="Rissc\Printformer\Observer\SetOrderItemDraftId"/>
     </event>
     <event name="sales_model_service_quote_submit_success">
-        <observer name="printformer_draft_set_order_item" instance="Rissc\Printformer\Observer\SetDraftOrderItemId" />
+        <observer name="printformer_draft_set_order_item" instance="Rissc\Printformer\Observer\SetDraftOrderItemId"/>
     </event>
     <event name="printformer_product_sync_after">
-        <observer name="rissc_printformer_product_sync_after" instance="Rissc\Printformer\Observer\Product\Sync\After\Observer" />
+        <observer name="rissc_printformer_product_sync_after"
+                  instance="Rissc\Printformer\Observer\Product\Sync\After\Observer"/>
     </event>
     <event name="catalog_product_save_after">
-        <observer name="rissc_printformer_product_view_buttons" instance="Rissc\Printformer\Observer\Product\View\Buttons\Observer" />
+        <observer name="rissc_printformer_product_view_buttons"
+                  instance="Rissc\Printformer\Observer\Product\View\Buttons\Observer"/>
     </event>
     <!-- Backend product edit (SAVE) -->
     <event name="controller_action_catalog_product_save_entity_after">
         <!-- Save printformer products -->
-        <observer name="Product_SaveAfter_PrintformerProducts" instance="Rissc\Printformer\Observer\Product\Save\SavePrintformerProducts" />
+        <observer name="Product_SaveAfter_PrintformerProducts"
+                  instance="Rissc\Printformer\Observer\Product\Save\SavePrintformerProducts"/>
     </event>
 </config>

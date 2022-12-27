@@ -5,14 +5,14 @@ namespace Rissc\Printformer\Controller\Adminhtml\Drafts;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\ItemFactory as OrderItemFactory;
 use Magento\Sales\Model\Order\Item as OrderItem;
+use Magento\Sales\Model\Order\ItemFactory as OrderItemFactory;
 use Rissc\Printformer\Controller\Adminhtml\AbstractController;
-use Rissc\Printformer\Model\DraftFactory;
-use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Gateway\Admin\Draft as GatewayDraft;
-use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Model\Draft;
+use Rissc\Printformer\Model\DraftFactory;
 
 class MassResend extends AbstractController
 {
@@ -41,13 +41,14 @@ class MassResend extends AbstractController
 
     /**
      * MassResend constructor.
-     * @param Context $context
-     * @param PageFactory $_resultPageFactory
-     * @param DraftFactory $draftFactory
-     * @param OrderItemFactory $orderItemFactory
-     * @param Config $config
-     * @param GatewayDraft $printformerDraft
-     * @param ApiHelper $apiHelper
+     *
+     * @param   Context           $context
+     * @param   PageFactory       $_resultPageFactory
+     * @param   DraftFactory      $draftFactory
+     * @param   OrderItemFactory  $orderItemFactory
+     * @param   Config            $config
+     * @param   GatewayDraft      $printformerDraft
+     * @param   ApiHelper         $apiHelper
      */
     public function __construct(
         Context $context,
@@ -58,11 +59,11 @@ class MassResend extends AbstractController
         GatewayDraft $printformerDraft,
         ApiHelper $apiHelper
     ) {
-        $this->_draftFactory = $draftFactory;
+        $this->_draftFactory     = $draftFactory;
         $this->_orderItemFactory = $orderItemFactory;
-        $this->_config = $config;
+        $this->_config           = $config;
         $this->_printformerDraft = $printformerDraft;
-        $this->_apiHelper = $apiHelper;
+        $this->_apiHelper        = $apiHelper;
 
         parent::__construct($context, $_resultPageFactory);
     }
@@ -71,34 +72,39 @@ class MassResend extends AbstractController
     {
         try {
             $drafts = $this->getRequest()->getParam('drafts');
-            if(!empty($drafts)) {
+            if (!empty($drafts)) {
                 /** @var Draft $draft */
-                $draft = $this->_draftFactory->create();
-                $draftCollection = $draft->getCollection()->addFieldToFilter('id', ['in' => $drafts]);
+                $draft           = $this->_draftFactory->create();
+                $draftCollection = $draft->getCollection()
+                    ->addFieldToFilter('id', ['in' => $drafts]);
 
                 $draftIds = [];
-                foreach($draftCollection as $draft) {
+                foreach ($draftCollection as $draft) {
                     /** @var OrderItem $orderItem */
                     $orderItem = $this->_orderItemFactory->create();
                     $orderItem = $orderItem->getCollection()
-                        ->addFieldToFilter('printformer_draftid', ['like' => '%' . $draft->getDraftId() . '%'])
-                        ->addFieldToFilter('printformer_storeid', ['eq' => $draft->getStoreId()])
+                        ->addFieldToFilter('printformer_draftid',
+                            ['like' => '%'.$draft->getDraftId().'%'])
+                        ->addFieldToFilter('printformer_storeid',
+                            ['eq' => $draft->getStoreId()])
                         ->load()
                         ->getFirstItem();
 
-                    if($orderItem->getId()) {
+                    if ($orderItem->getId()) {
                         /** @var Order $order */
                         $order = $orderItem->getOrder();
                         foreach ($order->getAllItems() as $item) {
-                            if ($draft->getProcessingId()){
-                                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+                            if ($draft->getProcessingId()) {
+                                if ($item->getPrintformerOrdered()
+                                    || !$item->getPrintformerDraftid()
+                                ) {
                                     continue;
                                 }
                             }
                             $draftIds = $item->getPrintformerDraftid();
-                            if (!empty($draftIds)){
+                            if (!empty($draftIds)) {
                                 $draftHashes = explode(',', $draftIds);
-                                foreach($draftHashes as $draftHash) {
+                                foreach ($draftHashes as $draftHash) {
                                     if (!empty($draftHash)) {
                                         $draftIds[] = $draftHash;
                                     }
@@ -113,6 +119,7 @@ class MassResend extends AbstractController
 
                 if (empty($draftIds)) {
                     $this->messageManager->addWarningMessage(__('Drafts have been resend previously.'));
+
                     return $this->_redirect('*/*/index');
                 }
 
@@ -123,9 +130,10 @@ class MassResend extends AbstractController
                 $this->messageManager->addSuccessMessage(__('No drafts have been processed.'));
             }
         } finally {
-            if (isset($drafts) && !empty($drafts) && !empty($draftIds)){
+            if (isset($drafts) && !empty($drafts) && !empty($draftIds)) {
                 foreach ($draftIds as $draftId) {
-                    $this->_apiHelper->setProcessingStateOnOrderItemByDraftId($draftId, $this->_apiHelper::ProcessingStateAdminMassResend);
+                    $this->_apiHelper->setProcessingStateOnOrderItemByDraftId($draftId,
+                        $this->_apiHelper::ProcessingStateAdminMassResend);
                 }
             }
         }

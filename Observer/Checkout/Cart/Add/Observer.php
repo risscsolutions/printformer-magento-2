@@ -1,13 +1,14 @@
 <?php
+
 namespace Rissc\Printformer\Observer\Checkout\Cart\Add;
 
-use \Magento\Framework\Event\ObserverInterface;
-use \Magento\Framework\Event\Observer as EventObserver;
-use \Magento\Customer\Model\Session as CustomerSession;
-use \Magento\Catalog\Model\Session as CatalogSession;
-use \Rissc\Printformer\Controller\Editor\Save;
-use Rissc\Printformer\Helper\Session;
+use Magento\Catalog\Model\Session as CatalogSession;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\Event\Observer as EventObserver;
+use Magento\Framework\Event\ObserverInterface;
+use Rissc\Printformer\Controller\Editor\Save;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Session;
 
 class Observer
     implements ObserverInterface
@@ -23,37 +24,40 @@ class Observer
     /**
      * Observer constructor.
      *
-     * @param CustomerSession $_customerSession
-     * @param CatalogSession $_catalogSession
-     * @param Session $sessionHelper
+     * @param   CustomerSession  $_customerSession
+     * @param   CatalogSession   $_catalogSession
+     * @param   Session          $sessionHelper
      */
     public function __construct(
         CustomerSession $_customerSession,
         CatalogSession $_catalogSession,
         Session $sessionHelper,
         Config $configHelper
-    )
-    {
+    ) {
         $this->_customerSession = $_customerSession;
-        $this->_catalogSession = $_catalogSession;
-        $this->sessionHelper = $sessionHelper;
-        $this->configHelper = $configHelper;
+        $this->_catalogSession  = $_catalogSession;
+        $this->sessionHelper    = $sessionHelper;
+        $this->configHelper     = $configHelper;
     }
 
     /**
-     * @param EventObserver $observer
+     * @param   EventObserver  $observer
      */
     public function execute(EventObserver $observer)
     {
         $this->_catalogSession->setSavedPrintformerOptions(null);
-        $this->_catalogSession->setData(Save::PERSONALISATIONS_QUERY_PARAM, null);
-        $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
+        $this->_catalogSession->setData(Save::PERSONALISATIONS_QUERY_PARAM,
+            null);
+        $this->_catalogSession->setData(Session::SESSION_KEY_PRINTFORMER_CURRENT_INTENT,
+            null);
         $product = $observer->getData('product');
-        if (isset($product)){
+        if (isset($product)) {
             $productItem = $observer->getQuoteItem();
             if ($this->configHelper->useChildProduct($productItem->getProductType())) {
                 $quoteChildren = $productItem->getChildren();
-                if (is_array($quoteChildren) && !empty($quoteChildren) && !empty($quoteChildren[0])){
+                if (is_array($quoteChildren) && !empty($quoteChildren)
+                    && !empty($quoteChildren[0])
+                ) {
                     $firstProduct = $quoteChildren[0]['product'];
                     if (!empty($firstProduct)) {
                         $productId = $firstProduct->getData('entity_id');
@@ -66,6 +70,5 @@ class Observer
                 $this->sessionHelper->removeSessionUniqueIdFromSession($productId);
             }
         }
-
     }
 }

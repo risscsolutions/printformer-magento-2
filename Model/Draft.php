@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Model;
 
 class Draft extends \Magento\Framework\Model\AbstractModel
@@ -14,13 +15,13 @@ class Draft extends \Magento\Framework\Model\AbstractModel
     const KEY_PROCESSING_ID = 'processing_id';
     const KEY_PROCESSING_STATUS = 'processing_status';
 
+    public function getIdentities()
+    {
+        return [self::CACHE_TAG.'_'.$this->getId()];
+    }
+
     protected function _construct()
     {
         $this->_init('Rissc\Printformer\Model\ResourceModel\Draft');
-    }
-
-    public function getIdentities()
-    {
-        return [self::CACHE_TAG . '_' . $this->getId()];
     }
 }

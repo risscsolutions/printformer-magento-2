@@ -1,10 +1,12 @@
 <?php
+
 namespace Rissc\Printformer\Model\Api\Webservice\Service;
 
 use Rissc\Printformer\Model\Api\Webservice\Data\AclDataInterface;
 
 /**
  * Class AclData
+ *
  * @package Rissc\Printformer\Model\Api\Webservice\Service
  */
 class AclData implements AclDataInterface
@@ -15,7 +17,7 @@ class AclData implements AclDataInterface
     protected $_data = [];
 
     /**
-     * @param array $data
+     * @param   array  $data
      *
      * @return AclData
      */

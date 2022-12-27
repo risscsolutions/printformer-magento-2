@@ -1,8 +1,10 @@
 <?php
+
 namespace Rissc\Printformer\Api\Data;
 
 /**
  * Interface AclDataInterface
+ *
  * @package Rissc\Printformer\Api\Data
  */
 interface AclDataInterface
@@ -23,7 +25,7 @@ interface AclDataInterface
     public function getAction();
 
     /**
-     * @param string $action
+     * @param   string  $action
      *
      * @return $this
      */
@@ -35,7 +37,7 @@ interface AclDataInterface
     public function getEntityType();
 
     /**
-     * @param string $entityType
+     * @param   string  $entityType
      *
      * @return $this
      */
@@ -47,7 +49,7 @@ interface AclDataInterface
     public function getEntityIdentifier();
 
     /**
-     * @param string $entityIdentifier
+     * @param   string  $entityIdentifier
      *
      * @return $this
      */
@@ -59,7 +61,7 @@ interface AclDataInterface
     public function getUserIdentifier();
 
     /**
-     * @param string $userIdentifier
+     * @param   string  $userIdentifier
      *
      * @return $this
      */
@@ -71,7 +73,7 @@ interface AclDataInterface
     public function getAllowAction();
 
     /**
-     * @param bool $allowAction
+     * @param   bool  $allowAction
      *
      * @return $this
      */

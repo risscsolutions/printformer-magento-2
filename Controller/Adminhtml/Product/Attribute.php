@@ -2,12 +2,12 @@
 
 namespace Rissc\Printformer\Controller\Adminhtml\Product;
 
-use Magento\Backend\App\Action\Context;
 use Magento\Backend\App\Action;
-use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Store\Model\Store;
+use Magento\Backend\App\Action\Context;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute as EntityAttribute;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Store\Model\Store;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 
 class Attribute
@@ -30,10 +30,11 @@ class Attribute
 
     /**
      * Attribute constructor.
-     * @param Context $context
-     * @param JsonFactory $resultJsonFactory
-     * @param Config $eavConfig
-     * @param ConfigHelper $config
+     *
+     * @param   Context       $context
+     * @param   JsonFactory   $resultJsonFactory
+     * @param   Config        $eavConfig
+     * @param   ConfigHelper  $config
      */
     public function __construct(
         Context $context,
@@ -42,26 +43,29 @@ class Attribute
         ConfigHelper $config
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
-        $this->eavConfig = $eavConfig;
-        $this->config = $config;
+        $this->eavConfig         = $eavConfig;
+        $this->config            = $config;
         parent::__construct($context);
     }
 
     public function execute()
     {
-        $attributeCode = $this->getRequest()->getParam('code', Store::DEFAULT_STORE_ID);
+        $attributeCode = $this->getRequest()->getParam('code',
+            Store::DEFAULT_STORE_ID);
         try {
             if (!$this->config->isEnabled()) {
                 throw new \Exception(__('Module disabled.'));
             }
 
-            $attribute = $this->eavConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY, $attributeCode);
-            if (!($attribute instanceOf EntityAttribute\AbstractAttribute)) {
+            $attribute
+                = $this->eavConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY,
+                $attributeCode);
+            if (!($attribute instanceof EntityAttribute\AbstractAttribute)) {
                 throw new \Exception(__('Attribute not found.'));
             }
 
             $source = $attribute->getSource();
-            if (!($source instanceOf EntityAttribute\Source\AbstractSource)) {
+            if (!($source instanceof EntityAttribute\Source\AbstractSource)) {
                 throw new \Exception(__('Invalid attribute.'));
             }
 
@@ -79,6 +83,7 @@ class Attribute
         }
         $this->_actionFlag->set('', self::FLAG_NO_POST_DISPATCH, true);
         $resultJson = $this->resultJsonFactory->create();
+
         return $resultJson->setData($response);
     }
 

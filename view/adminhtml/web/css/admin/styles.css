@@ -1,18 +1,21 @@
 .config-nav .admin__page-rissc-tab .rissc-logo::before {
-  content: '';
-  background-image: url('../../images/rissc_logo_2020.png');
-  background-repeat: no-repeat;
-  background-size: 30px;
-  background-position: 0 0;
-  height: 30px;
-  position: absolute;
-  width: 30px;
-  top: 11px;
+    content: '';
+    background-image: url('../../images/rissc_logo_2020.png');
+    background-repeat: no-repeat;
+    background-size: 30px;
+    background-position: 0 0;
+    height: 30px;
+    position: absolute;
+    width: 30px;
+    top: 11px;
 }
+
 .config-nav .admin__page-rissc-tab strong {
-  margin-left: 40px;
+    margin-left: 40px;
 }
+
 fieldset#printformer_changelog li {
-  list-style-position: inside;
+    list-style-position: inside;
 }
+
 /*# sourceMappingURL=styles.css.map */

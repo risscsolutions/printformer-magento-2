@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
     <event name="admin_system_config_changed_section_printformer">
-        <observer name="rissc_printformer_admin_system_config_changed_section_printformer" instance="Rissc\Printformer\Observer\Config\Save" />
+        <observer name="rissc_printformer_admin_system_config_changed_section_printformer"
+                  instance="Rissc\Printformer\Observer\Config\Save"/>
     </event>
 </config>

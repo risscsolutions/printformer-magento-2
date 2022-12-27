@@ -1,8 +1,10 @@
 <?php
+
 namespace Rissc\Printformer\Model\Api\Webservice\Data;
 
 /**
  * Interface AclInterface
+ *
  * @package Rissc\Printformer\Model\Api\Webservice\Data
  */
 interface AclInterface

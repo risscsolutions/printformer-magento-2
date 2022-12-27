@@ -1,7 +1,8 @@
 <?php
+
 namespace Rissc\Printformer\Model\ResourceModel;
 
-use \Magento\Framework\Model\ResourceModel\Db\AbstractDb;
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Rissc\Printformer\Setup\UpgradeSchema;
 
 class Log

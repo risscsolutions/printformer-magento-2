@@ -9,11 +9,6 @@ class Right extends AbstractModel implements RightInterface
 {
     protected $_eventPrefix = 'printformer_customer_group_right';
 
-    protected function _construct()
-    {
-        $this->_init(\Rissc\Printformer\Model\Customer\Resource\Group\Right::class);
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -89,6 +84,28 @@ class Right extends AbstractModel implements RightInterface
     /**
      * {@inheritdoc}
      */
+    public function setRightValue($key, $value)
+    {
+        return $this->setData($key, $value);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reset()
+    {
+        $this->setDraftEditorView(false);
+        $this->setDraftEditorUpdate(false);
+        $this->setReviewEnd(false);
+        $this->setReviewFinish(false);
+        $this->setReviewView(false);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function setDraftEditorView($draftEditorView)
     {
         return $this->setData(self::DRAFT_EDITOR_VIEW, $draftEditorView);
@@ -105,9 +122,9 @@ class Right extends AbstractModel implements RightInterface
     /**
      * {@inheritdoc}
      */
-    public function setReviewView($reviewView)
+    public function setReviewEnd($reviewEnd)
     {
-        return $this->setData(self::REVIEW_VIEW, $reviewView);
+        return $this->setData(self::REVIEW_END, $reviewEnd);
     }
 
     /**
@@ -121,30 +138,9 @@ class Right extends AbstractModel implements RightInterface
     /**
      * {@inheritdoc}
      */
-    public function setReviewEnd($reviewEnd)
+    public function setReviewView($reviewView)
     {
-        return $this->setData(self::REVIEW_END, $reviewEnd);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setRightValue($key, $value)
-    {
-        return $this->setData($key, $value);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function reset()
-    {
-        $this->setDraftEditorView(false);
-        $this->setDraftEditorUpdate(false);
-        $this->setReviewEnd(false);
-        $this->setReviewFinish(false);
-        $this->setReviewView(false);
-        return $this;
+        return $this->setData(self::REVIEW_VIEW, $reviewView);
     }
 
     /**
@@ -153,5 +149,10 @@ class Right extends AbstractModel implements RightInterface
     public function hasRight($key)
     {
         return (bool)$this->getData($key);
+    }
+
+    protected function _construct()
+    {
+        $this->_init(\Rissc\Printformer\Model\Customer\Resource\Group\Right::class);
     }
 }

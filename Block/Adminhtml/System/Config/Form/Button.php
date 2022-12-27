@@ -9,11 +9,13 @@ class Button extends Field
 {
     /**
      * @param $buttonLabel
+     *
      * @return $this
      */
     public function setbuttonLabel($buttonLabel)
     {
         $this->_buttonLabel = $buttonLabel;
+
         return $this;
     }
 
@@ -23,6 +25,7 @@ class Button extends Field
     public function render(AbstractElement $element)
     {
         $element->unsScope()->unsCanUseWebsiteValue()->unsCanUseDefaultValue();
+
         return parent::render($element);
     }
 }

@@ -1,10 +1,12 @@
 <?php
+
 namespace Rissc\Printformer\Model\History;
 
 use Magento\Framework\Model\AbstractModel;
 
 /**
  * Class Log
+ *
  * @package Rissc\Printformer\Model\History
  *
  * @method getDraftId()

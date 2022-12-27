@@ -1,17 +1,20 @@
 <?php
+
 $_data = array(
-    "Edit draft" => __('Edit draft'),
+    "Edit draft"                                                             => __('Edit draft'),
     "You've made two Drafts. Please select the one you want to add to cart." => __('You\'ve made two Drafts. Please select the one you want to add to cart.'),
-    "draft-customize" => __('draft-customize'),
-    "draft-personalize" => __('draft-personalize'),
-    "draft-upload" => __('draft-upload'),
-    "draft-upload-and-editor" => __('draft-upload-and-editor'),
-    'View draft' => __('View draft'),
-    'View upload' => __('View upload')
+    "draft-customize"                                                        => __('draft-customize'),
+    "draft-personalize"                                                      => __('draft-personalize'),
+    "draft-upload"                                                           => __('draft-upload'),
+    "draft-upload-and-editor"                                                => __('draft-upload-and-editor'),
+    'View draft'                                                             => __('View draft'),
+    'View upload'                                                            => __('View upload'),
 );
 ?>
 <script type="text/javascript">
     require(["jquery","mage/translate"], function($){
-        $.mage.translate.add(<?php echo Zend_Json::encode($_data) ?>)
+        $.mage.translate.add(<?php
+    echo Zend_Json::encode($_data) ?>)
     });
+
 </script>

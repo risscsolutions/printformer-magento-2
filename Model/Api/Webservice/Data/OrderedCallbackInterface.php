@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Model\Api\Webservice\Data;
 
 interface OrderedCallbackInterface

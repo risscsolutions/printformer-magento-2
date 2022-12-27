@@ -9,8 +9,8 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Rissc\Printformer\Api\Customer\Group\RightRepositoryInterface;
 use Rissc\Printformer\Api\Data\Customer\Group\RightInterface;
 use Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterfaceFactory;
-use Rissc\Printformer\Model\Customer\Resource\Group\Right as ResourceRight;
 use Rissc\Printformer\Model\Customer\Group\RightFactory;
+use Rissc\Printformer\Model\Customer\Resource\Group\Right as ResourceRight;
 use Rissc\Printformer\Model\Customer\Resource\Group\Right\CollectionFactory as ResourceCollectionFactory;
 
 class RightRepository implements RightRepositoryInterface
@@ -42,11 +42,12 @@ class RightRepository implements RightRepositoryInterface
 
     /**
      * RightRepository constructor.
-     * @param ResourceRight $resource
-     * @param RightFactory $rightFactory
-     * @param ResourceCollectionFactory $resourceCollectionFactory
-     * @param RightSearchResultsInterfaceFactory $searchResultsFactory
-     * @param CollectionProcessorInterface $collectionProcessor
+     *
+     * @param   ResourceRight                       $resource
+     * @param   RightFactory                        $rightFactory
+     * @param   ResourceCollectionFactory           $resourceCollectionFactory
+     * @param   RightSearchResultsInterfaceFactory  $searchResultsFactory
+     * @param   CollectionProcessorInterface        $collectionProcessor
      */
     public function __construct(
         ResourceRight $resource,
@@ -55,11 +56,11 @@ class RightRepository implements RightRepositoryInterface
         RightSearchResultsInterfaceFactory $searchResultsFactory,
         CollectionProcessorInterface $collectionProcessor
     ) {
-        $this->resource = $resource;
-        $this->rightFactory = $rightFactory;
+        $this->resource                  = $resource;
+        $this->rightFactory              = $rightFactory;
         $this->resourceCollectionFactory = $resourceCollectionFactory;
-        $this->searchResultsFactory = $searchResultsFactory;
-        $this->collectionProcessor = $collectionProcessor;
+        $this->searchResultsFactory      = $searchResultsFactory;
+        $this->collectionProcessor       = $collectionProcessor;
     }
 
     /**
@@ -75,27 +76,16 @@ class RightRepository implements RightRepositoryInterface
                 $exception
             );
         }
+
         return $right;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getById($id)
-    {
-        $right = $this->rightFactory->create();
-        $right->load($id);
-        if (!$right->getId()) {
-            throw new NoSuchEntityException(__('Right with id "%1" does not exist.', $id));
-        }
-        return $right;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getList(\Magento\Framework\Api\SearchCriteriaInterface $searchCriteria)
-    {
+    public function getList(
+        \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
+    ) {
         /** @var \Rissc\Printformer\Model\Customer\Resource\Group\Right\Collection $collection */
         $collection = $this->resourceCollectionFactory->create();
 
@@ -106,7 +96,16 @@ class RightRepository implements RightRepositoryInterface
         $searchResults->setSearchCriteria($searchCriteria);
         $searchResults->setItems($collection->getItems());
         $searchResults->setTotalCount($collection->getSize());
+
         return $searchResults;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteById($id)
+    {
+        return $this->delete($this->getById($id));
     }
 
     /**
@@ -122,14 +121,22 @@ class RightRepository implements RightRepositoryInterface
                 $exception->getMessage()
             ));
         }
+
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function deleteById($id)
+    public function getById($id)
     {
-        return $this->delete($this->getById($id));
+        $right = $this->rightFactory->create();
+        $right->load($id);
+        if (!$right->getId()) {
+            throw new NoSuchEntityException(__('Right with id "%1" does not exist.',
+                $id));
+        }
+
+        return $right;
     }
 }

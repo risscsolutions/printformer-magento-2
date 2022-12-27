@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Cron\Processing;
 
 use Psr\Log\LoggerInterface;
@@ -8,6 +9,7 @@ use Rissc\Printformer\Cron\Processing\Runs\Third;
 
 /**
  * Class Processing
+ *
  * @package Rissc\Printformer\Cron
  */
 class Cron
@@ -33,22 +35,21 @@ class Cron
     private $third;
 
     /**
-     * @param LoggerInterface $logger
-     * @param First $first
-     * @param Second $second
-     * @param Third $third
+     * @param   LoggerInterface  $logger
+     * @param   First            $first
+     * @param   Second           $second
+     * @param   Third            $third
      */
     public function __construct(
         LoggerInterface $logger,
         First $first,
         Second $second,
         Third $third
-    )
-    {
+    ) {
         $this->logger = $logger;
-        $this->first = $first;
+        $this->first  = $first;
         $this->second = $second;
-        $this->third = $third;
+        $this->third  = $third;
     }
 
     /**

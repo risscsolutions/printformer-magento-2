@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
@@ -22,16 +23,16 @@ class SetOrderItemDraftId implements ObserverInterface
     protected $draftFactory;
 
     /**
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \Rissc\Printformer\Helper\Config $config
+     * @param   \Psr\Log\LoggerInterface          $logger
+     * @param   \Rissc\Printformer\Helper\Config  $config
      */
     public function __construct(
         \Psr\Log\LoggerInterface $logger,
         \Rissc\Printformer\Helper\Config $config,
         \Rissc\Printformer\Model\DraftFactory $draftFactory
     ) {
-        $this->logger = $logger;
-        $this->config = $config;
+        $this->logger       = $logger;
+        $this->config       = $config;
         $this->draftFactory = $draftFactory;
     }
 
@@ -54,8 +55,10 @@ class SetOrderItemDraftId implements ObserverInterface
             $order = $observer->getData('order');
             foreach ($order->getAllItems() as $item) {
                 $quoteItem = $quote->getItemById($item->getQuoteItemId());
-                $draftIds = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                $storeId = $quoteItem->getData(InstallSchema::COLUMN_NAME_STOREID);
+                $draftIds
+                           = $quoteItem->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                $storeId
+                           = $quoteItem->getData(InstallSchema::COLUMN_NAME_STOREID);
                 $item->setData(InstallSchema::COLUMN_NAME_DRAFTID, $draftIds);
                 $item->setData(InstallSchema::COLUMN_NAME_STOREID, $storeId);
             }

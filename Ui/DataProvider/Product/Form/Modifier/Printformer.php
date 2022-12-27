@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier;
 
 use Magento\Catalog\Model\Locator\LocatorInterface;
@@ -6,15 +7,16 @@ use Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\AbstractModifier;
 use Magento\Downloadable\Model\Product\Type;
 use Magento\Downloadable\Model\Source\Shareable;
 use Magento\Downloadable\Model\Source\TypeUpload;
+use Magento\Downloadable\Ui\DataProvider\Product\Form\Modifier\Composite;
 use Magento\Framework\Stdlib\ArrayManager;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Ui\Component\Form;
-use Magento\Downloadable\Ui\DataProvider\Product\Form\Modifier\Composite;
 
 
 /**
  * Class Printformer
+ *
  * @package Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier
  */
 class Printformer extends AbstractModifier
@@ -58,13 +60,14 @@ class Printformer extends AbstractModifier
 
     /**
      * Printformer constructor.
-     * @param LocatorInterface $locator
-     * @param StoreManagerInterface $storeManager
-     * @param ArrayManager $arrayManager
-     * @param UrlInterface $urlBuilder
-     * @param TypeUpload $typeUpload
-     * @param Shareable $shareable
-     * @param Data\Printformer $printformerData
+     *
+     * @param   LocatorInterface       $locator
+     * @param   StoreManagerInterface  $storeManager
+     * @param   ArrayManager           $arrayManager
+     * @param   UrlInterface           $urlBuilder
+     * @param   TypeUpload             $typeUpload
+     * @param   Shareable              $shareable
+     * @param   Data\Printformer       $printformerData
      */
     public function __construct(
         LocatorInterface $locator,
@@ -75,12 +78,12 @@ class Printformer extends AbstractModifier
         Shareable $shareable,
         Data\Printformer $printformerData
     ) {
-        $this->locator = $locator;
-        $this->storeManager = $storeManager;
-        $this->arrayManager = $arrayManager;
-        $this->urlBuilder = $urlBuilder;
-        $this->typeUpload = $typeUpload;
-        $this->shareable = $shareable;
+        $this->locator         = $locator;
+        $this->storeManager    = $storeManager;
+        $this->arrayManager    = $arrayManager;
+        $this->urlBuilder      = $urlBuilder;
+        $this->typeUpload      = $typeUpload;
+        $this->shareable       = $shareable;
         $this->printformerData = $printformerData;
     }
 
@@ -92,7 +95,8 @@ class Printformer extends AbstractModifier
         $model = $this->locator->getProduct();
 
         $data[$model->getId()][self::DATA_SOURCE_DEFAULT]['files_transfer_to_printformer']
-        = $this->printformerData->isFilesCanBeTransferredToPrintformer() ? '1' : '0';
+            = $this->printformerData->isFilesCanBeTransferredToPrintformer()
+            ? '1' : '0';
 
         return $data;
     }
@@ -103,28 +107,31 @@ class Printformer extends AbstractModifier
      */
     public function modifyMeta(array $meta)
     {
-        $printformerPath = Composite::CHILDREN_PATH . '/' . $this::CONTAINER_PRINTFORMER;
+        $printformerPath = Composite::CHILDREN_PATH.'/'
+            .$this::CONTAINER_PRINTFORMER;
 
         $printformerContainer['arguments']['data']['config'] = [
-            'componentType' => Form\Fieldset::NAME,
+            'componentType'     => Form\Fieldset::NAME,
             'additionalClasses' => 'admin__fieldset-section',
-            'label' => __('Printformer'),
-            'dataScope' => '',
-            'visible' => $this->locator->getProduct()->getTypeId() === Type::TYPE_DOWNLOADABLE,
-            'sortOrder' => 30,
+            'label'             => __('Printformer'),
+            'dataScope'         => '',
+            'visible'           => $this->locator->getProduct()->getTypeId()
+                === Type::TYPE_DOWNLOADABLE,
+            'sortOrder'         => 30,
         ];
 
         $FilesTransferToPrintformer['arguments']['data']['config'] = [
             'componentType' => Form\Field::NAME,
-            'formElement' => Form\Element\Checkbox::NAME,
-            'dataType' => Form\Element\DataType\Number::NAME,
-            'description' => __('Files will be transferred to Printformer'),
-            'label' => ' ',
-            'dataScope' => 'product.files_transfer_to_printformer',
-            'scopeLabel' => $this->storeManager->isSingleStoreMode() ? '' : '[GLOBAL]',
-            'valueMap' => [
+            'formElement'   => Form\Element\Checkbox::NAME,
+            'dataType'      => Form\Element\DataType\Number::NAME,
+            'description'   => __('Files will be transferred to Printformer'),
+            'label'         => ' ',
+            'dataScope'     => 'product.files_transfer_to_printformer',
+            'scopeLabel'    => $this->storeManager->isSingleStoreMode() ? ''
+                : '[GLOBAL]',
+            'valueMap'      => [
                 'false' => '0',
-                'true' => '1',
+                'true'  => '1',
             ],
         ];
 
@@ -136,6 +143,7 @@ class Printformer extends AbstractModifier
             ]
         );
 
-        return $this->arrayManager->set($printformerPath, $meta, $printformerContainer);
+        return $this->arrayManager->set($printformerPath, $meta,
+            $printformerContainer);
     }
 }

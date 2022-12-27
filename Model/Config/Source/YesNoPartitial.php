@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Rissc\Printformer\Model\Config\Source;
 
 /**
@@ -21,7 +22,7 @@ class YesNoPartitial implements \Magento\Framework\Option\ArrayInterface
         return [
             ['value' => 1, 'label' => __('Yes')],
             ['value' => 0, 'label' => __('No')],
-            ['value' => 2, 'label' => __('Min. one')]
+            ['value' => 2, 'label' => __('Min. one')],
         ];
     }
 

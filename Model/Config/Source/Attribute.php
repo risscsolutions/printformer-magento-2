@@ -1,7 +1,9 @@
 <?php
+
 namespace Rissc\Printformer\Model\Config\Source;
 
-class Attribute extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
+class Attribute extends
+    \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
 {
     /**
      * @var \Magento\Framework\ObjectManagerInterface
@@ -14,16 +16,17 @@ class Attribute extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSourc
     protected $collection;
 
     /**
-     * @param \Magento\Framework\ObjectManagerInterface $objectManager
-     * @param \Magento\ConfigurableProduct\Model\ConfigurableAttributeHandler $configurableAttributeHandler
+     * @param   \Magento\Framework\ObjectManagerInterface                        $objectManager
+     * @param   \Magento\ConfigurableProduct\Model\ConfigurableAttributeHandler  $configurableAttributeHandler
      */
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $objectManager,
         \Magento\ConfigurableProduct\Model\ConfigurableAttributeHandler $configurableAttributeHandler
     ) {
-        $this->objectManager = $objectManager;
+        $this->objectManager                = $objectManager;
         $this->configurableAttributeHandler = $configurableAttributeHandler;
-        $this->collection = $configurableAttributeHandler->getApplicableAttributes();
+        $this->collection
+                                            = $configurableAttributeHandler->getApplicableAttributes();
     }
 
     /**
@@ -36,18 +39,21 @@ class Attribute extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSourc
         if ($this->_options === null) {
             $this->_options[] = array(
                 'label' => __('-- Please Select --'),
-                'value' => ''
+                'value' => '',
             );
-            foreach($this->getProductAttributes() as $attribute) {
-                if ($attribute->getFrontendInput() != 'select' || !$attribute->getIsUserDefined()) {
+            foreach ($this->getProductAttributes() as $attribute) {
+                if ($attribute->getFrontendInput() != 'select'
+                    || !$attribute->getIsUserDefined()
+                ) {
                     continue;
                 }
                 $this->_options[] = array(
                     'label' => $attribute->getAttributeCode(),
-                    'value' => $attribute->getAttributeCode()
+                    'value' => $attribute->getAttributeCode(),
                 );
             }
         }
+
         return $this->_options;
     }
 

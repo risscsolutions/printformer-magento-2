@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Adminhtml\Customer;
 
 use Magento\Customer\Controller\Adminhtml\Index as CustomerIndex;
@@ -16,6 +17,7 @@ class PrintformerIdentifier extends CustomerIndex
     {
         $this->initCurrentCustomer();
         $resultLayout = $this->resultLayoutFactory->create();
+
         return $resultLayout;
     }
 }

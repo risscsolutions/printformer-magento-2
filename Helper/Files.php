@@ -26,21 +26,20 @@ class Files extends AbstractHelper
     private $repository;
 
     /**
-     * @param Context $context
-     * @param Dir $dir
-     * @param MarkdownParser $markdownParser
+     * @param   Context         $context
+     * @param   Dir             $dir
+     * @param   MarkdownParser  $markdownParser
      */
     public function __construct(
         Context $context,
         Dir $dir,
         MarkdownParser $markdownParser,
         Repository $repository
-    )
-    {
+    ) {
         parent::__construct($context);
-        $this->dir = $dir;
+        $this->dir            = $dir;
         $this->markdownParser = $markdownParser;
-        $this->repository = $repository;
+        $this->repository     = $repository;
     }
 
     /**
@@ -50,7 +49,8 @@ class Files extends AbstractHelper
     {
         $resultImageUrl = '';
         try {
-            $resultImageUrl = $this->repository->getUrl($this->_getModuleName().'::images/rissc_logo_2020.png');
+            $resultImageUrl = $this->repository->getUrl($this->_getModuleName()
+                .'::images/rissc_logo_2020.png');
         } catch (\Exception $e) {
         }
 
@@ -58,18 +58,20 @@ class Files extends AbstractHelper
     }
 
     /**
-     * @param string $fileName
+     * @param   string  $fileName
+     *
      * @return string
      */
     public function getHtmlFromMarkdownFile(string $fileName): string
     {
         $resultHtml = '';
         try {
-            $moduleName = $this->_getModuleName();
-            $modulePath = $this->dir->getDir($moduleName);
-            $filePath = $modulePath . '/' . $fileName . '.md';
+            $moduleName          = $this->_getModuleName();
+            $modulePath          = $this->dir->getDir($moduleName);
+            $filePath            = $modulePath.'/'.$fileName.'.md';
             $markdownFileContent = file_get_contents($filePath);
-            $resultHtml = $this->markdownParser->text($markdownFileContent);
+            $resultHtml
+                                 = $this->markdownParser->text($markdownFileContent);
         } catch (\Exception $e) {
         }
 

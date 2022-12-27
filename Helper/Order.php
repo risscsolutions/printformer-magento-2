@@ -1,27 +1,29 @@
 <?php
+
 namespace Rissc\Printformer\Helper;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Downloadable\Model\Link;
-use Magento\Customer\Model\CustomerFactory;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product;
 use Magento\Customer\Model\Customer;
+use Magento\Customer\Model\CustomerFactory;
+use Magento\Downloadable\Model\Link;
+use Magento\Downloadable\Model\Product\Type;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\OrderItemInterface;
+use Magento\Sales\Api\OrderItemRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Sales\Model\ResourceModel\Order\Item\Collection as ItemCollection;
 use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollectionFactory;
-use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderItemInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Api\OrderItemRepositoryInterface;
-use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Model\Product;
-use Magento\Downloadable\Model\Product\Type;
-use Rissc\Printformer\Model\DraftFactory;
-use Rissc\Printformer\Helper\Config as PrintformerConfig;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Config as PrintformerConfig;
+use Rissc\Printformer\Model\DraftFactory;
 
 /**
  * Class Order
+ *
  * @package Rissc\Printformer\Helper
  */
 class Order extends AbstractHelper
@@ -77,16 +79,16 @@ class Order extends AbstractHelper
     private Config $configHelper;
 
     /**
-     * @param ItemCollectionFactory $itemCollectionFactory
-     * @param OrderRepositoryInterface $orderRepository
-     * @param ProductRepositoryInterface $productRepository
-     * @param Product $product
-     * @param Config $printformerConfig
-     * @param ItemFactory $itemFactory
-     * @param OrderItemRepositoryInterface $orderItemRepository
-     * @param Api $apiHelper
-     * @param CustomerFactory $_customerFactory
-     * @param Config $configHelper
+     * @param   ItemCollectionFactory         $itemCollectionFactory
+     * @param   OrderRepositoryInterface      $orderRepository
+     * @param   ProductRepositoryInterface    $productRepository
+     * @param   Product                       $product
+     * @param   Config                        $printformerConfig
+     * @param   ItemFactory                   $itemFactory
+     * @param   OrderItemRepositoryInterface  $orderItemRepository
+     * @param   Api                           $apiHelper
+     * @param   CustomerFactory               $_customerFactory
+     * @param   Config                        $configHelper
      */
     public function __construct(
         ItemCollectionFactory $itemCollectionFactory,
@@ -99,42 +101,43 @@ class Order extends AbstractHelper
         ApiHelper $apiHelper,
         CustomerFactory $_customerFactory,
         ConfigHelper $configHelper
-    )
-    {
+    ) {
         $this->itemCollectionFactory = $itemCollectionFactory;
-        $this->orderRepository = $orderRepository;
-        $this->productRepository = $productRepository;
-        $this->product = $product;
-        $this->printformerConfig = $printformerConfig;
-        $this->itemFactory = $itemFactory;
-        $this->apiHelper = $apiHelper;
-        $this->orderItemRepository = $orderItemRepository;
-        $this->_customerFactory = $_customerFactory;
-        $this->configHelper = $configHelper;
+        $this->orderRepository       = $orderRepository;
+        $this->productRepository     = $productRepository;
+        $this->product               = $product;
+        $this->printformerConfig     = $printformerConfig;
+        $this->itemFactory           = $itemFactory;
+        $this->apiHelper             = $apiHelper;
+        $this->orderItemRepository   = $orderItemRepository;
+        $this->_customerFactory      = $_customerFactory;
+        $this->configHelper          = $configHelper;
     }
 
     /**
      * Check with draft id if order-item has required config-status
      *
      * @param $draftHash
+     *
      * @return bool
      */
     public function checkItemByDraftHash($draftHash)
     {
-        $process = $this->apiHelper->getDraftProcess($draftHash);
+        $process     = $this->apiHelper->getDraftProcess($draftHash);
         $orderItemId = $process->getOrderItemId();
         if (!empty($orderItemId)) {
             $collection = $this->itemCollectionFactory->create();
             $collection
-                ->addFieldToFilter('main_table.item_id', ['eq' => $orderItemId]);
+                ->addFieldToFilter('main_table.item_id',
+                    ['eq' => $orderItemId]);
 
             $orderItem = $collection->getFirstItem();
-            if (isset($orderItem['order_id'])){
-                $order = $this->getOrderById($orderItem['order_id']);
-                $orderStatus = $order->getStatus();
+            if (isset($orderItem['order_id'])) {
+                $order            = $this->getOrderById($orderItem['order_id']);
+                $orderStatus      = $order->getStatus();
                 $validOrderStatus = $this->printformerConfig->getOrderStatus();
-                if (!empty($orderStatus) && !empty($validOrderStatus)){
-                    if (in_array($orderStatus, $validOrderStatus)){
+                if (!empty($orderStatus) && !empty($validOrderStatus)) {
+                    if (in_array($orderStatus, $validOrderStatus)) {
                         return true;
                     }
                 }
@@ -145,48 +148,67 @@ class Order extends AbstractHelper
     }
 
     /**
+     * @param $orderId
+     *
+     * @return OrderInterface
+     */
+    public function getOrderById($orderId)
+    {
+        return $this->orderRepository->get($orderId);
+    }
+
+    /**
      * @param $unprocessedOrderItem
+     *
      * @return string|null
      */
-    public function loadPayLoadInformationByOrderIdAndUploadFile($unprocessedOrderItem)
-    {
+    public function loadPayLoadInformationByOrderIdAndUploadFile(
+        $unprocessedOrderItem
+    ) {
         $orderItemId = $unprocessedOrderItem->getItemId();
-        $orderItem = $this->getOrderItemById($orderItemId);
+        $orderItem   = $this->getOrderItemById($orderItemId);
         $this->updateProcessingCountByOrderItem($orderItem);
 
-        $resultDraftHash = null;
-        $currentDraftHash = null;
-        $orderId = $unprocessedOrderItem->getOrderId();
-        $orderIncrementId = $unprocessedOrderItem->getIncrementId();
-        $customerId = $unprocessedOrderItem->getCustomerId();
-        $storeId = $unprocessedOrderItem->getStoreId();
-        $printformerUserIdentifier = $unprocessedOrderItem->getData('printformer_identification');
-        $productId = $unprocessedOrderItem->getProductId();
-        $product = $this->productRepository->getById($productId);
+        $resultDraftHash            = null;
+        $currentDraftHash           = null;
+        $orderId                    = $unprocessedOrderItem->getOrderId();
+        $orderIncrementId           = $unprocessedOrderItem->getIncrementId();
+        $customerId                 = $unprocessedOrderItem->getCustomerId();
+        $storeId                    = $unprocessedOrderItem->getStoreId();
+        $printformerUserIdentifier
+                                    = $unprocessedOrderItem->getData('printformer_identification');
+        $productId                  = $unprocessedOrderItem->getProductId();
+        $product
+                                    = $this->productRepository->getById($productId);
         $filesTransferToPrintformer = 0;
 
-        if (!empty($product)){
-            $filesTransferToPrintformerAttribute = $product->getCustomAttribute('files_transfer_to_printformer');
+        if (!empty($product)) {
+            $filesTransferToPrintformerAttribute
+                = $product->getCustomAttribute('files_transfer_to_printformer');
             if (!empty($filesTransferToPrintformerAttribute)) {
-                $filesTransferToPrintformer = $filesTransferToPrintformerAttribute->getValue();
+                $filesTransferToPrintformer
+                    = $filesTransferToPrintformerAttribute->getValue();
             }
 
             if ($filesTransferToPrintformer == 1) {
                 //check if user has printformer_identifier and create one if not
-                if (!isset($printformerUserIdentifier) && !empty($customerId)){
+                if (!isset($printformerUserIdentifier) && !empty($customerId)) {
                     $customer = $this->getCustomerById($customerId);
-                    if (!empty($customer)){
-                        $printformerUserIdentifier = $this->apiHelper->loadPrintformerIdentifierOnCustomer($customer);
+                    if (!empty($customer)) {
+                        $printformerUserIdentifier
+                            = $this->apiHelper->loadPrintformerIdentifierOnCustomer($customer);
                     }
                 }
 
                 if (isset($printformerUserIdentifier)) {
-                    $templateIdentifier = $this->getTemplateIdentifier($storeId); //$order->getStoreId()
+                    $templateIdentifier
+                        = $this->getTemplateIdentifier($storeId); //$order->getStoreId()
 
                     //start upload process and get draft from process
                     try {
                         if ($product->getTypeId() === Type::TYPE_DOWNLOADABLE) {
-                            $links = $product->getTypeInstance()->getLinks($product);
+                            $links = $product->getTypeInstance()
+                                ->getLinks($product);
 
                             /**
                              * Upload all link-files of product, if some product upload failes, clear result to not process the
@@ -197,7 +219,8 @@ class Order extends AbstractHelper
                             foreach ($links as $link) {
                                 $linkFile = $link->getLinkFile();
                                 if ($link->getId() && $linkFile) {
-                                    $draftProcess = $this->apiHelper->uploadDraftProcess(
+                                    $draftProcess
+                                        = $this->apiHelper->uploadDraftProcess(
                                         null,
                                         0,
                                         $productId,
@@ -214,11 +237,14 @@ class Order extends AbstractHelper
                                     );
 
                                     $newDraftIds = $draftProcess->getDraftId();
-                                    $item = $this->itemFactory->create();
-                                    $item->getResource()->load($item, $orderItemId);
-                                    $currentDraftIds = $item->getPrintformerDraftid();
-                                    if (isset($currentDraftIds)){
-                                        $allDrafts = $currentDraftIds . ',' . $newDraftIds;
+                                    $item        = $this->itemFactory->create();
+                                    $item->getResource()->load($item,
+                                        $orderItemId);
+                                    $currentDraftIds
+                                        = $item->getPrintformerDraftid();
+                                    if (isset($currentDraftIds)) {
+                                        $allDrafts = $currentDraftIds.','
+                                            .$newDraftIds;
                                     } else {
                                         $allDrafts = $newDraftIds;
                                     }
@@ -226,13 +252,16 @@ class Order extends AbstractHelper
                                     $item->getResource()->save($item);
 
                                     if (isset($newDraftIds)) {
-                                        $this->uploadPdf($newDraftIds, $linkFile);
+                                        $this->uploadPdf($newDraftIds,
+                                            $linkFile);
                                     }
                                 }
                             }
                         }
                     } catch (\Exception $e) {
-                        $this->_logger->debug('Upload failed for item with item-id: ' . $orderItemId . ' and order-id' . $orderId . ' with template identifier: ' . $templateIdentifier);
+                        $this->_logger->debug('Upload failed for item with item-id: '
+                            .$orderItemId.' and order-id'.$orderId
+                            .' with template identifier: '.$templateIdentifier);
                         $this->_logger->debug($e->getMessage());
                     }
                 } else {
@@ -245,16 +274,8 @@ class Order extends AbstractHelper
     }
 
     /**
-     * @param $orderId
-     * @return OrderInterface
-     */
-    public function getOrderById($orderId)
-    {
-        return $this->orderRepository->get($orderId);
-    }
-
-    /**
      * @param $orderItemId
+     *
      * @return OrderItemInterface
      */
     public function getOrderItemById($orderItemId)
@@ -263,7 +284,23 @@ class Order extends AbstractHelper
     }
 
     /**
+     * Save processed order by order-item
+     *
+     * @param   OrderItemInterface  $orderItem
+     */
+    public function updateProcessingCountByOrderItem(
+        OrderItemInterface $orderItem
+    ) {
+        $printformerUploadProcessingCount
+            = $orderItem->getPrintformerUploadProcessingCount();
+        $orderItem->setPrintformerUploadProcessingCount($printformerUploadProcessingCount
+            + 1);
+        $orderItem->getResource()->save($orderItem);
+    }
+
+    /**
      * @param $customerId
+     *
      * @return Customer
      */
     public function getCustomerById($customerId)
@@ -272,7 +309,8 @@ class Order extends AbstractHelper
     }
 
     /**
-     * @param OrderInterface $order
+     * @param   OrderInterface  $order
+     *
      * @return int|mixed
      */
     public function getTemplateIdentifier($storeId)
@@ -283,17 +321,5 @@ class Order extends AbstractHelper
         }
 
         return $templateIdentifier;
-    }
-
-    /**
-     * Save processed order by order-item
-     *
-     * @param OrderItemInterface $orderItem
-     */
-    public function updateProcessingCountByOrderItem(OrderItemInterface $orderItem)
-    {
-        $printformerUploadProcessingCount = $orderItem->getPrintformerUploadProcessingCount();
-        $orderItem->setPrintformerUploadProcessingCount($printformerUploadProcessingCount+1);
-        $orderItem->getResource()->save($orderItem);
     }
 }

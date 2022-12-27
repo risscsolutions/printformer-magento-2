@@ -1,107 +1,107 @@
 #printformer-editor-main,
 .printformer-editor-main {
-    height: 100% !important;
-    width: 100% !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 .printformer-editor-main-modal {
-    .modal-inner-wrap {
-        margin: 0;
-        height: 100% !important;
-        width: 100% !important;
+  .modal-inner-wrap {
+    margin: 0;
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  .modal-title {
+    border-bottom: none;
+    padding-bottom: none;
+    font-size: 20px;
+    text-align: center;
+  }
+
+  @media screen and (min-width: 768px) {
+    .modal-header {
+      padding-top: 1.5rem;
     }
 
-    .modal-title {
-        border-bottom: none;
-        padding-bottom: none;
-        font-size: 20px;
-        text-align: center;
+    .modal-content {
+      height: 88% !important;
+    }
+  }
+
+  @media screen and (max-width: 767px) {
+    .modal-header {
+      display: none;
     }
 
-    @media screen and (min-width: 768px) {
-        .modal-header {
-            padding-top: 1.5rem;
-        }
-
-        .modal-content {
-            height: 88% !important;
-        }
+    .modal-content {
+      height: 100% !important;
+      padding: 0;
     }
 
-    @media screen and (max-width: 767px) {
-        .modal-header {
-            display: none;
-        }
-
-        .modal-content {
-            height: 100% !important;
-            padding: 0;
-        }
-
-        #printformer-main-frame {
-            border: none;
-        }
+    #printformer-main-frame {
+      border: none;
     }
+  }
 }
 
 #printformer-editor-notice,
 #printformer-editor-close {
-    text-align: center;
+  text-align: center;
 }
 
 .printformer-editor-notice-modal .modal-inner-wrap,
 .printformer-editor-close-modal .modal-inner-wrap {
-    width: 20% !important;
-    min-width: 400px !important;
+  width: 20% !important;
+  min-width: 400px !important;
 }
 
 .printformer-editor-notice-modal .modal-footer,
 .printformer-editor-close-modal .modal-footer {
-    margin: 0 auto;
+  margin: 0 auto;
 }
 
 .printformer-editor-notice-modal .ok-btn,
 .printformer-editor-notice-modal .cancel-btn,
 .printformer-editor-close-modal .ok-btn,
 .printformer-editor-close-modal .cancel-btn {
-    min-width: 160px;
-    background-color: #c2c1c1;
-    border: 0;
-    border-radius: 0;
-    box-shadow: 0;
+  min-width: 160px;
+  background-color: #c2c1c1;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0;
 }
 
 .modal-popup.printformer-editor-main-modal .action-close {
-    padding: 15px;
+  padding: 15px;
 }
 
 #info {
-    display: none;
-    position: absolute;
-    background-color: white;
+  display: none;
+  position: absolute;
+  background-color: white;
 }
 
 #openEditor {
-    width: max-content;
+  width: max-content;
 }
 
 #openEditor:hover + #info, #info:hover {
-    display: block;
-    position: absolute;
+  display: block;
+  position: absolute;
 }
 
 #copy {
-    margin-top: 10px;
-    background-color: whitesmoke;
-    font-size: 0.9em;
+  margin-top: 10px;
+  background-color: whitesmoke;
+  font-size: 0.9em;
 
-    :hover {
-        background-color: gainsboro;
-    }
+  :hover {
+    background-color: gainsboro;
+  }
 
-    :focus {
-        background-color: grey;
-    }
+  :focus {
+    background-color: grey;
+  }
 }
 
 

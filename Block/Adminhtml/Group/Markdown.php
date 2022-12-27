@@ -22,11 +22,11 @@ class Markdown extends Fieldset
     private $files;
 
     /**
-     * @param Context $context
-     * @param Session $authSession
-     * @param Js $jsHelper
-     * @param Files $files
-     * @param array $data
+     * @param   Context  $context
+     * @param   Session  $authSession
+     * @param   Js       $jsHelper
+     * @param   Files    $files
+     * @param   array    $data
      */
     public function __construct(
         Context $context,
@@ -34,18 +34,23 @@ class Markdown extends Fieldset
         Js $jsHelper,
         Files $files,
         array $data = []
-    )
-    {
+    ) {
         parent::__construct($context, $authSession, $jsHelper, $data);
         $this->files = $files;
     }
 
     /**
+     * @param   AbstractElement  $element
+     *
      * @return string
      */
-    protected function getFilename(): string
+    protected function _getHeaderCommentHtml($element)
     {
-        return $this->filename;
+        $resultHtml = $this->getImageHtml();
+        $resultHtml .= $this->files->getHtmlFromMarkdownFile($this->getFilename());
+
+        return $element->getComment() ? '<div class="comment">'.$resultHtml
+            .$element->getComment().'</div>' : '';
     }
 
     /**
@@ -54,22 +59,21 @@ class Markdown extends Fieldset
     protected function getImageHtml(): string
     {
         $imageFilePath = $this->files->getRisscLogoUrl();
-        $resultHtml = '';
+        $resultHtml    = '';
         if (!empty($imageFilePath)) {
-            $resultHtml = '<p style="margin-bottom: 20px"><a href="https://www.rissc.de/"><img style="width: 70px;" src="' . $imageFilePath . '" alt="image"></a></p>';
+            $resultHtml
+                = '<p style="margin-bottom: 20px"><a href="https://www.rissc.de/"><img style="width: 70px;" src="'
+                .$imageFilePath.'" alt="image"></a></p>';
         }
 
         return $resultHtml;
     }
 
     /**
-     * @param AbstractElement $element
      * @return string
      */
-    protected function _getHeaderCommentHtml($element)
+    protected function getFilename(): string
     {
-        $resultHtml = $this->getImageHtml();
-        $resultHtml .= $this->files->getHtmlFromMarkdownFile($this->getFilename());
-        return $element->getComment() ? '<div class="comment">' . $resultHtml . $element->getComment() . '</div>' : '';
+        return $this->filename;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Controller\Upload;
 
 use Magento\Framework\App\Action\Action;
@@ -12,6 +13,7 @@ use Rissc\Printformer\Cron\Processing\Cron;
  * Test class for cron
  *
  * Class Index
+ *
  * @package Rissc\Printformer\Controller\Upload
  */
 class Index extends Action
@@ -32,21 +34,21 @@ class Index extends Action
 
     /**
      * Index constructor.
-     * @param Context $context
-     * @param JsonFactory $jsonFactory
-     * @param Cron $cron
+     *
+     * @param   Context      $context
+     * @param   JsonFactory  $jsonFactory
+     * @param   Cron         $cron
      */
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
         Cron $cron,
         State $state
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->jsonFactory = $jsonFactory;
-        $this->cron = $cron;
-        $this->state = $state;
+        $this->cron        = $cron;
+        $this->state       = $state;
     }
 
     /**
@@ -58,7 +60,7 @@ class Index extends Action
     {
         $result = $this->jsonFactory->create();
 
-        if($this->state->getMode() == $this->state::MODE_DEVELOPER){
+        if ($this->state->getMode() == $this->state::MODE_DEVELOPER) {
             $this->cron->execute();
         }
 

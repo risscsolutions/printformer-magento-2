@@ -10,6 +10,7 @@ class Index extends AbstractController
     {
         if ($this->getRequest()->getQuery('ajax')) {
             $this->_forward('grid');
+
             return null;
         }
 

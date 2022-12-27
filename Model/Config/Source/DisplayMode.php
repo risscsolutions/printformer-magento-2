@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Rissc\Printformer\Model\Config\Source;
 
 /**
@@ -21,7 +22,7 @@ class DisplayMode implements \Magento\Framework\Option\ArrayInterface
         return [
             ['value' => 0, 'label' => __('Lightbox')],
             ['value' => 1, 'label' => __('Fullscreen')],
-            ['value' => 2, 'label' => __('Shop Frame')]
+            ['value' => 2, 'label' => __('Shop Frame')],
         ];
     }
 
@@ -35,7 +36,7 @@ class DisplayMode implements \Magento\Framework\Option\ArrayInterface
         return [
             0 => __('Lightbox'),
             1 => __('Fullscreen'),
-            2 => __('Shop Frame')
+            2 => __('Shop Frame'),
         ];
     }
 }

@@ -10,9 +10,9 @@ use Magento\Framework\UrlInterface;
 use Magento\Ui\Component\DynamicRows;
 use Magento\Ui\Component\Form\Element\ActionDelete;
 use Magento\Ui\Component\Modal;
+use Rissc\Printformer\Helper\Config as PrintformerConfigHelper;
 use Rissc\Printformer\Helper\Product;
 use Rissc\Printformer\Ui\DataProvider\Product\PrintformerProductDataProvider;
-use Rissc\Printformer\Helper\Config as PrintformerConfigHelper;
 
 class PrintformerProduct
 {
@@ -48,11 +48,12 @@ class PrintformerProduct
 
     /**
      * PrintformerProduct constructor.
-     * @param Product $productHelper
-     * @param UrlInterface $urlBuilder
-     * @param RequestInterface $request
-     * @param PrintformerConfigHelper $printformerConfigHelper
-     * @param LocatorInterface $locator
+     *
+     * @param   Product                  $productHelper
+     * @param   UrlInterface             $urlBuilder
+     * @param   RequestInterface         $request
+     * @param   PrintformerConfigHelper  $printformerConfigHelper
+     * @param   LocatorInterface         $locator
      */
     public function __construct(
         Product $productHelper,
@@ -61,157 +62,147 @@ class PrintformerProduct
         PrintformerConfigHelper $printformerConfigHelper,
         LocatorInterface $locator
     ) {
-        $this->productHelper = $productHelper;
-        $this->urlBuilder = $urlBuilder;
-        $this->request = $request;
-        $this->locator = $locator;
+        $this->productHelper           = $productHelper;
+        $this->urlBuilder              = $urlBuilder;
+        $this->request                 = $request;
+        $this->locator                 = $locator;
         $this->printformerConfigHelper = $printformerConfigHelper;
     }
 
     /**
-     * @param CustomOptions $subject
-     * @param $meta
+     * @param   CustomOptions  $subject
+     * @param                  $meta
+     *
      * @return mixed
      */
     public function afterModifyMeta(CustomOptions $subject, $meta)
     {
         $storeId = $this->locator->getStore()->getId();
-        if(!$this->printformerConfigHelper->isEnabled($storeId) || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
+        if (!$this->printformerConfigHelper->isEnabled($storeId)
+            || ($this->request->getModuleName() != 'catalog'
+                && $this->request->getActionName() != 'product')
+        ) {
             return $meta;
+        }
 
         $meta['printformer_products'] = [
             'arguments' => [
                 'data' => [
                     'config' => [
                         'componentType' => 'fieldset',
-                        'label' => __('Printformer'),
-                        'collapsible' => true,
-                        'dataScope' => 'data.product',
-                        'sortOrder' => 1000
-                    ]
-                ]
+                        'label'         => __('Printformer'),
+                        'collapsible'   => true,
+                        'dataScope'     => 'data.product',
+                        'sortOrder'     => 1000,
+                    ],
+                ],
             ],
-            'children' => [
-                'button_set' => $this->getButtonSet(
+            'children'  => [
+                'button_set'           => $this->getButtonSet(
                     __('Add printformer templates to current product.'),
                     __('Add Printformer Templates'),
                     'printformer_products'
                 ),
-                'modal' => $this->getGenericModal(
+                'modal'                => $this->getGenericModal(
                     __('Add Printformer Templates')
                 ),
                 'printformer_products' => [
                     'arguments' => [
                         'data' => [
                             'config' => [
-                                'dataType' => 'text',
-                                'formElement' => 'input',
-                                'visible' => true,
-                                'required' => false,
-                                'notice' => '',
-                                'default' => '',
-                                'label' => '',
-                                'code' => 'test',
-                                'source' => 'test',
-                                'sortOrder' => 0,
-                                'componentType' => DynamicRows::NAME,
-                                'component' => 'Magento_Ui/js/dynamic-rows/dynamic-rows',
-                                'addButton' => false,
-                                'additionalClasses' => 'admin__field-wide',
-                                'deleteProperty' => 'is_delete',
-                                'deleteValue' => '1',
-                                'renderDefaultRecord' => false
-                            ]
-                        ]
+                                'dataType'            => 'text',
+                                'formElement'         => 'input',
+                                'visible'             => true,
+                                'required'            => false,
+                                'notice'              => '',
+                                'default'             => '',
+                                'label'               => '',
+                                'code'                => 'test',
+                                'source'              => 'test',
+                                'sortOrder'           => 0,
+                                'componentType'       => DynamicRows::NAME,
+                                'component'           => 'Magento_Ui/js/dynamic-rows/dynamic-rows',
+                                'addButton'           => false,
+                                'additionalClasses'   => 'admin__field-wide',
+                                'deleteProperty'      => 'is_delete',
+                                'deleteValue'         => '1',
+                                'renderDefaultRecord' => false,
+                            ],
+                        ],
                     ],
-                    'children' => [
+                    'children'  => [
                         'record' => [
                             'arguments' => [
                                 'data' => [
                                     'config' => [
-                                        'componentType' => 'container',
-                                        'component' => 'Magento_Ui/js/dynamic-rows/record',
+                                        'componentType'    => 'container',
+                                        'component'        => 'Magento_Ui/js/dynamic-rows/record',
                                         'positionProvider' => 'sort_order',
-                                        'isTemplate' => true,
-                                        'is_collection' => true,
+                                        'isTemplate'       => true,
+                                        'is_collection'    => true,
                                     ],
                                 ],
                             ],
-                            'children' => [
-                                'id' => $this->getFieldConfig(__('ID'), 10, 'id'),
-                                'name' => $this->getFieldConfig(__('Name'), 20, 'name'),
-                                'master_id' => $this->getFieldConfig(__('Master ID'), 30, 'master_id'),
-                                'intent' => $this->getFieldConfig(__('Intent'), 40, 'intent'),
-                                'is_delete' => $this->getIsDeleteFieldConfig(100)
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                            'children'  => [
+                                'id'        => $this->getFieldConfig(__('ID'),
+                                    10, 'id'),
+                                'name'      => $this->getFieldConfig(__('Name'),
+                                    20, 'name'),
+                                'master_id' => $this->getFieldConfig(__('Master ID'),
+                                    30, 'master_id'),
+                                'intent'    => $this->getFieldConfig(__('Intent'),
+                                    40, 'intent'),
+                                'is_delete' => $this->getIsDeleteFieldConfig(100),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         return $meta;
     }
 
-    /**
-     * @param CustomOptions $subject
-     * @param $meta
-     * @return mixed
-     */
-    public function afterModifyData(CustomOptions $subject, $meta)
-    {
-        $storeId = $this->locator->getProduct()->getStoreId();
-        $productId = $this->locator->getProduct()->getId();
-        if(!$this->printformerConfigHelper->isEnabled($storeId) || ($this->request->getModuleName() != 'catalog' && $this->request->getActionName() != 'product'))
-            return $meta;
-
-        $printformerProducts = [];
-        $i = 0;
-        foreach($this->productHelper->getCatalogProductPrintformerProductsArray($productId, $storeId) as $product) {
-            $printformerProducts[$i] = $product;
-            $printformerProducts[$i]['record_id'] = $i;
-            $i++;
-        }
-        $meta[$productId]['product']['printformer_products'] = $printformerProducts;
-        return $meta;
-    }
-
-    protected function getButtonSet(Phrase $content, Phrase $buttonTitle, $scope)
-    {
-        $modalTarget = $this->scopeName . '.printformer_products.modal';
+    protected function getButtonSet(
+        Phrase $content,
+        Phrase $buttonTitle,
+        $scope
+    ) {
+        $modalTarget = $this->scopeName.'.printformer_products.modal';
 
         return [
             'arguments' => [
                 'data' => [
                     'config' => [
-                        'formElement' => 'container',
+                        'formElement'   => 'container',
                         'componentType' => 'container',
-                        'label' => false,
-                        'content' => $content,
-                        'template' => 'ui/form/components/complex',
+                        'label'         => false,
+                        'content'       => $content,
+                        'template'      => 'ui/form/components/complex',
                     ],
                 ],
             ],
-            'children' => [
-                'button_' . $scope => [
+            'children'  => [
+                'button_'.$scope => [
                     'arguments' => [
                         'data' => [
                             'config' => [
-                                'formElement' => 'container',
+                                'formElement'   => 'container',
                                 'componentType' => 'container',
-                                'component' => 'Magento_Ui/js/form/components/button',
-                                'actions' => [
+                                'component'     => 'Magento_Ui/js/form/components/button',
+                                'actions'       => [
                                     [
                                         'targetName' => $modalTarget,
                                         'actionName' => 'toggleModal',
                                     ],
                                     [
-                                        'targetName' => $modalTarget . '.printformer_product_listing',
+                                        'targetName' => $modalTarget
+                                            .'.printformer_product_listing',
                                         'actionName' => 'render',
-                                    ]
+                                    ],
                                 ],
-                                'title' => $buttonTitle,
-                                'provider' => null,
+                                'title'         => $buttonTitle,
+                                'provider'      => null,
                             ],
                         ],
                     ],
@@ -230,69 +221,77 @@ class PrintformerProduct
                 'data' => [
                     'config' => [
                         'componentType' => Modal::NAME,
-                        'dataScope' => '',
-                        'component' => 'Rissc_Printformer/component/addprintformerdlg',
+                        'dataScope'     => '',
+                        'component'     => 'Rissc_Printformer/component/addprintformerdlg',
                         //,['store_id' => $this->getCurrentStoreId()]
-                        'syncUrl'     => $this->urlBuilder->getUrl('printformer/product/sync', ['store_id' => $this->locator->getProduct()->getStoreId()]),
-                        'options' => [
-                            'title' => $title,
+                        'syncUrl'       => $this->urlBuilder->getUrl('printformer/product/sync',
+                            [
+                                'store_id' => $this->locator->getProduct()
+                                    ->getStoreId(),
+                            ]),
+                        'options'       => [
+                            'title'   => $title,
                             'buttons' => [
                                 [
-                                    'text' => __('Cancel'),
+                                    'text'    => __('Cancel'),
                                     'actions' => [
-                                        'closeModal'
-                                    ]
+                                        'closeModal',
+                                    ],
                                 ],
                                 [
-                                    'text' => __('Synchronize templates'),
+                                    'text'    => __('Synchronize templates'),
                                     'actions' => [
-                                        'synchronizeTemplates'
-                                    ]
+                                        'synchronizeTemplates',
+                                    ],
                                 ],
                                 [
-                                    'text' => __('Add Selected Templates'),
-                                    'class' => 'action-primary',
+                                    'text'    => __('Add Selected Templates'),
+                                    'class'   => 'action-primary',
                                     'actions' => [
                                         [
-                                            'targetName' => 'index = ' . $listingTarget,
-                                            'actionName' => 'save'
+                                            'targetName' => 'index = '
+                                                .$listingTarget,
+                                            'actionName' => 'save',
                                         ],
-                                        'closeModal'
-                                    ]
+                                        'closeModal',
+                                    ],
                                 ],
                             ],
                         ],
                     ],
                 ],
             ],
-            'children' => [
+            'children'  => [
                 $listingTarget => [
                     'arguments' => [
                         'data' => [
                             'config' => [
-                                'autoRender' => false,
-                                'component' => 'Rissc_Printformer/component/insert-listing',
-                                'componentType' => 'insertListing',
+                                'autoRender'          => false,
+                                'component'           => 'Rissc_Printformer/component/insert-listing',
+                                'componentType'       => 'insertListing',
                                 'printformerProducts' => $this->getPrintformerProducts(),
-                                'dataScope' => $listingTarget,
-                                'externalProvider' => $listingTarget . '.' . $listingTarget . '_data_source',
-                                'selectionsProvider' => $listingTarget . '.' . $listingTarget . '.printformer_product_columns.ids',
-                                'indexField' => 'id',
-                                'ns' => $listingTarget,
-                                'render_url' => $this->urlBuilder->getUrl('mui/index/render'),
-                                'realTimeLink' => true,
-                                'provider' =>
+                                'dataScope'           => $listingTarget,
+                                'externalProvider'    => $listingTarget.'.'
+                                    .$listingTarget.'_data_source',
+                                'selectionsProvider'  => $listingTarget.'.'
+                                    .$listingTarget
+                                    .'.printformer_product_columns.ids',
+                                'indexField'          => 'id',
+                                'ns'                  => $listingTarget,
+                                'render_url'          => $this->urlBuilder->getUrl('mui/index/render'),
+                                'realTimeLink'        => true,
+                                'provider'            =>
                                     'product_form.product_form_data_source',
-                                'dataLinks' => [
+                                'dataLinks'           => [
                                     'imports' => false,
-                                    'exports' => true
+                                    'exports' => true,
                                 ],
-                                'behaviourType' => 'simple',
-                                'externalFilterMode' => true,
-                                'imports' => [
+                                'behaviourType'       => 'simple',
+                                'externalFilterMode'  => true,
+                                'imports'             => [
                                     'storeId' => '${ $.provider }:data.product.current_store_id',
                                 ],
-                                'exports' => [
+                                'exports'             => [
                                     'storeId' => '${ $.externalProvider }:params.current_store_id',
                                 ],
                             ],
@@ -305,20 +304,49 @@ class PrintformerProduct
         return $modal;
     }
 
-    protected function getFieldConfig($label, $sortOrder, $scope, array $options = [])
+    /**
+     * @return array
+     */
+    private function getPrintformerProducts()
     {
+        /** @var PrintformerProductDataProvider $dataProvider */
+        $dataProvider = \Magento\Framework\App\ObjectManager::getInstance()
+            ->create(PrintformerProductDataProvider::class, [
+                'name'             => 'printformer_product_listing_data_source',
+                'primaryFieldName' => 'id',
+                'requestFieldName' => 'id',
+                'data'             => [
+                    'config' => [
+                        'component'     => 'Magento_Ui/js/grid/provider',
+                        'update_url'    => 'mui/index/render',
+                        'storageConfig' => [
+                            'indexField' => 'id',
+                        ],
+                    ],
+                ],
+            ]);
+
+        return $dataProvider->getData();
+    }
+
+    protected function getFieldConfig(
+        $label,
+        $sortOrder,
+        $scope,
+        array $options = []
+    ) {
         return array_replace_recursive(
             [
                 'arguments' => [
                     'data' => [
                         'config' => [
-                            'label' => $label,
+                            'label'         => $label,
                             'componentType' => 'field',
-                            'formElement' => 'input',
-                            'dataScope' => $scope,
-                            'dataType' => 'text',
-                            'sortOrder' => $sortOrder,
-                            'disabled' => true
+                            'formElement'   => 'input',
+                            'dataScope'     => $scope,
+                            'dataType'      => 'text',
+                            'sortOrder'     => $sortOrder,
+                            'disabled'      => true,
                         ],
                     ],
                 ],
@@ -334,8 +362,8 @@ class PrintformerProduct
                 'data' => [
                     'config' => [
                         'componentType' => ActionDelete::NAME,
-                        'fit' => true,
-                        'sortOrder' => $sortOrder
+                        'fit'           => true,
+                        'sortOrder'     => $sortOrder,
                     ],
                 ],
             ],
@@ -343,25 +371,35 @@ class PrintformerProduct
     }
 
     /**
-     * @return array
+     * @param   CustomOptions  $subject
+     * @param                  $meta
+     *
+     * @return mixed
      */
-    private function getPrintformerProducts()
+    public function afterModifyData(CustomOptions $subject, $meta)
     {
-        /** @var PrintformerProductDataProvider $dataProvider */
-        $dataProvider = \Magento\Framework\App\ObjectManager::getInstance()->create(PrintformerProductDataProvider::class, [
-            'name' => 'printformer_product_listing_data_source',
-            'primaryFieldName' => 'id',
-            'requestFieldName' => 'id',
-            'data' => [
-                'config' => [
-                    'component' => 'Magento_Ui/js/grid/provider',
-                    'update_url' => 'mui/index/render',
-                    'storageConfig' => [
-                        'indexField' => 'id'
-                    ]
-                ]
-            ]
-        ]);
-        return $dataProvider->getData();
+        $storeId   = $this->locator->getProduct()->getStoreId();
+        $productId = $this->locator->getProduct()->getId();
+        if (!$this->printformerConfigHelper->isEnabled($storeId)
+            || ($this->request->getModuleName() != 'catalog'
+                && $this->request->getActionName() != 'product')
+        ) {
+            return $meta;
+        }
+
+        $printformerProducts = [];
+        $i                   = 0;
+        foreach (
+            $this->productHelper->getCatalogProductPrintformerProductsArray($productId,
+                $storeId) as $product
+        ) {
+            $printformerProducts[$i]              = $product;
+            $printformerProducts[$i]['record_id'] = $i;
+            $i++;
+        }
+        $meta[$productId]['product']['printformer_products']
+            = $printformerProducts;
+
+        return $meta;
     }
 }

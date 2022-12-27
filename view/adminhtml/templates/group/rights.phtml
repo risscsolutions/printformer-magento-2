@@ -1,14 +1,23 @@
-<?php /** @var \Rissc\Printformer\Block\Adminhtml\Group\Rights $this */ ?>
-<form method="post" action="<?php echo $this->getFormAction() ?>">
-    <input name="form_key" type="hidden" value="<?php echo $this->getFormKey() ?>">
+<?php
+/** @var \Rissc\Printformer\Block\Adminhtml\Group\Rights $this */ ?>
+<form method="post" action="<?php
+echo $this->getFormAction() ?>">
+    <input name="form_key" type="hidden" value="<?php
+    echo $this->getFormKey() ?>">
     <div class="page-main-actions">
         <div class="page-actions-placeholder">
 
         </div>
-        <div class="page-actions" data-ui-id="page-actions-toolbar-content-header"><div class="page-actions-inner" data-title="Pages">
+        <div class="page-actions"
+             data-ui-id="page-actions-toolbar-content-header">
+            <div class="page-actions-inner" data-title="Pages">
                 <div class="page-actions-buttons">
-                    <button id="add" title="<?php echo __('Save') ?>" type="button" class="action- scalable primary" data-ui-id="add-button" onclick="form.submit();">
-                        <span><?php echo __('Save') ?></span>
+                    <button id="add" title="<?php
+                    echo __('Save') ?>" type="button"
+                            class="action- scalable primary"
+                            data-ui-id="add-button" onclick="form.submit();">
+                        <span><?php
+                            echo __('Save') ?></span>
                     </button>
                 </div>
             </div>
@@ -16,23 +25,45 @@
     </div>
     <table style="width:100%" class="data-grid data-grid-draggable">
         <tr class="data-row">
-            <th class="data-grid-th"><?php echo __('Group') ?></th>
+            <th class="data-grid-th"><?php
+                echo __('Group') ?></th>
             <th class="data-grid-th">draft/editorView</th>
             <th class="data-grid-th">draft/editorUpdate</th>
             <th class="data-grid-th">review/view</th>
             <th class="data-grid-th">review/finish</th>
             <th class="data-grid-th">review/end</th>
         </tr>
-        <?php foreach($this->getGroups() as $_group): ?>
-            <?php $_right = $this->getRight($_group) ?>
+        <?php
+        foreach ($this->getGroups() as $_group): ?>
+            <?php
+            $_right = $this->getRight($_group) ?>
             <tr class="data-row">
-                <td><?php echo $_group->getCustomerGroupCode() ?></td>
-                <td><input type="checkbox" name="draft_editor_view[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getDraftEditorView()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="draft_editor_update[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getDraftEditorUpdate()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="review_view[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewView()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="review_finish[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewFinish()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="review_end[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewEnd()): ?> checked<?php endif; ?>></td>
+                <td><?php
+                    echo $_group->getCustomerGroupCode() ?></td>
+                <td><input type="checkbox" name="draft_editor_view[]"
+                           value="<?php
+                           echo $_group->getId() ?>"<?php
+                    if ($_right->getDraftEditorView()): ?> checked<?php
+                    endif; ?>></td>
+                <td><input type="checkbox" name="draft_editor_update[]"
+                           value="<?php
+                           echo $_group->getId() ?>"<?php
+                    if ($_right->getDraftEditorUpdate()): ?> checked<?php
+                    endif; ?>></td>
+                <td><input type="checkbox" name="review_view[]" value="<?php
+                    echo $_group->getId() ?>"<?php
+                    if ($_right->getReviewView()): ?> checked<?php
+                    endif; ?>></td>
+                <td><input type="checkbox" name="review_finish[]" value="<?php
+                    echo $_group->getId() ?>"<?php
+                    if ($_right->getReviewFinish()): ?> checked<?php
+                    endif; ?>></td>
+                <td><input type="checkbox" name="review_end[]" value="<?php
+                    echo $_group->getId() ?>"<?php
+                    if ($_right->getReviewEnd()): ?> checked<?php
+                    endif; ?>></td>
             </tr>
-        <?php endforeach; ?>
+        <?php
+        endforeach; ?>
     </table>
 </form>

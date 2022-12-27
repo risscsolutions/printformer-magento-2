@@ -1,95 +1,95 @@
 @font-face {
-    font-family: 'shopframe-icons';
-    src: url('../fonts/shopframe.eot?hhgf01');
-    src: url('../fonts/shopframe.eot?hhgf01#iefix') format('embedded-opentype'),
-    url('../fonts/shopframe.ttf?hhgf01') format('truetype'),
-    url('../fonts/shopframe.woff?hhgf01') format('woff'),
-    url('../fonts/shopframe.svg?hhgf01#icomoon') format('svg');
-    font-weight: normal;
-    font-style: normal;
+  font-family: 'shopframe-icons';
+  src: url('../fonts/shopframe.eot?hhgf01');
+  src: url('../fonts/shopframe.eot?hhgf01#iefix') format('embedded-opentype'),
+  url('../fonts/shopframe.ttf?hhgf01') format('truetype'),
+  url('../fonts/shopframe.woff?hhgf01') format('woff'),
+  url('../fonts/shopframe.svg?hhgf01#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
 }
 
 .printformer-editor-open {
-    overflow: hidden;
-    height: 100%;
+  overflow: hidden;
+  height: 100%;
 
-    .page-main {
-        margin: 0 !important;
+  .page-main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+
+    .columns {
+      height: 100% !important;
+      max-width: 100% !important;
+      min-width: 100% !important;
+      min-height: 100% !important;
+
+      .column.main {
         padding: 0 !important;
+      }
+
+      #printformer_shopframe_container {
+        height: 96% !important;
+      }
+
+      .inner-frame {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        width: 100% !important;
         max-width: 100% !important;
         min-width: 100% !important;
-        min-height: 100% !important;
+        height: 100% !important;
+        min-height: 75vh;
+        border: 0;
+      }
 
-        .columns {
-            height: 100% !important;
-            max-width: 100% !important;
-            min-width: 100% !important;
-            min-height: 100% !important;
-
-            .column.main {
-                padding: 0 !important;
-            }
-
-            #printformer_shopframe_container {
-                height: 96% !important;
-            }
-
-            .inner-frame {
-                -webkit-box-sizing: border-box;
-                -moz-box-sizing: border-box;
-                box-sizing: border-box;
-                width: 100% !important;
-                max-width: 100% !important;
-                min-width: 100% !important;
-                height: 100% !important;
-                min-height: 75vh;
-                border: 0;
-            }
-
-            @media only screen and (orientation: landscape) {
-                .inner-frame {
-                    min-height: 35vh;
-                }
-            }
+      @media only screen and (orientation: landscape) {
+        .inner-frame {
+          min-height: 35vh;
         }
+      }
+    }
+  }
+
+  .frame-fullscreen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 100;
+  }
+
+  .printformer-fullscreen-toggle {
+    position: absolute;
+    left: 15px;
+    bottom: 40px;
+    z-index: 102;
+
+    &::before {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-size: 25px;
+      line-height: 28px;
+      width: 28px;
+      color: #FFF;
+      content: '\e989';
+      font-family: 'shopframe-icons';
+      margin: 0;
+      vertical-align: top;
+      display: inline-block;
+      font-weight: normal;
+      overflow: hidden;
+      speak: none;
+      text-align: center;
+      text-shadow: 0 0 2px #000;
     }
 
-    .frame-fullscreen {
-        position: absolute;
-        left: 0;
-        top: 0;
-        z-index: 100;
+    &.shrink {
+      &::before {
+        content: '\e98a';
+      }
     }
-
-    .printformer-fullscreen-toggle {
-        position: absolute;
-        left: 15px;
-        bottom: 40px;
-        z-index: 102;
-
-        &::before {
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            font-size: 25px;
-            line-height: 28px;
-            width: 28px;
-            color: #FFF;
-            content: '\e989';
-            font-family: 'shopframe-icons';
-            margin: 0;
-            vertical-align: top;
-            display: inline-block;
-            font-weight: normal;
-            overflow: hidden;
-            speak: none;
-            text-align: center;
-            text-shadow: 0 0 2px #000;
-        }
-
-        &.shrink {
-            &::before {
-                content: '\e98a';
-            }
-        }
-    }
+  }
 }

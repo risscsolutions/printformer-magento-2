@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Ui;
 
+use Magento\Backend\Model\Session as BackendSession;
 use Magento\Framework\App\RequestInterface;
 use Magento\Ui\DataProvider\AbstractDataProvider;
 use Magento\Ui\DataProvider\AddFieldToCollectionInterface;
@@ -9,7 +10,6 @@ use Magento\Ui\DataProvider\AddFilterToCollectionInterface;
 use Rissc\Printformer\Model\Product;
 use Rissc\Printformer\Model\ResourceModel\Product\Collection;
 use Rissc\Printformer\Model\ResourceModel\Product\CollectionFactory;
-use Magento\Backend\Model\Session as BackendSession;
 
 class DataProvider extends AbstractDataProvider
 {
@@ -43,16 +43,16 @@ class DataProvider extends AbstractDataProvider
     /**
      * Construct
      *
-     * @param string $name
-     * @param string $primaryFieldName
-     * @param string $requestFieldName
-     * @param CollectionFactory $collectionFactory
-     * @param RequestInterface $request
-     * @param BackendSession $session
-     * @param AddFieldToCollectionInterface[] $addFieldStrategies
-     * @param AddFilterToCollectionInterface[] $addFilterStrategies
-     * @param array $meta
-     * @param array $data
+     * @param   string                            $name
+     * @param   string                            $primaryFieldName
+     * @param   string                            $requestFieldName
+     * @param   CollectionFactory                 $collectionFactory
+     * @param   RequestInterface                  $request
+     * @param   BackendSession                    $session
+     * @param   AddFieldToCollectionInterface[]   $addFieldStrategies
+     * @param   AddFilterToCollectionInterface[]  $addFilterStrategies
+     * @param   array                             $meta
+     * @param   array                             $data
      */
     public function __construct(
         $name,
@@ -66,13 +66,14 @@ class DataProvider extends AbstractDataProvider
         array $meta = [],
         array $data = []
     ) {
-        parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
+        parent::__construct($name, $primaryFieldName, $requestFieldName, $meta,
+            $data);
 
-        $this->collection = $collectionFactory->create();
-        $this->addFieldStrategies = $addFieldStrategies;
+        $this->collection          = $collectionFactory->create();
+        $this->addFieldStrategies  = $addFieldStrategies;
         $this->addFilterStrategies = $addFilterStrategies;
-        $this->request = $request;
-        $this->_session = $session;
+        $this->request             = $request;
+        $this->_session            = $session;
     }
 
     /**
@@ -84,7 +85,9 @@ class DataProvider extends AbstractDataProvider
 
         $collection->addFieldToSelect('*');
         $storeId = intval($this->request->getParam('store', 0));
-        if ($storeId > 0 || $this->_session->getPrintformerTemplatesStoreId() === null) {
+        if ($storeId > 0
+            || $this->_session->getPrintformerTemplatesStoreId() === null
+        ) {
             $this->_session->setPrintformerTemplatesStoreId($storeId);
         }
         $storeId = intval($this->_session->getPrintformerTemplatesStoreId());
@@ -103,7 +106,7 @@ class DataProvider extends AbstractDataProvider
 
         $returnArray = [
             'totalRecords' => $collection->getSize(),
-            'items' => $itemArray
+            'items'        => $itemArray,
         ];
 
         return $returnArray;

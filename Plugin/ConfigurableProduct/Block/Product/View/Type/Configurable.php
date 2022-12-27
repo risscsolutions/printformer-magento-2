@@ -2,18 +2,18 @@
 
 namespace Rissc\Printformer\Plugin\ConfigurableProduct\Block\Product\View\Type;
 
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\ConfigurableProduct\Block\Product\View\Type\Configurable as Subject;
 use Magento\Framework\App\RequestInterface;
-use \Magento\Framework\Json\EncoderInterface;
-use \Magento\Framework\Json\DecoderInterface;
+use Magento\Framework\Json\DecoderInterface;
+use Magento\Framework\Json\EncoderInterface;
 use Magento\Store\Model\StoreManager;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
-use Rissc\Printformer\Helper\ConfigurableProduct;
-use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
-use Rissc\Printformer\Helper\Config as ConfigHelper;
-use Rissc\Printformer\Helper\Media as MediaHelper;
 use Rissc\Printformer\Helper\Cart as CartHelper;
-use Magento\Catalog\Api\ProductRepositoryInterface;
+use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\ConfigurableProduct;
+use Rissc\Printformer\Helper\Media as MediaHelper;
+use Rissc\Printformer\Helper\Product as PrintformerProductHelper;
 
 class Configurable
 {
@@ -49,13 +49,13 @@ class Configurable
     private ConfigurableProduct $configurableProductHelper;
 
     /**
-     * @param EncoderInterface $encoder
-     * @param DecoderInterface $decoder
-     * @param Media $mediaHelper
-     * @param PrintformerBlock $printformerBlock
-     * @param PrintformerProductHelper $printformerProductHelper
-     * @param StoreManager $storeManager
-     * @param ProductRepositoryInterface $productRepository
+     * @param   EncoderInterface            $encoder
+     * @param   DecoderInterface            $decoder
+     * @param   Media                       $mediaHelper
+     * @param   PrintformerBlock            $printformerBlock
+     * @param   PrintformerProductHelper    $printformerProductHelper
+     * @param   StoreManager                $storeManager
+     * @param   ProductRepositoryInterface  $productRepository
      */
     public function __construct(
         EncoderInterface $encoder,
@@ -69,38 +69,40 @@ class Configurable
         RequestInterface $request,
         CartHelper $cartHelper,
         ConfigurableProduct $configurableProductHelper
-    )
-    {
-        $this->encoder = $encoder;
-        $this->decoder = $decoder;
-        $this->mediaHelper = $mediaHelper;
-        $this->printformerBlock = $printformerBlock;
-        $this->printformerProductHelper = $printformerProductHelper;
-        $this->storeManager = $storeManager;
-        $this->productRepository = $productRepository;
-        $this->configHelper = $configHelper;
-        $this->request = $request;
-        $this->cartHelper = $cartHelper;
+    ) {
+        $this->encoder                   = $encoder;
+        $this->decoder                   = $decoder;
+        $this->mediaHelper               = $mediaHelper;
+        $this->printformerBlock          = $printformerBlock;
+        $this->printformerProductHelper  = $printformerProductHelper;
+        $this->storeManager              = $storeManager;
+        $this->productRepository         = $productRepository;
+        $this->configHelper              = $configHelper;
+        $this->request                   = $request;
+        $this->cartHelper                = $cartHelper;
         $this->configurableProductHelper = $configurableProductHelper;
     }
 
     /**
      * Load draft-images to result-collection for json-config
      *
-     * @param Subject $subject
-     * @param $result
+     * @param   Subject  $subject
+     * @param            $result
+     *
      * @return mixed
      */
     public function afterGetJsonConfig(Subject $subject, $result)
     {
         if ($this->configHelper->isUseImagePreview()) {
             $config = $this->decoder->decode($result);
-            $config['filterConfigurableProduct'] = $this->configHelper->filterForConfigurableProduct();
+            $config['filterConfigurableProduct']
+                    = $this->configHelper->filterForConfigurableProduct();
             foreach ($config['images'] as $productId => $image) {
-                $product = $this->productRepository->getById($productId);
+                $product             = $this->productRepository->getById($productId);
                 $simpleProductImages = $product->getMediaGalleryImages();
 
-                $pfProducts = $this->printformerProductHelper->getPrintformerProductsForFrontendConfigurationLogic(
+                $pfProducts
+                    = $this->printformerProductHelper->getPrintformerProductsForFrontendConfigurationLogic(
                     $productId,
                     $this->storeManager->getStore()->getId()
                 );
@@ -110,19 +112,28 @@ class Configurable
                 if ($this->request->getModuleName() == 'wishlist') {
                     $id = (int)$this->request->getParam('id');
                     if ($id) {
-                        $wishlistItem = $this->cartHelper->getWishlistItemModel()->loadWithOptions($id);
+                        $wishlistItem
+                            = $this->cartHelper->getWishlistItemModel()
+                            ->loadWithOptions($id);
                         if ($wishlistItem) {
                             $buyRequest = $wishlistItem->getBuyRequest();
-                            $draftIds = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                            $draftIds
+                                        = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
                             if (!empty($draftIds)) {
                                 $draftIds = explode(',', $draftIds);
                             }
 
-                            $parentProductId = $wishlistItem->getBuyRequest()->getData('product');
-                            $buyRequestSuperAttribute = $buyRequest->getData('super_attribute');
+                            $parentProductId = $wishlistItem->getBuyRequest()
+                                ->getData('product');
+                            $buyRequestSuperAttribute
+                                             = $buyRequest->getData('super_attribute');
                             if (!empty($buyRequestSuperAttribute)) {
-                                $childProductFromBuyRequest = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute, $parentProductId);
-                                if ($childProductFromBuyRequest->getId() != $productId) {
+                                $childProductFromBuyRequest
+                                    = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute,
+                                    $parentProductId);
+                                if ($childProductFromBuyRequest->getId()
+                                    != $productId
+                                ) {
                                     $draftIds = null;
                                 }
                             }
@@ -130,21 +141,29 @@ class Configurable
                     }
                 } elseif ($this->request->getModuleName() == 'checkout') {
                     //find drafts in cart buy-request with corresponding product id for image preview
-                    $cartItems = $this->cartHelper->getCartItemModel()->getItems();
+                    $cartItems = $this->cartHelper->getCartItemModel()
+                        ->getItems();
                     foreach ($cartItems as $cartItem) {
                         $buyRequest = $cartItem->getBuyRequest();
                         if (!empty($buyRequest)) {
-                            $draftIds = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                            $draftIds
+                                = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
                             if (!empty($draftIds)) {
                                 $draftIds = explode(',', $draftIds);
                                 $draftIds = array_unique($draftIds);
                             }
 
-                            $parentProductId = $cartItem->getBuyRequest()->getData('product');
-                            $buyRequestSuperAttribute = $buyRequest->getData('super_attribute');
+                            $parentProductId = $cartItem->getBuyRequest()
+                                ->getData('product');
+                            $buyRequestSuperAttribute
+                                             = $buyRequest->getData('super_attribute');
                             if (!empty($buyRequestSuperAttribute)) {
-                                $childProductFromBuyRequest = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute, $parentProductId);
-                                if ($childProductFromBuyRequest->getId() != $productId) {
+                                $childProductFromBuyRequest
+                                    = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute,
+                                    $parentProductId);
+                                if ($childProductFromBuyRequest->getId()
+                                    != $productId
+                                ) {
                                     $draftIds = null;
                                 }
                             }
@@ -152,9 +171,13 @@ class Configurable
                     }
                 } else {
                     foreach ($pfProducts as $pfProduct) {
-                        $draftId = $this->printformerProductHelper->getDraftId($pfProduct->getId(), $pfProduct->getProductId());
+                        $draftId
+                            = $this->printformerProductHelper->getDraftId($pfProduct->getId(),
+                            $pfProduct->getProductId());
                         if (!empty($draftId)) {
-                            if (!$this->cartHelper->draftIsAlreadyUsedInCart($draftId) || $this->request->getModuleName() == 'checkout') {
+                            if (!$this->cartHelper->draftIsAlreadyUsedInCart($draftId)
+                                || $this->request->getModuleName() == 'checkout'
+                            ) {
                                 if (!empty($draftId)) {
                                     array_push($draftIds, $draftId);
                                 }
@@ -164,13 +187,16 @@ class Configurable
                 }
 
                 //load draft images into corresponding product if valid drafts found
-                if (!empty($draftIds)){
-                    $draftItem = $this->mediaHelper->loadDraftImagesToAdditionalImages($draftIds, $simpleProductImages);
-                    if (!empty($draftItem)){
+                if (!empty($draftIds)) {
+                    $draftItem
+                        = $this->mediaHelper->loadDraftImagesToAdditionalImages($draftIds,
+                        $simpleProductImages);
+                    if (!empty($draftItem)) {
                         $simpleProductImages = $draftItem->getItems();
 
                         foreach ($simpleProductImages as $simpleProductImage) {
-                            $config['images'][$productId][] = $simpleProductImage->getData();
+                            $config['images'][$productId][]
+                                = $simpleProductImage->getData();
                         }
                     }
                 }

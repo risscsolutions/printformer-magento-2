@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Helper;
 
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\ConfigurableProduct\Model\Product\Type\Model;
@@ -12,50 +13,47 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Catalog\Model\ProductFactory;
 
 /**
  * Class ConfigurableProduct
+ *
  * @package Rissc\Printformer\Helper
  */
 class ConfigurableProduct extends AbstractHelper
 {
     /**
-     * @var ConfigurableResource
-     */
-    private $resourceConfigurable;
-
-    /**
-     * @var Configurable
-     */
-    private $configurable;
-
-    /**
-     * @var Attribute
-     */
-    private $attributeFactory;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManager;
-
     /**
      * @var int
      */
     protected $storeId;
+    /**
+     * @var ConfigurableResource
+     */
+    private $resourceConfigurable;
+    /**
+     * @var Configurable
+     */
+    private $configurable;
+    /**
+     * @var Attribute
+     */
+    private $attributeFactory;
     private ProductRepositoryInterface $productRepository;
     private ProductFactory $productFactory;
     private Config $configHelper;
 
     /**
      * ConfigurableProduct constructor.
-     * @param Context $context
-     * @param ConfigurableResource $resourceConfigurable
-     * @param Configurable $configurable
-     * @param Attribute $attributeFactory
-     * @param StoreManagerInterface $storeManager
-     * @param ProductRepositoryInterface $productRepository
+     *
+     * @param   Context                     $context
+     * @param   ConfigurableResource        $resourceConfigurable
+     * @param   Configurable                $configurable
+     * @param   Attribute                   $attributeFactory
+     * @param   StoreManagerInterface       $storeManager
+     * @param   ProductRepositoryInterface  $productRepository
      */
     public function __construct(
         Context $context,
@@ -68,12 +66,12 @@ class ConfigurableProduct extends AbstractHelper
         Config $configHelper
     ) {
         $this->resourceConfigurable = $resourceConfigurable;
-        $this->configurable = $configurable;
-        $this->attributeFactory = $attributeFactory;
-        $this->storeManager = $storeManager;
-        $this->productRepository = $productRepository;
-        $this->productFactory = $productFactory;
-        $this->configHelper = $configHelper;
+        $this->configurable         = $configurable;
+        $this->attributeFactory     = $attributeFactory;
+        $this->storeManager         = $storeManager;
+        $this->productRepository    = $productRepository;
+        $this->productFactory       = $productFactory;
+        $this->configHelper         = $configHelper;
         //set store id
         try {
             $this->storeId = $this->storeManager->getStore()->getId();
@@ -84,6 +82,7 @@ class ConfigurableProduct extends AbstractHelper
 
     /**
      * @param $simpleProductId
+     *
      * @return array|string[]
      */
     public function getConfigurableBySimple($simpleProductId)
@@ -91,7 +90,7 @@ class ConfigurableProduct extends AbstractHelper
         $parentId = [];
         try {
             return $this->resourceConfigurable->getParentIdsByChild($simpleProductId);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
         }
 
         return $parentId;
@@ -102,40 +101,26 @@ class ConfigurableProduct extends AbstractHelper
      *
      * @param $simpleProductId
      * @param $storeId
+     *
      * @return ProductInterface|null
      */
-    public function getFirstConfigurableBySimpleProductId($simpleProductId, $storeId)
-    {
+    public function getFirstConfigurableBySimpleProductId(
+        $simpleProductId,
+        $storeId
+    ) {
         $product = null;
 
         try {
-            $parentIds = $this->resourceConfigurable->getParentIdsByChild($simpleProductId);
-            if(isset($parentIds[0])){
-                $product = $this->productRepository->getById($parentIds[0], false, $storeId);
+            $parentIds
+                = $this->resourceConfigurable->getParentIdsByChild($simpleProductId);
+            if (isset($parentIds[0])) {
+                $product = $this->productRepository->getById($parentIds[0],
+                    false, $storeId);
             }
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
         }
 
         return $product;
-    }
-
-    /**
-     * @param $attributesList
-     * @return mixed
-     */
-    public function removeColorAttributeFromAttributesList($attributesList)
-    {
-        /** @var Attribute $attribute */
-        $attributesColorId = $this->attributeFactory->getCollection()
-            ->addFieldToFilter('attribute_code', ['eq' => 'color'])
-            ->getFirstItem()
-            ->getData('attribute_id');
-
-        if (!empty($attributesColorId)){
-            unset($attributesList[(int)$attributesColorId]);
-        }
-
-        return $attributesList;
     }
 
     /**
@@ -144,28 +129,40 @@ class ConfigurableProduct extends AbstractHelper
      *
      * if products are available without printformer_color_variation id then return true to simply exlude the return
      * array in implemented method
+     *
      * @param $attributesInfo
      * @param $product
      * @param $storeId
+     *
      * @return array | boolean
      */
-    public function getAllAvailableChildrenByConfigurable($attributesInfo, $product, $storeId)
-    {
+    public function getAllAvailableChildrenByConfigurable(
+        $attributesInfo,
+        $product,
+        $storeId
+    ) {
         $this->configurable->getProductByAttributes($attributesInfo, $product);
 
-        $productCollection = $this->configurable->getUsedProductCollection($product);
+        $productCollection
+            = $this->configurable->getUsedProductCollection($product);
 
         //filter everything except color in $attributesInfo
-        $attributesInfo = $this->removeColorAttributeFromAttributesList($attributesInfo);
+        $attributesInfo
+            = $this->removeColorAttributeFromAttributesList($attributesInfo);
         foreach ($attributesInfo as $attributeId => $attributeValue) {
-            $productCollection->addAttributeToFilter($attributeId, $attributeValue);
+            $productCollection->addAttributeToFilter($attributeId,
+                $attributeValue);
         }
 
         $productCollection->addAttributeToSelect('*');
-        $productCollection->addAttributeToFilter('status',\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED);
+        $productCollection->addAttributeToFilter('status',
+            \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED);
 
         $productCollection->getSelect()->joinLeft(
-            array('_store' => $productCollection->getResource()->getTable('catalog_product_website')),
+            array(
+                '_store' => $productCollection->getResource()
+                    ->getTable('catalog_product_website'),
+            ),
             "_store.product_id = e.entity_id and _store.website_id=$storeId"
         );
 
@@ -173,14 +170,20 @@ class ConfigurableProduct extends AbstractHelper
         $defaultInventoryId = 0;
 
         $productCollection->getSelect()->joinLeft(
-            array('_inv' => $productCollection->getResource()->getTable('cataloginventory_stock_status')),
+            array(
+                '_inv' => $productCollection->getResource()
+                    ->getTable('cataloginventory_stock_status'),
+            ),
             "_inv.product_id = e.entity_id and _inv.website_id=$defaultInventoryId"
         );
         $productCollection->addAttributeToSelect('_inv.stock_status');
 
         //store specific but also only store-id 0 available (test with $storeId = 0;)
         $productCollection->getSelect()->joinLeft(
-            array('_inv_item' => $productCollection->getResource()->getTable('cataloginventory_stock_item')),
+            array(
+                '_inv_item' => $productCollection->getResource()
+                    ->getTable('cataloginventory_stock_item'),
+            ),
             "_inv_item.product_id = e.entity_id and _inv_item.website_id=$defaultInventoryId"
         );
         $productCollection->addAttributeToSelect('_inv_item.manage_stock');
@@ -225,21 +228,23 @@ class ConfigurableProduct extends AbstractHelper
 
         //prepare printformer_color_variation-ids of collection
         $productsDataWithoutVariationIdFilter = $productCollection->getData();
-        $resultAvailableVariants = [];
+        $resultAvailableVariants              = [];
 
         if (!empty($productsDataWithoutVariationIdFilter)) {
-            $productCollection->addFieldToFilter('printformer_color_variation', ['neq' => '']);
+            $productCollection->addFieldToFilter('printformer_color_variation',
+                ['neq' => '']);
             //overwrite with filter if products are available *current $productsData not empty
             //Todo:reset collection data????
             $productCollection->resetData();
             $productsDataWithVariationIdFilter = $productCollection->getData();
 
 
-            foreach ($productsDataWithVariationIdFilter as $productData){
-                $resultAvailableVariants[] = $productData['printformer_color_variation'];
+            foreach ($productsDataWithVariationIdFilter as $productData) {
+                $resultAvailableVariants[]
+                    = $productData['printformer_color_variation'];
             }
 
-            if(empty($resultAvailableVariants)){
+            if (empty($resultAvailableVariants)) {
                 $resultAvailableVariants = true;
             }
         } else {
@@ -250,13 +255,39 @@ class ConfigurableProduct extends AbstractHelper
     }
 
     /**
+     * @param $attributesList
+     *
+     * @return mixed
+     */
+    public function removeColorAttributeFromAttributesList($attributesList)
+    {
+        /** @var Attribute $attribute */
+        $attributesColorId = $this->attributeFactory->getCollection()
+            ->addFieldToFilter('attribute_code', ['eq' => 'color'])
+            ->getFirstItem()
+            ->getData('attribute_id');
+
+        if (!empty($attributesColorId)) {
+            unset($attributesList[(int)$attributesColorId]);
+        }
+
+        return $attributesList;
+    }
+
+    /**
      * @param $superAttributes
      * @param $parentProductId
+     *
      * @return \Magento\Catalog\Model\Product
      */
-    public function getChildProductBySuperAttributes($superAttributes, $parentProductId): \Magento\Catalog\Model\Product
-    {
-        $parentProduct = $this->productFactory->create()->load($parentProductId);
-        return $this->configurable->getProductByAttributes($superAttributes, $parentProduct);
+    public function getChildProductBySuperAttributes(
+        $superAttributes,
+        $parentProductId
+    ): \Magento\Catalog\Model\Product {
+        $parentProduct = $this->productFactory->create()
+            ->load($parentProductId);
+
+        return $this->configurable->getProductByAttributes($superAttributes,
+            $parentProduct);
     }
 }

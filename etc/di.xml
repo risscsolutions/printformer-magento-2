@@ -13,15 +13,20 @@
     <preference for="Rissc\Printformer\Api\Data\AclDataInterface" type="Rissc\Printformer\Model\AclData"/>
     <preference for="Magento\Checkout\Block\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Rissc\Printformer\Api\Data\Customer\Group\RightSearchResultsInterface"
-                type="Magento\Framework\Api\SearchResults" />
-    <preference for="Magento\Downloadable\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
-    <preference for="Magento\Bundle\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
-    <preference for="Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
-    <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="Rissc\Printformer\Block\Swatches\Product\Renderer\Configurable" />
+                type="Magento\Framework\Api\SearchResults"/>
+    <preference for="Magento\Downloadable\Block\Checkout\Cart\Item\Renderer"
+                type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
+    <preference for="Magento\Bundle\Block\Checkout\Cart\Item\Renderer"
+                type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
+    <preference for="Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable"
+                type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
+    <preference for="Magento\Swatches\Block\Product\Renderer\Configurable"
+                type="Rissc\Printformer\Block\Swatches\Product\Renderer\Configurable"/>
 
     <!-- Plugins -->
     <type name="Magento\ConfigurableProduct\Block\Product\View\Type\Configurable">
-        <plugin name="Rissc_Printformer_Product_Gallery" type="Rissc\Printformer\Plugin\ConfigurableProduct\Block\Product\View\Type\Configurable"
+        <plugin name="Rissc_Printformer_Product_Gallery"
+                type="Rissc\Printformer\Plugin\ConfigurableProduct\Block\Product\View\Type\Configurable"
                 sortOrder="100"/>
     </type>
     <type name="Magento\Catalog\Block\Product\View\Gallery">
@@ -68,7 +73,8 @@
                 sortOrder="100"/>
     </type>
     <type name="Magento\Sales\Model\ResourceModel\Order">
-        <plugin name="Rissc_Printformer_Sales_OrderResourceModel" type="Rissc\Printformer\Plugin\Sales\OrderResourceModel"
+        <plugin name="Rissc_Printformer_Sales_OrderResourceModel"
+                type="Rissc\Printformer\Plugin\Sales\OrderResourceModel"
                 sortOrder="100"/>
     </type>
     <type name="Magento\Wishlist\Block\Customer\Wishlist\Item\Column">
@@ -115,9 +121,9 @@
         />
     </type>
     <type name="Magento\Framework\App\Request\CsrfValidator">
-        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\CsrfValidatorSkip" />
+        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\CsrfValidatorSkip"/>
     </type>
     <type name="Magento\Checkout\Model\DefaultConfigProvider">
-        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\Checkout\Model\DefaultConfigProvider" />
+        <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\Checkout\Model\DefaultConfigProvider"/>
     </type>
 </config>

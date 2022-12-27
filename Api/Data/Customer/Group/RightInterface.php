@@ -48,50 +48,58 @@ interface RightInterface
     public function getReviewEnd();
 
     /**
-     * @param int $id
+     * @param   int  $id
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setId($id);
 
     /**
-     * @param int $customerGroupId
+     * @param   int  $customerGroupId
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setCustomerGroupId($customerGroupId);
 
     /**
-     * @param bool $draftEditorView
+     * @param   bool  $draftEditorView
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setDraftEditorView($draftEditorView);
 
     /**
-     * @param bool $draftEditorUpdate
+     * @param   bool  $draftEditorUpdate
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setDraftEditorUpdate($draftEditorUpdate);
 
     /**
-     * @param bool $reviewView
+     * @param   bool  $reviewView
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setReviewView($reviewView);
 
     /**
-     * @param bool $reviewFinish
+     * @param   bool  $reviewFinish
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setReviewFinish($reviewFinish);
 
     /**
-     * @param bool $reviewEnd
+     * @param   bool  $reviewEnd
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setReviewEnd($reviewEnd);
 
     /**
-     * @param string $key
-     * @param bool $value
+     * @param   string  $key
+     * @param   bool    $value
+     *
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setRightValue($key, $value);
@@ -102,7 +110,8 @@ interface RightInterface
     public function reset();
 
     /**
-     * @param string $key
+     * @param   string  $key
+     *
      * @return bool
      */
     public function hasRight($key);

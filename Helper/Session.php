@@ -4,8 +4,8 @@ namespace Rissc\Printformer\Helper;
 
 use Lcobucci\JWT\Exception;
 use Magento\Catalog\Model\Session as CatalogSession;
-use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Rissc\Printformer\Model\DraftFactory;
@@ -39,9 +39,10 @@ class Session extends AbstractHelper
 
     /**
      * Session constructor.
-     * @param Context $context
-     * @param CatalogSession $catalogSession
-     * @param CustomerSession $customerSession
+     *
+     * @param   Context          $context
+     * @param   CatalogSession   $catalogSession
+     * @param   CustomerSession  $customerSession
      */
     public function __construct(
         Context $context,
@@ -51,91 +52,80 @@ class Session extends AbstractHelper
         DraftFactory $draftFactory
     ) {
         parent::__construct($context);
-        $this->catalogSession = $catalogSession;
+        $this->catalogSession  = $catalogSession;
         $this->customerSession = $customerSession;
         $this->checkoutSession = $checkoutSession;
-        $this->draftFactory = $draftFactory;
+        $this->draftFactory    = $draftFactory;
     }
 
     /**
-     * @param int $productId
-     * @param int $draftId
-     * @param string $storeId
+     * @param   int     $productId
+     * @param   int     $draftId
+     * @param   string  $storeId
+     *
      * @return $this
      */
-    public function setDraftId($productId, $printformerProductId, $draftId, $storeId)
-    {
-        $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
+    public function setDraftId(
+        $productId,
+        $printformerProductId,
+        $draftId,
+        $storeId
+    ) {
+        $data
+            = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
         if (!is_array($data)) {
             $data = [];
         }
         $data[$storeId][$productId][$printformerProductId] = $draftId;
-        $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $data);
+        $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_DRAFTID,
+            $data);
 
         return $this;
     }
 
     /**
-     * @param int $productId
-     * @param int $storeId
+     * @param   int  $productId
+     * @param   int  $storeId
+     *
      * @return $this
      */
     public function unsetDraftId($productId, $printformerProductId, $storeId)
     {
-        $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
+        $data
+            = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
         if (!is_array($data)) {
             $data = [];
         }
         unset($data[$storeId][$productId][$printformerProductId]);
-        $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $data);
+        $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_DRAFTID,
+            $data);
 
         return $this;
     }
 
     /**
-     * @param int $productId
-     * @param int $storeId
+     * @param   int  $productId
+     * @param   int  $storeId
+     *
      * @return $this
      */
     public function unsetDraftIds($productId, $storeId)
     {
-        $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
+        $data
+            = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID);
         if (!is_array($data)) {
             $data = [];
         }
         unset($data[$storeId][$productId]);
-        $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $data);
+        $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_DRAFTID,
+            $data);
 
         return $this;
     }
 
     /**
-     * @param int $productId
-     * @param int $storeId
-     * @param string $intent
-     * @param bool $clear
-     * @return string|null
-     */
-    public function getDraftId($productId, $printformerProductId, $storeId, $intent = null, $clear = false)
-    {
-        if ($intent == $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT) || $intent == null) {
-            $data = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID, $clear);
-            return isset($data[$storeId][$productId][$printformerProductId]) ? $data[$storeId][$productId][$printformerProductId] : null;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getCustomerId()
-    {
-        return $this->customerSession->getCustomerId();
-    }
-
-    /**
      * @param $loginUrl
+     *
      * @return bool
      */
     public function authenticateCustomer($loginUrl = null)
@@ -167,41 +157,34 @@ class Session extends AbstractHelper
         return $this->checkoutSession;
     }
 
-    private function getSessionUniqueIdFromDraft(string $draftId)
-    {
-        $uniqueId = false;
-        try {
-            $draftProcess = $this->draftFactory->create();
-            $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
-            $lastItem = $draftCollection->getLastItem();
-            $uniqueId = $lastItem->getSessionUniqueId();
-        } catch (\Exception $e) {
-        }
-        return $uniqueId;
-    }
-
     public function getDraftIdsByProductId(string $productId)
     {
         $resultDraftIds = [];
 
-        $originSessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
-        if (!empty($originSessionUniqueIds)){
+        $originSessionUniqueIds
+            = $this->getSessionUniqueIdsByProductId($productId);
+        if (!empty($originSessionUniqueIds)) {
             $sessionUniqueIds = implode(",", $originSessionUniqueIds);
             if (!empty($sessionUniqueIds)) {
-                $draftProcess = $this->draftFactory->create();
+                $draftProcess    = $this->draftFactory->create();
                 $draftCollection = $draftProcess->getCollection()
-                    ->addFieldToFilter('session_unique_id', ['in' => $sessionUniqueIds]);
-                $items = $draftCollection->getItems();
+                    ->addFieldToFilter('session_unique_id',
+                        ['in' => $sessionUniqueIds]);
+                $items           = $draftCollection->getItems();
                 if (!empty($items)) {
                     foreach ($items as $item) {
                         if (!empty($item)) {
                             $productId = $item->getProductId();
-                            $printformerProductId = $item->getPrintformerProductId();
-                            if(!empty($printformerProductId) && !empty($productId)) {
-                                if (!isset($resultDraftIds[$productId]))
+                            $printformerProductId
+                                       = $item->getPrintformerProductId();
+                            if (!empty($printformerProductId)
+                                && !empty($productId)
+                            ) {
+                                if (!isset($resultDraftIds[$productId])) {
                                     $resultDraftIds[$productId] = [];
-                                $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+                                }
+                                $resultDraftIds[$productId][$printformerProductId]
+                                    = $item->getDraftId();
                             }
                         }
                     }
@@ -213,73 +196,16 @@ class Session extends AbstractHelper
     }
 
     /**
-     * @param string $draftId
-     * @return false
-     */
-    public function getPfProductByDraftId(string $draftId)
-    {
-        $lastPfProduct = false;
-        try {
-            $draftProcess = $this->draftFactory->create();
-            $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('id', ['eq' => $draftId]);
-            $lastPfProduct = $draftCollection->getLastItem();
-
-        } catch (\Exception $e) {
-        }
-        return $lastPfProduct;
-    }
-
-    /**
-     * @param string $processId
-     * @return false
-     */
-    public function getPfProductByDraftProcessId(string $processId)
-    {
-        $printformerProductId = false;
-        try {
-            $draftProcess = $this->draftFactory->create();
-            $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('id', ['eq' => $processId]);
-            $lastPfProduct = $draftCollection->getLastItem();
-
-        } catch (\Exception $e) {
-        }
-        return $lastPfProduct;
-    }
-
-    /**
      * Get unique id from session for the unique-ids-entry with corresponding product-id
      *
      * @param $productId
-     * @return string|null
-     */
-    public function getSessionUniqueIdByProductId($productId, $pfProductId)
-    {
-        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        $sessionUniqueId = null;
-
-        if (!empty($sessionUniqueIds) && !empty($productId) && !empty($pfProductId)){
-            if (isset($sessionUniqueIds[$productId])) {
-                if (isset($sessionUniqueIds[$productId][$pfProductId])) {
-                    $sessionUniqueId = $sessionUniqueIds[$productId][$pfProductId];
-                }
-            }
-        }
-
-        return $sessionUniqueId;
-    }
-
-    /**
-     * Get unique id from session for the unique-ids-entry with corresponding product-id
      *
-     * @param $productId
      * @return array
      */
     public function getSessionUniqueIdsByProductId($productId): array
     {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        if (!empty($sessionUniqueIds) && !empty($productId)){
+        if (!empty($sessionUniqueIds) && !empty($productId)) {
             if (isset($sessionUniqueIds[$productId])) {
                 $sessionUniqueIds = $sessionUniqueIds[$productId];
             }
@@ -288,7 +214,102 @@ class Session extends AbstractHelper
         if (empty($sessionUniqueIds)) {
             $sessionUniqueIds = [];
         }
+
         return $sessionUniqueIds;
+    }
+
+    /**
+     * @param   int     $productId
+     * @param   int     $storeId
+     * @param   string  $intent
+     * @param   bool    $clear
+     *
+     * @return string|null
+     */
+    public function getDraftId(
+        $productId,
+        $printformerProductId,
+        $storeId,
+        $intent = null,
+        $clear = false
+    ) {
+        if ($intent
+            == $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)
+            || $intent == null
+        ) {
+            $data
+                = $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_DRAFTID,
+                $clear);
+
+            return isset($data[$storeId][$productId][$printformerProductId])
+                ? $data[$storeId][$productId][$printformerProductId] : null;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param   string  $draftId
+     *
+     * @return false
+     */
+    public function getPfProductByDraftId(string $draftId)
+    {
+        $lastPfProduct = false;
+        try {
+            $draftProcess    = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('id', ['eq' => $draftId]);
+            $lastPfProduct   = $draftCollection->getLastItem();
+        } catch (\Exception $e) {
+        }
+
+        return $lastPfProduct;
+    }
+
+    /**
+     * @param   string  $processId
+     *
+     * @return false
+     */
+    public function getPfProductByDraftProcessId(string $processId)
+    {
+        $printformerProductId = false;
+        try {
+            $draftProcess    = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('id', ['eq' => $processId]);
+            $lastPfProduct   = $draftCollection->getLastItem();
+        } catch (\Exception $e) {
+        }
+
+        return $lastPfProduct;
+    }
+
+    /**
+     * Get unique id from session for the unique-ids-entry with corresponding product-id
+     *
+     * @param $productId
+     *
+     * @return string|null
+     */
+    public function getSessionUniqueIdByProductId($productId, $pfProductId)
+    {
+        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
+        $sessionUniqueId  = null;
+
+        if (!empty($sessionUniqueIds) && !empty($productId)
+            && !empty($pfProductId)
+        ) {
+            if (isset($sessionUniqueIds[$productId])) {
+                if (isset($sessionUniqueIds[$productId][$pfProductId])) {
+                    $sessionUniqueId
+                        = $sessionUniqueIds[$productId][$pfProductId];
+                }
+            }
+        }
+
+        return $sessionUniqueId;
     }
 
     /**
@@ -296,14 +317,17 @@ class Session extends AbstractHelper
      *
      * @param $productId
      * @param $pfProductId
+     *
      * @return string|null
      */
-    public function getSessionUniqueIdByProductAndPfProductId($productId, $pfProductId)
-    {
+    public function getSessionUniqueIdByProductAndPfProductId(
+        $productId,
+        $pfProductId
+    ) {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        $sessionUniqueId = null;
+        $sessionUniqueId  = null;
 
-        if (!empty($sessionUniqueIds) && !empty($productId)){
+        if (!empty($sessionUniqueIds) && !empty($productId)) {
             if (isset($sessionUniqueIds[$productId])) {
                 $sessionUniqueId = $sessionUniqueIds[$productId][$pfProductId];
             }
@@ -319,27 +343,28 @@ class Session extends AbstractHelper
      * @param $productId
      * @param $pfProductId
      * @param $draftId
+     *
      * @return false|string
      */
     public function loadSessionUniqueId(
         $productId,
         $pfProductId,
         $draftId = ''
-    )
-    {
+    ) {
         $uniqueId = false;
         if (!empty($draftId)) {
             $uniqueId = $this->getSessionUniqueIdFromDraft($draftId);
         }
 
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        if (empty($sessionUniqueIds)){
+        if (empty($sessionUniqueIds)) {
             $sessionUniqueIds = array();
         }
 
         if (!empty($pfProductId) && !empty($productId)) {
             if (empty($uniqueId)) {
-                $uniqueId = md5(time() . '_' . $this->customerSession->getCustomerId() . '_' . $productId);
+                $uniqueId = md5(time().'_'
+                    .$this->customerSession->getCustomerId().'_'.$productId);
             }
             $sessionUniqueIds[$productId][$pfProductId] = $uniqueId;
             $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
@@ -348,16 +373,42 @@ class Session extends AbstractHelper
         return $uniqueId;
     }
 
+    private function getSessionUniqueIdFromDraft(string $draftId)
+    {
+        $uniqueId = false;
+        try {
+            $draftProcess    = $this->draftFactory->create();
+            $draftCollection = $draftProcess->getCollection()
+                ->addFieldToFilter('draft_id', ['eq' => $draftId]);
+            $lastItem        = $draftCollection->getLastItem();
+            $uniqueId        = $lastItem->getSessionUniqueId();
+        } catch (\Exception $e) {
+        }
+
+        return $uniqueId;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getCustomerId()
+    {
+        return $this->customerSession->getCustomerId();
+    }
+
     /**
      * Remove the current session-unique id for concrete product-id from session
      *
      * @param $productId
+     *
      * @return void
      */
-    public function removeSessionUniqueIdFromSession($productId, $pfProductId = null)
-    {
+    public function removeSessionUniqueIdFromSession(
+        $productId,
+        $pfProductId = null
+    ) {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        if (!empty($sessionUniqueIds) && !empty($productId)){
+        if (!empty($sessionUniqueIds) && !empty($productId)) {
             if (!empty($pfProductId)) {
                 unset($sessionUniqueIds[$productId][$pfProductId]);
             } else {
@@ -368,26 +419,28 @@ class Session extends AbstractHelper
     }
 
     /**
-     * @param string $draftId
+     * @param   string  $draftId
+     *
      * @return bool
      */
     public function unsetSessionUniqueIdByDraftId(string $draftId)
     {
         $resultDeleteSuccess = false;
-        $draftProcess = $this->draftFactory->create();
-        $draftCollection = $draftProcess->getCollection()
+        $draftProcess        = $this->draftFactory->create();
+        $draftCollection     = $draftProcess->getCollection()
             ->addFieldToFilter('draft_id', ['eq' => $draftId]);
-        $lastItem = $draftCollection->getLastItem();
-        $productId = $lastItem->getProductId();
-        $pfProductId = $lastItem->getPrintformerProductId();
-        $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        if (!empty($sessionUniqueIds) && !empty($productId)){
+        $lastItem            = $draftCollection->getLastItem();
+        $productId           = $lastItem->getProductId();
+        $pfProductId         = $lastItem->getPrintformerProductId();
+        $sessionUniqueIds    = $this->customerSession->getSessionUniqueIds();
+        if (!empty($sessionUniqueIds) && !empty($productId)) {
             if (!empty($pfProductId)) {
                 unset($sessionUniqueIds[$productId][$pfProductId]);
                 $resultDeleteSuccess = true;
             }
         }
         $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
+
         return $resultDeleteSuccess;
     }
 
@@ -395,12 +448,17 @@ class Session extends AbstractHelper
      * Remove the current session-unique id for concrete product-id from session
      *
      * @param $productId
+     *
      * @return void
      */
-    public function removeSessionUniqueIdByProductIdFromSession($productId, $pfProductId)
-    {
+    public function removeSessionUniqueIdByProductIdFromSession(
+        $productId,
+        $pfProductId
+    ) {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-        if (!empty($sessionUniqueIds) && !empty($productId) && !empty($pfProductId)){
+        if (!empty($sessionUniqueIds) && !empty($productId)
+            && !empty($pfProductId)
+        ) {
             unset($sessionUniqueIds[$productId][$pfProductId]);
             $this->customerSession->setSessionUniqueIds($sessionUniqueIds);
         }
@@ -408,19 +466,24 @@ class Session extends AbstractHelper
 
     /**
      * @param $intent
+     *
      * @return void
      */
     public function setCurrentIntent($intent)
     {
-        if ($intent != $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
-            $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, $intent);
+        if ($intent
+            != $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)
+        ) {
+            $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT,
+                $intent);
         }
     }
 
     public function unsetCurrentIntent()
     {
         if ($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
-            $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT, null);
+            $this->catalogSession->setData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT,
+                null);
         }
     }
 
@@ -431,35 +494,6 @@ class Session extends AbstractHelper
         }
 
         return null;
-    }
-
-    /**
-     * @param string $draftId
-     *
-     * @return array|null
-     */
-    public function getDraftCache($draftId)
-    {
-        if (!$this->catalogSession->getPrintformerDraftCache()) {
-            return null;
-        }
-
-        $drafts = $this->catalogSession->getPrintformerDraftCache();
-        if (empty($drafts[$draftId])) {
-            return null;
-        }
-
-        return $drafts[$draftId];
-    }
-
-    /**
-     * @param string $draftId
-     *
-     * @return bool
-     */
-    public function hasDraftInCache($draftId)
-    {
-        return $this->getDraftCache($draftId) != null;
     }
 
     /**
@@ -482,6 +516,35 @@ class Session extends AbstractHelper
         $drafts[$draftId] = $data;
 
         $this->catalogSession->setPrintformerDraftCache($drafts);
+    }
+
+    /**
+     * @param   string  $draftId
+     *
+     * @return bool
+     */
+    public function hasDraftInCache($draftId)
+    {
+        return $this->getDraftCache($draftId) != null;
+    }
+
+    /**
+     * @param   string  $draftId
+     *
+     * @return array|null
+     */
+    public function getDraftCache($draftId)
+    {
+        if (!$this->catalogSession->getPrintformerDraftCache()) {
+            return null;
+        }
+
+        $drafts = $this->catalogSession->getPrintformerDraftCache();
+        if (empty($drafts[$draftId])) {
+            return null;
+        }
+
+        return $drafts[$draftId];
     }
 
     /**
@@ -508,7 +571,7 @@ class Session extends AbstractHelper
     }
 
     /**
-     * @param string $draftId
+     * @param   string  $draftId
      */
     public function removeDraftFromCache($draftId)
     {
@@ -526,13 +589,17 @@ class Session extends AbstractHelper
     }
 
     /**
-     * @param string $draftId
+     * @param   string  $draftId
+     *
      * @return array|false
      */
     public function getDraftPageInfo(string $draftId)
     {
-        $draftPageInfoFromSession = $this->catalogSession->getPrintformerDraftPageInfo();
-        if (is_array($draftPageInfoFromSession) && isset($draftPageInfoFromSession[$draftId])){
+        $draftPageInfoFromSession
+            = $this->catalogSession->getPrintformerDraftPageInfo();
+        if (is_array($draftPageInfoFromSession)
+            && isset($draftPageInfoFromSession[$draftId])
+        ) {
             $result = $draftPageInfoFromSession;
         } else {
             $result = false;
@@ -544,16 +611,18 @@ class Session extends AbstractHelper
     /**
      * @param $draftId
      * @param $data
+     *
      * @return false
      */
     public function setDraftPageInfo($draftId, $data)
     {
-        if (is_array($data)){
+        if (is_array($data)) {
             $preparedData = array(
-                $draftId => $data
+                $draftId => $data,
             );
 
-            $result = $this->catalogSession->setPrintformerDraftPageInfo($preparedData);
+            $result
+                = $this->catalogSession->setPrintformerDraftPageInfo($preparedData);
         } else {
             $result = false;
         }

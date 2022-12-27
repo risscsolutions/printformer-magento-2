@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Model\Product;
 
 class Source extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
@@ -14,23 +15,15 @@ class Source extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
     protected $printformerProductFactory;
 
     /**
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Rissc\Printformer\Model\ProductFactory $printformerProductFactory
+     * @param   \Magento\Store\Model\StoreManagerInterface  $storeManager
+     * @param   \Rissc\Printformer\Model\ProductFactory     $printformerProductFactory
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Rissc\Printformer\Model\ProductFactory $printformerProductFactory
     ) {
-        $this->storeManager = $storeManager;
+        $this->storeManager              = $storeManager;
         $this->printformerProductFactory = $printformerProductFactory;
-    }
-
-    /**
-     * @return int
-     */
-    protected function getCurrentStoreId()
-    {
-        return $this->storeManager->getStore()->getId();
     }
 
     /**
@@ -41,7 +34,7 @@ class Source extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
     public function getAllOptions()
     {
         if ($this->_options === null) {
-            $products = $this->printformerProductFactory
+            $products         = $this->printformerProductFactory
                 ->create()->getCollection()
                 ->addFieldToFilter('store_id', $this->getCurrentStoreId());
             $this->_options[] = array(
@@ -55,6 +48,15 @@ class Source extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
                 );
             }
         }
+
         return $this->_options;
+    }
+
+    /**
+     * @return int
+     */
+    protected function getCurrentStoreId()
+    {
+        return $this->storeManager->getStore()->getId();
     }
 }

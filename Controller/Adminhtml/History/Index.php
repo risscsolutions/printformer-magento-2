@@ -10,13 +10,15 @@ class Index extends AbstractController
     {
         if ($this->getRequest()->getQuery('ajax')) {
             $this->_forward('grid');
+
             return null;
         }
 
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
         $resultPage = $this->_resultPageFactory->create();
         $resultPage->setActiveMenu('Rissc_Printformer::main_menu');
-        $resultPage->getConfig()->getTitle()->prepend(__('Printformer Processing History'));
+        $resultPage->getConfig()->getTitle()
+            ->prepend(__('Printformer Processing History'));
 
         return $resultPage;
     }

@@ -4,12 +4,12 @@ namespace Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer;
 
 use Magento\Backend\Block\Context;
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
-use Magento\Framework\DataObject;
-use Rissc\Printformer\Model\Draft;
-use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Backend\Model\UrlInterface;
-use Rissc\Printformer\Setup\InstallData;
+use Magento\Framework\DataObject;
+use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Api;
+use Rissc\Printformer\Model\Draft;
+use Rissc\Printformer\Setup\InstallData;
 
 class DraftStatus extends AbstractRenderer
 {
@@ -25,10 +25,11 @@ class DraftStatus extends AbstractRenderer
 
     /**
      * DraftStatus constructor.
-     * @param Context $context
-     * @param ItemFactory $itemFactory
-     * @param UrlInterface $url
-     * @param array $data
+     *
+     * @param   Context       $context
+     * @param   ItemFactory   $itemFactory
+     * @param   UrlInterface  $url
+     * @param   array         $data
      */
     public function __construct(
         Context $context,
@@ -37,7 +38,7 @@ class DraftStatus extends AbstractRenderer
         array $data = []
     ) {
         $this->_itemFactory = $itemFactory;
-        $this->_url = $url;
+        $this->_url         = $url;
 
         parent::__construct($context, $data);
     }
@@ -46,10 +47,10 @@ class DraftStatus extends AbstractRenderer
     {
         /** @var Draft $row */
         $itemOrdered = false;
-        if($orderItemId = $row->getOrderItemId()) {
+        if ($orderItemId = $row->getOrderItemId()) {
             $item = $this->_itemFactory->create();
             $item->getResource()->load($item, $orderItemId);
-            if($item->getId()) {
+            if ($item->getId()) {
                 $itemOrdered = (bool)$item->getPrintformerOrdered();
                 if ($row->getProcessingStatus() == 1 && !$itemOrdered) {
                     $item->setPrintformerOrdered(1);
@@ -62,46 +63,70 @@ class DraftStatus extends AbstractRenderer
 
         $resultHtml = '';
 
-        if($row->getProcessingId()) {
-            $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Processing ID') . ': <strong>' . $row->getProcessingId() . '</strong></small>';
+        if ($row->getProcessingId()) {
+            $resultHtml .= '<br /><small style="color: #C0C0C0">'
+                .__('Processing ID').': <strong>'.$row->getProcessingId()
+                .'</strong></small>';
         }
 
-        if (isset($item)){
+        if (isset($item)) {
             $printformerCountState = (integer)$item->getPrintformerCountState();
-            if($printformerCountState === Api::ProcessingStateAfterOrder){
+            if ($printformerCountState === Api::ProcessingStateAfterOrder) {
                 $printformerCountStateMessage = 'Processed after order';
-            } elseif ($printformerCountState === Api::ProcessingStateAdminMassResend){
+            } elseif ($printformerCountState
+                === Api::ProcessingStateAdminMassResend
+            ) {
                 $printformerCountStateMessage = 'Processed after mass-resend';
-            } elseif ($printformerCountState === Api::ProcessingStateAfterCron){
+            } elseif ($printformerCountState
+                === Api::ProcessingStateAfterCron
+            ) {
                 $printformerCountStateMessage = 'Processed after cron';
-            } elseif ($printformerCountState === Api::ProcessingStateAfterUploadCallback){
-                $printformerCountStateMessage = 'processed after upload-callback';
+            } elseif ($printformerCountState
+                === Api::ProcessingStateAfterUploadCallback
+            ) {
+                $printformerCountStateMessage
+                    = 'processed after upload-callback';
             }
 
-            if ($printformerCountState !== 0 && isset($printformerCountStateMessage) && $printformerCountState != '0'){
-                if(!$row->getProcessingId()) {
-                    $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Processing failed') . '... <strong>' . $row->getProcessingId() . '</strong></small>';
+            if ($printformerCountState !== 0
+                && isset($printformerCountStateMessage)
+                && $printformerCountState != '0'
+            ) {
+                if (!$row->getProcessingId()) {
+                    $resultHtml .= '<br /><small style="color: #C0C0C0">'
+                        .__('Processing failed').'... <strong>'
+                        .$row->getProcessingId().'</strong></small>';
                 }
-                $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Last execution') . ': <strong>' . $item->getPrintformerCountDate() . '</strong></small>';
-                $resultHtml .= '<br /><small style="color: #C0C0C0">' . __('Last location') . ': <strong>' . $printformerCountStateMessage . '</strong></small>';
+                $resultHtml .= '<br /><small style="color: #C0C0C0">'
+                    .__('Last execution').': <strong>'
+                    .$item->getPrintformerCountDate().'</strong></small>';
+                $resultHtml .= '<br /><small style="color: #C0C0C0">'
+                    .__('Last location').': <strong>'
+                    .$printformerCountStateMessage.'</strong></small>';
             }
         }
 
-        $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE . '_' . InstallData::MODULE_NAME . '/images/proccessing_status_red.svg');
-        $draftStatus = __('Not processed yet!');
-        if($itemOrdered && $row->getProcessingId()) {
-            $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE . '_' . InstallData::MODULE_NAME . '/images/proccessing_status_green.svg');
+        $draftStatusImage = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE
+            .'_'.InstallData::MODULE_NAME.'/images/proccessing_status_red.svg');
+        $draftStatus      = __('Not processed yet!');
+        if ($itemOrdered && $row->getProcessingId()) {
+            $draftStatusImage
+                         = $this->getViewFileUrl(InstallData::MODULE_NAMESPACE
+                .'_'.InstallData::MODULE_NAME
+                .'/images/proccessing_status_green.svg');
             $draftStatus = __('Processed successfully!');
         }
+
         return '
             <div>
-                <img src="' . $draftStatusImage . '"
+                <img src="'.$draftStatusImage.'"
                      style="width:20px;height:20px;float:left;"
-                     alt="' . $draftStatus . '"
+                     alt="'.$draftStatus.'"
                 />
-                <span style="float:left;margin-left:5px;display:block;line-height:19px;"><strong>' . $draftStatus  . '</strong></span>
+                <span style="float:left;margin-left:5px;display:block;line-height:19px;"><strong>'
+            .$draftStatus.'</strong></span>
                 <div style="clear:both;"><!-- --></div>
             </div>
-        ' . $resultHtml;
+        '.$resultHtml;
     }
 }

@@ -15,16 +15,15 @@ class ReleaseVersion extends Field
     private $moduleList;
 
     /**
-     * @param Context $context
-     * @param ModuleListInterface $moduleList
-     * @param array $data
+     * @param   Context              $context
+     * @param   ModuleListInterface  $moduleList
+     * @param   array                $data
      */
     public function __construct(
         Context $context,
         ModuleListInterface $moduleList,
         array $data = []
-    )
-    {
+    ) {
         parent::__construct($context, $data);
         $this->moduleList = $moduleList;
     }
@@ -33,12 +32,12 @@ class ReleaseVersion extends Field
     /**
      * Show Printformer-Extension-Version in configuration
      *
-     * @param AbstractElement $element
+     * @param   AbstractElement  $element
+     *
      * @return string
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-
         $html = '<div style="padding-top:7px">';
         $html .= '<div><span> ';
         $html .= $this->getVersion();
@@ -55,9 +54,10 @@ class ReleaseVersion extends Field
     {
         $result = '?';
         $module = $this->moduleList->getOne($this->getModuleName());
-        if(isset($module['setup_version'])) {
+        if (isset($module['setup_version'])) {
             $result = $module['setup_version'];
         }
+
         return $result;
     }
 }

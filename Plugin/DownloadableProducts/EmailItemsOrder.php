@@ -15,7 +15,8 @@ class EmailItemsOrder
 
     /**
      * EmailItemsOrder constructor.
-     * @param DownloadableProductHelper $downloadableProductHelper
+     *
+     * @param   DownloadableProductHelper  $downloadableProductHelper
      */
     public function __construct(
         DownloadableProductHelper $downloadableProductHelper
@@ -25,18 +26,26 @@ class EmailItemsOrder
 
     /**
      * Try to get Printformer download url
-     * @param Downloadable $subject
-     * @param \Closure $proceed
-     * @param Item $item
+     *
+     * @param   Downloadable  $subject
+     * @param   \Closure      $proceed
+     * @param   Item          $item
+     *
      * @return string
      */
-    public function aroundGetPurchasedLinkUrl(Downloadable $subject, \Closure $proceed, Item $item)
-    {
+    public function aroundGetPurchasedLinkUrl(
+        Downloadable $subject,
+        \Closure $proceed,
+        Item $item
+    ) {
         $url = $proceed($item);
         $downloadableProductUrl = null;
-        if($this->downloadableProductHelper->tryGetPrintformerPdfUrl($item, $downloadableProductUrl)) {
+        if ($this->downloadableProductHelper->tryGetPrintformerPdfUrl($item,
+            $downloadableProductUrl)
+        ) {
             $url = $downloadableProductUrl;
         }
+
         return $url;
     }
 }

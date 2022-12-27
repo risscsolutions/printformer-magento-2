@@ -3,11 +3,11 @@
 namespace Rissc\Printformer\Block\Adminhtml\Edit\Tab;
 
 use Magento\Backend\Block\Template\Context;
-use Magento\Customer\Model\CustomerFactory;
-use Magento\Framework\Registry;
-use Magento\Framework\Data\FormFactory;
 use Magento\Backend\Block\Widget\Form\Generic;
 use Magento\Backend\Block\Widget\Tab\TabInterface;
+use Magento\Customer\Model\CustomerFactory;
+use Magento\Framework\Data\FormFactory;
+use Magento\Framework\Registry;
 use Rissc\Printformer\Helper\Config;
 
 class PrintformerIdentifier extends Generic implements TabInterface
@@ -20,11 +20,12 @@ class PrintformerIdentifier extends Generic implements TabInterface
 
     /**
      * Crossmedia constructor.
-     * @param CustomerFactory $customerFactory
-     * @param Context $context
-     * @param Registry $registry
-     * @param FormFactory $formFactory
-     * @param array $data
+     *
+     * @param   CustomerFactory  $customerFactory
+     * @param   Context          $context
+     * @param   Registry         $registry
+     * @param   FormFactory      $formFactory
+     * @param   array            $data
      */
     public function __construct(
         Context $context,
@@ -35,28 +36,8 @@ class PrintformerIdentifier extends Generic implements TabInterface
         array $data = []
     ) {
         $this->_customerFactory = $customerFactory;
-        $this->configHelper = $configHelper;
+        $this->configHelper     = $configHelper;
         parent::__construct($context, $registry, $formFactory, $data);
-    }
-
-    /**
-     * Whether tab is available
-     *
-     * @return bool
-     */
-    public function canShowTab()
-    {
-        return $this->configHelper->isEnabled();
-    }
-
-    /**
-     * Get tab label
-     *
-     * @return \Magento\Framework\Phrase
-     */
-    public function getTabLabel()
-    {
-        return __('Printformer');
     }
 
     /**
@@ -67,6 +48,16 @@ class PrintformerIdentifier extends Generic implements TabInterface
     public function getTabTitle()
     {
         return $this->getTabLabel();
+    }
+
+    /**
+     * Get tab label
+     *
+     * @return \Magento\Framework\Phrase
+     */
+    public function getTabLabel()
+    {
+        return __('Printformer');
     }
 
     /**
@@ -86,8 +77,10 @@ class PrintformerIdentifier extends Generic implements TabInterface
      */
     public function getTabUrl()
     {
-        return $this->getUrl('printformer/customer/printformeridentification', ['_current' => true]);
+        return $this->getUrl('printformer/customer/printformeridentification',
+            ['_current' => true]);
     }
+
     /**
      * Tab should be loaded trough Ajax call
      *
@@ -99,12 +92,40 @@ class PrintformerIdentifier extends Generic implements TabInterface
     }
 
     /**
-     * @return \Magento\Customer\Model\Customer
+     * Prepare the layout.
+     *
+     * @return string
      */
-    public function getCustomer()
+    public function getFormHtml()
     {
-        $customerId = $this->getRequest()->getParam('id');
-        return $this->_customerFactory->create()->load($customerId);
+        $html = parent::getFormHtml();
+
+        return $html;
+    }
+
+    /**
+     * @return string
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    protected function _toHtml()
+    {
+        if ($this->canShowTab()) {
+            $this->initForm();
+
+            return parent::_toHtml();
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * Whether tab is available
+     *
+     * @return bool
+     */
+    public function canShowTab()
+    {
+        return $this->configHelper->isEnabled();
     }
 
     /**
@@ -122,10 +143,13 @@ class PrintformerIdentifier extends Generic implements TabInterface
         /**@var \Magento\Framework\Data\Form $form */
         $form = $this->_formFactory->create();
         $form->setHtmlIdPrefix('myform_');
-        $fieldset = $form->addFieldset('base_fieldset', ['legend' => __('Printformer')]);
+        $fieldset = $form->addFieldset('base_fieldset',
+            ['legend' => __('Printformer')]);
         $disabled = true;
 
-        $printformerIdentification = $customer->getResource()->getAttribute('printformer_identification')->getFrontend()->getValue($customer);
+        $printformerIdentification = $customer->getResource()
+            ->getAttribute('printformer_identification')->getFrontend()
+            ->getValue($customer);
 
         $fieldset->addField(
             'test',
@@ -135,7 +159,9 @@ class PrintformerIdentifier extends Generic implements TabInterface
                 'required' => false,
                 'name' => 'printformer_identification',
                 'disabled' => $disabled,
-                'value' =>  ($printformerIdentification === null || $printformerIdentification == '') ? 'Nicht gesetzt' : $printformerIdentification
+                'value' => ($printformerIdentification === null
+                    || $printformerIdentification == '') ? 'Nicht gesetzt'
+                    : $printformerIdentification,
             ]
         );
 
@@ -145,26 +171,12 @@ class PrintformerIdentifier extends Generic implements TabInterface
     }
 
     /**
-     * @return string
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @return \Magento\Customer\Model\Customer
      */
-    protected function _toHtml()
+    public function getCustomer()
     {
-        if ($this->canShowTab()) {
-            $this->initForm();
-            return parent::_toHtml();
-        } else {
-            return '';
-        }
-    }
-    /**
-     * Prepare the layout.
-     *
-     * @return string
-     */
-    public function getFormHtml()
-    {
-        $html = parent::getFormHtml();
-        return $html;
+        $customerId = $this->getRequest()->getParam('id');
+
+        return $this->_customerFactory->create()->load($customerId);
     }
 }

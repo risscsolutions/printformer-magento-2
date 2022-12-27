@@ -8,7 +8,8 @@ use Magento\Framework\DataObject;
 class Data extends AbstractRenderer
 {
     /**
-     * @param DataObject $row
+     * @param   DataObject  $row
+     *
      * @return string
      */
     public function render(DataObject $row)
@@ -17,26 +18,33 @@ class Data extends AbstractRenderer
 
         /** @var \Magento\Backend\Block\Widget\Grid\Column $column */
         $column = $this->getColumn();
-        $html = '';
+        $html   = '';
 
         $html .= '<div style="width:400px;">';
-        $html .= '<a id="trigger_' . $row->getId() . '_' . $column->getIndex() . '" class="hide-trigger" href="javascript:;">' . __('Show Content') . '</a>';
-        $html .= '<div id="content_' . $row->getId() . '_' . $column->getIndex() . '" class="hidden hide-content">';
-        $html .= '  <pre>' . htmlentities($this->_niceXml($row->getData($column->getIndex()))) . '</pre>';
+        $html .= '<a id="trigger_'.$row->getId().'_'.$column->getIndex()
+            .'" class="hide-trigger" href="javascript:;">'.__('Show Content')
+            .'</a>';
+        $html .= '<div id="content_'.$row->getId().'_'.$column->getIndex()
+            .'" class="hidden hide-content">';
+        $html .= '  <pre>'
+            .htmlentities($this->_niceXml($row->getData($column->getIndex())))
+            .'</pre>';
         $html .= '</div>';
 
         $js = '<script type="text/javascript">';
         $js .= 'require([\'jquery\', \'jquery/ui\'], function($){ 
             $(window).load(function(){
-                var trigger = \'#trigger_' . $row->getId() . '_' . $column->getIndex() . '\';
-                var content = \'#content_' . $row->getId() . '_' . $column->getIndex() . '\';
+                var trigger = \'#trigger_'.$row->getId().'_'.$column->getIndex()
+            .'\';
+                var content = \'#content_'.$row->getId().'_'.$column->getIndex()
+            .'\';
                 if($(trigger).length && $(content).length) {
                     $(trigger).click(function(){
                         if($(content).hasClass(\'hidden\')) {
-                            $(trigger).text(\'' . __('Hide Content') . '\');
+                            $(trigger).text(\''.__('Hide Content').'\');
                             $(content).removeClass(\'hidden\');
                         } else {
-                            $(trigger).text(\'' . __('Show Content') . '\');
+                            $(trigger).text(\''.__('Show Content').'\');
                             $(content).addClass(\'hidden\');
                         }
                     });
@@ -52,18 +60,19 @@ class Data extends AbstractRenderer
     }
 
     /**
-     * @param string $data
+     * @param   string  $data
+     *
      * @return string
      */
     protected function _niceXml($data)
     {
-        if(preg_match('/xml/i', $data)) {
+        if (preg_match('/xml/i', $data)) {
             if ($xml = simplexml_load_string($data)) {
-                $domxml = new \DOMDocument('1.0');
+                $domxml                     = new \DOMDocument('1.0');
                 $domxml->preserveWhiteSpace = false;
-                $domxml->formatOutput = true;
+                $domxml->formatOutput       = true;
                 $domxml->loadXML($xml->asXML());
-                
+
                 return $domxml->saveXML();
             }
         }

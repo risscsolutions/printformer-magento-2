@@ -4,11 +4,11 @@ namespace Rissc\Printformer\Controller\Adminhtml\Product;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Rissc\Printformer\Gateway\Admin\Product;
-use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Api;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Rissc\Printformer\Helper\Config;
 
 class Sync extends Action
 {
@@ -35,11 +35,12 @@ class Sync extends Action
 
     /**
      * Sync constructor.
-     * @param Context $context
-     * @param ScopeConfigInterface $scopeConfig
-     * @param JsonFactory $resultJsonFactory
-     * @param Product $gateway
-     * @param Config $config
+     *
+     * @param   Context               $context
+     * @param   ScopeConfigInterface  $scopeConfig
+     * @param   JsonFactory           $resultJsonFactory
+     * @param   Product               $gateway
+     * @param   Config                $config
      */
     public function __construct(
         Context $context,
@@ -50,16 +51,16 @@ class Sync extends Action
         Api $apiHelper
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
-        $this->gateway = $gateway;
-        $this->config = $config;
-        $this->_scopeConfig = $scopeConfig;
-        $this->apiHelper = $apiHelper;
+        $this->gateway           = $gateway;
+        $this->config            = $config;
+        $this->_scopeConfig      = $scopeConfig;
+        $this->apiHelper         = $apiHelper;
         parent::__construct($context);
     }
 
     public function execute()
     {
-        $storeId = $this->getRequest()->getParam('store_id', false);
+        $storeId   = $this->getRequest()->getParam('store_id', false);
         $websiteId = $this->getRequest()->getParam('website_id', false);
 
         try {
@@ -68,23 +69,32 @@ class Sync extends Action
             }
 
             try {
-                $url = $this->apiHelper->apiUrl()->getClientName($storeId, $websiteId);
-                $httpClient = $this->apiHelper->getHttpClient($storeId, $websiteId);
+                $url        = $this->apiHelper->apiUrl()
+                    ->getClientName($storeId, $websiteId);
+                $httpClient = $this->apiHelper->getHttpClient($storeId,
+                    $websiteId);
 
                 $response = $httpClient->get($url);
                 $response = json_decode($response->getBody(), true);
-                $name = $response['data']['name'];
+                $name     = $response['data']['name'];
 
                 $this->gateway->syncProducts($storeId, $websiteId);
-                $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.').'<br>'.__('Mandator:').$name];
+                $response = ['success' => 'true',
+                             'message' => __('Templates synchronized successfully.')
+                                 .'<br>'.__('Mandator:').$name,
+                ];
             } catch (\Exception $e) {
-                $response = ['error' => 'true', 'message' => __('Error setting name client configuration. Empty Response. Url: ' . $url)];
+                $response = ['error'   => 'true',
+                             'message' => __('Error setting name client configuration. Empty Response. Url: '
+                                 .$url),
+                ];
             }
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $response = ['error' => 'true', 'message' => $e->getMessage()];
         }
         $this->_actionFlag->set('', self::FLAG_NO_POST_DISPATCH, true);
         $resultJson = $this->resultJsonFactory->create();
+
         return $resultJson->setData($response);
     }
 

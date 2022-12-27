@@ -21,32 +21,37 @@ class Add
 
     /**
      * Add constructor.
-     * @param ManagerInterface $messageManager
-     * @param Config $config
+     *
+     * @param   ManagerInterface  $messageManager
+     * @param   Config            $config
      */
     public function __construct(
         ManagerInterface $messageManager,
         Config $config
     ) {
         $this->messageManager = $messageManager;
-        $this->config = $config;
+        $this->config         = $config;
     }
 
     /**
      * Add wishlist hint text for guest users
-     * @param SubjectAdd $subject
-     * @param RequestInterface $request
+     *
+     * @param   SubjectAdd        $subject
+     * @param   RequestInterface  $request
      */
-    public function beforeDispatch(SubjectAdd $subject, RequestInterface $request)
-    {
+    public function beforeDispatch(
+        SubjectAdd $subject,
+        RequestInterface $request
+    ) {
         if ($subject->getActionFlag()->get('', 'no-dispatch')) {
             $this->messageManager->addNoticeMessage($this->config->getGuestWishlistHint());
         }
     }
 
     /**
-     * @param SubjectAdd $subject
-     * @param \Magento\Framework\Controller\Result\Redirect $result
+     * @param   SubjectAdd                                     $subject
+     * @param   \Magento\Framework\Controller\Result\Redirect  $result
+     *
      * @return \Magento\Framework\Controller\Result\Redirect
      */
     public function afterExecute(SubjectAdd $subject, $result)

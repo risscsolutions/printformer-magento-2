@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Gateway;
 
 use Magento\Framework\Exception\LocalizedException;
@@ -9,8 +10,8 @@ class Exception extends LocalizedException
     /**
      * Constructor
      *
-     * @param \Magento\Framework\Phrase $phrase
-     * @param \Exception $cause
+     * @param   \Magento\Framework\Phrase  $phrase
+     * @param   \Exception                 $cause
      */
     public function __construct(Phrase $phrase, \Exception $cause = null)
     {

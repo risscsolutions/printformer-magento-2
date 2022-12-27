@@ -48,12 +48,13 @@ class Draft
 
     /**
      * Draft constructor.
-     * @param LoggerInterface $logger
-     * @param Decoder $jsonDecoder
-     * @param UrlHelper $urlHelper
-     * @param UrlInterface $urlInterface
-     * @param DraftFactory $draftFactory
-     * @param LogHelper $logHelper
+     *
+     * @param   LoggerInterface  $logger
+     * @param   Decoder          $jsonDecoder
+     * @param   UrlHelper        $urlHelper
+     * @param   UrlInterface     $urlInterface
+     * @param   DraftFactory     $draftFactory
+     * @param   LogHelper        $logHelper
      */
     public function __construct(
         LoggerInterface $logger,
@@ -63,21 +64,23 @@ class Draft
         DraftFactory $draftFactory,
         LogHelper $logHelper
     ) {
-        $this->logger = $logger;
-        $this->jsonDecoder = $jsonDecoder;
-        $this->urlHelper = $urlHelper;
+        $this->logger        = $logger;
+        $this->jsonDecoder   = $jsonDecoder;
+        $this->urlHelper     = $urlHelper;
         $this->_urlInterface = $urlInterface;
         $this->_draftFactory = $draftFactory;
-        $this->_logHelper = $logHelper;
+        $this->_logHelper    = $logHelper;
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderInterface $order
+     * @param   \Magento\Sales\Api\Data\OrderInterface  $order
+     *
      * @return $this
      * @throws \Rissc\Printformer\Gateway\Exception
      */
-    public function setDraftOrdered(\Magento\Sales\Api\Data\OrderInterface $order)
-    {
+    public function setDraftOrdered(
+        \Magento\Sales\Api\Data\OrderInterface $order
+    ) {
         $draftIds = [];
         $lastItem = null;
         $url      = null;
@@ -85,15 +88,17 @@ class Draft
 
         $historyData = [
             'request_data' => null,
-            'direction' => 'outgoing'
+            'direction'    => 'outgoing',
         ];
 
         foreach ($order->getAllItems() as $item) {
-            if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+            if ($item->getPrintformerOrdered()
+                || !$item->getPrintformerDraftid()
+            ) {
                 continue;
             }
             $draftIds[] = $item->getPrintformerDraftid();
-            $lastItem = $item;
+            $lastItem   = $item;
         }
 
         if (!is_null($lastItem) && !empty($draftIds)) {
@@ -101,20 +106,20 @@ class Draft
                 ->getDraftProcessing($draftIds, $order->getQuoteId());
 
             $historyData['request_data'] = json_encode([
-                                                           $draftIds,
-                                                           md5($order->getQuoteId())
-                                                       ]);
-            $historyData['api_url'] = $url;
-            $historyData['draft_id'] = implode(', ', $draftIds);
+                $draftIds,
+                md5($order->getQuoteId()),
+            ]);
+            $historyData['api_url']      = $url;
+            $historyData['draft_id']     = implode(', ', $draftIds);
 
             $this->logger->debug($url);
 
             $headers = ["X-Magento-Tags-Pattern: .*"];
 
             $options = [
-                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_HTTPHEADER     => $headers,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HEADER => false
+                CURLOPT_HEADER         => false,
             ];
 
             $response = $this->_curlRequest($url, $options);
@@ -126,7 +131,8 @@ class Draft
         if (empty($response)) {
             $historyData['status'] = 'failed';
             $this->_logHelper->createEntry($historyData);
-            throw new Exception(__('Error setting draft ordered. Empty Response: ' . $response . ', Url: ' . $url));
+            throw new Exception(__('Error setting draft ordered. Empty Response: '
+                .$response.', Url: '.$url));
         }
 
         $responseArray = $this->jsonDecoder->decode($response);
@@ -142,7 +148,9 @@ class Draft
             $this->_logHelper->createEntry($historyData);
             throw new Exception(__('Error decoding response.'));
         }
-        if (isset($responseArray['success']) && false == $responseArray['success']) {
+        if (isset($responseArray['success'])
+            && false == $responseArray['success']
+        ) {
             $errorMsg = 'Request was not successful.';
             if (isset($responseArray['error'])) {
                 $errorMsg = $responseArray['error'];
@@ -165,8 +173,31 @@ class Draft
         return $this;
     }
 
+    protected function _curlRequest($url, $options)
+    {
+        $ch = curl_init($url);
+        if (is_array($options)) {
+            foreach ($options as $key => $option) {
+                curl_setopt($ch, $key, $option);
+            }
+        }
+        $connectionTimeout = 5;
+        $requestTimeout    = 30;
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connectionTimeout);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $requestTimeout);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+
+        $body = curl_exec($ch);
+        curl_close($ch);
+
+        return $body;
+    }
+
     /**
-     * @param \Magento\Sales\Model\Order $order
+     * @param   \Magento\Sales\Model\Order  $order
      *
      * @return bool
      */
@@ -178,15 +209,17 @@ class Draft
         $response = null;
 
         $historyData = [
-            'direction' => 'outgoing'
+            'direction' => 'outgoing',
         ];
 
         foreach ($order->getAllItems() as $item) {
-            if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+            if ($item->getPrintformerOrdered()
+                || !$item->getPrintformerDraftid()
+            ) {
                 continue;
             }
             $draftIds[] = $item->getPrintformerDraftid();
-            $lastItem = $item;
+            $lastItem   = $item;
         }
 
         if (!is_null($lastItem) && !empty($draftIds)) {
@@ -197,36 +230,39 @@ class Draft
 
             $headers = [
                 "X-Magento-Tags-Pattern: .*",
-                "Content-Type: application/json"
+                "Content-Type: application/json",
             ];
 
             $postFields = [
-                'draftIds' => $draftIds,
-                'stateChangedNotifyUrl' => $this->_urlInterface->getUrl('rest/V1/printformer') . self::API_URL_CALLBACKORDEREDSTATUS
+                'draftIds'              => $draftIds,
+                'stateChangedNotifyUrl' => $this->_urlInterface->getUrl('rest/V1/printformer')
+                    .self::API_URL_CALLBACKORDEREDSTATUS,
             ];
 
             $historyData['request_data'] = json_encode($postFields);
-            $historyData['draft_id'] = implode(', ', $draftIds);
+            $historyData['draft_id']     = implode(', ', $draftIds);
 
             $curlOptions = [
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => json_encode($postFields),
-                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => json_encode($postFields),
+                CURLOPT_HTTPHEADER     => $headers,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HEADER => false
+                CURLOPT_HEADER         => false,
             ];
 
-            $curlResponse = json_decode($this->_curlRequest($url, $curlOptions), true);
+            $curlResponse                 = json_decode($this->_curlRequest($url,
+                $curlOptions), true);
             $historyData['response_data'] = json_encode($curlResponse);
             if (isset($curlResponse['success']) && !$curlResponse['success']) {
                 $historyData['status'] = 'failed';
                 $this->_logHelper->createEntry($historyData);
+
                 return false;
             }
 
             if (isset($curlResponse['processingId'])) {
                 /** @var DraftModel $draft */
-                $draft = $this->_draftFactory->create();
+                $draft           = $this->_draftFactory->create();
                 $draftCollection = $draft->getCollection()
                     ->addFieldToFilter('draft_id', ['in' => $draftIds]);
 
@@ -247,35 +283,14 @@ class Draft
 
                 $historyData['status'] = 'send';
                 $this->_logHelper->createEntry($historyData);
+
                 return true;
             }
         }
 
         $historyData['status'] = 'failed';
         $this->_logHelper->createEntry($historyData);
+
         return false;
-    }
-
-    protected function _curlRequest($url, $options)
-    {
-        $ch = curl_init($url);
-        if (is_array($options)) {
-            foreach ($options as $key => $option) {
-                curl_setopt($ch, $key, $option);
-            }
-        }
-        $connectionTimeout = 5;
-        $requestTimeout = 30;
-
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connectionTimeout);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $requestTimeout);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-
-        $body = curl_exec($ch);
-        curl_close($ch);
-
-        return $body;
     }
 }

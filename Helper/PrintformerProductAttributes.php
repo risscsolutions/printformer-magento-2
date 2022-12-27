@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Helper;
 
 use Magento\Catalog\Model\Product;
@@ -9,6 +10,7 @@ use Magento\Framework\App\Helper\Context;
 
 /**
  * Class PrintformerProductAttributes
+ *
  * @package Rissc\Printformer\Helper
  */
 class PrintformerProductAttributes
@@ -25,34 +27,39 @@ class PrintformerProductAttributes
 
     /**
      * PrintformerProductAttributes constructor.
-     * @param Context $context
-     * @param ProductFactory $productFactory
-     * @param ProductResource $productResource
+     *
+     * @param   Context          $context
+     * @param   ProductFactory   $productFactory
+     * @param   ProductResource  $productResource
      */
     public function __construct(
         Context $context,
         ProductFactory $productFactory,
         ProductResource $productResource
     ) {
-        $this->productFactory = $productFactory;
+        $this->productFactory  = $productFactory;
         $this->productResource = $productResource;
         parent::__construct($context);
     }
 
     /**
      * @param $params
+     *
      * @return array
      */
     public function mergeFeedIdentifier($params)
     {
-        if ($this->loadProductResource()){
-            $productAttribute = $this->productResource->getAttribute('feed_identifier');
+        if ($this->loadProductResource()) {
+            $productAttribute
+                             = $this->productResource->getAttribute('feed_identifier');
             $optionAttribute = $productAttribute->getIsVisible();
 
-            if($optionAttribute == 1){
-                $feedIdentifier = $productAttribute->getFrontend()->getValue($this->currentSimpleProduct);
-                if(!empty($feedIdentifier)){
-                    $params = array_merge($params, ['feedIdentifier' => $feedIdentifier]);
+            if ($optionAttribute == 1) {
+                $feedIdentifier = $productAttribute->getFrontend()
+                    ->getValue($this->currentSimpleProduct);
+                if (!empty($feedIdentifier)) {
+                    $params = array_merge($params,
+                        ['feedIdentifier' => $feedIdentifier]);
                 }
             }
         }
@@ -63,7 +70,8 @@ class PrintformerProductAttributes
     /**
      * Get id to load to resource from request
      *
-     * @param null $productId
+     * @param   null  $productId
+     *
      * @return bool
      */
     private function loadProductResource($productId = null)
@@ -73,9 +81,11 @@ class PrintformerProductAttributes
         } else {
             $simpleProductId = $productId;
         }
-        if ($simpleProductId){
+        if ($simpleProductId) {
             $this->currentSimpleProduct = $this->productFactory->create();
-            $this->productResource->load($this->currentSimpleProduct, $simpleProductId);
+            $this->productResource->load($this->currentSimpleProduct,
+                $simpleProductId);
+
             return true;
         }
 

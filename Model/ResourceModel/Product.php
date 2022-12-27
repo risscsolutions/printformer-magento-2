@@ -1,4 +1,5 @@
 <?php
+
 namespace Rissc\Printformer\Model\ResourceModel;
 
 use Rissc\Printformer\Setup\InstallSchema;

@@ -2,17 +2,17 @@
 
 namespace Rissc\Printformer\Plugin\Sales;
 
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Model\Order as OrderModel;
 use Magento\Sales\Model\ResourceModel\Order;
-use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Psr\Log\LoggerInterface;
+use Rissc\Printformer\Cron\Processing\Runs\External;
 use Rissc\Printformer\Gateway\Admin\Draft;
 use Rissc\Printformer\Helper\Api;
 use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
-use Rissc\Printformer\Cron\Processing\Runs\External;
 
 class OrderResourceModel
 {
@@ -50,12 +50,13 @@ class OrderResourceModel
 
     /**
      * OrderResourceModel constructor.
-     * @param Api $api
-     * @param Config $config
-     * @param Draft $draft
-     * @param DraftFactory $draftFactory
-     * @param LoggerInterface $logger
-     * @param External $external
+     *
+     * @param   Api              $api
+     * @param   Config           $config
+     * @param   Draft            $draft
+     * @param   DraftFactory     $draftFactory
+     * @param   LoggerInterface  $logger
+     * @param   External         $external
      */
     public function __construct(
         Api $api,
@@ -65,41 +66,49 @@ class OrderResourceModel
         LoggerInterface $logger,
         External $external
     ) {
-        $this->api = $api;
-        $this->config = $config;
-        $this->draft = $draft;
+        $this->api          = $api;
+        $this->config       = $config;
+        $this->draft        = $draft;
         $this->draftFactory = $draftFactory;
-        $this->logger = $logger;
-        $this->external = $external;
+        $this->logger       = $logger;
+        $this->external     = $external;
     }
 
     /**
-     * @param Order $orderResourceModel
-     * @param AbstractDb $result
-     * @param OrderModel $orderModel
+     * @param   Order       $orderResourceModel
+     * @param   AbstractDb  $result
+     * @param   OrderModel  $orderModel
+     *
      * @return AbstractDb|void
      */
-    public function afterSave(Order $orderResourceModel, AbstractDb $result, OrderModel $orderModel)
-    {
+    public function afterSave(
+        Order $orderResourceModel,
+        AbstractDb $result,
+        OrderModel $orderModel
+    ) {
         $processingPermitted = false;
-        $draftIds = [];
-        $orderItems = [];
+        $draftIds            = [];
+        $orderItems          = [];
 
         try {
             $incrementOrderId = $orderModel->getIncrementId();
-            $processingPermitted = $this->api->isOrderStateValidToProcess($orderModel->getStatus());
+            $processingPermitted
+                              = $this->api->isOrderStateValidToProcess($orderModel->getStatus());
 
             foreach ($orderModel->getAllItems() as $item) {
-                if($item->getProductType() == 'downloadable'){
+                if ($item->getProductType() == 'downloadable') {
                     array_push($orderItems, $item->getId());
                 }
 
-                if ($item->getPrintformerOrdered() || !$item->getPrintformerDraftid()) {
+                if ($item->getPrintformerOrdered()
+                    || !$item->getPrintformerDraftid()
+                ) {
                     continue;
                 }
 
-                $printDraftIds = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-                if (!empty($printDraftIds)){
+                $printDraftIds
+                    = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                if (!empty($printDraftIds)) {
                     $itemDraftIds = explode(',', $printDraftIds);
                     foreach ($itemDraftIds as $draftId) {
                         $draftIds[] = $draftId;
@@ -109,14 +118,15 @@ class OrderResourceModel
                             ->setOrderItemId($item->getId())
                             ->save();
 
-                        if ($this->config->getOrderDraftUpdate($item->getStoreId())){
-                            $this->api->updateDraftHash($draftId, $incrementOrderId);
+                        if ($this->config->getOrderDraftUpdate($item->getStoreId())) {
+                            $this->api->updateDraftHash($draftId,
+                                $incrementOrderId);
                         }
                     }
                 }
             }
 
-            if (!empty($orderItems)){
+            if (!empty($orderItems)) {
                 $orderItemIds = implode(',', $orderItems);
                 $this->external->setOrderItemIdsToFilter($orderItemIds);
                 $this->external->execute();
@@ -135,9 +145,10 @@ class OrderResourceModel
             $this->logger->critical($e);
         } finally {
             if ($processingPermitted) {
-                if (isset($draftIds) && !empty($draftIds)){
+                if (isset($draftIds) && !empty($draftIds)) {
                     foreach ($draftIds as $draftId) {
-                        $this->api->setProcessingStateOnOrderItemByDraftId($draftId, $this->api::ProcessingStateAfterOrder);
+                        $this->api->setProcessingStateOnOrderItemByDraftId($draftId,
+                            $this->api::ProcessingStateAfterOrder);
                     }
                 }
             }

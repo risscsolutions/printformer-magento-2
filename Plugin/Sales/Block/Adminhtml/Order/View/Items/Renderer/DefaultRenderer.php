@@ -16,7 +16,8 @@ class DefaultRenderer
 
     /**
      * DefaultRenderer constructor.
-     * @param ViewHelper $viewHelper
+     *
+     * @param   ViewHelper  $viewHelper
      */
     public function __construct(
         ViewHelper $viewHelper
@@ -25,11 +26,12 @@ class DefaultRenderer
     }
 
     /**
-     * @param SubjectDefaultRenderer $renderer
-     * @param \Closure $proceed
-     * @param DataObject $item
-     * @param $column
-     * @param null $field
+     * @param   SubjectDefaultRenderer  $renderer
+     * @param   \Closure                $proceed
+     * @param   DataObject              $item
+     * @param                           $column
+     * @param   null                    $field
+     *
      * @return string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -44,10 +46,11 @@ class DefaultRenderer
         $html = $proceed($item, $column, $field);
         if ($column == 'product' && $item->getPrintformerDraftid()) {
             $product = $item->getProduct();
-            
-            if ($product !== null){
+
+            if ($product !== null) {
                 $product->getResource()->load($product, $product->getId());
-                $html .= $this->viewHelper->getEditorView($item, $product, $renderer);
+                $html .= $this->viewHelper->getEditorView($item, $product,
+                    $renderer);
             }
         }
 

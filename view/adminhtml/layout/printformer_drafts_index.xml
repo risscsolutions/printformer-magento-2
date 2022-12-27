@@ -6,7 +6,7 @@
     <body>
         <referenceContainer name="content">
             <block class="Rissc\Printformer\Block\Adminhtml\Drafts"
-                   name="printformer_drafts.grid.container" />
+                   name="printformer_drafts.grid.container"/>
         </referenceContainer>
     </body>
 </page>

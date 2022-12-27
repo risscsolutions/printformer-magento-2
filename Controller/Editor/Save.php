@@ -2,27 +2,27 @@
 
 namespace Rissc\Printformer\Controller\Editor;
 
-use Magento\Framework\App\Action\Context;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Session;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\Framework\Data\Form\FormKey;
 use Psr\Log\LoggerInterface;
 use Rissc\Printformer\Helper\Api;
-use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Api\Url;
-use Rissc\Printformer\Helper\ConfigurableProduct;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\ConfigurableProduct;
+use Rissc\Printformer\Helper\Media as MediaHelper;
+use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Model\Config\Source\Redirect;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\DraftFactory;
 use Rissc\Printformer\Setup\InstallSchema;
-use Magento\Framework\Data\Form\FormKey;
-use Rissc\Printformer\Model\Config\Source\Redirect;
-use Rissc\Printformer\Helper\Media as MediaHelper;
-use Magento\Catalog\Model\Product\Type;
 
 class Save extends Action
 {
@@ -76,17 +76,18 @@ class Save extends Action
 
     /**
      * Save constructor.
-     * @param LoggerInterface $logger
-     * @param Context $context
-     * @param ProductRepositoryInterface $productRepository
-     * @param SessionHelper $sessionHelper
-     * @param Url $urlHelper
-     * @param Config $configHelper
-     * @param DraftFactory $draftFactory
-     * @param Session $catalogSession
-     * @param FormKey $formKey
-     * @param MediaHelper $mediaHelper
-     * @param ConfigurableProduct $configurableProductHelper
+     *
+     * @param   LoggerInterface             $logger
+     * @param   Context                     $context
+     * @param   ProductRepositoryInterface  $productRepository
+     * @param   SessionHelper               $sessionHelper
+     * @param   Url                         $urlHelper
+     * @param   Config                      $configHelper
+     * @param   DraftFactory                $draftFactory
+     * @param   Session                     $catalogSession
+     * @param   FormKey                     $formKey
+     * @param   MediaHelper                 $mediaHelper
+     * @param   ConfigurableProduct         $configurableProductHelper
      */
     public function __construct(
         LoggerInterface $logger,
@@ -103,15 +104,15 @@ class Save extends Action
     ) {
         parent::__construct($context);
 
-        $this->_logger = $logger;
-        $this->_productRepository = $productRepository;
-        $this->_sessionHelper = $sessionHelper;
-        $this->_urlHelper = $urlHelper;
-        $this->_configHelper = $configHelper;
-        $this->_draftFactory = $draftFactory;
-        $this->_catalogSession = $catalogSession;
-        $this->_formKey = $formKey;
-        $this->_mediaHelper = $mediaHelper;
+        $this->_logger                   = $logger;
+        $this->_productRepository        = $productRepository;
+        $this->_sessionHelper            = $sessionHelper;
+        $this->_urlHelper                = $urlHelper;
+        $this->_configHelper             = $configHelper;
+        $this->_draftFactory             = $draftFactory;
+        $this->_catalogSession           = $catalogSession;
+        $this->_formKey                  = $formKey;
+        $this->_mediaHelper              = $mediaHelper;
         $this->configurableProductHelper = $configurableProductHelper;
     }
 
@@ -123,16 +124,20 @@ class Save extends Action
         $result = null;
 
         try {
-            $productId = $this->getRequest()->getParam('product_id');
+            $productId      = $this->getRequest()->getParam('product_id');
             $draftProcessId = $this->getRequest()->getParam('draft_process');
-            $storeId = $this->getRequest()->getParam('store_id');
+            $storeId        = $this->getRequest()->getParam('store_id');
 
-            $product = $this->_productRepository->getById($productId, false, $storeId);
+            $product     = $this->_productRepository->getById($productId, false,
+                $storeId);
             $extraParams = [];
-            $pfProduct = $this->_sessionHelper->getPfProductByDraftProcessId($draftProcessId);
+            $pfProduct
+                         = $this->_sessionHelper->getPfProductByDraftProcessId($draftProcessId);
             $pfProductId = $pfProduct->getPrintformerProductId();
-            $draftId = $pfProduct->getDraftId();
-            $uniqueID = $this->_sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftId);
+            $draftId     = $pfProduct->getDraftId();
+            $uniqueID
+                         = $this->_sessionHelper->loadSessionUniqueId($productId,
+                $pfProductId, $draftId);
 
             /** @var Draft $draft */
             $draft = $this->_draftFactory->create()->load($draftProcessId);
@@ -150,42 +155,57 @@ class Save extends Action
                 }
             }
 
-            $draftData = $apiHelper->getPrintformerDraft($draft->getDraftId(), true);
+            $draftData = $apiHelper->getPrintformerDraft($draft->getDraftId(),
+                true);
 
             if (
-                !empty($draftData['personalizations']['amount']) &&
-                $personalisations = $draftData['personalizations']['amount']
+                !empty($draftData['personalizations']['amount'])
+                && $personalisations = $draftData['personalizations']['amount']
             ) {
-                $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()] = $personalisations;
+                $extraParams[self::PERSONALISATIONS_QUERY_PARAM][$storeId][$product->getId()]
+                    = $personalisations;
             }
 
-            $params = $this->initDraft($product, $draftProcessId, $storeId, $extraParams);
-            $redirectAddToCart = $this->_configHelper->getConfigRedirect()!= Redirect::CONFIG_REDIRECT_URL_PRODUCT;
-            if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
+            $params            = $this->initDraft($product, $draftProcessId,
+                $storeId, $extraParams);
+            $redirectAddToCart = $this->_configHelper->getConfigRedirect()
+                != Redirect::CONFIG_REDIRECT_URL_PRODUCT;
+            if ($this->getRequest()->getParam('updateWishlistItemOptions')
+                == 'wishlist/index/updateItemOptions'
+            ) {
                 // update wishlist item options if true
-                $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
+                $result
+                    = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
                     ->setParams($this->prepareUpdateWishlistItemOptionsParams($params))
                     ->setModule('wishlist')
                     ->setController('index')
                     ->forward('updateItemOptions');
-            } elseif ($this->getRequest()->getParam('risscw2pnotepad')) { // add to wishlist if true
-                $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
+            } elseif ($this->getRequest()
+                ->getParam('risscw2pnotepad')
+            ) { // add to wishlist if true
+                $result
+                    = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
                     ->setParams($this->prepareAddToWishlistParams($params))
                     ->setModule('wishlist')
                     ->setController('index')
                     ->forward('add');
-            } elseif ($redirectAddToCart && $this->getRequest()->getParam('is_edit') != '1') {
+            } elseif ($redirectAddToCart
+                && $this->getRequest()->getParam('is_edit') != '1'
+            ) {
                 $productId = $product->getId();
                 if ($product->getTypeId() === Type::TYPE_SIMPLE) {
-                    $parentProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId, $storeId);
+                    $parentProduct
+                        = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId,
+                        $storeId);
                     if (!empty($parentProduct)) {
                         $productId = $parentProduct->getId();
                     }
                 }
 
-                $params['product'] = $productId;
+                $params['product']                       = $productId;
                 $params['printformer_unique_session_id'] = $uniqueID;
-                $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
+                $result
+                                                         = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
                     ->setParams($this->prepareAddToCartParams($params))
                     ->setModule('checkout')
                     ->setController('cart')
@@ -194,31 +214,44 @@ class Save extends Action
                 if ($this->getRequest()->getParam('is_edit') == '1') {
                     $productId = $this->getRequest()->getParam('edit_product');
                     if ($product->getTypeId() === Type::TYPE_SIMPLE) {
-                        $parentProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId, $storeId);
+                        $parentProduct
+                            = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId,
+                            $storeId);
                         if (!empty($parentProduct)) {
                             $productId = $parentProduct->getId();
                         }
                     }
 
-                    $configureUrl = $this->_url->getUrl('checkout/cart/configure', [
-                        'id' => $this->getRequest()->getParam('quote_id'),
-                        'product_id' => $productId
+                    $configureUrl
+                        = $this->_url->getUrl('checkout/cart/configure', [
+                        'id'         => $this->getRequest()
+                            ->getParam('quote_id'),
+                        'product_id' => $productId,
                     ]);
 
-                    $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($configureUrl);
+                    $result
+                        = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)
+                        ->setUrl($configureUrl);
                 } else {
                     $requestParams = [];
                     if ($this->getRequest()->getParam('project_id')) {
-                        $requestParams[] = 'project_id=' . $this->getRequest()->getParam('project_id');
+                        $requestParams[] = 'project_id='.$this->getRequest()
+                                ->getParam('project_id');
                     }
                     if ($product->getTypeId() === Type::TYPE_SIMPLE) {
                         //todo: check why on products without parent you go here
-                        $configurableProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(), $storeId);
-                        if(!empty($configurableProduct)) {
+                        $configurableProduct
+                            = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(),
+                            $storeId);
+                        if (!empty($configurableProduct)) {
                             $product = $configurableProduct;
                         }
                     }
-                    $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($this->_urlHelper->getRedirect($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
+                    $result
+                        = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)
+                        ->setUrl($this->_urlHelper->getRedirect($product)
+                            .(!empty($requestParams) ? '?'.implode('&',
+                                    $requestParams) : ''));
                 }
             }
         } catch (\Exception $e) {
@@ -230,18 +263,27 @@ class Save extends Action
     }
 
     /**
-     * @param ProductInterface $product
-     * @param $draftProcessId
-     * @param $storeId
-     * @param array $extra
+     * @param   ProductInterface  $product
+     * @param                     $draftProcessId
+     * @param                     $storeId
+     * @param   array             $extra
+     *
      * @return array
      */
-    protected function initDraft(ProductInterface $product, $draftProcessId, $storeId, $extra = [])
-    {
+    protected function initDraft(
+        ProductInterface $product,
+        $draftProcessId,
+        $storeId,
+        $extra = []
+    ) {
         $draftProcess = $this->_draftFactory->create()->load($draftProcessId);
 
-        if ($this->getRequest()->getParam('updateWishlistItemOptions') != 'wishlist/index/updateItemOptions') {
-            $this->_sessionHelper->setDraftId($product->getId(), $draftProcess->getPrintformerProductId(),  $draftProcess->getDraftId(), $storeId);
+        if ($this->getRequest()->getParam('updateWishlistItemOptions')
+            != 'wishlist/index/updateItemOptions'
+        ) {
+            $this->_sessionHelper->setDraftId($product->getId(),
+                $draftProcess->getPrintformerProductId(),
+                $draftProcess->getDraftId(), $storeId);
         }
 
         /** @var Session $session */
@@ -251,111 +293,26 @@ class Save extends Action
         }
 
         $params = array(
-            InstallSchema::COLUMN_NAME_DRAFTID => $draftProcess->getDraftId()
+            InstallSchema::COLUMN_NAME_DRAFTID => $draftProcess->getDraftId(),
         );
 
         if ($this->getRequest()->getParam('super_attribute')) {
-            $params['super_attribute'] = $this->getRequest()->getParam('super_attribute');
+            $params['super_attribute'] = $this->getRequest()
+                ->getParam('super_attribute');
         }
         if ($this->getRequest()->getParam('options')) {
             $params['options'] = $this->getRequest()->getParam('options');
         }
 
         $formatVariation = $this->_getFormatVariation();
-        $colorVariation = $this->_getColorVariation();
+        $colorVariation  = $this->_getColorVariation();
 
         if ($formatVariation) {
-            $this->_addSelectedProducFormat($params, $product, $formatVariation);
+            $this->_addSelectedProducFormat($params, $product,
+                $formatVariation);
         }
         if ($colorVariation) {
             $this->_addSelectedProducColor($params, $product, $colorVariation);
-        }
-
-        return $params;
-    }
-
-    /**
-     * @param ProductInterface $product
-     * @param array $params
-     *
-     * @return array
-     */
-    public function prepareAddToCartParams(array $params = [])
-    {
-        $redirectUrl = $this->_urlHelper->getRedirect();
-        if ($redirectUrl) {
-            $params['redirect_url'] = $redirectUrl;
-        }
-        $params['form_key'] = $this->_formKey->getFormKey();
-
-        $formData = $this->prepareFormData($this->_catalogSession->getSavedPrintformerOptions());
-        if (!empty($formData)) {
-            $params = array_merge($formData, $params);
-        }
-
-        return $params;
-    }
-
-    /**
-     * @param array $formData
-     *
-     * @return array
-     */
-    public function prepareFormData(array $formData)
-    {
-        $preparedFormData = [];
-
-        foreach ($formData as $key => $value) {
-            if ($key == 'options' || $key == 'super_attribute') {
-                foreach ($value as $k => $v) {
-                    $preparedFormData[$key][$k] = $v['value'];
-                }
-            }
-
-            if ($key == 'qty') {
-                $preparedFormData[$key] = $value['value'];
-            }
-        }
-
-        return $preparedFormData;
-    }
-
-    /**
-     * @param array $params
-     * @return array
-     */
-    protected function prepareAddToWishlistParams(array $params)
-    {
-        $redirectParams = array(
-            'controller' => 'wishlist',
-            'params' => array('_use_rewrite' => true)
-        );
-
-        $redirectUrl = $this->_urlHelper->getRedirect(null, $redirectParams);
-        if ($redirectUrl) {
-            $params['redirect_url'] = $redirectUrl;
-        }
-
-        return $params;
-    }
-
-    /**
-     * @param array $params
-     * @return array
-     */
-    protected function prepareUpdateWishlistItemOptionsParams(array $params)
-    {
-        $redirectParams = array(
-            'controller' => 'wishlist/index/configure',
-            'params' => array(
-                '_use_rewrite' => true,
-                'product_id' => $this->getRequest()->getParam('product')
-            )
-        );
-
-        $redirectUrl = $this->_urlHelper->getRedirect(null, $redirectParams);
-        if ($redirectUrl) {
-            $params['redirect_url'] = $redirectUrl;
         }
 
         return $params;
@@ -366,7 +323,8 @@ class Save extends Action
      */
     protected function _getFormatVariation()
     {
-        return $this->getRequest()->getParam($this->_configHelper->getFormatQueryParameter(), null);
+        return $this->getRequest()
+            ->getParam($this->_configHelper->getFormatQueryParameter(), null);
     }
 
     /**
@@ -374,17 +332,22 @@ class Save extends Action
      */
     protected function _getColorVariation()
     {
-        return $this->getRequest()->getParam($this->_configHelper->getColorQueryParameter(), null);
+        return $this->getRequest()
+            ->getParam($this->_configHelper->getColorQueryParameter(), null);
     }
 
     /**
-     * @param array $params
-     * @param ProductInterface $product
-     * @param string $variation
+     * @param   array             $params
+     * @param   ProductInterface  $product
+     * @param   string            $variation
+     *
      * @return array
      */
-    protected function _addSelectedProducFormat(array &$params, ProductInterface $product, $variation)
-    {
+    protected function _addSelectedProducFormat(
+        array &$params,
+        ProductInterface $product,
+        $variation
+    ) {
         if ($product->getTypeId() == Configurable::TYPE_CODE) {
             return $this->_addSelectedProductAttribute(
                 $params,
@@ -405,13 +368,93 @@ class Save extends Action
     }
 
     /**
-     * @param array $params
-     * @param ProductInterface $product
-     * @param string $variation
+     * @param   array             $params
+     * @param   ProductInterface  $product
+     * @param   string            $variation
+     * @param   string            $attributeName
+     * @param   array             $configAttributeValues
+     *
      * @return array
      */
-    protected function _addSelectedProducColor(array &$params, ProductInterface $product, $variation)
-    {
+    protected function _addSelectedProductAttribute(
+        array &$params,
+        ProductInterface $product,
+        $variation,
+        $attributeName,
+        $configAttributeValues
+    ) {
+        $attributeId      = null;
+        $attributeValueId = null;
+        foreach ($product->getAttributes() as $attribute) {
+            if ($attribute->getAttributeCode() == $attributeName) {
+                $attributeId = $attribute->getId();
+            }
+        }
+        foreach ($configAttributeValues as $configAttributeValue) {
+            if ($configAttributeValue['value'] == $variation) {
+                $attributeValueId = $configAttributeValue['attr_id'];
+            }
+        }
+        if ($attributeId && $attributeValueId) {
+            $params['super_attribute'][$attributeId] = $attributeValueId;
+        }
+
+        return $params;
+    }
+
+    /**
+     * @param   array             $params
+     * @param   ProductInterface  $product
+     * @param   string            $variation
+     * @param   string            $optionName
+     * @param   array             $configOptionValues
+     *
+     * @return array
+     */
+    protected function _addSelectedProductOption(
+        array &$params,
+        ProductInterface $product,
+        $variation,
+        $optionName,
+        $configOptionValues
+    ) {
+        $optionId         = null;
+        $optionValueId    = null;
+        $optionValueTitle = null;
+        foreach ($configOptionValues as $configOptionValue) {
+            if ($configOptionValue['value'] == $variation) {
+                $optionValueTitle = $configOptionValue['option'];
+            }
+        }
+        foreach ($product->getOptions() as $option) {
+            if ($option->getDefaultTitle() == $optionName) {
+                $optionId = $option->getId();
+                foreach ($option->getValues() as $optionValue) {
+                    if ($optionValue->getTitle() == $optionValueTitle) {
+                        $optionValueId = $optionValue->getId();
+                    }
+                }
+            }
+        }
+        if ($optionId && $optionValueId) {
+            $params['options'][$optionId] = $optionValueId;
+        }
+
+        return $params;
+    }
+
+    /**
+     * @param   array             $params
+     * @param   ProductInterface  $product
+     * @param   string            $variation
+     *
+     * @return array
+     */
+    protected function _addSelectedProducColor(
+        array &$params,
+        ProductInterface $product,
+        $variation
+    ) {
         if ($product->getTypeId() == Configurable::TYPE_CODE) {
             return $this->_addSelectedProductAttribute(
                 $params,
@@ -432,74 +475,92 @@ class Save extends Action
     }
 
     /**
-     * @param array $params
-     * @param ProductInterface $product
-     * @param string $variation
-     * @param string $attributeName
-     * @param array $configAttributeValues
+     * @param   array  $params
+     *
      * @return array
      */
-    protected function _addSelectedProductAttribute(
-        array &$params,
-        ProductInterface $product,
-        $variation,
-        $attributeName,
-        $configAttributeValues
-    ) {
-        $attributeId          = null;
-        $attributeValueId     = null;
-        foreach ($product->getAttributes() as $attribute) {
-            if ($attribute->getAttributeCode() == $attributeName) {
-                $attributeId = $attribute->getId();
-            }
+    protected function prepareUpdateWishlistItemOptionsParams(array $params)
+    {
+        $redirectParams = array(
+            'controller' => 'wishlist/index/configure',
+            'params'     => array(
+                '_use_rewrite' => true,
+                'product_id'   => $this->getRequest()->getParam('product'),
+            ),
+        );
+
+        $redirectUrl = $this->_urlHelper->getRedirect(null, $redirectParams);
+        if ($redirectUrl) {
+            $params['redirect_url'] = $redirectUrl;
         }
-        foreach ($configAttributeValues as $configAttributeValue) {
-            if ($configAttributeValue['value'] == $variation) {
-                $attributeValueId = $configAttributeValue['attr_id'];
-            }
-        }
-        if ($attributeId && $attributeValueId) {
-            $params['super_attribute'][$attributeId] = $attributeValueId;
-        }
+
         return $params;
     }
 
     /**
-     * @param array $params
-     * @param ProductInterface $product
-     * @param string $variation
-     * @param string $optionName
-     * @param array $configOptionValues
+     * @param   array  $params
+     *
      * @return array
      */
-    protected function _addSelectedProductOption(
-        array &$params,
-        ProductInterface $product,
-        $variation,
-        $optionName,
-        $configOptionValues
-    ) {
-        $optionId = null;
-        $optionValueId = null;
-        $optionValueTitle = null;
-        foreach ($configOptionValues as $configOptionValue) {
-            if ($configOptionValue['value'] == $variation) {
-                $optionValueTitle = $configOptionValue['option'];
-            }
+    protected function prepareAddToWishlistParams(array $params)
+    {
+        $redirectParams = array(
+            'controller' => 'wishlist',
+            'params'     => array('_use_rewrite' => true),
+        );
+
+        $redirectUrl = $this->_urlHelper->getRedirect(null, $redirectParams);
+        if ($redirectUrl) {
+            $params['redirect_url'] = $redirectUrl;
         }
-        foreach ($product->getOptions() as $option) {
-            if ($option->getDefaultTitle() == $optionName) {
-                $optionId = $option->getId();
-                foreach ($option->getValues() as $optionValue) {
-                    if ($optionValue->getTitle() == $optionValueTitle) {
-                        $optionValueId = $optionValue->getId();
-                    }
+
+        return $params;
+    }
+
+    /**
+     * @param   ProductInterface  $product
+     * @param   array             $params
+     *
+     * @return array
+     */
+    public function prepareAddToCartParams(array $params = [])
+    {
+        $redirectUrl = $this->_urlHelper->getRedirect();
+        if ($redirectUrl) {
+            $params['redirect_url'] = $redirectUrl;
+        }
+        $params['form_key'] = $this->_formKey->getFormKey();
+
+        $formData
+            = $this->prepareFormData($this->_catalogSession->getSavedPrintformerOptions());
+        if (!empty($formData)) {
+            $params = array_merge($formData, $params);
+        }
+
+        return $params;
+    }
+
+    /**
+     * @param   array  $formData
+     *
+     * @return array
+     */
+    public function prepareFormData(array $formData)
+    {
+        $preparedFormData = [];
+
+        foreach ($formData as $key => $value) {
+            if ($key == 'options' || $key == 'super_attribute') {
+                foreach ($value as $k => $v) {
+                    $preparedFormData[$key][$k] = $v['value'];
                 }
             }
+
+            if ($key == 'qty') {
+                $preparedFormData[$key] = $value['value'];
+            }
         }
-        if ($optionId && $optionValueId) {
-            $params['options'][$optionId] = $optionValueId;
-        }
-        return $params;
+
+        return $preparedFormData;
     }
 }
