@@ -16,6 +16,7 @@ $config = $this->helper(\Rissc\Printformer\Helper\Config::class);
 <?php if ($config->isFullscreenButtonEnabled()): ?>
     <a href="#" class="printformer-fullscreen-toggle"></a>
 <?php endif; ?>
-<iframe src="<?php echo $block->getFrameUrl(); ?>" class="inner-frame" name="printformer-shopframe" id="printformer_shopframe_container">
+<iframe src="<?php echo $block->getFrameUrl(); ?>" class="inner-frame" name="printformer-shopframe"
+        title="<?php echo __('Printformer Shopframe'); ?>" id="printformer_shopframe_container">
     <?php echo __('Your browser doesn\'t support inline frames.'); ?>
 </iframe>

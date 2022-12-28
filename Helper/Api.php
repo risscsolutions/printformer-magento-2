@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Helper;
 
 use DateTimeImmutable;
+use Exception;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -296,7 +297,7 @@ class Api extends AbstractHelper
      * @param null $admin
      *
      * @return string
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws AlreadyExistsException
      */
     public function getUserIdentifier($customer = null, $admin = null)
     {
@@ -405,7 +406,7 @@ class Api extends AbstractHelper
                     ]
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_logger->error('Can\'t load customer data from $customer variable');
             $this->_logger->error($e->getMessage());
             $this->_logger->error($e->getTraceAsString());
@@ -573,7 +574,7 @@ class Api extends AbstractHelper
                         $this->_logger->debug('Upload status code: '.$response->getStatusCode().'for upload with draft id: '.$draftId);
                         return false;
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->_logger->debug('Upload failed for draft with draft-id: '.$draftId.' on file path order-id'.$filePathUrl.' for callback url: '.$callBackUrlWithQueryString);
                     $this->_logger->debug('Upload error message: '.$e->getMessage());
                 }
@@ -715,7 +716,7 @@ class Api extends AbstractHelper
      * @param string $colorVariation
      * @param array $availableVariants
      * @return DataObject|Draft
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function draftProcess(
         $draftHash = null,
