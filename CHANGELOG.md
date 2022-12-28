@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [100.8.71] - 13-12-2022
+### Fixed
+- Fix sales plugin checkout error - WEM-1895 & WEM-1972
+- Fix product type check error caused on php Version 7.4 - WEM-1760
+<br>
+
 ## [100.8.70] - 14-11-2022
 ### Fixed
 - After redirect to product on stage konfig / version buttons remains disabled - WEM-1866
