@@ -68,8 +68,8 @@ class Markdown extends Fieldset
      */
     protected function _getHeaderCommentHtml($element)
     {
-        $resultHtml = $this->getImageHtml();
-        $resultHtml .= $this->files->getHtmlFromMarkdownFile($this->getFilename());
-        return $element->getComment() ? '<div class="comment">' . $resultHtml . $element->getComment() . '</div>' : '';
+        $resultHtml = '<div style="float: right">'.$this->getImageHtml().'</div>';
+        $resultHtml .= '<div style="width: 75%">'.$this->files->getHtmlFromMarkdownFile($this->getFilename()) .'</div>';
+        return $element->getComment() ? '<div style="margin-top:30px">' . $resultHtml . $element->getComment() . '</div>' : '';
     }
 }

@@ -18,6 +18,7 @@
     <preference for="Magento\Bundle\Block\Checkout\Cart\Item\Renderer" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="Rissc\Printformer\Block\Swatches\Product\Renderer\Configurable" />
+    <preference for="Magento\Wishlist\Controller\Index\Add" type="Rissc\Printformer\Controller\Index\Add" />
 
     <!-- Plugins -->
     <type name="Magento\ConfigurableProduct\Block\Product\View\Type\Configurable">
@@ -84,6 +85,10 @@
     </type>
     <type name="Magento\Wishlist\Model\Wishlist">
         <plugin name="Rissc_Printformer_WishlistModel" type="Rissc\Printformer\Plugin\Wishlist\WishlistModel"
+                sortOrder="100"/>
+    </type>
+    <type name="Magento\Wishlist\Helper\Data">
+        <plugin name="Rissc_Printformer_WishlistAddToBlock" type="Rissc\Printformer\Plugin\Wishlist\Helper\Data"
                 sortOrder="100"/>
     </type>
     <type name="Magento\Checkout\Model\Cart">
