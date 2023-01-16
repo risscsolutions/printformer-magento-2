@@ -201,6 +201,7 @@
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
+                    <comment>By changing status from “yes” to “no” the saved drafts will be deleted on customers wishlist.</comment>
                 </field>
             </group>
             <group id="draft" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
