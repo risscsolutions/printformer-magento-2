@@ -141,13 +141,16 @@ class Cart extends AbstractHelper
                                     $productId = $draftItem->getData('product_id');
                                     if(!empty($productId) && !empty($pfProductId)) {
                                         if ($pfProductId == $printformerProduct->getId() && $productId == $printformerProduct->getProductId()) {
-                                            $draftField = $wishlistItem->getOptionByCode($this->productHelper::COLUMN_NAME_DRAFTID)->getValue();
-                                            if (!empty($draftField)) {
-                                                $draftHashArray = explode(',', $draftField);
-                                                foreach($draftHashArray as $draftHash) {
-                                                    $draft = $this->productHelper->getDraftById($draftHash);
-                                                    if ($draft->getPrintformerProductId() == $pfProductId && $draft->getProductId() == $productId) {
-                                                        $draftId = $draftHash;
+                                            $draftOption = $wishlistItem->getOptionByCode($this->productHelper::COLUMN_NAME_DRAFTID);
+                                            if (!empty($draftOption)) {
+                                                $draftField = $draftOption->getValue();
+                                                if (!empty($draftField)) {
+                                                    $draftHashArray = explode(',', $draftField);
+                                                    foreach($draftHashArray as $draftHash) {
+                                                        $draft = $this->productHelper->getDraftById($draftHash);
+                                                        if ($draft->getPrintformerProductId() == $pfProductId && $draft->getProductId() == $productId) {
+                                                            $draftId = $draftHash;
+                                                        }
                                                     }
                                                 }
                                             }

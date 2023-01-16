@@ -93,9 +93,9 @@ class Configurable
      */
     public function afterGetJsonConfig(Subject $subject, $result)
     {
+        $config = $this->decoder->decode($result);
+        $config['filterConfigurableProduct'] = $this->configHelper->filterForConfigurableProduct();
         if ($this->configHelper->isUseImagePreview()) {
-            $config = $this->decoder->decode($result);
-            $config['filterConfigurableProduct'] = $this->configHelper->filterForConfigurableProduct();
             foreach ($config['images'] as $productId => $image) {
                 $product = $this->productRepository->getById($productId);
                 $simpleProductImages = $product->getMediaGalleryImages();
@@ -122,8 +122,10 @@ class Configurable
                             $buyRequestSuperAttribute = $buyRequest->getData('super_attribute');
                             if (!empty($buyRequestSuperAttribute)) {
                                 $childProductFromBuyRequest = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute, $parentProductId);
-                                if ($childProductFromBuyRequest->getId() != $productId) {
-                                    $draftIds = null;
+                                if (!empty($childProductFromBuyRequest)) {
+                                    if ($childProductFromBuyRequest->getId() != $productId) {
+                                        $draftIds = null;
+                                    }
                                 }
                             }
                         }
@@ -175,8 +177,9 @@ class Configurable
                     }
                 }
             }
-            $result = $this->encoder->encode($config);
         }
+
+        $result = $this->encoder->encode($config);
 
         return $result;
     }

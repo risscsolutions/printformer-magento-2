@@ -59,6 +59,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
     const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
+    const XML_PATH_CONFIG_USE_DRAFT_IN_WISHLIST     = 'printformer/general/use_draft_in_wishlist';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
     const XML_PATH_CONFIG_FORMAT_NOTICE_TEXT        = 'printformer/format/notice_text';
@@ -158,6 +159,24 @@ class Config extends AbstractHelper
         } catch (LocalizedException $e) {
         }
         return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public function searchForStoreId() : int
+    {
+        $storeId = $this->getStoreIdFromRequest();
+
+        if (!is_numeric($storeId)) {
+            $storeId = $this->getStoreIdFromStoreManager();
+        }
+
+        if (!is_numeric($storeId)) {
+            $storeId = Store::DEFAULT_STORE_ID;
+        }
+
+        return $storeId;
     }
 
     /**
@@ -663,9 +682,17 @@ class Config extends AbstractHelper
      */
     public function filterForConfigurableProduct($storeId = false, $websiteId = false)
     {
-        return true;
-        //todo: fix for future (some issues found with other config product_image_preview=no)
-//        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function useDraftInWishlist($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_USE_DRAFT_IN_WISHLIST, true, $storeId, $websiteId);
     }
 
     /**
