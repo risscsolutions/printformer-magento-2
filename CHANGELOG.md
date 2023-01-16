@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 <br><br>
 
-## [100.9.1] 16-01-2023
+## [100.9.2] 16-01-2023
 
 ### Added
 - Adding logic for simple products to assign printformer templates. The setting to activate is
