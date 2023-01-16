@@ -116,17 +116,6 @@ class Product extends AbstractHelper
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
 
-        if ($defaultStoreTemplatesCanBeUsedOnFrontend) {
-            $defaultStoreCanBeUsed = $this->configHelper->defaultStoreTemplatesCanBeUsed($storeId);
-            if ($defaultStoreCanBeUsed) {
-                $select->where('store_id IN ('.STORE::DEFAULT_STORE_ID.', ?)', intval($storeId));
-            } else {
-                $select->where('store_id = ?', intval($storeId));
-            }
-        } else {
-            $select->where('store_id = ?', intval($storeId));
-        }
-
         if (!empty($childProductIds)){
             array_unshift($childProductIds, $productId);
             $select->where("product_id IN (" . implode(',', $childProductIds) . ")");
@@ -134,7 +123,21 @@ class Product extends AbstractHelper
             $select->where('product_id = ?', intval($productId));
         }
 
-        return $connection->fetchAll($select);
+        $selectDefault = clone $select;
+        $select->where('store_id = ?', intval($storeId));
+        $resultTemplates = $connection->fetchAll($select);
+
+        if ($defaultStoreTemplatesCanBeUsedOnFrontend) {
+            if (empty($resultTemplates)) {
+                $defaultStoreCanBeUsed = $this->configHelper->defaultStoreTemplatesCanBeUsed($storeId);
+                if($defaultStoreCanBeUsed) {
+                    $selectDefault->where('store_id = ?', intval(STORE::DEFAULT_STORE_ID));
+                    $resultTemplates = $connection->fetchAll($selectDefault);
+                }
+            }
+        }
+
+        return $resultTemplates;
     }
 
     /**
