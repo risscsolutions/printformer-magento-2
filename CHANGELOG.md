@@ -11,8 +11,9 @@ All notable changes to this project will be documented in this file.
   "Use Configurable Product filter to get Printformer Products" = "no" - default is yes/disabled (WEM-1690)
 - Added config "Save draft on wishlist" and logic to add drafts into wishlist-item
   and move between cart-item and wishlist-item (WEM-1874, WEM-1690, WEM-1940)
-- Added functionality with new setting search_templates_on_default_store_config to load default templates, if it has 
-  permission over a new setting and if api keys in specified store and the default store are identical (WEM-1958)
+- Added functionality with new setting use_all_stores_default_templates_if_no_templates_assigned_on_store to load 
+  default templates, if it has  permission over a new setting and if api keys in specified store and the default store 
+  are identical (WEM-1958)
 
 ### Fixed
 - Multiple printformer products on same product can be assigned and used in checkout process correctly (WEM-1690)
