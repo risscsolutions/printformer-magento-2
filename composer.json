@@ -2,7 +2,7 @@
     "name": "rissc/module-printformer",
     "description": "Rissc Printformer Magento 2 module",
     "type": "magento2-module",
-    "version": "100.9.2",
+    "version": "100.9.3",
     "require": {
         "lcobucci/jwt": "^4.1",
         "guzzlehttp/guzzle": "^7.4",
