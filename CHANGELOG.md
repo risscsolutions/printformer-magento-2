@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Fixed issue where on older orders without child-product, reorder -> click on cart-item failed with error message
+  (WEM-1783)
 
 <br><br>
 
