@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 <br><br>
+## [100.9.4] 18-01-2023
+
+### Fixed
+- Fixed compartibility issue for php 7.4
+  (WEM-1800)
+
+<br><br>
 
 ## [100.9.3] 17-01-2023
 
