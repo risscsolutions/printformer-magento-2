@@ -61,13 +61,13 @@ class WishlistModel
 
     /**
      * @param Wishlist $subject
-     * @param int|Product $product
+     * @param $product
      * @param null $buyRequest
      * @param bool $forciblySetQty
      */
     public function beforeAddNewItem(
         Wishlist $subject,
-        int|ProductModel $product,
+        $product,
         $buyRequest = null,
         $forciblySetQty = false
     ) {

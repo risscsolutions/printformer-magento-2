@@ -4,8 +4,8 @@ namespace Rissc\Printformer\Plugin\ConfigurableProduct\Block\Product\View\Type;
 
 use Magento\ConfigurableProduct\Block\Product\View\Type\Configurable as Subject;
 use Magento\Framework\App\RequestInterface;
-use \Magento\Framework\Json\EncoderInterface;
-use \Magento\Framework\Json\DecoderInterface;
+use Magento\Framework\Json\EncoderInterface;
+use Magento\Framework\Json\DecoderInterface;
 use Magento\Store\Model\StoreManager;
 use Rissc\Printformer\Block\Catalog\Product\View\Printformer as PrintformerBlock;
 use Rissc\Printformer\Helper\ConfigurableProduct;
@@ -146,7 +146,7 @@ class Configurable
                             $buyRequestSuperAttribute = $buyRequest->getData('super_attribute');
                             if (!empty($buyRequestSuperAttribute)) {
                                 $childProductFromBuyRequest = $this->configurableProductHelper->getChildProductBySuperAttributes($buyRequestSuperAttribute, $parentProductId);
-                                if ($childProductFromBuyRequest->getId() != $productId) {
+                                if (isset($childProductFromBuyRequest) && $childProductFromBuyRequest->getId() != $productId) {
                                     $draftIds = null;
                                 }
                             }
