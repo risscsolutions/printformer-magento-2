@@ -1,0 +1,22 @@
+on:
+  push:
+    branches: [ '*' ]
+
+jobs:
+  git-info:
+    name: Update git information
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run git-info action
+        uses: ./.github/actions/git-info
+
+  release-please:
+    name: Run release-please
+    runs-on: ubuntu-latest
+    needs: git-info
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run release-please action
+        uses: ./.github/actions/release-please

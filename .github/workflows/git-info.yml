@@ -1,6 +1,8 @@
-name: Update Git Information
+name: update-git-information
+
 on:
   push:
+
 jobs:
   update-git-information:
     runs-on: ubuntu-latest
@@ -16,13 +18,11 @@ jobs:
             -w /app \
             composer install --no-interaction
           echo "branch,commit_hash,commit_date" > git-information.csv
-          git --no-pager log -1 --format="%d" | grep -qE "\((HEAD -> )?(main|master)(, .+)?\)" && \
-            echo "$(git rev-parse --abbrev-ref HEAD),$(git rev-parse HEAD),$(git log -1 --format=%cd --date=format:'%Y-%m-%d %H:%M:%S')" >> git-information.csv
+          branch_name=$(echo ${GITHUB_REF#refs/heads/})
+          echo "$branch_name,$(git rev-parse HEAD),$(git log -1 --format=%cd --date=format:'%Y-%m-%d %H:%M:%S')" >> git-information.csv
           chmod 644 git-information.csv
-      - name: Commit Git Information
-        run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add git-information.csv
-          git commit --author "GitHub Action <action@github.com>" -m "Update Git Information"
+          git commit --author "GitHub Action <action@github.com>" -m "chore(Github-Autocommit-Action): update git-information.csv with latest information"
           git push --force-with-lease

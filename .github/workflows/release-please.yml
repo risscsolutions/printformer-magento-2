@@ -1,4 +1,4 @@
-name: release-please
+name: run-release-please
 
 on:
   push:
