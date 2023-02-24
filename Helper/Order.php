@@ -232,7 +232,7 @@ class Order extends AbstractHelper
                                     $item->getResource()->save($item);
 
                                     if (isset($newDraftIds)) {
-                                        $this->uploadPdf($newDraftIds, $linkFile);
+                                        $this->apiHelper->uploadPdf($newDraftIds, $linkFile);
                                     }
                                 }
                             }
