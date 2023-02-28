@@ -8,6 +8,7 @@ use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Zend_Db_Exception;
 
 class UpgradeSchema implements UpgradeSchemaInterface
 {
@@ -24,7 +25,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
     /**
      * @param SchemaSetupInterface $setup
      * @param ModuleContextInterface $context
-     * @throws \Zend_Db_Exception
+     * @throws Zend_Db_Exception
      */
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
@@ -387,7 +388,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
         if(version_compare($context->getVersion(), '100.3.13', '<')) {
             $tableName = $connection->getTableName(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT);
-            $columnName = 'master_id';
+            $columnName = 'identifier';
             if(!$connection->tableColumnExists($tableName, $columnName)) {
                 $connection->addColumn(
                     $tableName,
@@ -628,6 +629,73 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         ],
                         'comment' => 'Updated At'
                     ]
+                );
+            }
+        }
+
+        if(version_compare($context->getVersion(), '100.9.6', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_PRODUCT);
+            $columnName = 'identifier';
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_TEXT,
+                        'size' => 255,
+                        'nullable' => false,
+                        'comment' => 'Identifier'
+                    ]
+                );
+
+                $connection->addIndex(
+                    $tableName,
+                    $setup->getIdxName($table, [$columnName]),
+                    [$columnName]
+                );
+
+                $connection->addIndex(
+                    $tableName,
+                    $setup->getIdxName($tableName, ['intent']),
+                    ['intent']
+                );
+
+                $setup->getConnection()->addIndex(
+                    $tableName,
+                    $setup->getIdxName($tableName, ['store_id']),
+                    ['store_id']
+                );
+
+                $setup->getConnection()->addIndex(
+                    $tableName,
+                    $setup->getIdxName($tableName, ['sku']),
+                    ['sku']
+                );
+            }
+
+            $tableName = $connection->getTableName(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT);
+            if(!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_TEXT,
+                        'size' => 255,
+                        'nullable' => false,
+                        'comment' => 'Identifier'
+                    ]
+                );
+
+                $connection->addIndex(
+                    $tableName,
+                    $setup->getIdxName($table, [$columnName]),
+                    [$columnName]
+                );
+
+                $setup->getConnection()->addIndex(
+                    $tableName,
+                    $setup->getIdxName($tableName, ['intent']),
+                    ['intent']
                 );
             }
         }

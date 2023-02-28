@@ -11,6 +11,7 @@ use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\UpgradeDataInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
+use Rissc\Printformer\Helper\Product as ProductHelper;
 use Rissc\Printformer\Helper\UpgradeData as UpgradeDataHelper;
 use Zend_Db_Statement_Exception;
 
@@ -22,12 +23,24 @@ class UpgradeData implements UpgradeDataInterface
     private $eavSetupFactory;
 
     /**
-     * Category setup factory
-     *
      * @var CategorySetupFactory
      */
     private $categorySetupFactory;
+
+    /**
+     * @var UpgradeDataHelper
+     */
     private UpgradeDataHelper $upgradeDataHelper;
+
+    /**
+     * @var Product
+     */
+    private $product;
+
+    /**
+     * @var ProductHelper 
+     */
+    private ProductHelper $productHelper;
 
     /**
      * UpgradeData constructor.
@@ -37,11 +50,15 @@ class UpgradeData implements UpgradeDataInterface
     public function __construct(
         EavSetupFactory $eavSetupFactory,
         CategorySetupFactory $categorySetupFactory,
-        UpgradeDataHelper $upgradeDataHelper
+        UpgradeDataHelper $upgradeDataHelper,
+        Product $product,
+        ProductHelper $productHelper
     ) {
         $this->eavSetupFactory = $eavSetupFactory;
         $this->categorySetupFactory = $categorySetupFactory;
         $this->upgradeDataHelper = $upgradeDataHelper;
+        $this->product = $product;
+        $this->productHelper = $productHelper;
     }
 
     /**
@@ -398,6 +415,13 @@ class UpgradeData implements UpgradeDataInterface
                     'used_in_product_listing' => true
                 ]
             );
+        }
+
+        if(version_compare($context->getVersion(), '100.9.6', '<')) {
+            //get all products from api-call into lastUpdatedList
+            $lastUpdatedList = $this->product->getProductsFromPrintformerApi(false, false);
+            //update identifier by response-array
+            $this->productHelper->updateIdentifierByResponseArray($lastUpdatedList);
         }
 
         $setup->endSetup();

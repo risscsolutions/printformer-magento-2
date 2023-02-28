@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Helper;
 
 use DateTimeImmutable;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
@@ -309,7 +310,7 @@ class Api extends AbstractHelper
      * @param null $admin
      *
      * @return string
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws AlreadyExistsException
      */
     public function getUserIdentifier($customer = null, $admin = null)
     {
@@ -418,7 +419,7 @@ class Api extends AbstractHelper
                     ]
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_logger->error('Can\'t load customer data from $customer variable');
             $this->_logger->error($e->getMessage());
             $this->_logger->error($e->getTraceAsString());
@@ -433,13 +434,13 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param int    $masterId
+     * @param int    $identifier
      * @param string $userIdentifier
      * @param array  $params
      *
      * @return mixed
      */
-    public function createDraftHash($masterId, $userIdentifier, $storeId, $params = [])
+    public function createDraftHash($identifier, $userIdentifier, $storeId, $params = [])
     {
         $url = $this->apiUrl()->getDraft();
 
@@ -448,8 +449,8 @@ class Api extends AbstractHelper
                 'user_identifier' => $userIdentifier
             ]
         ];
-        if(!empty($masterId)){
-            $requestData['json']['master_id'] = $masterId;
+        if(!empty($identifier)){
+            $requestData['json']['templateIdentifier'] = $identifier;
         }
         $params = $this->mergeAdditionalParamsForApiCall($params);
         foreach($params as $key => $value) {
@@ -621,7 +622,7 @@ class Api extends AbstractHelper
                         $this->_logger->debug('Upload status code: '.$response->getStatusCode().'for upload with draft id: '.$draftId);
                         return false;
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->_logger->debug('Upload failed for draft with draft-id: '.$draftId.' on file path order-id'.$filePathUrl.' for callback url: '.$callBackUrlWithQueryString);
                     $this->_logger->debug('Upload error message: '.$e->getMessage());
                 }
@@ -753,7 +754,7 @@ class Api extends AbstractHelper
 
     /**
      * @param string $draftHash
-     * @param int $masterId
+     * @param int $identifier
      * @param int $productId
      * @param string $intent
      * @param string $sessionUniqueId
@@ -763,11 +764,11 @@ class Api extends AbstractHelper
      * @param string $colorVariation
      * @param array $availableVariants
      * @return DataObject|Draft
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function draftProcess(
         $draftHash = null,
-        $masterId = null,
+        $identifier = null,
         $productId = null,
         $intent = null,
         $sessionUniqueId = null,
@@ -794,7 +795,7 @@ class Api extends AbstractHelper
 
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $storeId, $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -855,7 +856,7 @@ class Api extends AbstractHelper
 
     /**
      * @param null $draftHash
-     * @param int $masterId
+     * @param int $identifier
      * @param null $productId
      * @param null $sessionUniqueId
      * @param null $customerId
@@ -869,7 +870,7 @@ class Api extends AbstractHelper
      */
     public function uploadDraftProcess(
         $draftHash = null,
-        $masterId = 0,
+        $identifier = 0,
         $productId = null,
         $sessionUniqueId = null,
         $customerId = null,
@@ -901,7 +902,7 @@ class Api extends AbstractHelper
                 ];
 
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
-                $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $storeId, $dataParams);
+                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $storeId, $dataParams);
 
                 $process->addData([
                     'draft_id' => $draftHash,

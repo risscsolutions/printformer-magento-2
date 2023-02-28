@@ -256,7 +256,7 @@ define([
                 ButtonText = $t('View upload');
             }
 
-            $(this.editBtn).attr('data-pf-masterid', this.options.masterId);
+            $(this.editBtn).attr('data-pf-identifier', this.options.identifier);
             $(this.editBtn).attr('data-pf-type', draftType);
             $(this.editBtn).attr('data-pf-intent', editDraftIntent);
 
