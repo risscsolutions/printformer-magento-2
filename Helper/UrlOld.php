@@ -2,11 +2,14 @@
 
 namespace Rissc\Printformer\Helper;
 
-use \Rissc\Printformer\Model\Config\Source\Redirect;
-use \Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\UrlInterface;
+use Rissc\Printformer\Model\Config\Source\Redirect;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 
-class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
+class UrlOld extends AbstractHelper
 {
     const ROLE_USER  = '0';
     const ROLE_ADMIN = '1';
@@ -27,12 +30,12 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
     const URI_CUSTOMER_PDF              = 'api-ext/files/draft/';
 
     /**
-     * @var \Magento\Framework\UrlInterface
+     * @var UrlInterface
      */
     protected $url;
 
     /**
-     * @var \Rissc\Printformer\Helper\Config
+     * @var Config
      */
     protected $config;
 
@@ -41,13 +44,13 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
     protected $printformerUrl;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
+     * @param Context $context
      * @param Config $config
      */
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
+        Context $context,
         ScopeConfigInterface $scopeConfig,
-        \Rissc\Printformer\Helper\Config $config
+        Config $config
     ) {
         parent::__construct($context);
         $this->url = $context->getUrlBuilder();
@@ -158,17 +161,17 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * @param       $productId
-     * @param       $masterId
+     * @param       $identifier
      * @param null  $intent
      * @param null  $user
      * @param array $editParams
      *
      * @return string
      */
-    public function getEditorUrl($productId, $masterId, $intent = null, $user = null, $editParams = [])
+    public function getEditorUrl($productId, $identifier, $intent = null, $user = null, $editParams = [])
     {
         $paramsArray = [
-            'master_id' => $masterId,
+            'identifier' => $identifier,
             'product_id' => $productId,
             'intent' => $intent,
             'user' => $user
@@ -346,7 +349,7 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param \Magento\Catalog\Api\Data\ProductInterface $product
+     * @param ProductInterface $product
      * @param array $redirectParams
      * @return string
      */

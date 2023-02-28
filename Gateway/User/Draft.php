@@ -23,6 +23,8 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Config;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Zend_Http_Client;
+use Zend_Http_Response;
 
 class Draft
 {
@@ -307,12 +309,12 @@ class Draft
             ->getDraftDelete($draftId);
 
         $createdEntry = $this->_logHelper->createPostEntry($url);
-        /** @var \Zend_Http_Response $response */
+        /** @var Zend_Http_Response $response */
         $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
-            ->request(\Zend_Http_Client::POST);
+            ->request(Zend_Http_Client::POST);
         $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
 
         if (!$response->isSuccessful()) {
@@ -336,11 +338,11 @@ class Draft
     }
 
     /**
-     * @param $masterId
+     * @param $identifier
      * @param string $intent
      * @return null|string
      */
-    public function createDraft($masterId, $intent = null, $userIdentifier = null)
+    public function createDraft($identifier, $intent = null, $userIdentifier = null)
     {
         $url = $this->_urlHelper
             ->getDraft();
@@ -351,7 +353,7 @@ class Draft
 
         $requestData = [
             'json' => [
-                'master_id' => $masterId
+                'identifier' => $identifier
             ]
         ];
 
@@ -362,7 +364,7 @@ class Draft
         }
 
         $historyData['request_data'] = json_encode($requestData);
-        $historyData['draft_id'] = $masterId;
+        $historyData['draft_id'] = $identifier;
 
         $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
         $response = $this->_httpClient->post($url, $requestData);
@@ -400,12 +402,12 @@ class Draft
             ->getDraft($draftId);
 
         $createdEntry = $this->_logHelper->createPostEntry($url);
-        /** @var \Zend_Http_Response $response */
+        /** @var Zend_Http_Response $response */
         $response = $this->_httpClientFactory
             ->create()
             ->setUri((string)$url)
             ->setConfig(['timeout' => 30])
-            ->request(\Zend_Http_Client::POST);
+            ->request(Zend_Http_Client::POST);
         $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
 
         if (!$response->isSuccessful()) {

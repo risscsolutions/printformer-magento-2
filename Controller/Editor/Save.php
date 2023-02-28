@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Controller\Editor;
 
+use Exception;
 use Magento\Framework\App\Action\Context;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Session;
@@ -117,8 +118,8 @@ class Save extends Action
 
     public function execute()
     {
-        $masterId = $this->getRequest()->getParam('master_id');
-        $this->_catalogSession->setPrintformerMasterid($masterId);
+        $identifier = $this->getRequest()->getParam('identifier');
+        $this->_catalogSession->setPrintformerIdentifier($identifier);
 
         $result = null;
 
@@ -226,7 +227,7 @@ class Save extends Action
                     $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($this->_urlHelper->getRedirect($product) . (!empty($requestParams) ? '?' . implode('&', $requestParams) : ''));
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_logger->critical($e);
             //@todo show some message to customer?
         }
