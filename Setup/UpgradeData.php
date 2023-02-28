@@ -11,6 +11,8 @@ use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\UpgradeDataInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
+use Rissc\Printformer\Helper\Product as ProductHelper;
+use Zend_Db_Statement_Exception;
 
 class UpgradeData implements UpgradeDataInterface
 {
@@ -25,6 +27,11 @@ class UpgradeData implements UpgradeDataInterface
      * @var CategorySetupFactory
      */
     private $categorySetupFactory;
+    /**
+     * @var Product
+     */
+    private $product;
+    private ProductHelper $productHelper;
 
     /**
      * UpgradeData constructor.
@@ -33,16 +40,20 @@ class UpgradeData implements UpgradeDataInterface
      */
     public function __construct(
         EavSetupFactory $eavSetupFactory,
-        CategorySetupFactory $categorySetupFactory
+        CategorySetupFactory $categorySetupFactory,
+        Product $product,
+        ProductHelper $productHelper
     ) {
         $this->eavSetupFactory = $eavSetupFactory;
         $this->categorySetupFactory = $categorySetupFactory;
+        $this->product = $product;
+        $this->productHelper = $productHelper;
     }
 
     /**
      * @param ModuleDataSetupInterface $setup
      * @param ModuleContextInterface $context
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
@@ -349,7 +360,7 @@ class UpgradeData implements UpgradeDataInterface
                     'input' => 'text',
                     'class' => '',
                     'source' => '',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'global' => ScopedAttributeInterface::SCOPE_GLOBAL,
                     'visible' => false,
                     'required' => true,
                     'user_defined' => false,
@@ -379,7 +390,7 @@ class UpgradeData implements UpgradeDataInterface
                     'input' => 'text',
                     'class' => '',
                     'source' => '',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'global' => ScopedAttributeInterface::SCOPE_GLOBAL,
                     'visible' => false,
                     'required' => true,
                     'user_defined' => false,
@@ -393,6 +404,13 @@ class UpgradeData implements UpgradeDataInterface
                     'used_in_product_listing' => true
                 ]
             );
+        }
+
+        if(version_compare($context->getVersion(), '100.9.6', '<')) {
+            //get all products from api-call into lastUpdatedList
+            $lastUpdatedList = $this->product->getProductsFromPrintformerApi(false, false);
+            //update identifier by response-array
+            $this->productHelper->updateIdentifierByResponseArray($lastUpdatedList);
         }
 
         $setup->endSetup();

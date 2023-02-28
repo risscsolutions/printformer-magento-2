@@ -20,6 +20,7 @@ use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Setup\UpgradeSchema;
 use Magento\Store\Model\Store;
 
 class Product extends AbstractHelper
@@ -167,15 +168,15 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param string $masterId
+     * @param string $identifier
      * @return array
      */
-    public function getCatalogProductPrintformerProductsByMasterId($masterId)
+    public function getCatalogProductPrintformerProductsByIdentifier($identifier)
     {
         $connection = $this->resourceConnection->getConnection();
         $select = $connection->select()
             ->from('catalog_product_printformer_product')
-            ->where('master_id = ?', $masterId);
+            ->where('identifier = ?', $identifier);
         return $connection->fetchAll($select);
     }
 
@@ -218,8 +219,7 @@ class Product extends AbstractHelper
         //Todo: function can maybe merged with getCatalogProductPrintformerProductsData for better performance
         $catalogProductPrintformerProducts = [];
 
-        $childProductIds = [];
-        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId, $childProductIds) as $i => $row) {
+        foreach($this->getCatalogProductPrintformerProductsData($productId, $storeId) as $i => $row) {
             $catalogProductPrintformerProducts[$i] = new DataObject();
             $catalogProductPrintformerProducts[$i]->setCatalogProductPrintformerProduct(new DataObject($row));
 
@@ -447,5 +447,94 @@ class Product extends AbstractHelper
     {
         $childProduct = $this->configurableProduct->getProductByAttributes($superAttributes, $configurableProduct);
         return $childProduct;
+    }
+
+    /**
+     * Update identifiers for printformer_product and catalog_product_printformer_product relations table entry's
+     * @param array $lastUpdatedList
+     * @return void
+     */
+    public function updateIdentifierByResponseArray(array $lastUpdatedList)
+    {
+        //add ids for outdated entry's into a outdatedList
+        $connection = $this->resourceConnection->getConnection();
+        $select = $connection->select()
+            ->from(
+                ['pp' => InstallSchema::TABLE_NAME_PRODUCT],
+                ['id', 'identifier']
+            )
+            ->joinLeft(
+                ['cpp' => UpgradeSchema::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT],
+                'cpp.printformer_product_id = pp.id',
+                ['identifier as cpp_identifier']
+            )
+            ->columns([
+                          'pp_id' => 'pp.id',
+                          'pp_name' => 'pp.name',
+                          'pp_store_id' => 'pp.store_id',
+                          'pp_intent' => 'pp.intent',
+                          'pp_master_id' => 'pp.master_id',
+                          'pp_identifier' => 'pp.identifier',
+                          'cpp_id' => 'cpp.id',
+                          'cpp_printformer_product_id' => 'cpp.printformer_product_id',
+                          'cpp_product_id' => 'cpp.product_id',
+                          'cpp_store_id' => 'cpp.store_id',
+                          'cpp_intent' => 'cpp.intent',
+                          'cpp_master_id' => 'cpp.master_id',
+                          'cpp_identifier' => 'cpp.identifier'])
+            ->where('pp.identifier = "" OR cpp.identifier = ""');
+        $outdatedList = $connection->fetchAll($select);
+
+        //search for update-information in lastUpdatedList
+        $updates = [];
+        $updates['cpp'] = [];
+        $updates['pp'] = [];
+        if(!empty($outdatedList)){
+            // search for update-information in lastUpdatedList
+            foreach ($outdatedList as $outdatedEntry) {
+                foreach ($lastUpdatedList['data'] as $product) {
+                    if (!empty($outdatedEntry['pp_id'])) {
+                        if (!empty($outdatedEntry['pp_master_id']) && ($outdatedEntry['pp_master_id'] == $product['id'])) {
+                            $updates['pp'][] = ['table' => 'printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['pp_id']];
+                        } elseif (!empty($outdatedEntry['pp_name']) && ($outdatedEntry['pp_name'] == $product['name'])) {
+                            $updates['pp'][] = ['table' => 'printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['pp_id']];
+                        }
+                    }
+
+                    if (!empty($outdatedEntry['cpp_id'])) {
+                        if (!empty($outdatedEntry['cpp_master_id']) && ($outdatedEntry['cpp_master_id'] == $product['id'])) {
+                            $updates['cpp'][] = ['table' => 'catalog_product_printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['cpp_id']];
+                        } elseif (!empty($outdatedEntry['pp_name']) && ($outdatedEntry['pp_name'] == $product['name']) ) {
+                            $updates['cpp'][] = ['table' => 'catalog_product_printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['cpp_id']];
+                        }
+                    }
+                }
+            }
+        }
+
+        //if match, update entries in printformer_product and catalog_product_printformer_product with latest identifier information
+        //prepare the SQL statements for updating the tables
+        $connection->beginTransaction();
+        $updatePrintformerStatement = $connection->prepare("UPDATE ".InstallSchema::TABLE_NAME_PRODUCT." SET identifier = :identifier, updated_at = CURTIME() WHERE id = :id");
+        $updateProductStatement = $connection->prepare("UPDATE ".UpgradeSchema::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT." SET identifier = :identifier WHERE id = :id");
+        try {
+            foreach ($updates['pp'] as $update) {
+                $updatePrintformerStatement->execute([
+                    'identifier' => $update['identifier'],
+                    'id' => $update['id']
+                ]);
+            }
+            foreach ($updates['cpp'] as $update) {
+                $updateProductStatement->execute([
+                    'identifier' => $update['identifier'],
+                    'id' => $update['id']
+                ]);
+            }
+            // commit the transaction if all updates were successful
+            $connection->commit();
+        } catch (Exception $e) {
+            // rollback the transaction and log the error if an update failed
+            $connection->rollBack();
+        }
     }
 }

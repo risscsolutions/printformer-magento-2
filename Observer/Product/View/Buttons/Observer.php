@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Observer\Product\View\Buttons;
 
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\DataObject;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Catalog\Model\Product;
@@ -50,22 +51,26 @@ class Observer implements ObserverInterface
 
         $storeId = (int) $this->_request->getParam('store', 0);
 
-        $pfProduct = $this->getPfProductByMasterId($product->getPrintformerProduct(), $storeId);
-        if($pfProduct->getId()) {
-            $attribute = $product->getResource()->getAttribute('printformer_capabilities');
+        $pfProduct = $product->getPrintformerProduct();
+        if (!empty($pfProduct)) {
+            $identifier = $pfProduct->getIdentifier();
+            if (!empty($identifier)) {
+                $pfProduct = $this->getPfProductByIdentifier($identifier, $storeId);
+                if($pfProduct->getId()) {
+                    $attribute = $product->getResource()->getAttribute('printformer_capabilities');
 
-            if ($attribute->getId()) {
-                $currentlySelectedValueFromMultiselect = $attribute->getFrontend()->getValue($product);
-                $multiselectAsArray = explode(',', $currentlySelectedValueFromMultiselect ?? '');
-                $allOptionIds = [];
-                foreach ($multiselectAsArray as $singleMultiselectItem) {
-                    $allOptionIds[] = $attribute->getSource()->getOptionId(ltrim($singleMultiselectItem));
-                }
+                    if ($attribute->getId()) {
+                        $currentlySelectedValueFromMultiselect = $attribute->getFrontend()->getValue($product);
+                        $multiselectAsArray = explode(',', $currentlySelectedValueFromMultiselect ?? '');
+                        $allOptionIds = [];
+                        foreach ($multiselectAsArray as $singleMultiselectItem) {
+                            $allOptionIds[] = $attribute->getSource()->getOptionId(ltrim($singleMultiselectItem));
+                        }
 
-                $connection = $product->getResource()->getConnection();
-                $table = $connection->getTableName('catalog_product_entity_text');
+                        $connection = $product->getResource()->getConnection();
+                        $table = $connection->getTableName('catalog_product_entity_text');
 
-                $qry = "
+                        $qry = "
                     UPDATE `$table`
                         SET
                             `value` = ?
@@ -76,22 +81,24 @@ class Observer implements ObserverInterface
                         AND
                             `entity_id` = ?";
 
-                $connection->query($qry, [implode(',', $allOptionIds), $attribute->getId(), $storeId, $product->getId()]);
+                        $connection->query($qry, [implode(',', $allOptionIds), $attribute->getId(), $storeId, $product->getId()]);
+                    }
+                }
             }
         }
     }
 
     /**
-     * @param string $masterId
+     * @param string $identifier
      * @param int $storeId
-     * @return \Magento\Framework\DataObject|PfProduct
+     * @return DataObject|PfProduct
      */
-    protected function getPfProductByMasterId($masterId, $storeId)
+    protected function getPfProductByIdentifier($identifier, $storeId)
     {
         /** @var PfProduct $pfProduct */
         $pfProduct = $this->_pfProductFactory->create();
         $pfProductCollection = $pfProduct->getCollection()
-            ->addFieldToFilter('master_id', ['eq' => $masterId])
+            ->addFieldToFilter('identifier', ['eq' => $identifier])
             ->addFieldToFilter('store_id', ['eq' => $storeId]);
 
         if($pfProductCollection->count() > 0) {
