@@ -2,3 +2,7 @@
 .project
 .settings
 .DS_Store
+./idea/*
+node_modules/*
+/.husky/*
+/package-lock.json
