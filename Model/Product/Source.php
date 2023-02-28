@@ -1,25 +1,29 @@
 <?php
 namespace Rissc\Printformer\Model\Product;
 
-class Source extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
+use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
+use Magento\Store\Model\StoreManagerInterface;
+use Rissc\Printformer\Model\ProductFactory;
+
+class Source extends AbstractSource
 {
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $storeManager;
 
     /**
-     * @var \Rissc\Printformer\Model\ProductFactory
+     * @var ProductFactory
      */
     protected $printformerProductFactory;
 
     /**
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Rissc\Printformer\Model\ProductFactory $printformerProductFactory
+     * @param StoreManagerInterface $storeManager
+     * @param ProductFactory $printformerProductFactory
      */
     public function __construct(
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Rissc\Printformer\Model\ProductFactory $printformerProductFactory
+        StoreManagerInterface $storeManager,
+        ProductFactory $printformerProductFactory
     ) {
         $this->storeManager = $storeManager;
         $this->printformerProductFactory = $printformerProductFactory;
@@ -51,7 +55,7 @@ class Source extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
             foreach ($products as $product) {
                 $this->_options[] = array(
                     'label' => $product->getName(),
-                    'value' => $product->getMasterId(),
+                    'value' => $product->getIdentifier(),
                 );
             }
         }

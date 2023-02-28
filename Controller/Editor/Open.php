@@ -2,12 +2,14 @@
 
 namespace Rissc\Printformer\Controller\Editor;
 
+use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Phrase;
 use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Catalog\Model\Product;
@@ -199,7 +201,7 @@ class Open extends Action
         $params = $this->_getParams();
         $productId = $this->_getParam('product_id');
         $selectedProductId = $this->_getParam('selected_product_id');
-        $masterId = $this->_getParam('master_id');
+        $identifier = $this->_getParam('identifier');
         $intent = $this->_getParam('intent');
         $printformerDraft = $this->_getParam('draft_id');
         $sessionUniqueId = $this->_getParam('session_id');
@@ -252,7 +254,7 @@ class Open extends Action
          */
         $draftProcess = $this->_apiHelper->draftProcess(
             $printformerDraft,
-            $masterId,
+            $identifier,
             $product->getId(),
             $intent,
             $sessionUniqueId,
@@ -271,7 +273,7 @@ class Open extends Action
          * Get printformer editor url by draft id
          */
         $editorParams = [
-            'master_id' => $masterId,
+            'identifier' => $identifier,
             'product_id' => $productId,
             'data' => [
                 'draft_process' => $draftProcess->getId(),
@@ -315,7 +317,7 @@ class Open extends Action
 
     /**
      * Add notice to message manager and die()
-     * @param \Magento\Framework\Phrase $notice
+     * @param Phrase $notice
      * @return void
      */
     protected function _die($notice)
@@ -339,7 +341,7 @@ class Open extends Action
      * @param string $sessionUniqueId
      *
      * @return Draft
-     * @throws \Exception
+     * @throws Exception
      */
     protected function _createDraftProcess(
         Product $product,
@@ -382,7 +384,7 @@ class Open extends Action
      * @param CustomerSession $customerSession
      *
      * @return Draft
-     * @throws \Exception
+     * @throws Exception
      */
     protected function _getDraftProcess(
         $sessionUniqueId,

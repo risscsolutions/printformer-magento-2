@@ -1,15 +1,18 @@
 <?php
 namespace Rissc\Printformer\Model;
 
-class Draft extends \Magento\Framework\Model\AbstractModel
-    implements \Magento\Framework\DataObject\IdentityInterface
+use Magento\Framework\DataObject\IdentityInterface;
+use Magento\Framework\Model\AbstractModel;
+
+class Draft extends AbstractModel
+    implements IdentityInterface
 {
     const CACHE_TAG = 'printformer_draft';
 
     const KEY_USER_IDENTIFIER = 'user_identifier';
     const KEY_DRAFT_HASH = 'draft_id';
     const KEY_DRAFT_ID = 'draft_id';
-    const KEY_MASTER_ID = 'master_id';
+    const KEY_IDENTIFIER = 'identifier';
     const KEY_PRODUCT_ID = 'product_id';
     const KEY_PROCESSING_ID = 'processing_id';
     const KEY_PROCESSING_STATUS = 'processing_status';

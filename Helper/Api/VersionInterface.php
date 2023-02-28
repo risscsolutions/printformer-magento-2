@@ -7,7 +7,7 @@ interface VersionInterface
 {
     /**
      * @param int        $productId
-     * @param int        $masterId
+     * @param int        $identifier
      * @param string     $draftHash
      * @param array      $params
      * @param string     $intent
@@ -15,7 +15,7 @@ interface VersionInterface
      *
      * @return mixed
      */
-    public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null);
+    public function getEditorEntry($productId, $identifier, $draftHash, $params = [], $intent = null, $user = null);
 
     /**
      * @return string
