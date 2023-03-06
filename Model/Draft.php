@@ -4,8 +4,7 @@ namespace Rissc\Printformer\Model;
 use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\Model\AbstractModel;
 
-class Draft extends AbstractModel
-    implements IdentityInterface
+class Draft extends AbstractModel implements IdentityInterface
 {
     const CACHE_TAG = 'printformer_draft';
 
