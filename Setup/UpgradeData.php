@@ -417,7 +417,7 @@ class UpgradeData implements UpgradeDataInterface
             );
         }
 
-        if(version_compare($context->getVersion(), '100.9.6', '<')) {
+        if ( version_compare($context->getVersion(), '100.9.6', '<') ) {
             //get all products from api-call into lastUpdatedList
             $lastUpdatedList = $this->product->getProductsFromPrintformerApi(false, false);
             //update identifier by response-array
