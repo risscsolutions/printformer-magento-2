@@ -647,30 +647,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'comment' => 'Identifier'
                     ]
                 );
-
-                $connection->addIndex(
-                    $tableName,
-                    $setup->getIdxName($table, [$columnName]),
-                    [$columnName]
-                );
-
-                $connection->addIndex(
-                    $tableName,
-                    $setup->getIdxName($tableName, ['intent']),
-                    ['intent']
-                );
-
-                $setup->getConnection()->addIndex(
-                    $tableName,
-                    $setup->getIdxName($tableName, ['store_id']),
-                    ['store_id']
-                );
-
-                $setup->getConnection()->addIndex(
-                    $tableName,
-                    $setup->getIdxName($tableName, ['sku']),
-                    ['sku']
-                );
             }
 
             $tableName = $connection->getTableName(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT);
@@ -684,18 +660,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'nullable' => false,
                         'comment' => 'Identifier'
                     ]
-                );
-
-                $connection->addIndex(
-                    $tableName,
-                    $setup->getIdxName($table, [$columnName]),
-                    [$columnName]
-                );
-
-                $setup->getConnection()->addIndex(
-                    $tableName,
-                    $setup->getIdxName($tableName, ['intent']),
-                    ['intent']
                 );
             }
         }
