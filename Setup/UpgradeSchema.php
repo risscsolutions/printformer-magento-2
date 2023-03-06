@@ -633,10 +633,10 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
-        if(version_compare($context->getVersion(), '100.9.6', '<')) {
+        if ( version_compare($context->getVersion(), '100.9.6', '<') ) {
             $tableName = $connection->getTableName(self::TABLE_NAME_PRODUCT);
             $columnName = 'identifier';
-            if(!$connection->tableColumnExists($tableName, $columnName)) {
+            if ( !$connection->tableColumnExists($tableName, $columnName) ) {
                 $connection->addColumn(
                     $tableName,
                     $columnName,
@@ -650,7 +650,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
 
             $tableName = $connection->getTableName(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT);
-            if(!$connection->tableColumnExists($tableName, $columnName)) {
+            if ( !$connection->tableColumnExists($tableName, $columnName) ) {
                 $connection->addColumn(
                     $tableName,
                     $columnName,

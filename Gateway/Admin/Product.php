@@ -254,17 +254,25 @@ class Product
                         $pfProduct = $this->printformerProductFactory->create();
                         $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
 
-                        $pfProduct = $this->updatePrintformerProduct($pfProduct, $responseRealigned[$identifier], $intent, $storeId);
+                        $pfProduct = $this->updatePrintformerProduct(
+                            $pfProduct,
+                            $responseRealigned[$identifier],
+                            $intent,
+                            $storeId
+                        );
 
                         $pfProduct->getResource()->save($pfProduct);
-                        $updatIdentifiers[$pfProduct->getId()] = ['id' => $pfProduct->getIdentifier(), 'intent' => $intent];
+                        $updatIdentifiers[$pfProduct->getId()] = [
+                            'id' => $pfProduct->getIdentifier(),
+                            'intent' => $intent
+                        ];
                     }
                 }
             }
         }
 
         if (!empty($updatIdentifiers)) {
-            $this->_updateProductRelations($updatIdentifiers, (int)$storeId);
+            $this->updateProductRelations($updatIdentifiers, (int)$storeId);
         }
 
         return $this;
@@ -330,7 +338,7 @@ class Product
      *
      * @return bool
      */
-    protected function _updateProductRelations(array $identifiers, $storeId)
+    protected function updateProductRelations(array $identifiers, $storeId)
     {
         $rowsToUpdate = count($identifiers);
         $tableName = $this->connection->getTableName('catalog_product_printformer_product');

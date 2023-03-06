@@ -596,7 +596,11 @@ class V2 extends AbstractHelper implements VersionInterface
         $usage
     )
     {
-        return $this->getPrintformerBaseUrl() . str_replace(array('{draftId}', '{usage}'), array($draftHash, $usage), self::API_GET_DRAFT_USAGE_PAGE_INFO);
+        return $this->getPrintformerBaseUrl() . str_replace(
+            array('{draftId}', '{usage}'),
+            array($draftHash, $usage),
+            self::API_GET_DRAFT_USAGE_PAGE_INFO
+        );
     }
 
     public function getRedirect(
