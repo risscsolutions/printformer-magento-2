@@ -330,7 +330,7 @@ class Draft
      * @param string $intent
      * @return null|string
      */
-    public function createDraft($identifier, $intent = null, $userIdentifier = null)
+    public function createDraft($identifier, $intent = null)
     {
         $url = $this->_urlHelper
             ->getDraft();

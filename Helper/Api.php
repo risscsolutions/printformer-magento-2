@@ -448,7 +448,7 @@ class Api extends AbstractHelper
                 'user_identifier' => $userIdentifier
             ]
         ];
-        if(!empty($identifier)){
+        if( !empty($identifier) ) {
             $requestData['json']['templateIdentifier'] = $identifier;
         }
         $params = $this->mergeAdditionalParamsForApiCall($params);
