@@ -58,14 +58,17 @@ class OrderModel
     /**
      * @param $sku
      * @param $array
+     *
      * @return int|string|null
      */
-    function searchForItemId($sku, $array) {
+    public function searchForItemId($sku, $array)
+    {
         foreach ($array as $key => $val) {
             if ($val['item_id'] === $sku) {
                 return $key;
             }
         }
+
         return null;
     }
 }

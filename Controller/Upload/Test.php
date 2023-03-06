@@ -59,9 +59,9 @@ class Test extends Action
     {
         $result = $this->jsonFactory->create();
 
-        if($this->state->getMode() == $this->state::MODE_DEVELOPER){
+//        if($this->state->getMode() == $this->state::MODE_DEVELOPER){
             $this->cronTest->execute();
-        }
+//        }
 
         http_response_code(200);
         header('Content-Type: application/json');

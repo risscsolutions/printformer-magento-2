@@ -2,8 +2,8 @@
 namespace Rissc\Printformer\Helper;
 
 use DateTimeImmutable;
-use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Exception;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -33,6 +33,7 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
+use Magento\Framework\Serialize\SerializerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
@@ -126,6 +127,11 @@ class Api extends AbstractHelper
     private Config $configHelper;
 
     /**
+     * @param SerializerInterface $serializer
+     */
+    protected $serializer;
+
+    /**
      * @param Context $context
      * @param CustomerSession $customerSession
      * @param UrlHelper $urlHelper
@@ -143,6 +149,9 @@ class Api extends AbstractHelper
      * @param TimezoneInterface $timezone
      * @param OrderItemRepositoryInterface $orderItemRepository
      * @param Log $_logHelper
+     * @param DraftResource $draftResource
+     * @param Config $configHelper
+     * @param SerializerInterface $serializer
      */
     public function __construct(
         Context $context,
@@ -163,7 +172,8 @@ class Api extends AbstractHelper
         OrderItemRepositoryInterface $orderItemRepository,
         LogHelper $_logHelper,
         DraftResource $draftResource,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        SerializerInterface $serializer
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -184,6 +194,7 @@ class Api extends AbstractHelper
         $this->draftResource = $draftResource;
         $this->context = $context;
         $this->configHelper = $configHelper;
+        $this->serializer = $serializer;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -766,21 +777,35 @@ class Api extends AbstractHelper
         $storeId = $this->_storeManager->getStore()->getId();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
-        if(!$process->getId() && !$checkOnly) {
+        $catalogSession = $this->_sessionHelper->getCatalogSession();
+        $preselectData = $catalogSession->getSavedPrintformerOptions();
+        $options = null;
+        if (!empty($preselectData['super_attribute'])) {
+            $options = $this->serializer->serialize($preselectData['super_attribute']);
+        }
+
+        if ($process->getId() && $options) {
+            $process->setSuperAttribute($options);
+            $process->getResource()->save($process);
+        }
+
+        if (!$process->getId() && !$checkOnly) {
             $dataParams = [
                 'intent' => $intent
             ];
 
-            if (!empty($availableVariants) && is_array($availableVariants)){
+            if (!empty($availableVariants) && is_array($availableVariants)) {
                 $dataParams['availableVariantVersions'] = $availableVariants;
                 $process->addData([
                     'available_variants' => implode(",", $availableVariants)
                 ]);
             }
 
+            $userIdentifier = $this->getUserIdentifier();
+
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($identifier, $userIdentifier, $storeId, $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -794,10 +819,11 @@ class Api extends AbstractHelper
                     'session_unique_id' => $sessionUniqueId,
                     'product_id' => $productId,
                     'customer_id' => $customerId,
-                    'user_identifier' => $this->getUserIdentifier(),
+                    'user_identifier' => $userIdentifier,
                     'created_at' => time(),
                     'printformer_product_id' => $printformerProductId,
-                    'color_variation' => $colorVariation
+                    'color_variation' => $colorVariation,
+                    'super_attribute' => $options
                 ]);
                 $process->getResource()->save($process);
             } catch (AlreadyExistsException $e) {
