@@ -520,48 +520,27 @@ class Product extends AbstractHelper
         $lastUpdatedList
     )
     {
+
+        //search for update-information in lastUpdatedList
         $updates = ['cpp' => [], 'pp' => []];
 
         if ( !empty($outdatedList) ) {
+            // search for update-information in lastUpdatedList
             foreach ( $outdatedList as $outdatedEntry ) {
                 foreach ( $lastUpdatedList['data'] as $product ) {
                     if ( !empty($outdatedEntry['pp_id']) ) {
-                        if (
-                            (
-                                !empty($outdatedEntry['pp_master_id'])
-                                && $outdatedEntry['pp_master_id'] == $product['id']
-                            )
-                            ||
-                            (
-                                !empty($outdatedEntry['pp_name'])
-                                && $outdatedEntry['pp_name'] == $product['name']
-                            )
-                        ) {
-                            $updates['pp'][] = [
-                                'table' => 'printformer_product',
-                                'identifier' => $product['identifier'],
-                                'id' => (int)$outdatedEntry['pp_id']
-                            ];
+                        if ( !empty($outdatedEntry['pp_master_id']) && ($outdatedEntry['pp_master_id'] == $product['id']) ) {
+                            $updates['pp'][] = ['table' => 'printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['pp_id']];
+                        } elseif ( !empty($outdatedEntry['pp_name']) && ($outdatedEntry['pp_name'] == $product['name']) ) {
+                            $updates['pp'][] = ['table' => 'printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['pp_id']];
                         }
                     }
 
                     if ( !empty($outdatedEntry['cpp_id']) ) {
-                        if (
-                            (
-                                !empty($outdatedEntry['cpp_master_id'])
-                                && $outdatedEntry['cpp_master_id'] == $product['id']
-                            )
-                            ||
-                            (
-                                !empty($outdatedEntry['cpp_name'])
-                                && $outdatedEntry['cpp_name'] == $product['name']
-                            )
-                        ) {
-                            $updates['cpp'][] = [
-                                'table' => 'catalog_product_printformer_product',
-                                'identifier' => $product['identifier'],
-                                'id' => (int)$outdatedEntry['cpp_id']
-                            ];
+                        if ( !empty($outdatedEntry['cpp_master_id']) && ($outdatedEntry['cpp_master_id'] == $product['id']) ) {
+                            $updates['cpp'][] = ['table' => 'catalog_product_printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['cpp_id']];
+                        } elseif ( !empty($outdatedEntry['pp_name']) && ($outdatedEntry['pp_name'] == $product['name']) ) {
+                            $updates['cpp'][] = ['table' => 'catalog_product_printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['cpp_id']];
                         }
                     }
                 }
