@@ -470,13 +470,17 @@ class Product extends AbstractHelper
      */
     public function updateIdentifierByResponseArray(array $lastUpdatedList)
     {
+        //get connection
         $connection = $this->resourceConnection->getConnection();
 
+        //get list from db
         $outdatedList = $this->getOutdatedList($connection);
 
-        $updates = $this->findUpdates($outdatedList, $lastUpdatedList);
+        //compare latest entries from api with db entries
+        $updates = $this->getPrepareDataForUpdateQueries( $outdatedList, $lastUpdatedList);
 
-        $this->updateTables($updates, $connection);
+        //start sql-update queries with latest updates-array
+        $this->updateTablesPreparedData( $connection, $updates);
     }
 
     /**
@@ -511,38 +515,102 @@ class Product extends AbstractHelper
     }
 
     /**
+     * @param array $types
+     * @param $productId
+     * @param $productName
+     * @param $requiredName
+     * @param $requiredId
+     * @param $requiredMasterId
+     * @param $mainType
+     * @return array
+     */
+    private function searchTableEntryTypeByData(
+        array $types,
+        $productId,
+        $productName,
+        $requiredName,
+        $requiredId,
+        $requiredMasterId,
+        $mainType
+    )
+    {
+        if (
+            !empty( $requiredId ) && !empty( $requiredMasterId ) && !empty( $productId ) && $requiredMasterId == $productId
+        ) {
+            $types[] = $mainType;
+        } elseif (
+            !empty( $requiredName ) && !empty( $productName ) && $requiredName == $productName
+        ) {
+            $types[] = $mainType;
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param array $outdatedEntry
+     * @param int $productId
+     * @param string $productName
+     * @return array
+     */
+    private function getAllTableEntryTypesForCurrentEntry(
+        array $outdatedEntry,
+        int $productId,
+        string $productName
+    )
+    {
+        $types = [];
+
+        $types = $this->searchTableEntryTypeByData( $types, $productId, $productName, $outdatedEntry['pp_name'], $outdatedEntry['pp_id'], $outdatedEntry['pp_master_id'], 'pp' );
+        $types = $this->searchTableEntryTypeByData( $types, $productId, $productName, $outdatedEntry['pp_name'], $outdatedEntry['cpp_id'], $outdatedEntry['cpp_master_id'], 'cpp' );
+
+        return $types;
+    }
+
+    /**
+     * @param array $updates
+     * @param array $outdatedEntry
+     * @param array $product
+     * @return array
+     */
+    private function prepareUpdatesByApiResponseAndDbData(
+        array $updates,
+        array $outdatedEntry,
+        array $product
+    )
+    {
+        $productIdentifier = $product['identifier'];
+        $productId = $product['id'];
+        $productName = $product['name'];
+
+        $types = $this->getAllTableEntryTypesForCurrentEntry( $outdatedEntry, $productId, $productName );
+
+        foreach ( $types as $type ) {
+            $updates[$type][] = [
+                'table' => $type === 'pp' ? 'printformer_product' : 'catalog_product_printformer_product',
+                'identifier' => $productIdentifier,
+                'id' => (int)$outdatedEntry[$type . '_id']
+            ];
+        }
+
+        return $updates;
+    }
+
+    /**
      * @param $outdatedList
      * @param $lastUpdatedList
      * @return array|array[]
      */
-    private function findUpdates(
+    private function getPrepareDataForUpdateQueries(
         $outdatedList,
         $lastUpdatedList
     )
     {
-
-        //search for update-information in lastUpdatedList
-        $updates = ['cpp' => [], 'pp' => []];
-
-        if ( !empty($outdatedList) ) {
-            // search for update-information in lastUpdatedList
+        $updates = [ 'cpp' => [], 'pp' => [] ];
+        if ( !empty( $outdatedList ) ) {
             foreach ( $outdatedList as $outdatedEntry ) {
                 foreach ( $lastUpdatedList['data'] as $product ) {
-                    if ( !empty($outdatedEntry['pp_id']) ) {
-                        if ( !empty($outdatedEntry['pp_master_id']) && ($outdatedEntry['pp_master_id'] == $product['id']) ) {
-                            $updates['pp'][] = ['table' => 'printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['pp_id']];
-                        } elseif ( !empty($outdatedEntry['pp_name']) && ($outdatedEntry['pp_name'] == $product['name']) ) {
-                            $updates['pp'][] = ['table' => 'printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['pp_id']];
-                        }
-                    }
-
-                    if ( !empty($outdatedEntry['cpp_id']) ) {
-                        if ( !empty($outdatedEntry['cpp_master_id']) && ($outdatedEntry['cpp_master_id'] == $product['id']) ) {
-                            $updates['cpp'][] = ['table' => 'catalog_product_printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['cpp_id']];
-                        } elseif ( !empty($outdatedEntry['pp_name']) && ($outdatedEntry['pp_name'] == $product['name']) ) {
-                            $updates['cpp'][] = ['table' => 'catalog_product_printformer_product', 'identifier' => $product['identifier'], 'id' => (int)$outdatedEntry['cpp_id']];
-                        }
-                    }
+                    $updates = $this->prepareUpdatesByApiResponseAndDbData( $updates, $outdatedEntry, $product );
                 }
             }
         }
@@ -555,16 +623,16 @@ class Product extends AbstractHelper
      * @param $connection
      * @return void
      */
-    private function updateTables(
-        $updates,
-        $connection
+    private function updateTablesPreparedData(
+        $connection,
+        $updates
     )
     {
         $connection->beginTransaction();
 
         $updatePrintformerStatement = $connection->prepare(
             "UPDATE " . InstallSchema::TABLE_NAME_PRODUCT
-            . " SET identifier = :identifier, updated_at = CURTIME() WHERE id = :id");
+            . " SET identifier = :identifier, updated_at = CURTIME() WHERE id = :id" );
 
         $updateProductStatement = $connection->prepare(
             "UPDATE "
@@ -574,20 +642,20 @@ class Product extends AbstractHelper
 
         try {
             foreach ( $updates['pp'] as $update ) {
-                $updatePrintformerStatement->execute([
-                                                         'identifier' => $update['identifier'],
-                                                         'id' => $update['id']
-                                                     ]);
+                $updatePrintformerStatement->execute( [
+                                                          'identifier' => $update['identifier'],
+                                                          'id' => $update['id']
+                                                      ] );
             }
             foreach ( $updates['cpp'] as $update ) {
-                $updateProductStatement->execute([
-                                                     'identifier' => $update['identifier'],
-                                                     'id' => $update['id']
-                                                 ]);
+                $updateProductStatement->execute( [
+                                                      'identifier' => $update['identifier'],
+                                                  ] );
             }
             $connection->commit();
         } catch ( Exception $e ) {
             $connection->rollBack();
         }
+
     }
 }
