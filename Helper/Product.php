@@ -358,12 +358,12 @@ class Product extends AbstractHelper
      */
     public function getConfigurableAndChildrens($mainProduct)
     {
-        if ($this->configHelper->useChildProduct($mainProduct->getTypeId())) {
+        if($this->configHelper->useChildProduct($mainProduct->getTypeId())) {
             $childProducts = $mainProduct->getTypeInstance()->getUsedProducts($mainProduct);
-            foreach ($childProducts as $simpleProductKey => $simpleProduct) {
+            foreach( $childProducts as $simpleProductKey => $simpleProduct ) {
                 $_attributes = $mainProduct->getTypeInstance(true)->getConfigurableAttributes($mainProduct);
                 $attributesPair = [];
-                foreach ($_attributes as $_attribute) {
+                foreach( $_attributes as $_attribute ) {
                     $attributeId = (int)$_attribute->getAttributeId();
                     $attributeCode = $this->getAttributeCode($attributeId);
                     $attributesPair[$attributeId] = (int)$simpleProduct->getData($attributeCode);
@@ -435,16 +435,16 @@ class Product extends AbstractHelper
      */
     public function getSessionUniqueId(string $draftField)
     {
-        if (!empty($draftField)) {
+        if ( !empty($draftField) ) {
             $draftHashArray = explode(',', $draftField);
-            foreach($draftHashArray as $draftHash) {
+            foreach ( $draftHashArray as $draftHash ) {
                 $draftItem = $this->getDraftById($draftHash);
-                if ($draftItem) {
+                if ( $draftItem ) {
                     $pfProductId = $draftItem->getData('printformer_product_id');
                     $productId = $draftItem->getData('product_id');
-                    if(!empty($productId) && !empty($pfProductId)) {
+                    if ( !empty($productId) && !empty($pfProductId) ) {
                         $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
-                        if (!isset($uniqueId)) {
+                        if ( !isset($uniqueId) ) {
                             $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
                         }
                     }
@@ -477,10 +477,10 @@ class Product extends AbstractHelper
         $outdatedList = $this->getOutdatedList($connection);
 
         //compare latest entries from api with db entries
-        $updates = $this->getPrepareDataForUpdateQueries( $outdatedList, $lastUpdatedList);
+        $updates = $this->getPrepareDataForUpdateQueries($outdatedList, $lastUpdatedList);
 
         //start sql-update queries with latest updates-array
-        $this->updateTablesPreparedData( $connection, $updates);
+        $this->updateTablesPreparedData($connection, $updates);
     }
 
     /**
@@ -535,11 +535,16 @@ class Product extends AbstractHelper
     )
     {
         if (
-            !empty( $requiredId ) && !empty( $requiredMasterId ) && !empty( $productId ) && $requiredMasterId == $productId
+            !empty($requiredId)
+            && !empty($requiredMasterId)
+            && !empty($productId)
+            && $requiredMasterId == $productId
         ) {
             $types[] = $mainType;
         } elseif (
-            !empty( $requiredName ) && !empty( $productName ) && $requiredName == $productName
+            !empty($requiredName)
+            && !empty($productName)
+            && $requiredName == $productName
         ) {
             $types[] = $mainType;
         }
@@ -561,8 +566,25 @@ class Product extends AbstractHelper
     {
         $types = [];
 
-        $types = $this->searchTableEntryTypeByData( $types, $productId, $productName, $outdatedEntry['pp_name'], $outdatedEntry['pp_id'], $outdatedEntry['pp_master_id'], 'pp' );
-        $types = $this->searchTableEntryTypeByData( $types, $productId, $productName, $outdatedEntry['pp_name'], $outdatedEntry['cpp_id'], $outdatedEntry['cpp_master_id'], 'cpp' );
+        $types = $this->searchTableEntryTypeByData(
+            $types,
+            $productId,
+            $productName,
+            $outdatedEntry['pp_name'],
+            $outdatedEntry['pp_id'],
+            $outdatedEntry['pp_master_id'],
+            'pp'
+        );
+
+        $types = $this->searchTableEntryTypeByData(
+            $types,
+            $productId,
+            $productName,
+            $outdatedEntry['pp_name'],
+            $outdatedEntry['cpp_id'],
+            $outdatedEntry['cpp_master_id'],
+            'cpp'
+        );
 
         return $types;
     }
@@ -583,9 +605,13 @@ class Product extends AbstractHelper
         $productId = $product['id'];
         $productName = $product['name'];
 
-        $types = $this->getAllTableEntryTypesForCurrentEntry( $outdatedEntry, $productId, $productName );
+        $types = $this->getAllTableEntryTypesForCurrentEntry(
+            $outdatedEntry,
+            $productId,
+            $productName
+        );
 
-        foreach ( $types as $type ) {
+        foreach ($types as $type) {
             $updates[$type][] = [
                 'table' => $type === 'pp' ? 'printformer_product' : 'catalog_product_printformer_product',
                 'identifier' => $productIdentifier,
@@ -606,11 +632,11 @@ class Product extends AbstractHelper
         $lastUpdatedList
     )
     {
-        $updates = [ 'cpp' => [], 'pp' => [] ];
-        if ( !empty( $outdatedList ) ) {
-            foreach ( $outdatedList as $outdatedEntry ) {
-                foreach ( $lastUpdatedList['data'] as $product ) {
-                    $updates = $this->prepareUpdatesByApiResponseAndDbData( $updates, $outdatedEntry, $product );
+        $updates = ['cpp' => [], 'pp' => []];
+        if (!empty($outdatedList)) {
+            foreach ($outdatedList as $outdatedEntry) {
+                foreach ($lastUpdatedList['data'] as $product) {
+                    $updates = $this->prepareUpdatesByApiResponseAndDbData($updates, $outdatedEntry, $product);
                 }
             }
         }
@@ -632,7 +658,7 @@ class Product extends AbstractHelper
 
         $updatePrintformerStatement = $connection->prepare(
             "UPDATE " . InstallSchema::TABLE_NAME_PRODUCT
-            . " SET identifier = :identifier, updated_at = CURTIME() WHERE id = :id" );
+            . " SET identifier = :identifier, updated_at = CURTIME() WHERE id = :id");
 
         $updateProductStatement = $connection->prepare(
             "UPDATE "
@@ -641,21 +667,20 @@ class Product extends AbstractHelper
         );
 
         try {
-            foreach ( $updates['pp'] as $update ) {
-                $updatePrintformerStatement->execute( [
-                                                          'identifier' => $update['identifier'],
-                                                          'id' => $update['id']
-                                                      ] );
+            foreach ($updates['pp'] as $update) {
+                $updatePrintformerStatement->execute([
+                                                         'identifier' => $update['identifier'],
+                                                         'id' => $update['id']
+                                                     ]);
             }
-            foreach ( $updates['cpp'] as $update ) {
-                $updateProductStatement->execute( [
-                                                      'identifier' => $update['identifier'],
-                                                  ] );
+            foreach ($updates['cpp'] as $update) {
+                $updateProductStatement->execute([
+                                                     'identifier' => $update['identifier'],
+                                                 ]);
             }
             $connection->commit();
-        } catch ( Exception $e ) {
+        } catch (Exception $e) {
             $connection->rollBack();
         }
-
     }
 }
