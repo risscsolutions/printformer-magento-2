@@ -5,7 +5,6 @@ namespace Rissc\Printformer\Helper;
 use Exception;
 use Magento\Catalog\Model\Product as ProductModel;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface as ProductAttributeRepository;
-use Magento\Catalog\Model\ProductRepository;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableProductModel;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -46,11 +45,6 @@ class Product extends AbstractHelper
     protected $_request;
 
     /**
-     * @var ProductRepository
-     */
-    private ProductRepository $catalogProductRepository;
-
-    /**
      * @var DraftFactory
      */
     private DraftFactory $draftFactory;
@@ -69,19 +63,17 @@ class Product extends AbstractHelper
      * @param ResourceProduct $resource
      * @param ResourceConnection $resourceConnection
      * @param Context $context
-     * @param RequestInterface $request
-     * @param ProductRepository $catalogProductRepository
      * @param DraftFactory $draftFactory
      * @param Config $configHelper
      * @param Session $sessionHelper
+     * @param ProductAttributeRepository $productAttributeRepository
+     * @param ConfigurableProductModel $configurableProduct
      */
     public function __construct(
         ProductFactory $productFactory,
         ResourceProduct $resource,
         ResourceConnection $resourceConnection,
         Context $context,
-        RequestInterface $request,
-        ProductRepository $catalogProductRepository,
         DraftFactory $draftFactory,
         Config $configHelper,
         SessionHelper $sessionHelper,
@@ -92,8 +84,6 @@ class Product extends AbstractHelper
         $this->productFactory = $productFactory;
         $this->resource = $resource;
         $this->resourceConnection = $resourceConnection;
-        $this->_request = $request;
-        $this->catalogProductRepository = $catalogProductRepository;
         $this->draftFactory = $draftFactory;
         $this->configHelper = $configHelper;
         $this->sessionHelper = $sessionHelper;
@@ -465,19 +455,24 @@ class Product extends AbstractHelper
     }
 
     /**
-     * @param array $lastUpdatedList
+     * Update identifier by response-array
+     * @param array $lastEntries
+     * @param int $storeId
      * @return void
      */
-    public function updateIdentifierByResponseArray(array $lastUpdatedList)
+    public function updateIdentifierByResponseArray(
+        array $lastEntries,
+        int $storeId
+    )
     {
         //get connection
         $connection = $this->resourceConnection->getConnection();
 
         //get list from db
-        $outdatedList = $this->getOutdatedList($connection);
+        $localEntries = $this->getLocalEntrysList($connection, $storeId);
 
         //compare latest entries from api with db entries
-        $updates = $this->getPrepareDataForUpdateQueries($outdatedList, $lastUpdatedList);
+        $updates = $this->getPrepareDataForUpdateQueries($localEntries, $lastEntries);
 
         //start sql-update queries with latest updates-array
         $this->updateTablesPreparedData($connection, $updates);
@@ -487,31 +482,38 @@ class Product extends AbstractHelper
      * @param $connection
      * @return mixed
      */
-    private function getOutdatedList($connection)
+    private function getLocalEntrysList(
+        $connection,
+        $storeId
+    )
     {
-        return $connection->fetchAll(
-            $connection->select()
-                ->from(['pp' => InstallSchema::TABLE_NAME_PRODUCT], ['id', 'identifier'])
-                ->joinLeft([
-                               'cpp' => UpgradeSchema::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT
-                           ], 'cpp.printformer_product_id = pp.id', ['identifier as cpp_identifier'])
-                ->columns([
-                              'pp_id' => 'pp.id',
-                              'pp_name' => 'pp.name',
-                              'pp_store_id' => 'pp.store_id',
-                              'pp_intent' => 'pp.intent',
-                              'pp_master_id' => 'pp.master_id',
-                              'pp_identifier' => 'pp.identifier',
-                              'cpp_id' => 'cpp.id',
-                              'cpp_printformer_product_id' => 'cpp.printformer_product_id',
-                              'cpp_product_id' => 'cpp.product_id',
-                              'cpp_store_id' => 'cpp.store_id',
-                              'cpp_intent' => 'cpp.intent',
-                              'cpp_master_id' => 'cpp.master_id',
-                              'cpp_identifier' => 'cpp.identifier'
-                          ])
-                ->where('pp.identifier = "" OR cpp.identifier = ""')
-        );
+        $select = $connection->select()
+            ->from(['pp' => InstallSchema::TABLE_NAME_PRODUCT], ['id', 'identifier'])
+            ->joinLeft([
+                           'cpp' => UpgradeSchema::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT
+                       ], 'cpp.printformer_product_id = pp.id', ['identifier as cpp_identifier'])
+            ->columns([
+                          'pp_id' => 'pp.id',
+                          'pp_name' => 'pp.name',
+                          'pp_store_id' => 'pp.store_id',
+                          'pp_intent' => 'pp.intent',
+                          'pp_master_id' => 'pp.master_id',
+                          'pp_identifier' => 'pp.identifier',
+                          'cpp_id' => 'cpp.id',
+                          'cpp_printformer_product_id' => 'cpp.printformer_product_id',
+                          'cpp_product_id' => 'cpp.product_id',
+                          'cpp_store_id' => 'cpp.store_id',
+                          'cpp_intent' => 'cpp.intent',
+                          'cpp_master_id' => 'cpp.master_id',
+                          'cpp_identifier' => 'cpp.identifier'
+                      ])
+            ->where('pp.identifier = "" OR cpp.identifier = ""');
+
+        if (isset($storeId) && $storeId !== false) {
+            $select->where('pp.store_id = "' . $storeId . '"');
+        }
+
+        return $connection->fetchAll($select);
     }
 
     /**
@@ -676,6 +678,7 @@ class Product extends AbstractHelper
             foreach ($updates['cpp'] as $update) {
                 $updateProductStatement->execute([
                                                      'identifier' => $update['identifier'],
+                                                     'id' => $update['id']
                                                  ]);
             }
             $connection->commit();
