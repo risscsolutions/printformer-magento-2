@@ -14,6 +14,9 @@ use Rissc\Printformer\Gateway\Admin\Product;
 use Rissc\Printformer\Helper\Product as ProductHelper;
 use Rissc\Printformer\Helper\UpgradeData as UpgradeDataHelper;
 use Zend_Db_Statement_Exception;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Psr\Log\LoggerInterface;
 
 class UpgradeData implements UpgradeDataInterface
 {
@@ -41,24 +44,37 @@ class UpgradeData implements UpgradeDataInterface
      * @var ProductHelper 
      */
     private ProductHelper $productHelper;
+    private StoreManagerInterface $storeManager;
+    private ScopeConfigInterface $scopeConfig;
+    private LoggerInterface $logger;
 
     /**
-     * UpgradeData constructor.
      * @param EavSetupFactory $eavSetupFactory
      * @param CategorySetupFactory $categorySetupFactory
+     * @param Product $product
+     * @param ProductHelper $productHelper
+     * @param StoreManagerInterface $storeManager
+     * @param ScopeConfigInterface $scopeConfig
+     * @param LoggerInterface $logger
      */
     public function __construct(
         EavSetupFactory $eavSetupFactory,
         CategorySetupFactory $categorySetupFactory,
         UpgradeDataHelper $upgradeDataHelper,
         Product $product,
-        ProductHelper $productHelper
+        ProductHelper $productHelper,
+        StoreManagerInterface $storeManager,
+        ScopeConfigInterface $scopeConfig,
+        LoggerInterface $logger
     ) {
         $this->eavSetupFactory = $eavSetupFactory;
         $this->categorySetupFactory = $categorySetupFactory;
         $this->upgradeDataHelper = $upgradeDataHelper;
         $this->product = $product;
         $this->productHelper = $productHelper;
+        $this->storeManager = $storeManager;
+        $this->scopeConfig = $scopeConfig;
+        $this->logger = $logger;
     }
 
     /**
@@ -417,14 +433,61 @@ class UpgradeData implements UpgradeDataInterface
             );
         }
 
-        if ( version_compare($context->getVersion(), '100.9.6', '<') ) {
-            //get all products from api-call into lastUpdatedList
-            $lastUpdatedList = $this->product->getProductsFromPrintformerApi(false, false);
-            //update identifier by response-array
-            $this->productHelper->updateIdentifierByResponseArray($lastUpdatedList);
+        if (version_compare($context->getVersion(), '100.9.6', '<')) {
+            $identifierConfig = 'printformer/version2group/v2identifier';
+            $stores = $this->findStoresWithConfig($identifierConfig);
+            $defaultStores = $stores['default'];
+            $customStores = $stores['custom'];
+
+            if (!empty($stores['default'])) {
+                $lastUpdatedList = $this->loadProductsFromApiByStoreId(0);
+
+                if (!in_array("0", $defaultStores, true)) {
+                    array_unshift($defaultStores, "0");
+                }
+
+                foreach ($defaultStores as $storeId) {
+                    $this->runIdentifierUpdatesByStoreId($lastUpdatedList, $storeId);
+                }
+            }
+
+            foreach ($customStores as $storeId) {
+                $lastUpdatedList = $this->loadProductsFromApiByStoreId($storeId);
+                $this->runIdentifierUpdatesByStoreId($lastUpdatedList, $storeId);
+            }
         }
 
         $setup->endSetup();
+    }
+
+    /**
+     * Find stores with config
+     *
+     * @param string $configPath
+     * @return array
+     */
+    public function findStoresWithConfig($configPath)
+    {
+        $stores = $this->storeManager->getStores();
+        $defaultStoreConfig = $this->scopeConfig->getValue($configPath, 'store', 0);
+        $storesWithCustomConfig = [];
+        $storesWithDefaultConfig = [];
+
+        foreach ($stores as $store) {
+            $storeConfigValue = $this->scopeConfig->getValue($configPath, 'store', $store->getId());
+
+            if (!empty($defaultStoreConfig)) {
+                if ($storeConfigValue === $defaultStoreConfig) {
+                    $storesWithDefaultConfig[] = $store->getId();
+                } else {
+                    $storesWithCustomConfig[] = $store->getId();
+                }
+            } elseif (!empty($storeConfigValue)) {
+                $storesWithCustomConfig[] = $store->getId();
+            }
+        }
+
+        return ['custom' => $storesWithCustomConfig, 'default' => $storesWithDefaultConfig];
     }
 
     /**
@@ -457,5 +520,47 @@ class UpgradeData implements UpgradeDataInterface
                 'apply_to' => ''
             ]
         );
+    }
+
+    /**
+     * @param int $storeId
+     * @return array
+     */
+    private function loadProductsFromApiByStoreId(
+        int $storeId
+    )
+    {
+        try {
+            $lastUpdatedList = $this->product->getProductsFromPrintformerApi($storeId, false);
+        } catch (\Exception $e) {
+            $errorMessage = sprintf(
+                'The api-ext template command could not be completed for store with id: %s',
+                $storeId
+            );
+            $this->logger->critical($errorMessage, ['exception' => $e]);
+        }
+
+        return $lastUpdatedList;
+    }
+
+    /**
+     * @param array $lastUpdatedList
+     * @param $storeId
+     * @return void
+     */
+    private function runIdentifierUpdatesByStoreId(
+        array $lastUpdatedList,
+        $storeId
+    )
+    {
+        try {
+            $this->productHelper->updateIdentifierByResponseArray($lastUpdatedList, $storeId);
+        } catch (\Exception $e) {
+            $errorMessage = sprintf(
+                'The identifier update process could not be completed for store with id: %s',
+                $storeId
+            );
+            $this->logger->critical($errorMessage, ['exception' => $e]);
+        }
     }
 }
