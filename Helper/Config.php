@@ -84,6 +84,7 @@ class Config extends AbstractHelper
     const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
 
     const XML_PATH_CONFIG_USE_ALL_STORES_DEFAULT_TEMPLATES_IF_NO_TEMPLATES_ASSIGNED_ON_STORE = 'printformer/general/use_all_stores_default_templates_if_no_templates_assigned_on_store';
+    const XML_PATH_CONFIG_COMPARE_CURRENT_APIKEY_WITH_DEFAULT = 'printformer/general/compare_current_apikey_with_default';
 
     public const XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED = 'cataloginventory/item_options/manage_stock';
 
@@ -793,17 +794,37 @@ class Config extends AbstractHelper
     }
 
     /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function compareCurrentApiKeyWithDefault($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_COMPARE_CURRENT_APIKEY_WITH_DEFAULT, true, $storeId, $websiteId);
+    }
+
+    /**
      * Function to verify if for a given store id the filter with default store can ne used.
-     *
      * @param int $storeId
      * @return bool
      */
     public function defaultStoreTemplatesCanBeUsed(int $storeId): bool
     {
-        $isApiKeyEquivalentToDefault = $this->isApiKeyEquivalentToDefault($storeId);
+        $compareCurrentWithDefault = $this->compareCurrentApiKeyWithDefault($storeId);
+        if ($compareCurrentWithDefault) {
+            $isApiKeyEquivalentToDefault = $this->isApiKeyEquivalentToDefault($storeId);
+            if ($isApiKeyEquivalentToDefault) {
+                $defaultStoreTemplateIsPermittedForCurrentApiKey = true;
+            } else {
+                $defaultStoreTemplateIsPermittedForCurrentApiKey = false;
+            }
+        } else {
+            $defaultStoreTemplateIsPermittedForCurrentApiKey = true;
+        }
+
         $defaultStoreTemplatesCanBeUsed = $this->useDefaultTemplatesIfStoreTemplatesMissing($storeId);
 
-        if ($isApiKeyEquivalentToDefault && $defaultStoreTemplatesCanBeUsed) {
+        if ($defaultStoreTemplateIsPermittedForCurrentApiKey && $defaultStoreTemplatesCanBeUsed) {
             $defaultStoreTemplatesCanBeUsed = true;
         } else {
             $defaultStoreTemplatesCanBeUsed = false;
