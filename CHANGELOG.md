@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.2.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.1.0...v101.2.0) (2023-03-17)
+
+
+### Features
+
+* **WEM-2089:** add new property social for SocialMedia module ([725e5ed](https://github.com/risscsolutions/printformer-magento-2/commit/725e5ed8cb6fc0a5c0c48234f671b2fdb9e3137e))
+
 ## [101.1.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.0.1...v101.1.0) (2023-03-17)
 
 
