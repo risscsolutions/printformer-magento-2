@@ -556,9 +556,10 @@ class Api extends AbstractHelper
     /**
      * @param $draftId
      * @param $downloadableLinkFilePath
+     * @param $social
      * @return bool
      */
-    public function uploadPdf($draftId, $downloadableLinkFilePath)
+    public function uploadPdf($draftId, $downloadableLinkFilePath, $social = false)
     {
         $absoluteMediaPath = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath();
         $absoluteDownloadableMediaPath = $absoluteMediaPath.'downloadable/files/links';
@@ -580,19 +581,21 @@ class Api extends AbstractHelper
             $apiUrl = $this->apiUrl()->getUploadDraftId($draftId);
 
             $filePathUrl = $baseUrl.DirectoryList::PUB.DIRECTORY_SEPARATOR.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
-            $callBackUrl = $this->getUploadCallbackUrl($draftId);
-            $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
 
-            if (isset($filePathUrl) && isset($apiUrl) && isset($callBackUrlWithQueryString)){
-                $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
+            if (isset($filePathUrl) && isset($apiUrl)){
 
                 //upload temporary file-url
                 $requestData = [
                     'json' => [
-                        'fileURL' => $filePathUrl,
-                        'callbackURL' => $callBackUrlWithQueryString
+                        'fileURL' => $filePathUrl
                     ]
                 ];
+                if (!$social) {
+                    $callBackUrl = $this->getUploadCallbackUrl($draftId);
+                    $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
+                    $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
+                    $requestData['json']['callbackURL'] = $callBackUrlWithQueryString;
+                }
 
                 try {
                     $createdEntry = $this->_logHelper->createPostEntry($apiUrl, $requestData);
