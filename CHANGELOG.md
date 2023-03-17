@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.1.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.0.1...v101.1.0) (2023-03-17)
+
+
+### Features
+
+* **WEM-2099:** added helper for db-operations as for example store-id-research ([af42ffd](https://github.com/risscsolutions/printformer-magento-2/commit/af42ffd286a7ab27bb9a21f89ce8acf674599c6f))
+
 ## [101.0.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.0.0...v101.0.1) (2023-02-24)
 
 
