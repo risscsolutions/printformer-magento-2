@@ -105,7 +105,7 @@ class QuoteModel
         $currentOrder = $this->registry->registry('current_order');
         (!empty($currentOrder)) ? $isReordered = true : $isReordered = false;
 
-        $this->cartHelper->prepareDraft($isReordered, $isReordered);
+        $this->cartHelper->prepareDraft($buyRequest, $isReordered);
 
         $result = $proceed($product, $buyRequest, $processMode);
 
