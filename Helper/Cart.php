@@ -7,6 +7,7 @@ use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableT
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Checkout\Model\Cart as CartModel;
+use Magento\Framework\DataObject;
 use Magento\Wishlist\Model\Item as WishlistItemModel;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
@@ -344,56 +345,58 @@ class Cart extends AbstractHelper
         $isReordered
     )
     {
-        $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-        if (!empty($draftIds)) {
-            $draftHashArray = explode(',', $draftIds);
+        if ($buyRequest instanceof DataObject) {
+            $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+            if (!empty($draftIds)) {
+                $draftHashArray = explode(',', $draftIds);
 
-            $draftHashRelations = [];
-            $newDraftHashArray = [];
-            foreach ($draftHashArray as $draftId) {
-                if (!empty($draftId)) {
-                    if ($isReordered) {
-                        $oldDraftId = $draftId;
-                        $customerId = $this->sessionHelper->getCustomerSession()->getCustomerId();
-                        $newDraftProcess = $this->apiHelper->generateNewReplicateDraft($oldDraftId, $customerId);
-                        if (!empty($newDraftProcess)) {
-                            $newDraftId = $newDraftProcess->getDraftId();
-                            if (!empty($newDraftId)) {
-                                $draftId = $newDraftId;
-                                $relations = $buyRequest->getData('draft_hash_relations');
-                                if (!empty($relations[$newDraftProcess->getProductId()][$newDraftProcess->getPrintformerProductId()])) {
-                                    $relations[$newDraftProcess->getProductId()][$newDraftProcess->getPrintformerProductId()] = $newDraftId;
-                                    $buyRequest->setData('draft_hash_relations', $relations);
+                $draftHashRelations = [];
+                $newDraftHashArray = [];
+                foreach ($draftHashArray as $draftId) {
+                    if (!empty($draftId)) {
+                        if ($isReordered) {
+                            $oldDraftId = $draftId;
+                            $customerId = $this->sessionHelper->getCustomerSession()->getCustomerId();
+                            $newDraftProcess = $this->apiHelper->generateNewReplicateDraft($oldDraftId, $customerId);
+                            if (!empty($newDraftProcess)) {
+                                $newDraftId = $newDraftProcess->getDraftId();
+                                if (!empty($newDraftId)) {
+                                    $draftId = $newDraftId;
+                                    $relations = $buyRequest->getData('draft_hash_relations');
+                                    if (!empty($relations[$newDraftProcess->getProductId()][$newDraftProcess->getPrintformerProductId()])) {
+                                        $relations[$newDraftProcess->getProductId()][$newDraftProcess->getPrintformerProductId()] = $newDraftId;
+                                        $buyRequest->setData('draft_hash_relations', $relations);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (empty($newDraftProcess)) {
-                        /** @var Draft $draftProcess */
-                        $draftProcess = $this->apiHelper->draftProcess($draftId);
-                    } else {
-                        $draftProcess = $newDraftProcess;
-                    }
+                        if (empty($newDraftProcess)) {
+                            /** @var Draft $draftProcess */
+                            $draftProcess = $this->apiHelper->draftProcess($draftId);
+                        } else {
+                            $draftProcess = $newDraftProcess;
+                        }
 
-                    if ($draftProcess->getId()) {
-                        $draftHashRelations = $this->updateDraftHashRelations(
-                            $draftHashRelations,
-                            $draftProcess->getProductId(),
-                            $draftProcess->getPrintformerProductId(),
-                            $draftProcess->getDraftId()
-                        );
-                    }
+                        if ($draftProcess->getId()) {
+                            $draftHashRelations = $this->updateDraftHashRelations(
+                                $draftHashRelations,
+                                $draftProcess->getProductId(),
+                                $draftProcess->getPrintformerProductId(),
+                                $draftProcess->getDraftId()
+                            );
+                        }
 
-                    array_push($newDraftHashArray, $draftId);
+                        array_push($newDraftHashArray, $draftId);
+                    }
                 }
-            }
 
-            $newDraftHashArrayFormatted = implode(',', $newDraftHashArray);
-            $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $newDraftHashArrayFormatted);
+                $newDraftHashArrayFormatted = implode(',', $newDraftHashArray);
+                $buyRequest->setData(InstallSchema::COLUMN_NAME_DRAFTID, $newDraftHashArrayFormatted);
 
-            if (!empty($draftHashRelations)) {
-                $buyRequest->setData('draft_hash_relations', $draftHashRelations);
+                if (!empty($draftHashRelations)) {
+                    $buyRequest->setData('draft_hash_relations', $draftHashRelations);
+                }
             }
         }
     }
