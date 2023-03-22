@@ -7,6 +7,7 @@
 
 * check variable for type data-object ([ae3b037](https://github.com/risscsolutions/printformer-magento-2/commit/ae3b0375c9af3555308b70d1f69ec6621130c084))
 * fix variable-error for quote-model on handling add-to-cart from category page ([1d561b6](https://github.com/risscsolutions/printformer-magento-2/commit/1d561b674d7225b12f09178f1c39177271e12bbb))
+* fix(WEM-2048): fix issue with "Add to cart" button on category page ([1c8d1b30](https://github.com/risscsolutions/printformer-magento-2/commit/1c8d1b30))
 
 ## [101.2.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.1.0...v101.2.0) (2023-03-17)
 
