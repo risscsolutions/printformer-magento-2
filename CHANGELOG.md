@@ -1,5 +1,13 @@
 # Changelog
 
+## [101.2.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.2.0...v101.2.1) (2023-03-22)
+
+
+### Bug Fixes
+
+* check variable for type data-object ([ae3b037](https://github.com/risscsolutions/printformer-magento-2/commit/ae3b0375c9af3555308b70d1f69ec6621130c084))
+* fix variable-error for quote-model on handling add-to-cart from category page ([1d561b6](https://github.com/risscsolutions/printformer-magento-2/commit/1d561b674d7225b12f09178f1c39177271e12bbb))
+
 ## [101.2.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.1.0...v101.2.0) (2023-03-17)
 
 
