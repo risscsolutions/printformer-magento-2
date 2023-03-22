@@ -132,7 +132,8 @@ class OrderResourceModel
                 $this->api->setAsyncOrdered($draftIds);
             }
         } catch (\Exception $e) {
-            $this->logger->critical($e);
+            $this->logger->error('In sales printformer process something went wrong');
+            $this->logger->error($e->getMessage());
         } finally {
             if ($processingPermitted) {
                 if (isset($draftIds) && !empty($draftIds)){
