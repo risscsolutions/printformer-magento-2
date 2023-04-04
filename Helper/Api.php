@@ -36,6 +36,7 @@ use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use GuzzleHttp\ClientFactory;
 
 class Api extends AbstractHelper
 {
@@ -125,6 +126,8 @@ class Api extends AbstractHelper
     private Context $context;
     private Config $configHelper;
 
+    private ClientFactory $clientFactory;
+
     /**
      * @param Context $context
      * @param CustomerSession $customerSession
@@ -143,6 +146,9 @@ class Api extends AbstractHelper
      * @param TimezoneInterface $timezone
      * @param OrderItemRepositoryInterface $orderItemRepository
      * @param Log $_logHelper
+     * @param DraftResource $draftResource
+     * @param Config $configHelper
+     * @param ClientFactory $clientFactory
      */
     public function __construct(
         Context $context,
@@ -163,7 +169,8 @@ class Api extends AbstractHelper
         OrderItemRepositoryInterface $orderItemRepository,
         LogHelper $_logHelper,
         DraftResource $draftResource,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        ClientFactory $clientFactory
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -184,6 +191,7 @@ class Api extends AbstractHelper
         $this->draftResource = $draftResource;
         $this->context = $context;
         $this->configHelper = $configHelper;
+        $this->clientFactory = $clientFactory;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -219,13 +227,17 @@ class Api extends AbstractHelper
         }
 
         if (!isset($this->_httpClients[$storeId])) {
-            $this->_httpClients[$storeId] = new Client([
-                'base_url' => $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId),
-                'headers' => [
-                  'Accept' => 'application/json',
-                  'Authorization' => 'Bearer ' . $this->_config->getClientApiKey($storeId, $websiteId),
-                ]
-            ]);
+            $this->_httpClients[$storeId] = $this->clientFactory->create(
+                [
+                    'config' => [
+                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId),
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => 'Bearer ' . $this->_config->getClientApiKey($storeId, $websiteId),
+                        ],
+                    ],
+                ],
+            );
         }
 
         return $this->_httpClients[$storeId];
@@ -583,7 +595,7 @@ class Api extends AbstractHelper
 
             $filePathUrl = $baseUrl.DirectoryList::PUB.DIRECTORY_SEPARATOR.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
 
-            if (isset($filePathUrl) && isset($apiUrl)){
+            if (isset($filePathUrl) && isset($apiUrl)) {
 
                 //upload temporary file-url
                 $requestData = [
@@ -1198,12 +1210,17 @@ class Api extends AbstractHelper
 
         try {
             $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash, 0);
-            $httpClient = new Client([
-                'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
-                'headers' => [
-                    'Accept' => 'application/json'
-                ]
-            ]);
+
+            $httpClient = $this->clientFactory->create(
+                [
+                    'config' => [
+                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
+                        'headers' => [
+                            'Accept' => 'application/json'
+                        ],
+                    ],
+                ],
+            );
             $completeThumbnailUrl = $thumbnailUrl . '?' . http_build_query($postFields);
 
             $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
