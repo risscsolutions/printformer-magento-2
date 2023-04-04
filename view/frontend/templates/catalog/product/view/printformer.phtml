@@ -1,7 +1,8 @@
 <?php
-/** @var \Rissc\Printformer\Block\Catalog\Product\View\Printformer $block */
+/** @var Printformer $block */
 
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Rissc\Printformer\Block\Catalog\Product\View\Printformer;
 
 $block->cleanupDraftSession();
 $product = $block->getProduct();
@@ -23,7 +24,7 @@ $product = $block->getProduct();
                 <?php $_printformerProduct = $_catalogProductPrintformerProduct->getPrintformerProduct() ?>
                 <button id="printformer-button-<?php echo $product->getId(); ?>-<?php echo $_printformerProduct->getTemplateId() ?>"
                         type="button"
-                        data-pf-masterid="<?php echo $_printformerProduct->getMasterId(); ?>"
+                        data-pf-identifier="<?php echo $_printformerProduct->getIdentifier(); ?>"
                         data-pf-draft="inactive"
                         data-pf-type="editor"
                         data-pf-intent="<?php echo $_printformerProduct->getIntent(); ?>"
@@ -34,7 +35,7 @@ $product = $block->getProduct();
                 <?php if ($block->canShowDeleteButton() && !$block->draftInUsage($_printformerProduct)): ?>
                     <button id="printformer-delete-<?php echo $product->getId(); ?>-<?php echo $_printformerProduct->getTemplateId() ?>"
                             data-printformer-product="<?php echo $_printformerProduct->getId() ?>"
-                            data-printformer-master="<?php echo $_printformerProduct->getMasterId(); ?>"
+                            data-printformer-identifier="<?php echo $_printformerProduct->getIdentifier(); ?>"
                             data-product-id="<?php echo $product->getId(); ?>"
                             class="action primary tocart printformer-delete"
                             disabled="disabled"

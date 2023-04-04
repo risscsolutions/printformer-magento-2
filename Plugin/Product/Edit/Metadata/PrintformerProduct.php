@@ -4,6 +4,7 @@ namespace Rissc\Printformer\Plugin\Product\Edit\Metadata;
 
 use Magento\Catalog\Model\Locator\LocatorInterface;
 use Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\CustomOptions;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 use Magento\Framework\UrlInterface;
@@ -140,7 +141,7 @@ class PrintformerProduct
                             'children' => [
                                 'id' => $this->getFieldConfig(__('ID'), 10, 'id'),
                                 'name' => $this->getFieldConfig(__('Name'), 20, 'name'),
-                                'master_id' => $this->getFieldConfig(__('Master ID'), 30, 'master_id'),
+                                'identifier' => $this->getFieldConfig(__('Identifier'), 30, 'identifier'),
                                 'intent' => $this->getFieldConfig(__('Intent'), 40, 'intent'),
                                 'is_delete' => $this->getIsDeleteFieldConfig(100)
                             ]
@@ -348,7 +349,7 @@ class PrintformerProduct
     private function getPrintformerProducts()
     {
         /** @var PrintformerProductDataProvider $dataProvider */
-        $dataProvider = \Magento\Framework\App\ObjectManager::getInstance()->create(PrintformerProductDataProvider::class, [
+        $dataProvider = ObjectManager::getInstance()->create(PrintformerProductDataProvider::class, [
             'name' => 'printformer_product_listing_data_source',
             'primaryFieldName' => 'id',
             'requestFieldName' => 'id',
