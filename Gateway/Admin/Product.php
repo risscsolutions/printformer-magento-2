@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Gateway\Admin;
 
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\ClientFactory;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
@@ -70,14 +71,20 @@ class Product
     private $logHelper;
 
     /**
+     * @var ClientFactory
+     */
+    private $clientFactory;
+
+    /**
      * Product constructor.
-     * @param WebsiteRepository $websiteRepository
-     * @param Decoder $jsonDecoder
-     * @param Url $urlHelper
-     * @param PrintformerProductFactory $printformerProductFactory
-     * @param ProductFactory $productFactory
-     * @param Config $configHelper
-     * @throws Zend_Db_Statement_Exception
+     * @param   WebsiteRepository  $websiteRepository
+     * @param   Decoder  $jsonDecoder
+     * @param   Url  $urlHelper
+     * @param   PrintformerProductFactory  $printformerProductFactory
+     * @param   ProductFactory  $productFactory
+     * @param   Config  $configHelper
+     * @param   Log  $logHelper
+     * @param   ClientFactory  $clientFactory
      */
     public function __construct(
         WebsiteRepository $websiteRepository,
@@ -86,7 +93,8 @@ class Product
         PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
         Config $configHelper,
-        Log $logHelper
+        Log $logHelper,
+        ClientFactory $clientFactory
     ) {
         $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
@@ -95,6 +103,7 @@ class Product
         $this->productFactory = $productFactory;
         $this->configHelper = $configHelper;
         $this->logHelper = $logHelper;
+        $this->clientFactory = $clientFactory;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->connection = $printformerProduct->getResource()->getConnection();
@@ -143,13 +152,17 @@ class Product
             throw new Exception(__('There are no available credentials for this website. Please check your settings in admin section.'));
         }
 
-        $request = new HttpClient([
-                                      'base_url' => $url,
-                                      'headers' => [
-                                          'Accept' => 'application/json',
-                                          'Authorization' => 'Bearer ' . $apiKey
-                                      ]
-                                  ]);
+        $request = $this->clientFactory->create(
+            [
+                'config' => [
+                    'base_url' => $url,
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => 'Bearer ' . $apiKey
+                    ],
+                ],
+            ],
+        );
 
         $createdEntry = $this->logHelper->createGetEntry($url);
         $response = $request->get($url);
