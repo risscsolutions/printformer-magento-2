@@ -12,6 +12,6 @@ $_data = array(
 ?>
 <script type="text/javascript">
     require(["jquery","mage/translate"], function($){
-        $.mage.translate.add(<?php echo Zend_Json::encode($_data) ?>)
+        $.mage.translate.add(<?php echo json_encode($_data) ?>)
     });
 </script>
