@@ -211,7 +211,7 @@ class Draft
                 if (!$userIdentifier) {
                     $userIdentifier = $this->createUser();
                     $customer->setData('printformer_identification', $userIdentifier);
-                    $customer->getResource()->save($customer);
+                    $customer->getResource()->saveAttribute($customer, 'printformer_identification');
                 }
             } else {
                 $userIdentifier = $this->createUser();
@@ -282,7 +282,7 @@ class Draft
         $url = $this->_urlHelper->getDraft();
 
         $header = [
-            'Content-Type:' => 'application/json',
+            'Content-Type' => 'application/json',
             'Accept' => 'application/json'
         ];
         $header['Authorization'] = 'Bearer ' . $this->getClientApiKey($storeId, $websiteId);
