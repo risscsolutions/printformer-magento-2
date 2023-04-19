@@ -1471,7 +1471,7 @@ class Api extends AbstractHelper
                         `entity_id` = " . $customer->getId() . ";
                 ");
         $customer->setData('printformer_identification', $customerUserIdentifier);
-        $customer->getResource()->save($customer);
+        $customer->getResource()->saveAttribute($customer, 'printformer_identification');
         return $customerUserIdentifier;
     }
 
