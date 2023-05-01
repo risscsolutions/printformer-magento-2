@@ -163,7 +163,7 @@ class Save extends Action
             $params = $this->initDraft($product, $draftProcessId, $storeId, $extraParams);
             $wishlistUrl = $this->_sessionHelper->getWishlistUrl();
             if (!empty($wishlistUrl)) {
-                $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($wishlistUrl.(! empty($requestParams) ? '?'.implode('&', $requestParams) : ''));
+                $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($wishlistUrl);
                 return $result;
             }
             $redirectAddToCart = $this->_configHelper->getConfigRedirect()!= Redirect::CONFIG_REDIRECT_URL_PRODUCT;
