@@ -167,27 +167,35 @@ class Cart extends AbstractHelper
                         }
                         break;
                     case 'wishlist':
-                        $wishlistItem = $this->wishlistItemModel->loadWithOptions($id);
-                        $buyRequest = $wishlistItem->getBuyRequest();
-                        $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
-                        if (!empty($draftField)) {
-                            $draftHashArray = explode(',', $draftField);
-                            foreach ($draftHashArray as $draftHash) {
-                                $draftItem = $this->productHelper->getDraftById($draftHash);
-                                if ($draftItem) {
-                                    $pfProductId = $draftItem->getData('printformer_product_id');
-                                    $productId = $draftItem->getData('product_id');
-                                    if (!empty($productId) && !empty($pfProductId)) {
-                                        if ($pfProductId == $printformerProduct->getId() && $productId == $printformerProduct->getProductId()) {
-                                            $draftOption = $wishlistItem->getOptionByCode($this->productHelper::COLUMN_NAME_DRAFTID);
-                                            if (!empty($draftOption)) {
-                                                $draftField = $draftOption->getValue();
-                                                if (!empty($draftField)) {
-                                                    $draftHashArray = explode(',', $draftField);
-                                                    foreach ($draftHashArray as $draftHash) {
-                                                        $draft = $this->productHelper->getDraftById($draftHash);
-                                                        if ($draft->getPrintformerProductId() == $pfProductId && $draft->getProductId() == $productId) {
-                                                            $draftId = $draftHash;
+                        $productId = $printformerProduct->getProductId();
+                        $pfProductId = $printformerProduct->getId();
+                        $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                        if ($sessionUniqueId) {
+                            $draftId = $this->productHelper->getDraftId($pfProductId, $productId);
+                        } else {
+                            $draftId = $this->productHelper->getDraftId($pfProductId, $productId);
+                            $wishlistItem = $this->wishlistItemModel->loadWithOptions($id);
+                            $buyRequest = $wishlistItem->getBuyRequest();
+                            $draftField = $buyRequest->getData($this->productHelper::COLUMN_NAME_DRAFTID);
+                            if (!empty($draftField)) {
+                                $draftHashArray = explode(',', $draftField);
+                                foreach ($draftHashArray as $draftHash) {
+                                    $draftItem = $this->productHelper->getDraftById($draftHash);
+                                    if ($draftItem) {
+                                        $pfProductId = $draftItem->getData('printformer_product_id');
+                                        $productId = $draftItem->getData('product_id');
+                                        if (!empty($productId) && !empty($pfProductId)) {
+                                            if ($pfProductId == $printformerProduct->getId() && $productId == $printformerProduct->getProductId()) {
+                                                $draftOption = $wishlistItem->getOptionByCode($this->productHelper::COLUMN_NAME_DRAFTID);
+                                                if (!empty($draftOption)) {
+                                                    $draftField = $draftOption->getValue();
+                                                    if (!empty($draftField)) {
+                                                        $draftHashArray = explode(',', $draftField);
+                                                        foreach ($draftHashArray as $draftHash) {
+                                                            $draft = $this->productHelper->getDraftById($draftHash);
+                                                            if ($draft->getPrintformerProductId() == $pfProductId && $draft->getProductId() == $productId) {
+                                                                $draftId = $draftHash;
+                                                            }
                                                         }
                                                     }
                                                 }
