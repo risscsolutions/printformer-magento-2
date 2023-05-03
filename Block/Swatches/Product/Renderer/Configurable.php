@@ -120,13 +120,20 @@ class Configurable extends parentConfigurable
                         }
                         break;
                     case 'wishlist':
-                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
-                        if (!empty($wishlistItem)) {
-                            $wishlistProductId = $wishlistItem->getProductId();
-                            if (!empty($wishlistProductId) && $productId == $wishlistProductId) {
-                                $option = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                                if (!empty($option)) {
-                                    $draftId = $option->getValue();
+                        $productId = $printformerProduct->getProductId();
+                        $pfProductId = $printformerProduct->getId();
+                        $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                        if ($sessionUniqueId) {
+                            $draftId = $this->printformerProductHelper->getDraftId($pfProductId, $productId);
+                        } else {
+                            $wishlistItem = $this->wishlistItem->loadWithOptions($id);
+                            if (!empty($wishlistItem)) {
+                                $wishlistProductId = $wishlistItem->getProductId();
+                                if (!empty($wishlistProductId) && $productId == $wishlistProductId) {
+                                    $option = $wishlistItem->getOptionByCode($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
+                                    if (!empty($option)) {
+                                        $draftId = $option->getValue();
+                                    }
                                 }
                             }
                         }
