@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Gateway\User;
 
 use DateTimeImmutable;
+use GuzzleHttp\ClientFactory;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -102,6 +103,8 @@ class Draft
      */
     private $jwtConfig;
 
+    private ClientFactory $clientFactory;
+
     /**
      * @param LoggerInterface $logger
      * @param ZendClientFactory $httpClientFactory
@@ -115,6 +118,9 @@ class Draft
      * @param Media $mediaHelper
      * @param Config $config
      * @param EncryptorInterface $encryptor
+     * @param ClientFactory $clientFactory
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
         LoggerInterface $logger,
@@ -128,7 +134,8 @@ class Draft
         UrlInterface $url,
         Media $mediaHelper,
         Config $config,
-        EncryptorInterface $encryptor
+        EncryptorInterface $encryptor,
+        ClientFactory $clientFactory
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -145,6 +152,7 @@ class Draft
         $this->_urlHelper->initVersionHelper();
         $storeId = $storeManager->getStore()->getId();
         $websiteId = $storeManager->getWebsite()->getId();
+        $this->clientFactory = $clientFactory;
         $this->_httpClient = $this->getGuzzleClient($storeId, $websiteId);
 
         try {
@@ -277,10 +285,14 @@ class Draft
         ];
         $header['Authorization'] = 'Bearer ' . $this->getClientApiKey($storeId, $websiteId);
 
-        return new Client([
-            'base_uri' => $url,
-            'headers' => $header,
-        ]);
+        return $this->clientFactory->create(
+            [
+                'config' => [
+                    'base_uri' => $url,
+                    'headers' => $header,
+                ],
+            ],
+        );
     }
 
     /**
