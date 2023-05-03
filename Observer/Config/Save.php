@@ -58,6 +58,9 @@ class Save implements ObserverInterface
         try {
             $storeId = false;
             $websiteId = $observer->getWebsite();
+            if (empty($websiteId)) {
+                $storeId = 0;
+            }
             $url = $this->_apiHelper->apiUrl()->getClientName($storeId, $websiteId);
             $httpClient = $this->_apiHelper->getHttpClient($storeId, $websiteId);
             $response = $httpClient->get($url);
