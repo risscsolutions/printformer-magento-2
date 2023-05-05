@@ -1,5 +1,20 @@
 # Changelog
 
+## [101.3.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.2.1...v101.3.0) (2023-05-05)
+
+
+### Features
+
+* **WEM-2127:** page wishlist edit add to cart removes item from wishlist ([466d172](https://github.com/risscsolutions/printformer-magento-2/commit/466d1720a24acc95592718024698e1d636e827dc))
+
+
+### Bug Fixes
+
+* **WEM-1861:** save value mandator name for default admin store ([d4ca678](https://github.com/risscsolutions/printformer-magento-2/commit/d4ca6789c9b6360d0613fbe3185eb770ccb76905))
+* **WEM-2127:** delete wrong code wishlist ([63df29c](https://github.com/risscsolutions/printformer-magento-2/commit/63df29c98768963049e46a40de41db0dd49bbb2e))
+* **WEM-2127:** unset session link wishlist ([e253a8b](https://github.com/risscsolutions/printformer-magento-2/commit/e253a8b9b69a6291ff0356206f5653a0434c8211))
+* **wem-2128:** replaces customer save by customer save attribute and fixes header key ([06d72e8](https://github.com/risscsolutions/printformer-magento-2/commit/06d72e8ff3e9beb70d915affdd77bd56acdf7a77))
+
 ## [101.2.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.2.0...v101.2.1) (2023-03-22)
 
 
