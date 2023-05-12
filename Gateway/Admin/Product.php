@@ -70,21 +70,19 @@ class Product
      */
     private $logHelper;
 
-    /**
-     * @var ClientFactory
-     */
-    private $clientFactory;
+    private ClientFactory $clientFactory;
 
     /**
      * Product constructor.
-     * @param   WebsiteRepository  $websiteRepository
-     * @param   Decoder  $jsonDecoder
-     * @param   Url  $urlHelper
-     * @param   PrintformerProductFactory  $printformerProductFactory
-     * @param   ProductFactory  $productFactory
-     * @param   Config  $configHelper
-     * @param   Log  $logHelper
-     * @param   ClientFactory  $clientFactory
+     * @param WebsiteRepository $websiteRepository
+     * @param Decoder $jsonDecoder
+     * @param Url $urlHelper
+     * @param PrintformerProductFactory $printformerProductFactory
+     * @param ProductFactory $productFactory
+     * @param Config $configHelper
+     * @param Log $logHelper
+     * @param ClientFactory $clientFactory
+     * @throws Zend_Db_Statement_Exception
      */
     public function __construct(
         WebsiteRepository $websiteRepository,
@@ -155,10 +153,10 @@ class Product
         $request = $this->clientFactory->create(
             [
                 'config' => [
-                    'base_url' => $url,
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => 'Bearer ' . $apiKey
+            'base_url' => $url,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $apiKey
                     ],
                 ],
             ],
