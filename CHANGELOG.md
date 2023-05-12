@@ -1,5 +1,13 @@
 # Changelog
 
+## [101.3.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.0...v101.3.1) (2023-05-12)
+
+
+### Bug Fixes
+
+* **WEM-2155:** get last draftId for file pdf links ([f210f2a](https://github.com/risscsolutions/printformer-magento-2/commit/f210f2ac44b1dc52e6fe4012c4ac17c979e14d37))
+* **WEM-2155:** resolve store logic for admin print file links ([4e86dab](https://github.com/risscsolutions/printformer-magento-2/commit/4e86dab410b04e45c29c6ed95cdb4b54b2067583))
+
 ## [101.3.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.2.1...v101.3.0) (2023-05-05)
 
 
