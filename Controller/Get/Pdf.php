@@ -45,7 +45,7 @@ class Pdf extends Action
         $draft = $this->_apiHelper->draftProcess($draftId);
 
         if ($draftId == $draft->getDraftId()) {
-            $url = $this->_apiHelper->apiUrl()->getAdminPdf($draft->getDraftId(), $quoteId);
+            $url = $this->_apiHelper->apiUrl()->getAdminPdf($draft->getDraftId(), $quoteId, $draft->getStoreId());
             $this->_redirect($url);
             return;
         }
