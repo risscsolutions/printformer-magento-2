@@ -48,8 +48,10 @@ class DownloadableProduct extends AbstractHelper
 
         try {
             if ($item->getPrintformerDraftid() != null) {
+                $draftsArray = explode(',',$item->getPrintformerDraftid());
+                $lastElement = end($draftsArray);
                 $url = $this->_getUrl('printformer/get/pdf', [
-                    'draft_id' => $item->getPrintformerDraftid(),
+                    'draft_id' => $lastElement,
                     'quote_id' => $item->getOrder()->getQuoteId()
                 ]);
                 return true;

@@ -67,18 +67,22 @@ interface VersionInterface
     /**
      * @param string $draftHash
      * @param int    $quoteId
+     * @param int    $storeId
+     * @param int    $websiteId
      *
      * @return string
      */
-    public function getPDF($draftHash, $quoteId = null);
+    public function getPDF($draftHash, $quoteId = null, $storeId = false, $websiteId = false);
 
     /**
      * @param string $draftHash
      * @param int    $quoteId
+     * @param int    $storeId
+     * @param int    $websiteId
      *
      * @return string
      */
-    public function getPreviewPDF($draftHash, $quoteid = null);
+    public function getPreviewPDF($draftHash, $quoteid = null, $storeId = false, $websiteId = false);
 
     /**
      * @return string
@@ -93,18 +97,20 @@ interface VersionInterface
     /**
      * @param string $draftHash
      * @param int    $quoteId
+     * @param int    $storeId
      *
      * @return string
      */
-    public function getAdminPDF($draftHash, $quoteId);
+    public function getAdminPDF($draftHash, $quoteId, $storeId);
 
     /**
      * @param string $draftHash
      * @param int    $quoteId
+     * @param int    $storeId
      *
      * @return string
      */
-    public function getAdminPreviewPDF($draftHash, $quoteId);
+    public function getAdminPreviewPDF($draftHash, $quoteId, $storeId);
 
     /**
      * @param string $draftHash
