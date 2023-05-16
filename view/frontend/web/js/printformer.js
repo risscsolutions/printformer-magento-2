@@ -484,6 +484,24 @@ define([
                     }
                 }, addBtn);
             }
+            this.allDraftsDone(draftIds, this.options.printformerProducts);
+        },
+
+        allDraftsDone: function(draftIds, allDrafts) {
+            switch (this.options.allowSkipConfig) {
+                case 0:
+                    if (draftIds.length < allDrafts.length) {
+                        return this.addBtnDisable();
+                    }
+                    break;
+                case 2:
+                    if (allDrafts.length > 0 && draftIds.length < 1) {
+                        return this.addBtnDisable();
+                    }
+                    break;
+                default:
+                    return this.addBtnEnable();
+            }
         },
 
         addBtnEnable: function () {
