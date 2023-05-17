@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Helper;
 
 use DateTimeImmutable;
+use GuzzleHttp\Exception\GuzzleException;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -35,6 +36,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use GuzzleHttp\ClientFactory;
 
 class Api extends AbstractHelper
 {
@@ -124,6 +126,8 @@ class Api extends AbstractHelper
     private Context $context;
     private Config $configHelper;
 
+    private ClientFactory $clientFactory;
+
     /**
      * @param SerializerInterface $serializer
      */
@@ -149,7 +153,11 @@ class Api extends AbstractHelper
      * @param Log $_logHelper
      * @param DraftResource $draftResource
      * @param Config $configHelper
+<<<<<<< HEAD
      * @param SerializerInterface $serializer
+=======
+     * @param ClientFactory $clientFactory
+>>>>>>> cac176a8d481e2613801dac9d2a090baa12e7f38
      */
     public function __construct(
         Context $context,
@@ -171,7 +179,11 @@ class Api extends AbstractHelper
         LogHelper $_logHelper,
         DraftResource $draftResource,
         ConfigHelper $configHelper,
+<<<<<<< HEAD
         SerializerInterface $serializer
+=======
+        ClientFactory $clientFactory
+>>>>>>> cac176a8d481e2613801dac9d2a090baa12e7f38
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -193,6 +205,7 @@ class Api extends AbstractHelper
         $this->context = $context;
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
+        $this->clientFactory = $clientFactory;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -228,13 +241,17 @@ class Api extends AbstractHelper
         }
 
         if (!isset($this->_httpClients[$storeId])) {
-            $this->_httpClients[$storeId] = new Client([
-                'base_url' => $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId),
-                'headers' => [
-                  'Accept' => 'application/json',
-                  'Authorization' => 'Bearer ' . $this->_config->getClientApiKey($storeId, $websiteId),
-                ]
-            ]);
+            $this->_httpClients[$storeId] = $this->clientFactory->create(
+                [
+                    'config' => [
+                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId),
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => 'Bearer ' . $this->_config->getClientApiKey($storeId, $websiteId),
+                        ],
+                    ],
+                ],
+            );
         }
 
         return $this->_httpClients[$storeId];
@@ -472,6 +489,38 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @param $userIdentifier
+     * @param $drafts
+     * @param $storeId
+     * @return bool
+     */
+    public function mergeUsers($originUserIdentifier, $tempUserIdentifier, $storeId = null)
+    {
+        if (!isset($storeId) || !is_numeric($storeId)) {
+            $storeId = $this->configHelper->searchForStoreId();
+        }
+
+        $url = $this->apiUrl()->getMergeUser($originUserIdentifier);
+
+        $requestData = [
+            'json' => [
+                'source_user_identifier' => $tempUserIdentifier
+            ]
+        ];
+
+        $result = false;
+        try {
+            $response = $this->getHttpClient($storeId)->post($url, $requestData);
+            $responseBody = $response->getBody();
+            $response = json_decode($responseBody, true);
+            $result = $response;
+        } catch (GuzzleException $e) {
+        }
+
+        return $result;
+    }
+
+    /**
      * @param $draftHash
      * @param $orderId
      * @return mixed
@@ -525,7 +574,7 @@ class Api extends AbstractHelper
             $this->_sessionHelper->setDraftPageInfo($draftHash, $response['data']);
             $result =  $response['data'];
         } else {
-            $result = $storedDraftPageInfo;
+            $result = $storedDraftPageInfo[$draftHash];
         }
 
         return $result;
@@ -534,9 +583,10 @@ class Api extends AbstractHelper
     /**
      * @param $draftId
      * @param $downloadableLinkFilePath
+     * @param $social
      * @return bool
      */
-    public function uploadPdf($draftId, $downloadableLinkFilePath)
+    public function uploadPdf($draftId, $downloadableLinkFilePath, $social = false)
     {
         $absoluteMediaPath = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath();
         $absoluteDownloadableMediaPath = $absoluteMediaPath.'downloadable/files/links';
@@ -558,19 +608,21 @@ class Api extends AbstractHelper
             $apiUrl = $this->apiUrl()->getUploadDraftId($draftId);
 
             $filePathUrl = $baseUrl.DirectoryList::PUB.DIRECTORY_SEPARATOR.DirectoryList::MEDIA.DIRECTORY_SEPARATOR.$downloadableTempLinkFilePath;
-            $callBackUrl = $this->getUploadCallbackUrl($draftId);
-            $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
 
-            if (isset($filePathUrl) && isset($apiUrl) && isset($callBackUrlWithQueryString)){
-                $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
+            if (isset($filePathUrl) && isset($apiUrl)) {
 
                 //upload temporary file-url
                 $requestData = [
                     'json' => [
-                        'fileURL' => $filePathUrl,
-                        'callbackURL' => $callBackUrlWithQueryString
+                        'fileURL' => $filePathUrl
                     ]
                 ];
+                if (!$social) {
+                    $callBackUrl = $this->getUploadCallbackUrl($draftId);
+                    $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
+                    $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
+                    $requestData['json']['callbackURL'] = $callBackUrlWithQueryString;
+                }
 
                 try {
                     $createdEntry = $this->_logHelper->createPostEntry($apiUrl, $requestData);
@@ -1072,9 +1124,11 @@ class Api extends AbstractHelper
 
     /**
      * @param $draftId
+     * @param $customerId
+     * @param $userIdentifier
      * @return false|Draft
      */
-    public function generateNewReplicateDraft($draftId, $customerId = null)
+    public function generateNewReplicateDraft($draftId, $customerId = null, $userIdentifier = null)
     {
         $result = false;
         $oldDraftId = $draftId;
@@ -1095,6 +1149,10 @@ class Api extends AbstractHelper
 
                 if (isset($customerId)) {
                     $draftData['customer_id'] = $customerId;
+                }
+
+                if (isset($userIdentifier)) {
+                    $draftData['user_identifier'] = $userIdentifier;
                 }
 
                 $newDraftProcess->addData($draftData);
@@ -1179,12 +1237,17 @@ class Api extends AbstractHelper
 
         try {
             $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash, 0);
-            $httpClient = new Client([
-                'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
-                'headers' => [
-                    'Accept' => 'application/json'
-                ]
-            ]);
+
+            $httpClient = $this->clientFactory->create(
+                [
+                    'config' => [
+                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
+                        'headers' => [
+                            'Accept' => 'application/json'
+                        ],
+                    ],
+                ],
+            );
             $completeThumbnailUrl = $thumbnailUrl . '?' . http_build_query($postFields);
 
             $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
@@ -1453,7 +1516,7 @@ class Api extends AbstractHelper
                         `entity_id` = " . $customer->getId() . ";
                 ");
         $customer->setData('printformer_identification', $customerUserIdentifier);
-        $customer->getResource()->save($customer);
+        $customer->getResource()->saveAttribute($customer, 'printformer_identification');
         return $customerUserIdentifier;
     }
 

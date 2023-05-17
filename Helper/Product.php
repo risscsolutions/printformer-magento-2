@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Exception;
 use Magento\Catalog\Model\Product as ProductModel;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface as ProductAttributeRepository;
 use Magento\Catalog\Model\ProductRepository;
@@ -19,6 +20,7 @@ use Rissc\Printformer\Model\ProductFactory;
 use Rissc\Printformer\Model\ResourceModel\Product as ResourceProduct;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Rissc\Printformer\Setup\InstallSchema;
+use Magento\Store\Model\Store;
 
 class Product extends AbstractHelper
 {
@@ -107,14 +109,12 @@ class Product extends AbstractHelper
      * @param array $childProductIds
      * @return array
      */
-    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [])
+    protected function getCatalogProductPrintformerProductsData($productId, int $storeId = 0, array $childProductIds = [], $defaultStoreTemplatesCanBeUsedOnFrontend = true)
     {
         $connection = $this->resourceConnection->getConnection();
 
         $select = $connection->select()
             ->from('catalog_product_printformer_product');
-
-        $select->where('store_id = ?', intval($storeId));
 
         if (!empty($childProductIds)){
             array_unshift($childProductIds, $productId);
@@ -123,7 +123,21 @@ class Product extends AbstractHelper
             $select->where('product_id = ?', intval($productId));
         }
 
-        return $connection->fetchAll($select);
+        $selectDefault = clone $select;
+        $select->where('store_id = ?', intval($storeId));
+        $resultTemplates = $connection->fetchAll($select);
+
+        if ($defaultStoreTemplatesCanBeUsedOnFrontend) {
+            if (empty($resultTemplates)) {
+                $defaultStoreCanBeUsed = $this->configHelper->defaultStoreTemplatesCanBeUsed($storeId);
+                if($defaultStoreCanBeUsed) {
+                    $selectDefault->where('store_id = ?', intval(STORE::DEFAULT_STORE_ID));
+                    $resultTemplates = $connection->fetchAll($selectDefault);
+                }
+            }
+        }
+
+        return $resultTemplates;
     }
 
     /**
@@ -173,7 +187,7 @@ class Product extends AbstractHelper
      */
     public function getCatalogProductPrintformerProductsArray($productId, $storeId = 0)
     {
-        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, []);
+        $result = $this->getCatalogProductPrintformerProductsData($productId, $storeId, [], false);
 
         foreach($result as &$row) {
             $printformerProduct = $this->productFactory->create();
@@ -378,7 +392,7 @@ class Product extends AbstractHelper
                 ->addFieldToFilter('draft_id', ['eq' => $draftId]);
             $lastItem = $draftCollection->getLastItem();
             $printformerProductId = $lastItem->getPrintformerProductId();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
         return $printformerProductId;
     }
@@ -395,7 +409,7 @@ class Product extends AbstractHelper
             $draftCollection = $draftProcess->getCollection()
                 ->addFieldToFilter('draft_id', ['eq' => $draftId]);
             $resultItem = $draftCollection->getLastItem();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
         return $resultItem;
     }
@@ -406,16 +420,18 @@ class Product extends AbstractHelper
      */
     public function getSessionUniqueId(string $draftField)
     {
-        $draftHashArray = explode(',', $draftField ?? '');
-        foreach($draftHashArray as $draftHash) {
-            $draftItem = $this->getDraftById($draftHash);
-            if ($draftItem) {
-                $pfProductId = $draftItem->getData('printformer_product_id');
-                $productId = $draftItem->getData('product_id');
-                if(!empty($productId) && !empty($pfProductId)) {
-                    $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
-                    if (!isset($uniqueId)) {
-                        $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
+        if (!empty($draftField)) {
+            $draftHashArray = explode(',', $draftField);
+            foreach($draftHashArray as $draftHash) {
+                $draftItem = $this->getDraftById($draftHash);
+                if ($draftItem) {
+                    $pfProductId = $draftItem->getData('printformer_product_id');
+                    $productId = $draftItem->getData('product_id');
+                    if(!empty($productId) && !empty($pfProductId)) {
+                        $uniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                        if (!isset($uniqueId)) {
+                            $uniqueId = $this->sessionHelper->loadSessionUniqueId($productId, $pfProductId, $draftHash);
+                        }
                     }
                 }
             }

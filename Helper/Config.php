@@ -2,7 +2,9 @@
 namespace Rissc\Printformer\Helper;
 
 use DateInterval;
+use DateTime;
 use DateTimeImmutable;
+use Exception;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Encryption\EncryptorInterface;
@@ -57,6 +59,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
     const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
+    const XML_PATH_CONFIG_USE_DRAFT_IN_WISHLIST     = 'printformer/general/use_draft_in_wishlist';
 
     const XML_PATH_CONFIG_FORMAT_CHANGE_NOTICE      = 'printformer/format/change_notice';
     const XML_PATH_CONFIG_FORMAT_NOTICE_TEXT        = 'printformer/format/notice_text';
@@ -80,6 +83,8 @@ class Config extends AbstractHelper
     const REGISTRY_KEY_WISHLIST_NEW_ITEM_ID         = 'printformer_new_wishlist_item_id';
     const CONFIGURABLE_TYPE_CODE = Configurable::TYPE_CODE;
 
+    const XML_PATH_CONFIG_USE_ALL_STORES_DEFAULT_TEMPLATES_IF_NO_TEMPLATES_ASSIGNED_ON_STORE = 'printformer/general/use_all_stores_default_templates_if_no_templates_assigned_on_store';
+
     public const XML_PATH_INVENTORY_MANAGE_STOCK_CONFIG_ENABLED = 'cataloginventory/item_options/manage_stock';
 
     /**
@@ -101,7 +106,7 @@ class Config extends AbstractHelper
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param EncryptorInterface $encryptor
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function __construct(
         Context $context,
@@ -154,6 +159,24 @@ class Config extends AbstractHelper
         } catch (LocalizedException $e) {
         }
         return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public function searchForStoreId() : int
+    {
+        $storeId = $this->getStoreIdFromRequest();
+
+        if (!is_numeric($storeId)) {
+            $storeId = $this->getStoreIdFromStoreManager();
+        }
+
+        if (!is_numeric($storeId)) {
+            $storeId = Store::DEFAULT_STORE_ID;
+        }
+
+        return $storeId;
     }
 
     /**
@@ -247,7 +270,7 @@ class Config extends AbstractHelper
     /**
      * @return bool
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function isFullscreenButtonEnabled($storeId = false, $websiteId = false)
     {
@@ -419,7 +442,7 @@ class Config extends AbstractHelper
         try {
             $dateTimeInterval = new DateInterval('P' . $days . 'D');
             $expireDateTimeImmutable = $dateTimeImmutable->add($dateTimeInterval);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_logger->warning('invalid datetime interval format, please verify');
         }
 
@@ -433,7 +456,7 @@ class Config extends AbstractHelper
     {
         $days = $this->getConfigValue(self::XML_PATH_CONFIG_EXPIRE_DATE, false, $storeId, $websiteId);
 
-        return (new \DateTime())->add(\DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
+        return (new DateTime())->add(DateInterval::createFromDateString('+'.$days.' days'))->getTimestamp();
     }
 
     /**
@@ -659,9 +682,17 @@ class Config extends AbstractHelper
      */
     public function filterForConfigurableProduct($storeId = false, $websiteId = false)
     {
-        return true;
-        //todo: fix for future (some issues found with other config product_image_preview=no)
-//        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
+        return $this->getConfigValue(self::XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function useDraftInWishlist($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_USE_DRAFT_IN_WISHLIST, true, $storeId, $websiteId);
     }
 
     /**
@@ -749,5 +780,53 @@ class Config extends AbstractHelper
             $result = false;
         }
         return $result;
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function useDefaultTemplatesIfStoreTemplatesMissing($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_USE_ALL_STORES_DEFAULT_TEMPLATES_IF_NO_TEMPLATES_ASSIGNED_ON_STORE, true, $storeId, $websiteId);
+    }
+
+    /**
+     * Function to verify if for a given store id the filter with default store can ne used.
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function defaultStoreTemplatesCanBeUsed(int $storeId): bool
+    {
+        $isApiKeyEquivalentToDefault = $this->isApiKeyEquivalentToDefault($storeId);
+        $defaultStoreTemplatesCanBeUsed = $this->useDefaultTemplatesIfStoreTemplatesMissing($storeId);
+
+        if ($isApiKeyEquivalentToDefault && $defaultStoreTemplatesCanBeUsed) {
+            $defaultStoreTemplatesCanBeUsed = true;
+        } else {
+            $defaultStoreTemplatesCanBeUsed = false;
+        }
+
+        return $defaultStoreTemplatesCanBeUsed;
+    }
+
+    /**
+     * Function to check if the api-key of a given store is equivalent to the stored default key
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function isApiKeyEquivalentToDefault(int $storeId)
+    {
+        $storeApiKey = $this->getClientApiKey($storeId);
+        $defaultApiKey = $this->getClientApiKey(STORE::DEFAULT_STORE_ID);
+
+        if ($storeApiKey == $defaultApiKey) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

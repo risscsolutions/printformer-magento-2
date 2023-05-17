@@ -163,17 +163,17 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getPDF($draftHash, $quoteId = null)
+    public function getPDF($draftHash, $quoteId = null, $storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getPDF($draftHash, $quoteId, $storeId, $websiteId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPreviewPDF($draftHash, $quoteId = null)
+    public function getPreviewPDF($draftHash, $quoteId = null, $storeId = false, $websiteId = false)
     {
-        return $this->getVersionHelper()->getPreviewPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getPreviewPDF($draftHash, $quoteId, $storeId, $websiteId);
     }
 
     /**
@@ -195,17 +195,17 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getAdminPDF($draftHash, $quoteId)
+    public function getAdminPDF($draftHash, $quoteId, $storeId)
     {
-        return $this->getVersionHelper()->getAdminPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getAdminPDF($draftHash, $quoteId, $storeId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAdminPreviewPDF($draftHash, $quoteId)
+    public function getAdminPreviewPDF($draftHash, $quoteId, $storeId)
     {
-        return $this->getVersionHelper()->getAdminPreviewPDF($draftHash, $quoteId);
+        return $this->getVersionHelper()->getAdminPreviewPDF($draftHash, $quoteId, $storeId);
     }
 
     /**
@@ -274,6 +274,14 @@ class Url extends AbstractHelper implements VersionInterface
     public function getReplicateDraftId($oldDraftId)
     {
         return $this->getVersionHelper()->getReplicateDraftId($oldDraftId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMergeUser($originUserIdentifier)
+    {
+        return $this->getVersionHelper()->getMergeUsers($originUserIdentifier);
     }
 
     /**

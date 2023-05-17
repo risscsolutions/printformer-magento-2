@@ -143,8 +143,11 @@ class Save extends Action
             $apiHelper = ObjectManager::getInstance()->get(Api::class);
 
             if ($apiHelper->config()->isUseImagePreview()) {
-                $this->_mediaHelper->createPreview($draft->getData('draft_id'), 1);
-                $this->_mediaHelper->createThumbnail($draft->getData('draft_id'), 1);
+                $draftIds = $draft->getData('draft_id');
+                if (!empty($draftIds)) {
+                    $this->_mediaHelper->createPreview($draftIds, 1);
+                    $this->_mediaHelper->createThumbnail($draftIds, 1);
+                }
             }
 
             $draftData = $apiHelper->getPrintformerDraft($draft->getDraftId(), true);
@@ -157,6 +160,11 @@ class Save extends Action
             }
 
             $params = $this->initDraft($product, $draftProcessId, $storeId, $extraParams);
+            $wishlistUrl = $this->_sessionHelper->getWishlistUrl();
+            if (!empty($wishlistUrl)) {
+                $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT)->setUrl($wishlistUrl);
+                return $result;
+            }
             $redirectAddToCart = $this->_configHelper->getConfigRedirect()!= Redirect::CONFIG_REDIRECT_URL_PRODUCT;
             if ($this->getRequest()->getParam('updateWishlistItemOptions') == 'wishlist/index/updateItemOptions') {
                 // update wishlist item options if true
@@ -172,7 +180,15 @@ class Save extends Action
                     ->setController('index')
                     ->forward('add');
             } elseif ($redirectAddToCart && $this->getRequest()->getParam('is_edit') != '1') {
-                $params['product'] = $product->getId();
+                $productId = $product->getId();
+                if ($product->getTypeId() === Type::TYPE_SIMPLE) {
+                    $parentProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId, $storeId);
+                    if (!empty($parentProduct)) {
+                        $productId = $parentProduct->getId();
+                    }
+                }
+
+                $params['product'] = $productId;
                 $params['printformer_unique_session_id'] = $uniqueID;
                 $result = $this->resultFactory->create(ResultFactory::TYPE_FORWARD)
                     ->setParams($this->prepareAddToCartParams($params))
@@ -182,11 +198,10 @@ class Save extends Action
             } else { // redirect to product page
                 if ($this->getRequest()->getParam('is_edit') == '1') {
                     $productId = $this->getRequest()->getParam('edit_product');
-
                     if ($product->getTypeId() === Type::TYPE_SIMPLE) {
-                        $product = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($product->getId(), $storeId);
-                        if (!empty($product)) {
-                            $productId = $product->getId();
+                        $parentProduct = $this->configurableProductHelper->getFirstConfigurableBySimpleProductId($productId, $storeId);
+                        if (!empty($parentProduct)) {
+                            $productId = $parentProduct->getId();
                         }
                     }
 

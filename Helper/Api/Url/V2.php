@@ -26,6 +26,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const API_UPDATE_DRAFT = '/api-ext/draft/{draftId}';
     const API_GET_DRAFT_USAGE_PAGE_INFO = '/api-ext/draft/{draftId}/{usage}/page-info';
     const API_REPLICATE_DRAFT = '/api-ext/draft/{draftId}/replicate';
+    const API_MERGE_USERS = '/api-ext/user/{user}/merge';
     const API_UPLOAD_DRAFT = '/api-ext/draft/{draftId}/upload';
     const API_DRAFT_PROCESSING = '/api-ext/pdf-processing';
     const API_URL_CALLBACKORDEREDSTATUS = 'printformer/api/callbackOrderedStatus';
@@ -206,6 +207,14 @@ class V2 extends AbstractHelper implements VersionInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getMergeUsers($originUserIdentifier)
+    {
+        return $this->getPrintformerBaseUrl() . str_replace('{user}', $originUserIdentifier, self::API_MERGE_USERS);
+    }
+
+    /**
      * @param $draftId
      * @return string
      */
@@ -359,10 +368,12 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getPDF(
         $draftHash,
-        $quoteid = null
+        $quoteid = null,
+        $storeId = false,
+        $websiteId = false
     )
     {
-        return $this->getPrintformerBaseUrl() .
+        return $this->getPrintformerBaseUrl($storeId, $websiteId) .
             str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PDF);
     }
 
@@ -371,10 +382,12 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getPreviewPDF(
         $draftHash,
-        $quoteid = null
+        $quoteid = null,
+        $storeId = false,
+        $websiteId = false
     )
     {
-        return $this->getPrintformerBaseUrl() .
+        return $this->getPrintformerBaseUrl($storeId, $websiteId) .
             str_replace('{draftId}', $draftHash, self::API_FILES_DRAFT_PREVIEW);
     }
 
@@ -454,18 +467,27 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminPDF(
         $draftHash,
-        $quoteId
+        $quoteId,
+        $storeId = false
     )
     {
+        $websiteId = false;
+        if ($storeId) {
+            $websiteId = $this->_storeManager->getStore($storeId)->getWebsiteId();
+            $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
+            if (!empty($apiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+            }
+        }
         $issuedAt = new DateTimeImmutable();
-        $expirationDate = $this->_config->getExpireDate();
+        $expirationDate = $this->_config->getExpireDate($storeId, $websiteId);
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
+            ->withClaim('client', $this->_config->getClientIdentifier($storeId, $websiteId))
             ->expiresAt($expirationDate);
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $pdfUrl = $this->getPDF($draftHash);
+        $pdfUrl = $this->getPDF($draftHash, $storeId, $websiteId);
         $postFields = [
             'jwt' => $JWT
         ];
@@ -478,18 +500,28 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminPreviewPDF(
         $draftHash,
-        $quoteId
+        $quoteId,
+        $storeId = false
     )
     {
+        $websiteId = false;
+        if ($storeId) {
+            $websiteId = $this->_storeManager->getStore($storeId)->getWebsiteId();
+            $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
+            if (!empty($apiKey)) {
+                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+            }
+        }
+
         $issuedAt = new DateTimeImmutable();
-        $expirationDate = $this->_config->getExpireDate();
+        $expirationDate = $this->_config->getExpireDate($storeId, $websiteId);
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
+            ->withClaim('client', $this->_config->getClientIdentifier($storeId, $websiteId))
             ->expiresAt($expirationDate);
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $pdfUrl = $this->getPreviewPDF($draftHash);
+        $pdfUrl = $this->getPreviewPDF($draftHash, $storeId, $websiteId);
         $postFields = [
             'jwt' => $JWT
         ];

@@ -632,7 +632,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
-        if (version_compare($context->getVersion(), '100.8.70', '<')) {
+        if (version_compare($context->getVersion(), '100.9.6', '<')) {
             $tableName = $connection->getTableName(self::TABLE_NAME_DRAFT);
             $columnName = 'super_attribute';
             if (!$connection->tableColumnExists($tableName, $columnName)) {

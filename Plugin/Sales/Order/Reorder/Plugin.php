@@ -2,42 +2,53 @@
 namespace Rissc\Printformer\Plugin\Sales\Order\Reorder;
 
 use Closure;
-use Magento\Catalog\Model\Product;
 use Magento\Checkout\Model\Cart;
-use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Registry;
 use Rissc\Printformer\Helper\Api;
-use Rissc\Printformer\Setup\InstallSchema;
+use Rissc\Printformer\Helper\Cart as CartHelper;
 
 class Plugin
 {
-    /** @var Api */
-    protected $_apiHelper;
+    /**
+     * @var Api
+     */
+    protected $apiHelper;
 
-    /** @var Registry */
-    protected $_registry;
+    /**
+     * @var Registry
+     */
+    protected $registry;
 
+    /**
+     * @var CartHelper
+     */
+    private CartHelper $cartHelper;
+
+    /**
+     * @param Registry $registry
+     * @param CartHelper $cartHelper
+     */
     public function __construct(
-        Api $apiHelper,
-        Registry $registry
+        Registry $registry,
+        CartHelper $cartHelper
     ) {
-        $this->_apiHelper = $apiHelper;
-        $this->_registry = $registry;
+        $this->registry = $registry;
+        $this->cartHelper = $cartHelper;
     }
 
     /**
      * @param Cart $subject
      * @param Closure $originalAddOrderItem
      * @param $item
-     * @return mixed
+     * @return mixed|null
      */
     public function aroundAddOrderItem(Cart $subject, Closure $originalAddOrderItem, $item)
     {
-        if ($this->_registry->registry('printformer_is_reorder')) {
-            $this->_registry->unregister('printformer_is_reorder');
+        if ($this->registry->registry('printformer_is_reorder')) {
+            $this->registry->unregister('printformer_is_reorder');
         }
 
-        $this->_registry->register('printformer_is_reorder', true);
+        $this->registry->register('printformer_is_reorder', true);
 
         return $originalAddOrderItem($item);
     }
@@ -45,33 +56,15 @@ class Plugin
     /**
      * @param Cart $subject
      * @param Closure $originalAddProduct
-     * @param Product $product
+     * @param $product
      * @param $buyRequest
-     * @return mixed
-     * @throws AlreadyExistsException
+     * @return mixed|null
      */
-    public function aroundAddProduct(Cart $subject, Closure $originalAddProduct, Product $product, $buyRequest)
+    public function aroundAddProduct(Cart $subject, Closure $originalAddProduct, $product, $buyRequest)
     {
-        if ($this->_registry->registry('printformer_is_reorder')) {
-            $draftIds = $buyRequest->getData(InstallSchema::COLUMN_NAME_DRAFTID);
-            if (!empty($draftIds)) {
-                $draftHashArray = explode(',', $draftIds ?? '');
-                foreach ($draftHashArray as $draftId) {
-                    $oldDraftId = $draftId;
-                    $newDraft = $this->_apiHelper->generateNewReplicateDraft($oldDraftId);
-                    if (!empty($newDraft)) {
-                        $newDraftId = $newDraft->getDraftId();
-                        $relations = $buyRequest->getData('draft_hash_relations');
-                        if (!empty($relations[$newDraft->getPrintformerProductId()])) {
-                            $relations[$newDraft->getPrintformerProductId()] = $newDraftId;
-                            $buyRequest->setData('draft_hash_relations', $relations);
-                        }
-                    }
-                }
-            }
+        $isReordered = $this->registry->registry('printformer_is_reorder');
 
-            $this->_registry->unregister('printformer_is_reorder');
-        }
+        $this->cartHelper->prepareDraft($buyRequest, $isReordered);
 
         return $originalAddProduct($product, $buyRequest);
     }

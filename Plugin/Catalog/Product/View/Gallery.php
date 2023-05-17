@@ -86,7 +86,7 @@ class Gallery
         if ($this->configHelper->isUseImagePreview()) {
             $draftIds = $this->getDraftIds($product->getId(), $product->getStore()->getId(), $product->getTypeId());
             if (!empty($draftIds)){
-                $this->mediaHelper->loadDraftImagesToMainImage($draftIds, $result);
+                $this->mediaHelper->loadDraftImagesToMainImage($draftIds, $product, $result);
             }
         }
 

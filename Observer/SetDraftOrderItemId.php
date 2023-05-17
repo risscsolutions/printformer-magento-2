@@ -50,13 +50,16 @@ class SetDraftOrderItemId implements ObserverInterface
              */
             $order = $observer->getData('order');
             foreach ($order->getAllItems() as $item) {
-                foreach(explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID) ?? '') as $draftId) {
-                    if (!empty($draftId)){
-                        $this->draftFactory
-                            ->create()
-                            ->load($draftId, 'draft_id')
-                            ->setOrderItemId($item->getId())
-                            ->save();
+                $draftIdsField = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                if (!empty($draftIdsField)) {
+                    foreach(explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID)) as $draftId) {
+                        if (!empty($draftId)){
+                            $this->draftFactory
+                                ->create()
+                                ->load($draftId, 'draft_id')
+                                ->setOrderItemId($item->getId())
+                                ->save();
+                        }
                     }
                 }
             }

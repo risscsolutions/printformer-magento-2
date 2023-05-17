@@ -84,6 +84,7 @@ class Printformer extends AbstractView
     private ProductAttributeRepositoryInterface $productAttributeRepository;
 
     private ConfigurableProductHelper $configurableProductHelper;
+
     private cartHelper $cartHelper;
 
     /**
@@ -685,52 +686,6 @@ class Printformer extends AbstractView
     }
 
     /**
-     * @return void
-     */
-    public function loadUniqueSessionIdsByRequestInformation()
-    {
-        $uniqueId = null;
-
-        $productId = (int)$this->getRequest()->getParam('product_id');
-
-        if ($this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $productId) {
-            $id = (int)$this->getRequest()->getParam('id');
-            if ($id) {
-                switch ($this->getRequest()->getModuleName()) {
-                    case 'checkout':
-                        $quoteItem = $this->cart->getQuote()->getItemById($id);
-                        $product = $quoteItem->getProduct();
-                        $buyRequest = $quoteItem->getBuyRequest();
-                        if ($this->configHelper->useChildProduct($product->getTypeId())) {
-                            $children = $quoteItem->getChildren();
-                            foreach ($children as $child) {
-                                $buyRequest = $child->getBuyRequest();
-                                $draftField = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                                $this->printformerProductHelper->getSessionUniqueId($draftField);
-                            }
-                        } else {
-                            $buyRequest = $quoteItem->getBuyRequest();
-                            $draftField = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                            $this->printformerProductHelper->getSessionUniqueId($draftField);
-                        }
-                        break;
-                    case 'wishlist':
-                        $wishlistItem = $this->wishlistItem->loadWithOptions($id);
-                        $buyRequest = $wishlistItem->getBuyRequest();
-                        $draftField = $buyRequest->getData($this->printformerProductHelper::COLUMN_NAME_DRAFTID);
-                        $draftHashArray = explode(',', $draftField ?? '');
-                        foreach($draftHashArray as $draftHash) {
-//                            $this->printformerProductHelper->getSessionUniqueId($draftHash);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-
-    /**
      * @return string
      */
     public function getJsonConfig()
@@ -740,7 +695,6 @@ class Printformer extends AbstractView
             return '{}';
         }
 
-        $this->loadUniqueSessionIdsByRequestInformation();
         $minSaleQty = 1;
         try {
             $stockItem = $product->getExtensionAttributes()->getStockItem();

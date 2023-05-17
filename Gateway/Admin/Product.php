@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Gateway\Admin;
 
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\ClientFactory;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Json\Decoder;
 use Magento\Framework\Stdlib\DateTime;
@@ -66,6 +67,8 @@ class Product
      */
     private $logHelper;
 
+    private ClientFactory $clientFactory;
+
     /**
      * Product constructor.
      * @param WebsiteRepository $websiteRepository
@@ -74,6 +77,8 @@ class Product
      * @param PrintformerProductFactory $printformerProductFactory
      * @param ProductFactory $productFactory
      * @param Config $configHelper
+     * @param Log $logHelper
+     * @param ClientFactory $clientFactory
      * @throws \Zend_Db_Statement_Exception
      */
     public function __construct(
@@ -83,7 +88,8 @@ class Product
         PrintformerProductFactory $printformerProductFactory,
         ProductFactory $productFactory,
         Config $configHelper,
-        Log $logHelper
+        Log $logHelper,
+        ClientFactory $clientFactory
     ) {
         $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
@@ -92,6 +98,7 @@ class Product
         $this->productFactory = $productFactory;
         $this->configHelper = $configHelper;
         $this->logHelper = $logHelper;
+        $this->clientFactory = $clientFactory;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->connection = $printformerProduct->getResource()->getConnection();
@@ -161,13 +168,17 @@ class Product
             throw new Exception(__('There are no available credentials for this website. Please check your settings in admin section.'));
         }
 
-        $request = new HttpClient([
-            'base_url' => $url,
-            'headers' => [
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $apiKey
-            ]
-        ]);
+        $request = $this->clientFactory->create(
+            [
+                'config' => [
+                    'base_url' => $url,
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => 'Bearer ' . $apiKey
+                    ],
+                ],
+            ],
+        );
 
         $createdEntry = $this->logHelper->createGetEntry($url);
         $response = $request->get($url);

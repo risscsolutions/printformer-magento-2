@@ -227,17 +227,17 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getPDF($draftHash, $quoteId = null)
+    public function getPDF($draftHash, $quoteId = null, $storeId = false, $websiteId = false)
     {
-        return $this->getAdminPDF($draftHash, $quoteId);
+        return $this->getAdminPDF($draftHash, $quoteId, $storeId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPreviewPDF($draftHash, $quoteId = null)
+    public function getPreviewPDF($draftHash, $quoteId = null, $storeId = false, $websiteId = false)
     {
-        return $this->getAdminPDF($draftHash, $quoteId);
+        return $this->getAdminPDF($draftHash, $quoteId, $storeId);
     }
 
     /**
@@ -267,7 +267,7 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getAdminPDF($draftHash, $quoteId)
+    public function getAdminPDF($draftHash, $quoteId, $storeId)
     {
         $this->authRole = self::ROLE_ADMIN;
         $urlParts = [
@@ -285,9 +285,9 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getAdminPreviewPDF($draftHash, $quoteId)
+    public function getAdminPreviewPDF($draftHash, $quoteId, $storeId)
     {
-        return $this->getAdminPDF($draftHash, $quoteId);
+        return $this->getAdminPDF($draftHash, $quoteId, $storeId);
     }
 
     /**

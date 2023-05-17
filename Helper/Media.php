@@ -2,8 +2,10 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Magento\Catalog\Model\Product as ProductModel;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Data\Collection;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\FileSystemException;
@@ -281,23 +283,43 @@ class Media extends AbstractHelper
     /**
      * Add draft-image-item to image-collection
      *
-     * @param $draftId
-     * @param $result
-     * @return mixed
+     * @param $draftIds
+     * @param ProductModel $product
+     * @param Collection $result
+     * @return Collection
      */
     public function loadDraftImagesToMainImage(
         $draftIds,
-        $result
+        ProductModel $product,
+        Collection $result
     )
     {
         if ($this->_config->isUseImagePreview()) {
             if (!empty($draftIds)) {
-                $counter = 0;
-                $result->removeAllItems();
+                //load all images from product
+                $items = $product->getMediaGalleryImages()->getItems();
+
+                //remove all already loaded pf images because on multiple getGalleryImages-call the image from cache
+                //does not work for printformer images
+                foreach ($items as $itemKey => $item) {
+                    if ($item['label'] === 'Image Printformer') {
+                        $result->removeItemByKey($itemKey);
+                    }
+                }
+
+                //on multiple calls always set counter to last origin product image + 1
+                if (!empty($items)) {
+                    $lastItem = array_pop($items);
+                    if ($lastItem) {
+                        if ($lastItemId = $lastItem->getId()) {
+                            $counter = $lastItemId + 1;
+                        }
+                    }
+                }
 
                 foreach ($draftIds as $draftIdKey => $draftId) {
                     $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-                    $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+                    $pages = $printformerDraft['pages'] ?? 1;
 
                     for ($index = 0; $index < $pages; $index++) {
                         try {
@@ -309,17 +331,18 @@ class Media extends AbstractHelper
                             $imagePreviewUrl = $this->getImagePreviewUrl(($index + 1), $draftId);
                             $fullImagePreviewUrl = $imagePreviewUrl . $additionalHash;
                             $result->addItem(new DataObject([
-                                                                'id' => $index + $counter,
-                                                                'small_image_url' => $fullImagePreviewUrl,
-                                                                'medium_image_url' => $fullImagePreviewUrl,
-                                                                'large_image_url' => $fullImagePreviewUrl,
-                                                                'is_main_image' => ($index + $counter == 0),
-                                                                'file' => $imagePreviewFilePath,
-                                                                'position' => 1,
-                                                                'label' => 'Image Printformer',
-                                                                'disabled' => 0,
-                                                                'media_type' => 'image'
-                                                            ]));
+                                'id' => $index + $counter,
+                                'small_image_url' => $fullImagePreviewUrl,
+                                'medium_image_url' => $fullImagePreviewUrl,
+                                'large_image_url' => $fullImagePreviewUrl,
+                                'is_main_image' => ($index + $counter == 0),
+                                'file' => 'Image Printformer',
+                                'path' => $imagePreviewFilePath,
+                                'position' => 1,
+                                'label' => 'Image Printformer',
+                                'disabled' => 0,
+                                'media_type' => 'image'
+                            ]));
                         } catch (\Exception $e) {
                             $this->_logger->error($e->getMessage());
                             $this->_logger->error($e->getTraceAsString());
@@ -349,11 +372,10 @@ class Media extends AbstractHelper
         if ($this->_config->isUseImagePreview()) {
             if (!empty($draftIds)) {
                 $counter = 0;
-                $result->removeAllItems();
 
                 foreach ($draftIds as $draftIdKey => $draftId) {
                     $printformerDraft = $this->_apiHelper->getDraftUsagePageInfo($draftId, $this->_apiHelper::DRAFT_USAGE_PAGE_INFO_PREVIEW);
-                    $pages = isset($printformerDraft[$draftId]['pages']) ? $printformerDraft[$draftId]['pages'] : 1;
+                    $pages = $printformerDraft['pages'] ?? 1;
 
                     for ($index = 0; $index < $pages; $index++) {
                         try {
@@ -401,7 +423,7 @@ class Media extends AbstractHelper
     )
     {
         $url = null;
-        if ($this->_config->isUseImagePreview() && $draftId) {
+        if ($this->_config->isUseImagePreview() && !empty($draftId)) {
             try {
                 $filePath = $this->getImageFilePath($draftId, $page, false);
                 if (!file_exists($filePath) || !is_array(getimagesize($filePath))) {
@@ -456,13 +478,15 @@ class Media extends AbstractHelper
     {
         $result = false;
         if ($this->_config->isUseImagePreview()) {
-            $draftIds = explode(',', $draftIds ?? '')[0];
-            try {
-                if (!file_exists($this->getImageFilePath($draftIds, 1, true))) {
-                    $this->createThumbnail($draftIds);
+            if (!empty($draftIds)){
+                $draftIds = explode(',', $draftIds)[0];
+                try {
+                    if (!file_exists($this->getImageFilePath($draftIds, 1, true))) {
+                        $this->createThumbnail($draftIds);
+                    }
+                    $result = $this->getImageUrl($draftIds, 1, true);
+                } catch (AlreadyExistsException|FileSystemException|NoSuchEntityException $e) {
                 }
-                $result = $this->getImageUrl($draftIds, 1, true);
-            } catch (AlreadyExistsException|FileSystemException|NoSuchEntityException $e) {
             }
         }
 

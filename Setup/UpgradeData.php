@@ -11,6 +11,8 @@ use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\UpgradeDataInterface;
 use Rissc\Printformer\Gateway\Admin\Product;
+use Rissc\Printformer\Helper\UpgradeData as UpgradeDataHelper;
+use Zend_Db_Statement_Exception;
 
 class UpgradeData implements UpgradeDataInterface
 {
@@ -25,6 +27,7 @@ class UpgradeData implements UpgradeDataInterface
      * @var CategorySetupFactory
      */
     private $categorySetupFactory;
+    private UpgradeDataHelper $upgradeDataHelper;
 
     /**
      * UpgradeData constructor.
@@ -33,16 +36,18 @@ class UpgradeData implements UpgradeDataInterface
      */
     public function __construct(
         EavSetupFactory $eavSetupFactory,
-        CategorySetupFactory $categorySetupFactory
+        CategorySetupFactory $categorySetupFactory,
+        UpgradeDataHelper $upgradeDataHelper
     ) {
         $this->eavSetupFactory = $eavSetupFactory;
         $this->categorySetupFactory = $categorySetupFactory;
+        $this->upgradeDataHelper = $upgradeDataHelper;
     }
 
     /**
      * @param ModuleDataSetupInterface $setup
      * @param ModuleContextInterface $context
-     * @throws \Zend_Db_Statement_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
@@ -349,7 +354,7 @@ class UpgradeData implements UpgradeDataInterface
                     'input' => 'text',
                     'class' => '',
                     'source' => '',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'global' => ScopedAttributeInterface::SCOPE_GLOBAL,
                     'visible' => false,
                     'required' => true,
                     'user_defined' => false,
@@ -379,7 +384,7 @@ class UpgradeData implements UpgradeDataInterface
                     'input' => 'text',
                     'class' => '',
                     'source' => '',
-                    'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'global' => ScopedAttributeInterface::SCOPE_GLOBAL,
                     'visible' => false,
                     'required' => true,
                     'user_defined' => false,

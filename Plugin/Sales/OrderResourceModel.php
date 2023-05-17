@@ -98,17 +98,20 @@ class OrderResourceModel
                     continue;
                 }
 
-                $itemDraftIds = explode(',', $item->getData(InstallSchema::COLUMN_NAME_DRAFTID) ?? '');
-                foreach ($itemDraftIds as $draftId) {
-                    $draftIds[] = $draftId;
-                    $this->draftFactory
-                        ->create()
-                        ->load($draftId, 'draft_id')
-                        ->setOrderItemId($item->getId())
-                        ->save();
+                $printDraftIds = $item->getData(InstallSchema::COLUMN_NAME_DRAFTID);
+                if (!empty($printDraftIds)){
+                    $itemDraftIds = explode(',', $printDraftIds);
+                    foreach ($itemDraftIds as $draftId) {
+                        $draftIds[] = $draftId;
+                        $this->draftFactory
+                            ->create()
+                            ->load($draftId, 'draft_id')
+                            ->setOrderItemId($item->getId())
+                            ->save();
 
-                    if ($this->config->getOrderDraftUpdate($item->getStoreId())){
-                        $this->api->updateDraftHash($draftId, $incrementOrderId);
+                        if ($this->config->getOrderDraftUpdate($item->getStoreId())){
+                            $this->api->updateDraftHash($draftId, $incrementOrderId);
+                        }
                     }
                 }
             }

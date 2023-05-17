@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Helper;
 
+use Lcobucci\JWT\Exception;
 use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -14,6 +15,7 @@ class Session extends AbstractHelper
 {
     const SESSION_KEY_PRINTFORMER_DRAFTID = InstallSchema::COLUMN_NAME_DRAFTID;
     const SESSION_KEY_PRINTFORMER_CURRENT_INTENT = 'printformer_current_intent';
+    const SESSION_KEY_WISHLIST_URL = 'wishlist_url';
 
     /**
      * @var CatalogSession
@@ -180,28 +182,77 @@ class Session extends AbstractHelper
         return $uniqueId;
     }
 
-    public function getDraftIdsByProductId(string $productId)
+    public function loadDraftIdsFromSession(string $productId): array
     {
-        $sessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
         $resultDraftIds = [];
-        if (is_array($sessionUniqueIds) && !empty($sessionUniqueIds)){
-            $sessionUniqueIds = implode(",", $sessionUniqueIds);
-            $draftProcess = $this->draftFactory->create();
-            $draftCollection = $draftProcess->getCollection()
-                ->addFieldToFilter('session_unique_id', ['in' => $sessionUniqueIds]);
-            $items = $draftCollection->getItems();
-            if (!empty($items)) {
-                foreach ($items as $item) {
-                    $productId = $item->getProductId();
-                    $printformerProductId = $item->getPrintformerProductId();
-                    if (!isset($resultDraftIds[$productId]))
-                        $resultDraftIds[$productId] = [];
-                    $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+
+        $originSessionUniqueIds = $this->getSessionUniqueIdsByProductId($productId);
+        if (!empty($originSessionUniqueIds)){
+            $sessionUniqueIds = implode(",", $originSessionUniqueIds);
+            if (!empty($sessionUniqueIds)) {
+                $draftProcess = $this->draftFactory->create();
+                $draftCollection = $draftProcess->getCollection()
+                    ->addFieldToFilter('session_unique_id', ['in' => $sessionUniqueIds]);
+                $items = $draftCollection->getItems();
+                if (!empty($items)) {
+                    foreach ($items as $item) {
+                        if (!empty($item)) {
+                            $productId = $item->getProductId();
+                            $printformerProductId = $item->getPrintformerProductId();
+                            if(!empty($printformerProductId) && !empty($productId)) {
+                                if (!isset($resultDraftIds[$productId]))
+                                    $resultDraftIds[$productId] = [];
+                                $resultDraftIds[$productId][$printformerProductId] = $item->getDraftId();
+                            }
+                        }
+                    }
                 }
             }
         }
 
         return $resultDraftIds;
+    }
+
+    /**
+     * @param $productId
+     * @param $storeId
+     * @param $buyRequest
+     * @return void
+     */
+    public function loadDraftsForBuyRequest($productId, $storeId, $buyRequest): void
+    {
+        $buyRequestDraftFieldData = $buyRequest->getData($this::SESSION_KEY_PRINTFORMER_DRAFTID);
+        if(empty($buyRequestDraftFieldData)) {
+            $draftField = $this->loadDraftIdsFromSession($productId);
+        }
+
+        if (!empty($draftField[$productId])) {
+            foreach ($draftField[$productId] as $draftKey => $draftValue) {
+                $printformerProductId = $draftKey;
+                if ($buyRequest->getData('_processing_params')) {
+                    $draftId = $buyRequest
+                        ->getData('_processing_params')
+                        ->getData('current_config')
+                        ->getData($this::SESSION_KEY_PRINTFORMER_DRAFTID);
+                    if ($draftId) {
+                        $buyRequest->setData($this::SESSION_KEY_PRINTFORMER_DRAFTID, $draftId);
+                    }
+                } elseif (!empty($draftValue)) {
+                    $draftIdsStored = $buyRequest->getData($this::SESSION_KEY_PRINTFORMER_DRAFTID);
+                    if (!empty($draftIdsStored)){
+                        $draftIds = $draftIdsStored . ',' . $draftValue;
+                    } else {
+                        $draftIds = $draftValue;
+                    }
+                    $buyRequest->setData(
+                        $this::SESSION_KEY_PRINTFORMER_DRAFTID,
+                        $draftIds
+                    );
+                    $this->unsetSessionUniqueIdByDraftId($draftValue);
+                    $this->unsetDraftId($productId, $printformerProductId, $storeId);
+                }
+            }
+        }
     }
 
     /**
@@ -266,20 +317,24 @@ class Session extends AbstractHelper
      * Get unique id from session for the unique-ids-entry with corresponding product-id
      *
      * @param $productId
-     * @return string|null
+     * @return array
      */
-    public function getSessionUniqueIdsByProductId($productId)
+    public function getSessionUniqueIdsByProductId($productId): array
     {
         $sessionUniqueIds = $this->customerSession->getSessionUniqueIds();
-
-        if (!empty($sessionUniqueIds) && !empty($productId)){
-            if (isset($sessionUniqueIds[$productId])) {
-                if (isset($sessionUniqueIds[$productId])) {
-                    $sessionUniqueIds = $sessionUniqueIds[$productId];
-                }
+        if (!empty($sessionUniqueIds)){
+            $sessionUniqueIdsShifted = $sessionUniqueIds;
+            $sessionUniqueIdsShifted = array_shift($sessionUniqueIdsShifted);
+            if (empty($sessionUniqueIdsShifted) && !empty($sessionUniqueIds[$productId])) {
+                $sessionUniqueIds = $sessionUniqueIds[$productId];
+            } else {
+                $sessionUniqueIds = $sessionUniqueIdsShifted;
             }
         }
 
+        if (empty($sessionUniqueIds)) {
+            $sessionUniqueIds = [];
+        }
         return $sessionUniqueIds;
     }
 
@@ -420,6 +475,33 @@ class Session extends AbstractHelper
     {
         if ($this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT)) {
             return $this->catalogSession->getData(self::SESSION_KEY_PRINTFORMER_CURRENT_INTENT);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param $wishlistUrl
+     * @return void
+     */
+    public function setWishlistUrl($wishlistUrl)
+    {
+        if ($wishlistUrl != $this->catalogSession->getData(self::SESSION_KEY_WISHLIST_URL)) {
+            $this->catalogSession->setData(self::SESSION_KEY_WISHLIST_URL, $wishlistUrl);
+        }
+    }
+
+    public function unsetWishlistUrl()
+    {
+        if ($this->catalogSession->getData(self::SESSION_KEY_WISHLIST_URL)) {
+            $this->catalogSession->setData(self::SESSION_KEY_WISHLIST_URL, null);
+        }
+    }
+
+    public function getWishlistUrl()
+    {
+        if ($this->catalogSession->getData(self::SESSION_KEY_WISHLIST_URL)) {
+            return $this->catalogSession->getData(self::SESSION_KEY_WISHLIST_URL);
         }
 
         return null;

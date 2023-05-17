@@ -5,6 +5,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Downloadable\Model\Link;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\Customer;
+use Magento\Framework\App\Helper\Context;
 use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Sales\Model\ResourceModel\Order\Item\Collection as ItemCollection;
 use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollectionFactory;
@@ -77,6 +78,7 @@ class Order extends AbstractHelper
     private Config $configHelper;
 
     /**
+     * @param Context $context
      * @param ItemCollectionFactory $itemCollectionFactory
      * @param OrderRepositoryInterface $orderRepository
      * @param ProductRepositoryInterface $productRepository
@@ -89,6 +91,7 @@ class Order extends AbstractHelper
      * @param Config $configHelper
      */
     public function __construct(
+        Context $context,
         ItemCollectionFactory $itemCollectionFactory,
         OrderRepositoryInterface $orderRepository,
         ProductRepositoryInterface $productRepository,
@@ -111,6 +114,9 @@ class Order extends AbstractHelper
         $this->orderItemRepository = $orderItemRepository;
         $this->_customerFactory = $_customerFactory;
         $this->configHelper = $configHelper;
+        parent::__construct(
+            $context
+        );
     }
 
     /**
@@ -226,7 +232,7 @@ class Order extends AbstractHelper
                                     $item->getResource()->save($item);
 
                                     if (isset($newDraftIds)) {
-                                        $this->uploadPdf($newDraftIds, $linkFile);
+                                        $this->apiHelper->uploadPdf($newDraftIds, $linkFile);
                                     }
                                 }
                             }
