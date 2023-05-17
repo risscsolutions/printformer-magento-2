@@ -19,4 +19,16 @@
             <resource ref="anonymous"/>
         </resources>
     </route>
+    <route url="/V1/products/:productId/tpl-assign" method="DELETE">
+        <service class="Rissc\Printformer\Model\Api\Webservice\Data\TemplateInterface" method="remove"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/products/:productId/tpl-assign" method="POST">
+        <service class="Rissc\Printformer\Model\Api\Webservice\Data\TemplateInterface" method="addTemplate"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
 </routes>

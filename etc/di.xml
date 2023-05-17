@@ -19,6 +19,7 @@
     <preference for="Magento\ConfigurableProduct\Block\Cart\Item\Renderer\Configurable" type="Rissc\Printformer\Block\Checkout\Cart\Renderer"/>
     <preference for="Magento\Swatches\Block\Product\Renderer\Configurable" type="Rissc\Printformer\Block\Swatches\Product\Renderer\Configurable" />
     <preference for="Magento\Wishlist\Controller\Index\Add" type="Rissc\Printformer\Controller\Index\Add" />
+    <preference for="Rissc\Printformer\Model\Api\Webservice\Data\TemplateInterface" type="Rissc\Printformer\Model\Api\Webservice\Service\Template"/>
 
     <!-- Plugins -->
     <type name="Magento\ConfigurableProduct\Block\Product\View\Type\Configurable">
