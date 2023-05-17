@@ -153,11 +153,8 @@ class Api extends AbstractHelper
      * @param Log $_logHelper
      * @param DraftResource $draftResource
      * @param Config $configHelper
-<<<<<<< HEAD
      * @param SerializerInterface $serializer
-=======
      * @param ClientFactory $clientFactory
->>>>>>> cac176a8d481e2613801dac9d2a090baa12e7f38
      */
     public function __construct(
         Context $context,
@@ -179,11 +176,8 @@ class Api extends AbstractHelper
         LogHelper $_logHelper,
         DraftResource $draftResource,
         ConfigHelper $configHelper,
-<<<<<<< HEAD
-        SerializerInterface $serializer
-=======
+        SerializerInterface $serializer,
         ClientFactory $clientFactory
->>>>>>> cac176a8d481e2613801dac9d2a090baa12e7f38
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
