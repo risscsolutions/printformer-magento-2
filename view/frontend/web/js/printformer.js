@@ -61,6 +61,10 @@ define([
                                 preselectionFormatted[index] = val.value;
                             });
                             this.preselectOptions(preselectionFormatted);
+                            $.each(this.options.preselection.options, function (index, val) {
+                                let dataSelector = '[data-selector="options\\[' + index + '\\]"]';
+                                $(dataSelector).val(val.value);
+                            });
                         }
                     }
                     this.runCallbacks('printformer:preselection:after');
