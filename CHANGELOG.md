@@ -1,5 +1,19 @@
 # Changelog
 
+## [101.4.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.2...v101.4.0) (2023-06-16)
+
+
+### Features
+
+* **WEM-2159:** added each for product options and load values into custom attributes ([d8137bb](https://github.com/risscsolutions/printformer-magento-2/commit/d8137bb46a9bd2d205570bf8213d92af0afb6c20))
+
+## [101.3.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.1...v101.3.2) (2023-06-16)
+
+
+### Bug Fixes
+
+* **WEM-2179:** resolve function getPdf() bug with missing property quoteId ([f5076eb](https://github.com/risscsolutions/printformer-magento-2/commit/f5076ebc0564de39bed859c71e86ed7eb6f1c847))
+
 ## [101.3.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.0...v101.3.1) (2023-05-12)
 
 
