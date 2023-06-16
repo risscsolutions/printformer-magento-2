@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.3.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.1...v101.3.2) (2023-06-16)
+
+
+### Bug Fixes
+
+* **WEM-2179:** resolve function getPdf() bug with missing property quoteId ([f5076eb](https://github.com/risscsolutions/printformer-magento-2/commit/f5076ebc0564de39bed859c71e86ed7eb6f1c847))
+
 ## [101.3.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.0...v101.3.1) (2023-05-12)
 
 
