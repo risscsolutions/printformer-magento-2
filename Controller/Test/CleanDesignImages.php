@@ -43,12 +43,15 @@ class CleanDesignImages extends Action
      */
     public function execute()
     {
-        $this->logger->debug('--------------------------------Cron cleanDesignImages-test started--------------------------------');
+        $this->logger->debug('---Cron cleanDesignImages-test started---');
 
         if ($this->state->getMode() == $this->state::MODE_DEVELOPER) {
             $this->test->execute();
+            $this->logger->debug('---Cron cleanDesignImages-test executed in developer mode---');
+        } else {
+            $this->logger->debug('---Cron cleanDesignImages-test not executed cause of production mode---');
         }
 
-        $this->logger->debug('--------------------------------Cron cleanDesignImages-test finished-------------------------------');
+        $this->logger->debug('---Cron cleanDesignImages-test finished---');
     }
 }

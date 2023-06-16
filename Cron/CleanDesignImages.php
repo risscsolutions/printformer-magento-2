@@ -14,17 +14,19 @@ class CleanDesignImages
     private LoggerInterface $logger;
     private DirectoryList $directoryList;
     private File $file;
-    const DIRECTORY = 'printformer';
-    const DIRECTORY_PREVIEW = 'preview';
-    const DIRECTORY_THUMBS = 'thumbs';
-    const WEEK_IN_SECONDS = 604800;
-    const DAY_IN_SECONDS = 86400;
     private TimezoneInterface $timezone;
+
+    private const DIRECTORY = 'printformer';
+    private const DIRECTORY_PREVIEW = 'preview';
+    private const DIRECTORY_THUMBS = 'thumbs';
+    private const WEEK_IN_SECONDS = 604800;
+    private const DAY_IN_SECONDS = 86400;
 
     /**
      * @param LoggerInterface $logger
      * @param DirectoryList $directoryList
      * @param File $file
+     * @param TimezoneInterface $timezone
      */
     public function __construct(
         LoggerInterface $logger,
@@ -41,36 +43,55 @@ class CleanDesignImages
 
     public function execute()
     {
-        $subFolders = [$this::DIRECTORY_PREVIEW, $this::DIRECTORY_THUMBS];
+        try {
+            $subFolders = [self::DIRECTORY_PREVIEW, self::DIRECTORY_THUMBS];
 
-        foreach ($subFolders as $subFolder){
-            //get folder to scan
-            $subFolderPath = $this->directoryList->getPath(MagentoDirectoryList::PUB) . DIRECTORY_SEPARATOR
-                . MagentoDirectoryList::MEDIA . DIRECTORY_SEPARATOR . $this::DIRECTORY . DIRECTORY_SEPARATOR
-                . $subFolder;
+            foreach ($subFolders as $subFolder) {
+                $subFolderPath = $this->directoryList->getPath(MagentoDirectoryList::PUB) . DIRECTORY_SEPARATOR
+                    . MagentoDirectoryList::MEDIA . DIRECTORY_SEPARATOR . self::DIRECTORY . DIRECTORY_SEPARATOR
+                    . $subFolder;
 
-            if (is_dir($subFolderPath)) {
-                //read just that single directory
-                $subFolderFiles =  $this->file->readDirectory($subFolderPath);
+                if (!is_dir($subFolderPath)) {
+                    $this->logger->warning(
+                        'Image cleanup not possible. Can not access directory on path: ' . $subFolderPath
+                    );
+                    return;
+                }
 
-                foreach ($subFolderFiles as $subFolderFile){
-                    if (file_exists($subFolderFile)){
-                        $fileModificationTime = time()-filemtime($subFolderFile);
-                        if ($fileModificationTime > $this::WEEK_IN_SECONDS){
-                            try {
-                                $this->file->deleteFile($subFolderFile);
-                                $this->logger->info(
-                                    'Deleted Cached Image: '
-                                    . $subFolderFile.  ' (after more then 7 days) (' . number_format($fileModificationTime/$this::DAY_IN_SECONDS, 1) .' days old) on: '. $this->timezone->date()->format('Y-m-d H:i:s')
-                                );
-                            } catch (FileSystemException $e) {
-                            }
-                        }
+                $subFolderFiles = $this->file->readDirectory($subFolderPath);
+                foreach ($subFolderFiles as $subFolderFile) {
+                    if (!file_exists($subFolderFile)) {
+                        return;
+                    }
+
+                    $fileModificationTime = time() - filemtime($subFolderFile);
+                    if ($fileModificationTime <= self::WEEK_IN_SECONDS) {
+                        return;
+                    }
+
+                    try {
+                        $this->file->deleteFile($subFolderFile);
+                        $this->logger->info(
+                            'Deleted Cached Image: '
+                            . $subFolderFile . ' (after more than 7 days) ('
+                            . number_format($fileModificationTime / self::DAY_IN_SECONDS, 1)
+                            . ' days old) on: ' . $this->timezone->date()->format('Y-m-d H:i:s')
+                        );
+                    } catch (FileSystemException $e) {
+                        $this->logger->error(
+                            'Failed to delete Cached Image: '
+                            . $subFolderFile . ' (after more than 7 days) ('
+                            . number_format($fileModificationTime / self::DAY_IN_SECONDS, 1)
+                            . ' days old) on: ' . $this->timezone->date()->format('Y-m-d H:i:s')
+                        );
                     }
                 }
-            } else {
-                $this->logger->warning('Image cleanup not possible. Can not access directory on path: '.$subFolderPath);
             }
+        } catch (\Exception $e) {
+            $this->logger->critical(
+                'Unexpected problem occurred while executing the cache images cleanup cron job: '
+                . $e->getMessage()
+            );
         }
     }
 }
