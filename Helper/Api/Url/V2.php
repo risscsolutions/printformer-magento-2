@@ -487,7 +487,7 @@ class V2 extends AbstractHelper implements VersionInterface
             ->expiresAt($expirationDate);
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
-        $pdfUrl = $this->getPDF($draftHash, $storeId, $websiteId);
+        $pdfUrl = $this->getPDF($draftHash, $quoteId, $storeId, $websiteId);
         $postFields = [
             'jwt' => $JWT
         ];
