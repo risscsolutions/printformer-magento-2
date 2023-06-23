@@ -200,9 +200,6 @@ class Product
             }
             throw new Exception(__($errorMsg));
         }
-        if (empty($responseArray['data'])) {
-            throw new Exception(__('Empty products data.'));
-        }
 
         foreach ($storeIds as $storeId) {
             try {
