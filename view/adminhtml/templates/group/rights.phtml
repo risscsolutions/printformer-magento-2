@@ -22,6 +22,7 @@
             <th class="data-grid-th">review/view</th>
             <th class="data-grid-th">review/finish</th>
             <th class="data-grid-th">review/end</th>
+            <th class="data-grid-th">Super user</th>
         </tr>
         <?php foreach($this->getGroups() as $_group): ?>
             <?php $_right = $this->getRight($_group) ?>
@@ -32,6 +33,7 @@
                 <td><input type="checkbox" name="review_view[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewView()): ?> checked<?php endif; ?>></td>
                 <td><input type="checkbox" name="review_finish[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewFinish()): ?> checked<?php endif; ?>></td>
                 <td><input type="checkbox" name="review_end[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewEnd()): ?> checked<?php endif; ?>></td>
+                <td><input type="checkbox" name="super_user[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getSuperUser()): ?> checked<?php endif; ?>></td>
             </tr>
         <?php endforeach; ?>
     </table>

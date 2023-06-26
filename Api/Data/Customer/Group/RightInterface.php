@@ -11,6 +11,7 @@ interface RightInterface
     const REVIEW_VIEW = 'review_view';
     const REVIEW_FINISH = 'review_finish';
     const REVIEW_END = 'review_end';
+    const SUPER_USER = 'super_user';
 
     /**
      * @return int
@@ -46,6 +47,11 @@ interface RightInterface
      * @return bool
      */
     public function getReviewEnd();
+
+    /**
+     * @return bool
+     */
+    public function getSuperUser();
 
     /**
      * @param int $id
@@ -88,6 +94,12 @@ interface RightInterface
      * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
      */
     public function setReviewEnd($reviewEnd);
+
+    /**
+     * @param bool $superUser
+     * @return \Rissc\Printformer\Api\Data\Customer\Group\RightInterface
+     */
+    public function setSuperUser($superUser);
 
     /**
      * @param string $key

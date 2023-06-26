@@ -73,6 +73,14 @@ class Right extends AbstractModel implements RightInterface
     /**
      * {@inheritdoc}
      */
+    public function getSuperUser()
+    {
+        return parent::getData(self::SUPER_USER);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function setId($id)
     {
         return $this->setData(self::ID, $id);
@@ -124,6 +132,14 @@ class Right extends AbstractModel implements RightInterface
     public function setReviewEnd($reviewEnd)
     {
         return $this->setData(self::REVIEW_END, $reviewEnd);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSuperUser($superUser)
+    {
+        return $this->setData(self::SUPER_USER, $superUser);
     }
 
     /**
