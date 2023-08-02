@@ -65,6 +65,10 @@ define([
                                 let dataSelector = '[data-selector="options\\[' + index + '\\]"]';
                                 $(dataSelector).val(val.value);
 
+								if (val.value != undefined) {
+								   let dataSelector = '[id="options_'+ index +'_date"]';
+								   $(dataSelector).val(val.value);
+								}
                                 if (val.value.date != undefined) {
 								   let dataSelector = '[id="options_'+ index +'_date"]';
 								   $(dataSelector).val(val.value.date);
