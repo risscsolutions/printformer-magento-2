@@ -88,9 +88,9 @@ class Grid extends Extended
 
         ]);
 
-        $this->addColumn('master_id', [
-            'header' => __('Master-ID'),
-            'index' => 'master_id',
+        $this->addColumn('identifier', [
+            'header' => __('Identifier'),
+            'index' => 'identifier',
         ]);
 
         $this->addColumn('name', [
