@@ -148,6 +148,7 @@ class Cart extends AbstractHelper
             $wishlistItem = null;
             $id = (int)$this->_request->getParam('id');
             $productId = (int)$this->_request->getParam('product_id');
+            $pfProductId = $printformerProduct->getId();
             if ($id) {
                 switch ($this->_request->getModuleName()) {
                     case 'checkout':
@@ -164,11 +165,13 @@ class Cart extends AbstractHelper
                             } else {
                                 $draftId = $this->loadDraftFromQuoteItem($quoteItem, $printformerProduct->getProductId(), $printformerProduct->getId());
                             }
+                            $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
+                            if ($sessionUniqueId && !$draftId) {
+                                $draftId = $this->productHelper->getDraftId($pfProductId, $productId);
+                            }
                         }
                         break;
                     case 'wishlist':
-                        $productId = $printformerProduct->getProductId();
-                        $pfProductId = $printformerProduct->getId();
                         $sessionUniqueId = $this->sessionHelper->getSessionUniqueIdByProductId($productId, $pfProductId);
                         if ($sessionUniqueId) {
                             $draftId = $this->productHelper->getDraftId($pfProductId, $productId);
