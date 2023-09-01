@@ -80,9 +80,10 @@ class Product
      * @param PrintformerProductFactory $printformerProductFactory
      * @param ProductFactory $productFactory
      * @param Config $configHelper
+     * @throws Zend_Db_Statement_Exception
      * @param Log $logHelper
      * @param ClientFactory $clientFactory
-     * @throws Zend_Db_Statement_Exception
+     * @throws \Zend_Db_Statement_Exception
      */
     public function __construct(
         WebsiteRepository $websiteRepository,
@@ -153,10 +154,10 @@ class Product
         $request = $this->clientFactory->create(
             [
                 'config' => [
-            'base_url' => $url,
-            'headers' => [
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $apiKey
+                    'base_url' => $url,
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => 'Bearer ' . $apiKey
                     ],
                 ],
             ],
@@ -182,6 +183,9 @@ class Product
             }
             throw new Exception(__($errorMsg));
         }
+        if (empty($responseArray['data'])) {
+            throw new Exception(__('Empty products data.'));
+        }
 
         return $responseArray;
     }
@@ -201,6 +205,7 @@ class Product
             $this->_syncProducts($storeId, $responseArray['data']);
         } catch (\Exception $e) {
             $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
+                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
         }
 
         return $this;

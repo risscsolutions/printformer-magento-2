@@ -1,5 +1,19 @@
 # Changelog
 
+## [101.5.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.4.0...v101.5.0) (2023-09-01)
+
+
+### Features
+
+* additional logic to load over setup-command ([2855f47](https://github.com/risscsolutions/printformer-magento-2/commit/2855f47085d19503634abcf718132ea59647b197))
+* **wem-1845:** change complete extension logic from master-id to identifier ([ed3e284](https://github.com/risscsolutions/printformer-magento-2/commit/ed3e284fa7864fcc606694427fdc471e65291ce6))
+
+
+### Bug Fixes
+
+* avoid indexer creations in branch ([cf95825](https://github.com/risscsolutions/printformer-magento-2/commit/cf95825b05b0c280824fc0768320b1c4e2b26c58))
+* **WEM-1816:** added identifier column printformer product grid instead of master id ([4aa3291](https://github.com/risscsolutions/printformer-magento-2/commit/4aa329117220faab714398c4e76d1939eb2afccc))
+
 ## [101.4.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.2...v101.4.0) (2023-06-16)
 
 
