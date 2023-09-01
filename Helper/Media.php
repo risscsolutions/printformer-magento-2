@@ -23,6 +23,8 @@ class Media extends AbstractHelper
     const IMAGE_PATH = 'printformer/{type}/%s_%d.png';
     const IMAGE_PARENT_PATH = 'printformer/{type}';
 
+    const COUNTER = 0;
+
     /** @var Filesystem */
     protected $filesystem;
 
@@ -307,6 +309,8 @@ class Media extends AbstractHelper
                     }
                 }
 
+                // Counter value for empty images product
+                $counter = self::COUNTER;
                 //on multiple calls always set counter to last origin product image + 1
                 if (!empty($items)) {
                     $lastItem = array_pop($items);
