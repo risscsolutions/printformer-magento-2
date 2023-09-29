@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.5.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.0...v101.5.1) (2023-09-01)
+
+
+### Bug Fixes
+
+* **WEM-2238:** fixed error undefined variable count for products without images ([8b59cd7](https://github.com/risscsolutions/printformer-magento-2/commit/8b59cd752fecccc4b1be26b2391c167692613b36))
+
 ## [101.5.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.4.0...v101.5.0) (2023-09-01)
 
 
