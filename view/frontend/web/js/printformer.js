@@ -51,6 +51,12 @@ define([
                 this.initPersonalisationQty();
             }
 
+            if (this.isDefined(this.options.personalizations) && this.options.personalizations > 1) {
+                this.initPersonalisationQty();
+            }
+
+            $(document).trigger('printformer:loaded');
+            this.runCallbacks('printformer:loaded:after');
             if (draftsExist) {
                 if(this.isDefined(this.options.preselection) && this.options.preselection !== null) {
                     this.runCallbacks('printformer:preselection:before');
@@ -79,13 +85,6 @@ define([
                     this.runCallbacks('printformer:preselection:after');
                 }
             }
-
-            if (this.isDefined(this.options.personalizations) && this.options.personalizations > 1) {
-                this.initPersonalisationQty();
-            }
-
-            $(document).trigger('printformer:loaded');
-            this.runCallbacks('printformer:loaded:after');
         },
 
         isDefined: function(value) {
