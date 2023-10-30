@@ -721,6 +721,13 @@ class Api extends AbstractHelper
         // Check store id for admin pages
         if (isset($params['store_id'])){
             $storeId = $params['store_id'];
+            try {
+                $apiKey = $this->_config->getClientApiKey($storeId);
+                if (!empty($apiKey)) {
+                    $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+                }
+            } catch (NoSuchEntityException $e) {
+            }
         }
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
         $client = $this->_config->getClientIdentifier($storeId);

@@ -331,7 +331,10 @@ class V2 extends AbstractHelper implements VersionInterface
     )
     {
         $product = $this->_catalogHelper->prepareProduct($product);
-
+         // Check store id for admin pages
+        if ($storeId){
+            $product->setStoreId($storeId);
+        }
         if (isset($params['quote_id']) && $product->getId()) {
             $referrerParams['id'] = $params['quote_id'];
             $referrerParams['product_id'] = $product->getId();
