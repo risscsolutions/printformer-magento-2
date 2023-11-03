@@ -232,7 +232,13 @@ class V2 extends AbstractHelper implements VersionInterface
         $params = []
     )
     {
-        $editorUrl = $this->getPrintformerBaseUrl() .
+        $storeId = $this->_storeManager->getStore()->getId();
+        // Check store param for admin pages
+        if (isset($params['store_id'])){
+            $storeId = $params['store_id'];
+        }
+
+        $editorUrl = $this->getPrintformerBaseUrl($storeId) .
             self::EXT_EDITOR_PATH;
 
         $dataParams = [
@@ -252,12 +258,12 @@ class V2 extends AbstractHelper implements VersionInterface
         $queryParams = [];
         $queryParams['callback'] = $this->_getCallbackUrl(
             $customCallbackUrl,
-            $this->_storeManager->getStore()->getId(),
+            $storeId,
             $dataParams
         );
 
         if ($this->_config->getRedirectProductOnCancel()) {
-            $queryParams['callback_cancel'] = $this->_getProductCallbackUrl(intval($params['product_id']), $params['data'], $this->_storeManager->getStore()->getId());
+            $queryParams['callback_cancel'] = $this->_getProductCallbackUrl(intval($params['product_id']), $params['data'], $storeId);
         }
 
         return $editorUrl . '/' . $draftHash . '?' . http_build_query($queryParams);
@@ -325,7 +331,10 @@ class V2 extends AbstractHelper implements VersionInterface
     )
     {
         $product = $this->_catalogHelper->prepareProduct($product);
-
+         // Check store id for admin pages
+        if ($storeId){
+            $product->setStoreId($storeId);
+        }
         if (isset($params['quote_id']) && $product->getId()) {
             $referrerParams['id'] = $params['quote_id'];
             $referrerParams['product_id'] = $product->getId();

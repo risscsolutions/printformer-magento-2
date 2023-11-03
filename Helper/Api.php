@@ -36,6 +36,7 @@ use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Api\Url\V2;
 use GuzzleHttp\ClientFactory;
 
 class Api extends AbstractHelper
@@ -707,11 +708,23 @@ class Api extends AbstractHelper
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
+        $storeId = $this->getStoreId();
+        // Check store id for admin pages
+        if (isset($params['store_id'])){
+            $storeId = $params['store_id'];
+            try {
+                $apiKey = $this->_config->getClientApiKey($storeId);
+                if (!empty($apiKey)) {
+                    $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+                }
+            } catch (NoSuchEntityException $e) {
+            }
+        }
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
-        $client = $this->_config->getClientIdentifier($this->getStoreId());
+        $client = $this->_config->getClientIdentifier($storeId);
         $identifier = bin2hex(random_bytes(16));
         $issuedAt = new DateTimeImmutable();
-        $expirationDate = $this->_config->getExpireDate();
+        $expirationDate = $this->_config->getExpireDate($storeId);
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
             ->withClaim('client', $client)
@@ -723,16 +736,16 @@ class Api extends AbstractHelper
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $setIssuedAtTimestamp = time();
-        $expirationDateTimeStamp = $this->_config->getExpireDateTimeStamp();
+        $expirationDateTimeStamp = $this->_config->getExpireDateTimeStamp($storeId);
         $requestData = [
-            'apiKey' => $this->_config->getClientApiKey($this->getStoreId()),
-            'storeId' => $this->getStoreId()
+            'apiKey' => $this->_config->getClientApiKey($storeId),
+            'storeId' => $storeId
         ];
         $data = [
             'draftId' => $draftHash,
             'userIdentifier' => $userIdentifier,
             'params' => $params,
-            'storeId' => $this->getStoreId(),
+            'storeId' => $storeId,
             'client' => $client,
             'id' => $identifier,
             'replicateAsHeader' => true,
@@ -745,7 +758,7 @@ class Api extends AbstractHelper
         ];
         $entry = $this->_logHelper->createRedirectEntry($editorOpenUrl, $data);
 
-        $redirectUrl = $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
+        $redirectUrl = $this->apiUrl()->getPrintformerBaseUrl($storeId) . V2::EXT_AUTH_PATH . '?' . http_build_query(['jwt' => $JWT]);
         $entry->setResponseData(json_encode(["redirectUrl" => $redirectUrl, "jwt" => $JWT]));
         $this->_logHelper->updateEntry($entry);
 
