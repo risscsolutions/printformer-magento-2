@@ -48,6 +48,17 @@
                             <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\DraftEditor</argument>
                         </arguments>
                     </block>
+                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="product_id">
+                        <arguments>
+                            <argument name="header" xsi:type="string" translate="true">Product Name</argument>
+                            <argument name="index" xsi:type="string" translate="true">product_id</argument>
+                            <argument name="type" xsi:type="string">text</argument>
+                            <argument name="column_css_class" xsi:type="string">col-id</argument>
+                            <argument name="header_css_class" xsi:type="string">col-id</argument>
+                            <argument name="width" xsi:type="string">100px</argument>
+                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\Drafts\Grid\Renderer\ProductName</argument>
+                        </arguments>
+                    </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="order_item_id">
                         <arguments>
                             <argument name="header" xsi:type="string" translate="true">Order-Item-ID</argument>
