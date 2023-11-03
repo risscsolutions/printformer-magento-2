@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.5.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.2...v101.5.3) (2023-11-03)
+
+
+### Bug Fixes
+
+* **WEM-1880:** update composer version ([fd00952](https://github.com/risscsolutions/printformer-magento-2/commit/fd0095225ba91d0bbe3b8b89903d9f2be717f0a5))
+
 ## [101.5.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.1...v101.5.2) (2023-11-03)
 
 
