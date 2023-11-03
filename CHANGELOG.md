@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.5.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.1...v101.5.2) (2023-11-03)
+
+
+### Bug Fixes
+
+* **WEM-1816:** fixed draft product grid filtration by product name ([2719b7f](https://github.com/risscsolutions/printformer-magento-2/commit/2719b7fb19bc51105a2c246dd58be01496819ab2))
+
 ## [101.5.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.0...v101.5.1) (2023-09-01)
 
 
