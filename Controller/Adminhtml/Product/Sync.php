@@ -78,7 +78,7 @@ class Sync extends Action
                 $this->gateway->syncProducts($storeId, $websiteId);
                 $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.').'<br>'.__('Mandator:').$name];
             } catch (\Exception $e) {
-                $response = ['error' => 'true', 'message' => __('Error setting name client configuration. Empty Response. Url: ' . $url)];
+                $response = ['error' => 'true', 'message' => __('No templates are assigned to Mandator Name.')];
             }
         } catch (\Exception $e){
             $response = ['error' => 'true', 'message' => $e->getMessage()];
