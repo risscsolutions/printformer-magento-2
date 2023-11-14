@@ -51,35 +51,6 @@ define([
                 this.initPersonalisationQty();
             }
 
-            if (draftsExist) {
-                if(this.isDefined(this.options.preselection) && this.options.preselection !== null) {
-                    this.runCallbacks('printformer:preselection:before');
-                    if (this.options.preselection.product === this.options.ProductId) {
-                        let preselectionFormatted = [];
-                        if (this.isDefined(this.options.preselection.super_attribute)) {
-                            $.each(this.options.preselection.super_attribute, function (index, val) {
-                                preselectionFormatted[index] = val.value;
-                            });
-                            this.preselectOptions(preselectionFormatted);
-                            $.each(this.options.preselection.options, function (index, val) {
-                                let dataSelector = '[data-selector="options\\[' + index + '\\]"]';
-                                $(dataSelector).val(val.value);
-
-								if (val.value != undefined) {
-								   let dataSelector = '[id="options_'+ index +'_date"]';
-								   $(dataSelector).val(val.value);
-								}
-                                if (val.value.date != undefined) {
-								   let dataSelector = '[id="options_'+ index +'_date"]';
-								   $(dataSelector).val(val.value.date);
-								}
-                            });
-                        }
-                    }
-                    this.runCallbacks('printformer:preselection:after');
-                }
-            }
-
             if (this.isDefined(this.options.personalizations) && this.options.personalizations > 1) {
                 this.initPersonalisationQty();
             }
@@ -99,14 +70,17 @@ define([
                                         $.each(this.options.preselection.options, function (index, val) {
                                             let dataSelector = '[data-selector="options\\[' + index + '\\]"]';
                                             $(dataSelector).val(val.value);
+                                            window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
 
             								if (val.value != undefined) {
             								   let dataSelector = '[id="options_'+ index +'_date"]';
             								   $(dataSelector).val(val.value);
+            								   window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
             								}
                                             if (val.value.date != undefined) {
             								   let dataSelector = '[id="options_'+ index +'_date"]';
             								   $(dataSelector).val(val.value.date);
+            								   window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
             								}
                                         });
                                     }
