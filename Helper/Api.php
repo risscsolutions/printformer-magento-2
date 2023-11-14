@@ -243,6 +243,33 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @return Client
+     */
+    public function getCsvClient($storeId = false, $websiteId = false)
+    {
+        if ($storeId == false && $websiteId == false){
+            $storeId = $this->getStoreManager()->getStore()->getId();
+            $websiteId = $this->getStoreManager()->getWebsite()->getId();
+        }
+
+        if (!isset($this->_httpClients[$storeId])) {
+            $this->_httpClients[$storeId] = $this->clientFactory->create(
+                [
+                    'config' => [
+                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId),
+                        'headers' => [
+                            'Accept' => 'text/csv',
+                            'Authorization' => 'Bearer ' . $this->_config->getClientApiKey($storeId, $websiteId),
+                        ],
+                    ],
+                ],
+            );
+        }
+
+        return $this->_httpClients[$storeId];
+    }
+
+    /**
      * @return Config
      */
     public function config()
