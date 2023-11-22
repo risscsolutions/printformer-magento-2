@@ -37,6 +37,9 @@ use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use GuzzleHttp\ClientFactory;
+//todo: integrate sdk everywhere
+use Rissc\Printformer\Helper\Sdk\PrintformerSdkSingleton;
+use Rissc\Printformer\Printformer;
 
 class Api extends AbstractHelper
 {
@@ -127,29 +130,8 @@ class Api extends AbstractHelper
     private Config $configHelper;
 
     private ClientFactory $clientFactory;
+    private Printformer $printformerSdk;
 
-    /**
-     * @param Context $context
-     * @param CustomerSession $customerSession
-     * @param UrlHelper $urlHelper
-     * @param StoreManagerInterface $storeManager
-     * @param DraftFactory $draftFactory
-     * @param Session $sessionHelper
-     * @param Config $config
-     * @param CustomerFactory $customerFactory
-     * @param CustomerResource $customerResource
-     * @param AdminSession $adminSession
-     * @param PrintformerProductAttributes $printformerProductAttributes
-     * @param Filesystem $filesystem
-     * @param UrlInterface $urlBuilder
-     * @param ItemFactory $itemFactory
-     * @param TimezoneInterface $timezone
-     * @param OrderItemRepositoryInterface $orderItemRepository
-     * @param Log $_logHelper
-     * @param DraftResource $draftResource
-     * @param Config $configHelper
-     * @param ClientFactory $clientFactory
-     */
     public function __construct(
         Context $context,
         CustomerSession $customerSession,
@@ -193,27 +175,30 @@ class Api extends AbstractHelper
         $this->configHelper = $configHelper;
         $this->clientFactory = $clientFactory;
 
+        try {
+            $config = $this->getPrintformerConfig($this->getStoreId(), $this->getWebsiteId());
+            $this->printformerSdk = PrintformerSdkSingleton::getInstance($config)->getSdk();
+        } catch (\Exception $e) {
+            $this->_logger->critical('Unable to load singleton printformer-sdk instance');
+        }
+
+        $this->jwtConfig = $this->getJwtConfig();
+
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
-
-        try {
-            $storeId = $storeManager->getStore()->getId();
-            $apiKey = $this->_config->getClientApiKey($storeId);
-            if (!empty($apiKey)) {
-                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
-            }
-        } catch (NoSuchEntityException $e) {
-        }
 
         parent::__construct($context);
     }
 
-    /**
-     * @return int
-     */
-    public function getStoreId()
+    public function getStoreId(): int | null
     {
-        return $this->_storeManager->getStore()->getId();
+        $storeId = null;
+        if ($this->_storeManager) {
+            if ($this->_storeManager->getStore()) {
+                $storeId = $this->_storeManager->getStore()->getId();
+            }
+        }
+        return $storeId;
     }
 
     /**
@@ -398,39 +383,25 @@ class Api extends AbstractHelper
         return $this->_urlHelper;
     }
 
-    /**
-     * @param null $requestData
-     * @return mixed
-     */
-    public function createUser($customer = null)
+    public function createUser(DataObject $customer = new DataObject()): string | null
     {
-        $url = $this->apiUrl()->getUser();
-
-        $transfer = $this->_config->isDataTransferEnabled();
-        $requestData = [];
-
+        $userIdentifier = null;
         try {
-            if ($customer && $transfer) {
-                $requestData = [
-                    'json' => [
-                        'firstName' => $customer->getFirstname(),
-                        'lastName' => $customer->getLastname(),
-                        'email' => $customer->getEmail()
-                    ]
-                ];
-            }
+            $pfUser = $this->printformerSdk->clientFactory()->user()->create([
+                'email' => $customer->getEmail() ? $customer->getEmail() : null,
+                'firstName' => $customer->getFirstName() ? $customer->getFirstName() : null,
+                'lastName' => $customer->getLastname() ? $customer->getLastname() : null,
+                //todo: 'title' => '',
+                //todo: 'salutation' => '',
+                //todo: 'customAttributes' => '',
+                //todo: 'locale' => '',
+            ]);
+            $userIdentifier = $pfUser->identifier;
         } catch (Exception $e) {
-            $this->_logger->error('Can\'t load customer data from $customer variable');
-            $this->_logger->error($e->getMessage());
-            $this->_logger->error($e->getTraceAsString());
+            $this->_logger->critical($e);
         }
 
-        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
-        $response = $this->getHttpClient()->post($url, $requestData);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-        $response = json_decode($response->getBody(), true);
-        return $response['data']['identifier'];
+        return $userIdentifier;
     }
 
     /**
@@ -1273,6 +1244,7 @@ class Api extends AbstractHelper
      */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
+        //todo adjust to sdk without _httpClient
         $url = $this->apiUrl()->getPrintformerBaseUrl().'/api-ext/draft/claim';
 
         $requestData = [
@@ -1504,5 +1476,37 @@ class Api extends AbstractHelper
         $params = $this->printformerProductAttributes->mergeFeedIdentifier($params);
 
         return $params;
+    }
+
+    protected function getPrintformerConfig($storeId, $websiteId): array
+    {
+        //todo>:> instead create user by sdk here
+        //        $config = [
+        //            'base_uri' => 'https://printformer.stage-00.aws.rissc.net',
+        //            'identifier' => 'vD3rU3Qw',
+        //            'api_key' => '04HjIzShfi.............',
+        //        ];
+
+        $baseUri = $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId);
+        $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
+        $identifier = $this->_config->getClientIdentifier($storeId, $websiteId);
+
+        $config = [
+            'base_uri' => $baseUri,
+            'identifier' => $identifier,
+            'api_key' => $apiKey,
+        ];
+
+        return $config;
+    }
+
+    public function getJwtConfig(): \Lcobucci\JWT\Configuration | null
+    {
+        $apiKey = $this->_config->getClientApiKey($this->getStoreId());
+        if (!empty($apiKey)) {
+            return Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+        } else {
+            return null;
+        }
     }
 }
