@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.6.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.3...v101.6.0) (2023-11-29)
+
+
+### Features
+
+* **WEM-2349:** added MIT license file ([5dff841](https://github.com/risscsolutions/printformer-magento-2/commit/5dff8416ea7c6fcf51bb497a2233908bb4d3f71e))
+
 ## [101.5.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.2...v101.5.3) (2023-11-03)
 
 
