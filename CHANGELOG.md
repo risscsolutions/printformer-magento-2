@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.6.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.0...v101.6.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* **WEM-2280:** update version ([3803573](https://github.com/risscsolutions/printformer-magento-2/commit/3803573c828f0867366ee3e62c299d29960820dd))
+
 ## [101.6.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.3...v101.6.0) (2023-11-29)
 
 
