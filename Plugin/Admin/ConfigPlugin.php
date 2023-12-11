@@ -61,7 +61,9 @@ class ConfigPlugin
 
         /** @var \Magento\Catalog\Setup\CategorySetup $categorySetup */
         $categorySetup = $this->categorySetupFactory->create(['setup' => $this->moduleDataSetup]);
-        $sql = $categorySetup->updateAttribute(\Magento\Catalog\Model\Product::ENTITY, 'feed_identifier', 'is_visible', $feedIdentifier);
+        $categorySetup->updateAttribute(Product::ENTITY, 'feed_identifier', 'is_visible', $feedIdentifier);
+        $categorySetup->updateAttribute(Product::ENTITY, 'feed_name', 'is_visible', $feedIdentifier);
+
         $this->moduleDataSetup->getConnection()->endSetup();
     }
 }

@@ -375,6 +375,11 @@ class Url extends AbstractHelper implements VersionInterface
         return $this->getVersionHelper()->getProductFeedUrl();
     }
 
+    public function getProductFeedName($feedIdentifier)
+    {
+        return $this->getVersionHelper()->getProductFeedName($feedIdentifier);
+    }
+
     public function getClientName($storeId = false, $websiteId = false)
     {
         return $this->getVersionHelper()->getClientName($storeId, $websiteId);
