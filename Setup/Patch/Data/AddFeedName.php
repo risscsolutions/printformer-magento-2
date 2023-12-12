@@ -85,19 +85,7 @@ class AddFeedName implements DataPatchInterface, PatchRevertableInterface
             ]
         );
 
-//        // get default attribute set id
-//        $attributeSetId = $categorySetup->getDefaultAttributeSetId(\Magento\Catalog\Model\Product::ENTITY);
-//        $attributeGroupName = 'Printformer Product Feed';
-//
-//        // add attribute to group
-//        $categorySetup->addAttributeToGroup(
-//            \Magento\Catalog\Model\Product::ENTITY,
-//            $attributeSetId,
-//            $attributeGroupName, // attribute group
-//            'feed_name', // attribute code
-//            20 // sort order
-//        );
-        $eavSetup->updateAttribute(\Magento\Catalog\Model\Product::ENTITY, 'feed_name', 'is_visible', '0');
+        $eavSetup->updateAttribute(\Magento\Catalog\Model\Product::ENTITY, 'feed_identifier', 'is_visible', '1');
 
         $this->moduleDataSetup->getConnection()->endSetup();
     }
