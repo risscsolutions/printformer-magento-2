@@ -3,4 +3,7 @@
     <event name="admin_system_config_changed_section_printformer">
         <observer name="rissc_printformer_admin_system_config_changed_section_printformer" instance="Rissc\Printformer\Observer\Config\Save" />
     </event>
+    <event name="catalog_product_save_after">
+        <observer name="observer_get_feed_name" instance="Rissc\Printformer\Observer\Admin\Product\GetFeedName" />
+    </event>
 </config>

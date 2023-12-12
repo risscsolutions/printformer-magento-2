@@ -47,6 +47,8 @@ class V2 extends AbstractHelper implements VersionInterface
 
     const API_PRODUCT_FEED = '/api-ext/product-feed';
 
+    const API_GET_FEED_NAME = '/api-ext/product-feed/{feedIdentifier}';
+
 
     /** Pageplanning START */
     const API_DRAFT_SETUP = '/api-ext/draft-setup';
@@ -696,6 +698,12 @@ class V2 extends AbstractHelper implements VersionInterface
     public function getProductFeedUrl()
     {
         return $this->getPrintformerBaseUrl() . self::API_PRODUCT_FEED;
+    }
+
+    public function getProductFeedName($feedIdentifier)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{feedIdentifier}', $feedIdentifier, self::API_GET_FEED_NAME);
     }
 
     /**
