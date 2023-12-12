@@ -9,6 +9,10 @@
                     <item name="class" xsi:type="string">Rissc\Printformer\Ui\Modifiers\Templates</item>
                     <item name="sortOrder" xsi:type="number">450</item>
                 </item>
+                <item name="feedSettings" xsi:type="array">
+                    <item name="class" xsi:type="string">Rissc\Printformer\Ui\DataProvider\Product\Form\Modifier\Attributes\FeedName</item>
+                    <item name="sortOrder" xsi:type="number">500</item>
+                </item>
             </argument>
         </arguments>
     </virtualType>
