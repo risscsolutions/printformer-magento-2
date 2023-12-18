@@ -201,6 +201,17 @@ class Api extends AbstractHelper
         return $storeId;
     }
 
+    public function getWebsiteId(): int | null
+    {
+        $storeId = null;
+        if ($this->_storeManager) {
+            if ($this->_storeManager->getStore()) {
+                $storeId = $this->_storeManager->getStore()->getId();
+            }
+        }
+        return $storeId;
+    }
+
     /**
      * @return Client
      */
@@ -244,45 +255,39 @@ class Api extends AbstractHelper
         return $this->_storeManager;
     }
 
+
     /**
-     * @param $customer Customer
+     * @param $customer
+     * @return void
      */
     public function checkUserData($customer)
     {
-        $transfer = $this->_config->isDataTransferEnabled();
         if ($customer->getPrintformerIdentification() !== null) {
-            $apiUrl = $this->apiUrl()->getUserData($customer->getPrintformerIdentification());
+            $transfer = $this->_config->isDataTransferEnabled();
+            if (!$transfer) {
+                return;
+            }
+            //todo:  $createdEntry = $this->_logHelper->createGetEntry('Show User Data');
+            $userIdentifier = null;
+            try {
+                $pfUser = $this->printformerSdk->clientFactory()->user()->show($customer->getPrintformerIdentification());
+                $userIdentifier = $pfUser->identifier;
+                //todo: $this->_logHelper->updateEntry($createdEntry, ['response_data' => $responseBody]);
+                if ($userIdentifier) {
 
-            $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
-            $response = $this->getHttpClient()->get($apiUrl);
-            $userDataContent = $response->getBody()->getContents();
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
+                    if ($pfUser->firstName == '' || $pfUser->lastName == '') {
+                        $pfUser = $this->printformerSdk->clientFactory()->user()->update($userIdentifier, [
+                            'email' => $customer->getEmail() ? $customer->getEmail() : null,
+                            'firstName' => $customer->getFirstname() ? $customer->getFirstname() : null,
+                            'lastName' => $customer->getLastname() ? $customer->getLastname() : null
+                        ]);
 
-            if ($response->getStatusCode() === 200) {
-                $resultData = json_decode($userDataContent, true);
-                $profileData = $resultData['data']['profile'];
-
-                if (!$transfer) {
-                    return;
+                        //todo: $createdEntry = $this->_logHelper->createPutEntry('Update User', $pfUser);
+                        //todo: $this->_logHelper->updateEntry($createdEntry, ['response_data' => $pfUser]);
+                    }
                 }
-
-                if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
-                    $url = $this->apiUrl()->getUserData(
-                        $customer->getPrintformerIdentification()
-                    );
-
-                    $requestData = [
-                        'json' => [
-                            'firstName' => $customer->getFirstname(),
-                            'lastName' => $customer->getLastname(),
-                            'email' => $customer->getEmail()
-                        ]
-                    ];
-
-                    $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
-                    $response = $this->getHttpClient()->put($url, $requestData);
-                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
-                }
+            } catch (Exception $e) {
+                $this->_logger->critical($e);
             }
         } else {
             $userIdentifier = $this->createUser($customer);
@@ -383,13 +388,19 @@ class Api extends AbstractHelper
         return $this->_urlHelper;
     }
 
+    /**
+     * @param DataObject $customer
+     * @return string|null
+     */
     public function createUser(DataObject $customer = new DataObject()): string | null
     {
         $userIdentifier = null;
+        $transfer = $this->_config->isDataTransferEnabled();
         try {
+
             $pfUser = $this->printformerSdk->clientFactory()->user()->create([
                 'email' => $customer->getEmail() ? $customer->getEmail() : null,
-                'firstName' => $customer->getFirstName() ? $customer->getFirstName() : null,
+                'firstName' => $customer->getFirstname() ? $customer->getFirstname() : null,
                 'lastName' => $customer->getLastname() ? $customer->getLastname() : null,
                 //todo: 'title' => '',
                 //todo: 'salutation' => '',
@@ -397,6 +408,8 @@ class Api extends AbstractHelper
                 //todo: 'locale' => '',
             ]);
             $userIdentifier = $pfUser->identifier;
+            //todo:  $createdEntry = $this->_logHelper->createPostEntry('create User', $pfUser);
+            //todo:  $this->_logHelper->updateEntry($createdEntry, ['response_data' => $pfUser]);
         } catch (Exception $e) {
             $this->_logger->critical($e);
         }
@@ -445,36 +458,20 @@ class Api extends AbstractHelper
         return $response['data']['draftHash'];
     }
 
+
     /**
-     * @param $userIdentifier
-     * @param $drafts
-     * @param $storeId
-     * @return bool
+     * @param $originUserIdentifier
+     * @param $tempUserIdentifier
+     * @return \Rissc\Printformer\Client\User\User|void
      */
-    public function mergeUsers($originUserIdentifier, $tempUserIdentifier, $storeId = null)
+    public function mergeUsers($originUserIdentifier, $tempUserIdentifier)
     {
-        if (!isset($storeId) || !is_numeric($storeId)) {
-            $storeId = $this->configHelper->searchForStoreId();
-        }
-
-        $url = $this->apiUrl()->getMergeUser($originUserIdentifier);
-
-        $requestData = [
-            'json' => [
-                'source_user_identifier' => $tempUserIdentifier
-            ]
-        ];
-
-        $result = false;
         try {
-            $response = $this->getHttpClient($storeId)->post($url, $requestData);
-            $responseBody = $response->getBody();
-            $response = json_decode($responseBody, true);
-            $result = $response;
-        } catch (GuzzleException $e) {
+            $pfUser = $this->printformerSdk->clientFactory()->user()->merge($originUserIdentifier, $tempUserIdentifier);
+            return $pfUser;
+        } catch (Exception $e) {
+            $this->_logger->critical($e);
         }
-
-        return $result;
     }
 
     /**
