@@ -424,9 +424,18 @@ class Api extends AbstractHelper
      *
      * @return mixed
      */
-    public function createDraftHash($identifier, $userIdentifier, $storeId, $params = [])
+    public function createDraftHash($identifier, $userIdentifier, $params = [])
     {
-        $url = $this->apiUrl()->getDraft();
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient
+            ->create([
+                'templateIdentifier' => $identifier,
+                'user_identifier' => $userIdentifier,
+                'intent' => $params['intent']
+            ]);
+        $draftHash =  $draft->draftHash;
+        $draftData = json_decode(json_encode ( $draft ) , true);
+        $draftDataJson = json_encode ( $draft );
 
         $requestData = [
             'json' => [
@@ -441,23 +450,17 @@ class Api extends AbstractHelper
             $requestData['json'][$key] = $value;
         }
 
-        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
-        $response = $this->getHttpClient($storeId)->post($url, $requestData);
-        $responseBody = $response->getBody();
-        $responseContent = $responseBody->getContents();
-        $response = json_decode($responseBody, true);
-        $this->_logHelper->updateEntry($createdEntry, [
-            'response_data' => $responseContent, 'draft_id' => $response['data']['draftHash']]);
+        $createdEntry = $this->_logHelper->createPostEntry('Create Draft', $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson, 'draft_id' => $draftHash]);
 
-        if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
-            $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+        if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
         } else {
-            $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
         }
 
-        return $response['data']['draftHash'];
+        return $draftHash;
     }
-
 
     /**
      * @param $originUserIdentifier
@@ -763,7 +766,7 @@ class Api extends AbstractHelper
 
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -870,7 +873,7 @@ class Api extends AbstractHelper
                 ];
 
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
-                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $storeId, $dataParams);
+                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $dataParams);
 
                 $process->addData([
                     'draft_id' => $draftHash,
