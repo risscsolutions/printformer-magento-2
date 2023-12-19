@@ -418,7 +418,7 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param string $identifier
+     * @param int $identifier
      * @param string $userIdentifier
      * @param array $params
      * @return mixed
@@ -510,24 +510,25 @@ class Api extends AbstractHelper
     /**
      * @param $draftHash
      * @param $pageInfo
-     * @param null $storeId
      * @return array|mixed
      */
-    public function getDraftUsagePageInfo($draftHash, $pageInfo, $storeId = null)
+    public function getDraftUsagePageInfo($draftHash, $pageInfo)
     {
         $storedDraftPageInfo = $this->_sessionHelper->getDraftPageInfo($draftHash);
 
         if (!$storedDraftPageInfo) {
-            $apiUrl = $this->_urlHelper
-                ->getDraftUsagePageInfo($draftHash, $pageInfo);
+            $draftClient = $this->printformerSdk->clientFactory()->draft();
+            $draft = $draftClient->pageInfo($draftHash, $pageInfo);
 
-            $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
-            $response = $this->getHttpClient($storeId)->get($apiUrl);
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+            $draftHash = $draft->draftHash;
+            $draftData = json_decode(json_encode($draft), true);
+            $draftDataJson = json_encode($draft);
 
-            $response = json_decode($response->getBody(), true);
-            $this->_sessionHelper->setDraftPageInfo($draftHash, $response['data']);
-            $result =  $response['data'];
+            $createdEntry = $this->_logHelper->createGetEntry('Page Info');
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
+
+            $this->_sessionHelper->setDraftPageInfo($draftHash, $draftData);
+            $result =  $draftData;
         } else {
             $result = $storedDraftPageInfo[$draftHash];
         }
@@ -644,23 +645,23 @@ class Api extends AbstractHelper
     /**
      * @param string $draftHash
      * @param bool $forceUpdate
-     *
      * @return array
      */
     public function getPrintformerDraft($draftHash, $forceUpdate = false)
     {
         if (!$this->_sessionHelper->hasDraftInCache($draftHash) || $forceUpdate) {
-            $url = $this->apiUrl()->getDraft($draftHash);
+            $draftClient = $this->printformerSdk->clientFactory()->draft();
+            $draft = $draftClient->show($draftHash);
+            $draftHash = $draft->draftHash;
+            $draftData = json_decode(json_encode($draft), true);
+            $draftDataJson = json_encode($draft);
+            $createdEntry = $this->_logHelper->createGetEntry('Show Draft');
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
 
-            $createdEntry = $this->_logHelper->createGetEntry($url);
-            $response = $this->getHttpClient()->get($url);
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-            $response = json_decode($response->getBody(), true);
-            if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
-                $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+            if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($draftHash)) {
+                $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
             } else {
-                $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+                $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
             }
         }
 
@@ -1236,29 +1237,21 @@ class Api extends AbstractHelper
 
     /**
      * @param string $userIdentifier
-     * @param array  $drafts
-     * @param bool   $dryRun
-     *
+     * @param array $drafts
+     * @param bool $dryRun
      * @return array
      */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
-        //todo adjust to sdk without _httpClient
-        $url = $this->apiUrl()->getPrintformerBaseUrl().'/api-ext/draft/claim';
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient->claim($userIdentifier, $drafts, $dryRun);
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
-        $requestData = [
-            'json' => [
-                'user_identifier' => $userIdentifier,
-                'drafts' => $drafts,
-                'dryRun' => $dryRun
-            ]
-        ];
+        $createdEntry = $this->_logHelper->createPostEntry('Claim Draft', $userIdentifier);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
 
-        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
-        $body = $this->getHttpClient()->post($url, $requestData)->getBody();
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $body->getContents()]);
-
-        return json_decode($body, true);
+        return $draftData;
     }
 
     /**
