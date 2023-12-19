@@ -418,10 +418,9 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param int    $identifier
+     * @param string $identifier
      * @param string $userIdentifier
-     * @param array  $params
-     *
+     * @param array $params
      * @return mixed
      */
     public function createDraftHash($identifier, $userIdentifier, $params = [])
@@ -433,20 +432,20 @@ class Api extends AbstractHelper
                 'user_identifier' => $userIdentifier,
                 'intent' => $params['intent']
             ]);
-        $draftHash =  $draft->draftHash;
-        $draftData = json_decode(json_encode ( $draft ) , true);
-        $draftDataJson = json_encode ( $draft );
+        $draftHash = $draft->draftHash;
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
         $requestData = [
             'json' => [
                 'user_identifier' => $userIdentifier
             ]
         ];
-        if( !empty($identifier) ) {
+        if (!empty($identifier)) {
             $requestData['json']['templateIdentifier'] = $identifier;
         }
         $params = $this->mergeAdditionalParamsForApiCall($params);
-        foreach($params as $key => $value) {
+        foreach ($params as $key => $value) {
             $requestData['json'][$key] = $value;
         }
 
@@ -482,31 +481,30 @@ class Api extends AbstractHelper
      * @param $orderId
      * @return mixed
      */
-    public function updateDraftHash($draftHash, $orderId, $storeId = null)
+    public function updateDraftHash($draftHash, $orderId)
     {
-        $url = $this->_urlHelper
-            ->getDraftUpdate($draftHash);
-
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
         $requestData = [
-            'json' => [
-                'customAttributes' => [
-                    $this->_config->getOrderDraftUpdateOrderId() => $orderId
-                ]
+            'customAttributes' => [
+                $this->_config->getOrderDraftUpdateOrderId() => $orderId
             ]
         ];
+        $draft = $draftClient->update($draftHash, $requestData);
 
-        $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
-        $response = $this->getHttpClient($storeId)->put($url, $requestData);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+        $draftHash = $draft->draftHash;
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
-        $response = json_decode($response->getBody(), true);
-        if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
-            $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+        $createdEntry = $this->_logHelper->createPutEntry('Update DraftHash', $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
+
+        if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
         } else {
-            $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
         }
 
-        return $response['data']['draftHash'];
+        return $draftHash;
     }
 
     /**
@@ -615,28 +613,29 @@ class Api extends AbstractHelper
         return $this->urlBuilder->getUrl(self::CALLBACK_UPLOAD_ENDPOINT, $params);
     }
 
+
     /**
      * @param string $oldDraftId
      * @return string
      */
-    public function getReplicateDraftId(string $oldDraftId) : string
+    public function getReplicateDraftId(string $oldDraftId): string
     {
         if ($this->_sessionHelper->hasDraftInCache($oldDraftId)) {
             $this->_sessionHelper->removeDraftFromCache($oldDraftId);
         }
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient->replicate($oldDraftId, []);
+        $draftHash = $draft->draftHash;
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
-        $url = $this->apiUrl()->getReplicateDraftId($oldDraftId);
+        $createdEntry = $this->_logHelper->createGetEntry('Replicate Draft');
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
 
-        $createdEntry = $this->_logHelper->createGetEntry($url);
-        $response = $this->getHttpClient()->get($url);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-        $draftInfo = json_decode($response->getBody(), true);
-        $draftHash = $draftInfo['data']['draftHash'];
         if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
-            $this->_sessionHelper->updateDraftInCache($draftHash, $draftInfo['data']);
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
         } else {
-            $this->_sessionHelper->addDraftToCache($draftHash, $draftInfo['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
         }
 
         return $draftHash;
