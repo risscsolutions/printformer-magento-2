@@ -35,6 +35,7 @@ use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
+use Rissc\Printformer\Helper\Catalog as CatalogHelper;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use GuzzleHttp\ClientFactory;
 //todo: integrate sdk everywhere
@@ -129,6 +130,8 @@ class Api extends AbstractHelper
     private Context $context;
     private Config $configHelper;
 
+    /** @var CatalogHelper */
+    protected $_catalogHelper;
     private ClientFactory $clientFactory;
     private Printformer $printformerSdk;
 
@@ -151,6 +154,7 @@ class Api extends AbstractHelper
         OrderItemRepositoryInterface $orderItemRepository,
         LogHelper $_logHelper,
         DraftResource $draftResource,
+        CatalogHelper $catalogHelper,
         ConfigHelper $configHelper,
         ClientFactory $clientFactory
     ) {
@@ -172,6 +176,7 @@ class Api extends AbstractHelper
         $this->_logHelper = $_logHelper;
         $this->draftResource = $draftResource;
         $this->context = $context;
+        $this->_catalogHelper = $catalogHelper;
         $this->configHelper = $configHelper;
         $this->clientFactory = $clientFactory;
 
@@ -203,13 +208,13 @@ class Api extends AbstractHelper
 
     public function getWebsiteId(): int | null
     {
-        $storeId = null;
+        $websiteId = null;
         if ($this->_storeManager) {
             if ($this->_storeManager->getStore()) {
-                $storeId = $this->_storeManager->getStore()->getId();
+                $websiteId = $this->_storeManager->getStore($this->_storeManager->getStore()->getId())->getWebsiteId();
             }
         }
-        return $storeId;
+        return $websiteId;
     }
 
     /**
@@ -666,6 +671,115 @@ class Api extends AbstractHelper
         }
 
         return $this->_sessionHelper->getDraftCache($draftHash);
+    }
+
+    public function getEditorSdk($draftHash, $userIdentifier, $params = [])
+    {
+//        $editorUrl = $this->getPrintformerBaseUrl() .
+//            self::EXT_EDITOR_PATH;
+
+
+        $dataParams = [
+            'product_id' => $params['product_id'],
+            'draft_process' => $params['data']['draft_process']
+        ];
+
+        if (!empty($params['data']['quote_id'])) {
+            $dataParams['quote_id'] = $params['data']['quote_id'];
+        }
+
+        $customCallbackUrl = null;
+        if (!empty($params['data']['callback_url'])) {
+            $customCallbackUrl = $params['data']['callback_url'];
+        }
+
+        $queryParams = [];
+        $callback = $this->getCallbackSdkUrl(
+            $customCallbackUrl,
+            $this->_storeManager->getStore()->getId(),
+            $dataParams
+        );
+        if ($this->_config->getRedirectProductOnCancel()) {
+            $callbackCancel = $this->getProductCallbackSdkUrl(intval($params['product_id']), $params['data'], $this->_storeManager->getStore()->getId());
+        }
+        $editorUrl = (string)$this->printformerSdk->urlGenerator()->editor()
+            ->draft($draftHash)
+            ->callback($callback)
+            ->callbackHalt($callbackCancel ?? '') // Optional, if omitted the callbackCancel URL is used
+            ->user($userIdentifier)
+            ->step('preview');
+
+        return $editorUrl;
+    }
+
+    /**
+     * @param Product | int $product
+     * @param int $storeId
+     * @param bool $encodeUrl
+     *
+     * @return string
+     */
+    protected function getProductSdkCallbackUrl(
+        $product,
+        $params = [],
+        $storeId = 0,
+        $encodeUrl = true
+    )
+    {
+        $product = $this->_catalogHelper->prepareProduct($product);
+
+        if (isset($params['quote_id']) && $product->getId()) {
+            $referrerParams['id'] = $params['quote_id'];
+            $referrerParams['product_id'] = $product->getId();
+
+            $baseUrl = $this->_urlBuilder->getUrl('checkout/cart/configure', $referrerParams);
+        } else {
+            $baseUrl = $product->getProductUrl(null);
+        }
+
+        if ($encodeUrl) {
+            $baseUrl = base64_encode($baseUrl);
+        }
+
+        return $baseUrl;
+    }
+
+    /**
+     * @param string $requestReferrer
+     * @param int $storeId
+     * @param array $params
+     * @param bool $encodeUrl
+     *
+     * @return string
+     */
+    protected function getCallbackSdkUrl(
+        $requestReferrer,
+        $storeId = 0,
+        $params = [],
+        $encodeUrl = true
+    )
+    {
+        if ($requestReferrer != null) {
+            $referrer = urldecode($requestReferrer);
+        } else {
+            $referrerParams = array_merge($params, [
+                'store_id' => $storeId,
+            ]);
+
+            if (isset($params['quote_id']) && isset($params['product_id'])) {
+                $referrerParams['quote_id'] = $params['quote_id'];
+                $referrerParams['edit_product'] = $params['product_id'];
+                $referrerParams['is_edit'] = 1;
+            }
+
+            $referrer = $this->_urlBuilder->getUrl('printformer/editor/save', $referrerParams);
+        }
+
+        if ($encodeUrl) {
+            $referrer = base64_encode($referrer);
+        }
+
+        return $referrer;
     }
 
     /**
