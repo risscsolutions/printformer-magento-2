@@ -706,24 +706,24 @@ class Api extends AbstractHelper
             ->draft($draftHash)
             ->callback($callback)
             ->callbackHalt($callbackCancel ?? '') // Optional, if omitted the callbackCancel URL is used
-            ->user($userIdentifier)
-            ->step('preview');
+            ->user($userIdentifier);
+        //->step('preview');
 
         return $editorUrl;
     }
 
+
     /**
      * @param Product | int $product
+     * @param array $params
      * @param int $storeId
-     * @param bool $encodeUrl
      *
      * @return string
      */
-    protected function getProductSdkCallbackUrl(
+    protected function getProductCallbackSdkUrl(
         $product,
         $params = [],
-        $storeId = 0,
-        $encodeUrl = true
+        $storeId = 0
     )
     {
         $product = $this->_catalogHelper->prepareProduct($product);
@@ -737,10 +737,6 @@ class Api extends AbstractHelper
             $baseUrl = $product->getProductUrl(null);
         }
 
-        if ($encodeUrl) {
-            $baseUrl = base64_encode($baseUrl);
-        }
-
         return $baseUrl;
     }
 
@@ -748,15 +744,13 @@ class Api extends AbstractHelper
      * @param string $requestReferrer
      * @param int $storeId
      * @param array $params
-     * @param bool $encodeUrl
      *
      * @return string
      */
     protected function getCallbackSdkUrl(
         $requestReferrer,
         $storeId = 0,
-        $params = [],
-        $encodeUrl = true
+        $params = []
     )
     {
         if ($requestReferrer != null) {
@@ -775,10 +769,6 @@ class Api extends AbstractHelper
             $referrer = $this->_urlBuilder->getUrl('printformer/editor/save', $referrerParams);
         }
 
-        if ($encodeUrl) {
-            $referrer = base64_encode($referrer);
-        }
-
         return $referrer;
     }
 
@@ -792,7 +782,7 @@ class Api extends AbstractHelper
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
-        $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
+        $editorOpenUrl = $this->getEditorSdk($draftHash, $userIdentifier, $params);
         $client = $this->_config->getClientIdentifier($this->getStoreId());
         $identifier = bin2hex(random_bytes(16));
         $issuedAt = new DateTimeImmutable();
