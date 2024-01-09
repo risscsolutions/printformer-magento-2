@@ -525,7 +525,6 @@ class Api extends AbstractHelper
             $draftClient = $this->printformerSdk->clientFactory()->draft();
             $draft = $draftClient->pageInfo($draftHash, $pageInfo);
 
-            $draftHash = $draft->draftHash;
             $draftData = json_decode(json_encode($draft), true);
             $draftDataJson = json_encode($draft);
 
@@ -705,7 +704,7 @@ class Api extends AbstractHelper
         $editorUrl = (string)$this->printformerSdk->urlGenerator()->editor()
             ->draft($draftHash)
             ->callback($callback)
-            ->callbackHalt($callbackCancel ?? '') // Optional, if omitted the callbackCancel URL is used
+            ->callbackCancel($callbackCancel ?? '') // Optional, if omitted the callbackCancel URL is used
             ->user($userIdentifier);
         //->step('preview');
 
