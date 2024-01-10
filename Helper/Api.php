@@ -1267,49 +1267,24 @@ class Api extends AbstractHelper
      */
     public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
-        $issuedAt = new DateTimeImmutable();
-        $JWTBuilder = $this->jwtConfig->builder()
-            ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->withClaim('user', $userIdentifier)
-            ->expiresAt($this->_config->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
-
-        $postFields = [
-            'jwt' => $JWT,
-            'width' => $width,
-            'height' => $height,
-            'page' => $page
-        ];
-
         try {
-            $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash, 0);
+            $thumbnailUrl = (string)$this->printformerSdk->urlGenerator()->draftFiles()
+                ->image($draftHash)
+                ->width($width)
+                ->height($height)
+                ->page($page);
 
-            $httpClient = $this->clientFactory->create(
-                [
-                    'config' => [
-                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
-                        'headers' => [
-                            'Accept' => 'application/json'
-                        ],
-                    ],
-                ],
-            );
-            $completeThumbnailUrl = $thumbnailUrl . '?' . http_build_query($postFields);
-
-            $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
-            $response = $httpClient->get($completeThumbnailUrl);
+            $createdEntry = $this->_logHelper->createGetEntry($thumbnailUrl);
             $this->_logHelper->updateEntry($createdEntry, ['response_data' => 'IMAGE']);
         } catch(ServerException $e) {
             throw $e;
         }
 
-        /** @var Psr7Stream $stream */
-        $stream = $response->getBody();
+        $info = getimagesize($thumbnailUrl);
         $responseData = [
-            'content_type' => implode('', $response->getHeader('Content-Type')),
-            'size' => $stream->getSize(),
-            'content' => $stream->getContents()
+            'content_type' =>  $info['mime'],
+            'size' => $info,
+            'content' => file_get_contents($thumbnailUrl)
         ];
 
         return $responseData;
