@@ -153,8 +153,7 @@ class Grid extends Extended
                 ['product' => $catalogCollection->getTable('catalog_product_entity_varchar')],
                 'product.entity_id = main_table.product_id',
                 ['product.value', 'product.entity_id', 'product.store_id']
-            )->where('product.attribute_id = ?', $attributeId->getAttributeId())
-            ->where('product.store_id = main_table.store_id');
+            )->where('product.attribute_id = ?', $attributeId->getAttributeId());
         $catalogCollection->addFieldToFilter('product.value', ['like' => '%' . $value . '%']);
 
         $ids = [];

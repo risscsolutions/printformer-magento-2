@@ -37,7 +37,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $setup->getTable(self::TABLE_NAME_DRAFT)
             )->addColumn(
                 'id',
-                DdlTable::TYPE_INTEGER,
+                Table::TYPE_INTEGER,
                 null,
                 array (
                     'identity' => true,
@@ -48,13 +48,13 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'Draft ID'
             )->addColumn(
                 'draft_id',
-                DdlTable::TYPE_TEXT,
+                Table::TYPE_TEXT,
                 255,
                 [],
                 'Draft Hash'
             )->addColumn(
                 'order_item_id',
-                DdlTable::TYPE_INTEGER,
+                Table::TYPE_INTEGER,
                 null,
                 [
                     'unsigned' => true,
@@ -63,7 +63,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'Order Item ID'
             )->addColumn(
                 'store_id',
-                DdlTable::TYPE_SMALLINT,
+                Table::TYPE_SMALLINT,
                 null,
                 [
                     'unsigned' => true,
@@ -79,14 +79,14 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'store_id',
                 $setup->getTable('store'),
                 'store_id',
-                DdlTable::ACTION_CASCADE
+                Table::ACTION_CASCADE
             )->addColumn(
                 'created_at',
-                DdlTable::TYPE_TIMESTAMP,
+                Table::TYPE_TIMESTAMP,
                 null,
                 [
                     'nullable' => false,
-                    'default' => DdlTable::TIMESTAMP_INIT
+                    'default' => Table::TIMESTAMP_INIT
                 ],
                 'Create At'
             )->addIndex(
@@ -133,7 +133,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             )
                 ->addColumn(
                     'id',
-                    DdlTable::TYPE_INTEGER,
+                    Table::TYPE_INTEGER,
                     null,
                     array (
                         'identity' => true,
@@ -145,24 +145,24 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 )
                 ->addColumn(
                     'draft_id',
-                    DdlTable::TYPE_TEXT,
+                    Table::TYPE_TEXT,
                     255,
                     [],
                     'Draft Hash'
                 )
                 ->addColumn(
                     'created_at',
-                    DdlTable::TYPE_TIMESTAMP,
+                    Table::TYPE_TIMESTAMP,
                     null,
                     [
                         'nullable' => false,
-                        'default' => DdlTable::TIMESTAMP_INIT
+                        'default' => Table::TIMESTAMP_INIT
                     ],
                     'Created At'
                 )
                 ->addColumn(
                     'direction',
-                    DdlTable::TYPE_TEXT,
+                    Table::TYPE_TEXT,
                     35,
                     [
                         'nullable' => false,
@@ -172,7 +172,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 )
                 ->addColumn(
                     'status',
-                    DdlTable::TYPE_TEXT,
+                    Table::TYPE_TEXT,
                     35,
                     [
                         'nullable' => false,
@@ -181,7 +181,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 )
                 ->addColumn(
                     'request_data',
-                    DdlTable::TYPE_TEXT,
+                    Table::TYPE_TEXT,
                     null,
                     [
                         'nullable' => false
@@ -189,7 +189,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 )
                 ->addColumn(
                     'response_data',
-                    DdlTable::TYPE_TEXT,
+                    Table::TYPE_TEXT,
                     null,
                     [
                         'nullable' => false
@@ -198,7 +198,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 )
                 ->addColumn(
                     'api_url',
-                    DdlTable::TYPE_TEXT,
+                    Table::TYPE_TEXT,
                     null,
                     [
                         'nullable' => false
@@ -298,7 +298,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $table = $connection->newTable($setup->getTable(self::TABLE_NAME_CUSTOMER_GROUP_RIGHT))
                 ->addColumn(
                     'id',
-                    DdlTable::TYPE_INTEGER,
+                    Table::TYPE_INTEGER,
                     null,
                     [
                         'identity' => true,
@@ -307,12 +307,12 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'unsigned' => true
                     ]
                 )
-                ->addColumn('customer_group_id', DdlTable::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true])
-                ->addColumn('draft_editor_view', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
-                ->addColumn('draft_editor_update', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
-                ->addColumn('review_view', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
-                ->addColumn('review_finish', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
-                ->addColumn('review_end', DdlTable::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0]);
+                ->addColumn('customer_group_id', Table::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true])
+                ->addColumn('draft_editor_view', Table::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('draft_editor_update', Table::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('review_view', Table::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('review_finish', Table::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0])
+                ->addColumn('review_end', Table::TYPE_INTEGER, 1, ['nullable' => false, 'unsigned' => true, 'default' => 0]);
 
             $connection->createTable($table);
         }
@@ -333,7 +333,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $table = $connection->newTable($setup->getTable(self::TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT))
                 ->addColumn(
                     'id',
-                    DdlTable::TYPE_INTEGER,
+                    Table::TYPE_INTEGER,
                     null,
                     [
                         'identity' => true,
@@ -342,8 +342,8 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'unsigned' => true
                     ]
                 )
-                ->addColumn('product_id', DdlTable::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true])
-                ->addColumn('printformer_product_id', DdlTable::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true]);
+                ->addColumn('product_id', Table::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true])
+                ->addColumn('printformer_product_id', Table::TYPE_INTEGER, 10, ['nullable' => false, 'unsigned' => true]);
 
             $connection->createTable($table);
         }
@@ -511,11 +511,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $printformerProductTable,
                 'updated_at',
                 [
-                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'type' => Table::TYPE_TIMESTAMP,
                     'size' => null,
                     [
                         'nullable' => false,
-                        'default' => DdlTable::TIMESTAMP_INIT
+                        'default' => Table::TIMESTAMP_INIT
                     ],
                     'comment' => 'Update At'
                 ]
@@ -527,7 +527,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $setup->getTable('sales_order_item'),
                 self::COLUMN_NAME_UPLOAD_PROCESSING_COUNT,
                 [
-                    'type' => DdlTable::TYPE_SMALLINT,
+                    'type' => Table::TYPE_SMALLINT,
                     'unsigned' => true,
                     'nullable' => false,
                     'default' => '0',
@@ -542,11 +542,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $printformerProductTable,
                 'updated_at',
                 [
-                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'type' => Table::TYPE_TIMESTAMP,
                     'size' => null,
                     [
                         'nullable' => false,
-                        'default' => DdlTable::TIMESTAMP_INIT_UPDATE
+                        'default' => Table::TIMESTAMP_INIT_UPDATE
                     ],
                     'comment' => 'Update At'
                 ]
@@ -576,7 +576,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $tableName,
                 self::COLUMN_NAME_PROCESSING_COUNT_STATE,
                 [
-                    'type' => DdlTable::TYPE_SMALLINT,
+                    'type' => Table::TYPE_SMALLINT,
                     'unsigned' => true,
                     'nullable' => false,
                     'default' => '0',
@@ -588,11 +588,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 $tableName,
                 self::COLUMN_NAME_PROCESSING_COUNT_DATE,
                 [
-                    'type' => DdlTable::TYPE_TIMESTAMP,
+                    'type' => Table::TYPE_TIMESTAMP,
                     'size' => null,
                     [
                         'nullable' => false,
-                        'default' => DdlTable::TIMESTAMP_INIT
+                        'default' => Table::TIMESTAMP_INIT
                     ],
                     'comment' => 'Printformer Processing Count Updated At'
                 ]
@@ -607,7 +607,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     $tableName,
                     $columnName,
                     [
-                        'type' => DdlTable::TYPE_TEXT,
+                        'type' => Table::TYPE_TEXT,
                         'unsigned' => true,
                         'nullable' => false,
                         'comment' => 'Request type'
@@ -621,11 +621,11 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     $tableName,
                     $columnName,
                     [
-                        'type' => DdlTable::TYPE_TIMESTAMP,
+                        'type' => Table::TYPE_TIMESTAMP,
                         'size' => null,
                         [
                             'nullable' => false,
-                            'default' => DdlTable::TIMESTAMP_INIT_UPDATE
+                            'default' => Table::TIMESTAMP_INIT_UPDATE
                         ],
                         'comment' => 'Updated At'
                     ]
@@ -659,6 +659,21 @@ class UpgradeSchema implements UpgradeSchemaInterface
                         'size' => 255,
                         'nullable' => false,
                         'comment' => 'Identifier'
+                    ]
+                );
+            }
+        }
+
+        if (version_compare($context->getVersion(), '100.9.7', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_DRAFT);
+            $columnName = 'super_attribute';
+            if (!$connection->tableColumnExists($tableName, $columnName)) {
+                $connection->addColumn(
+                    $tableName,
+                    $columnName,
+                    [
+                        'type' => Table::TYPE_TEXT,
+                        'comment' => 'Super Attribute Option'
                     ]
                 );
             }

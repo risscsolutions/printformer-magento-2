@@ -1,5 +1,33 @@
 # Changelog
 
+## [101.6.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.0...v101.6.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* **WEM-2280:** update version ([3803573](https://github.com/risscsolutions/printformer-magento-2/commit/3803573c828f0867366ee3e62c299d29960820dd))
+
+## [101.6.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.3...v101.6.0) (2023-11-29)
+
+
+### Features
+
+* **WEM-2349:** added MIT license file ([5dff841](https://github.com/risscsolutions/printformer-magento-2/commit/5dff8416ea7c6fcf51bb497a2233908bb4d3f71e))
+
+## [101.5.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.2...v101.5.3) (2023-11-03)
+
+
+### Bug Fixes
+
+* **WEM-1880:** update composer version ([fd00952](https://github.com/risscsolutions/printformer-magento-2/commit/fd0095225ba91d0bbe3b8b89903d9f2be717f0a5))
+
+## [101.5.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.1...v101.5.2) (2023-11-03)
+
+
+### Bug Fixes
+
+* **WEM-1816:** fixed draft product grid filtration by product name ([2719b7f](https://github.com/risscsolutions/printformer-magento-2/commit/2719b7fb19bc51105a2c246dd58be01496819ab2))
+
 ## [101.5.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.0...v101.5.1) (2023-09-01)
 
 

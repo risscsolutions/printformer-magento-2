@@ -77,6 +77,7 @@ class Webtoken extends Action
 
         $editorParams = [
             'product_id' => $draftProcess->getProductId(),
+            'store_id' => $draftProcess->getStoreId(),
             'data' => [
                 'draft_process' => $draftProcess->getId(),
                 'callback_url' => $referrerUrl
