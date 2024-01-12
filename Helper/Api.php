@@ -1639,4 +1639,13 @@ class Api extends AbstractHelper
             return null;
         }
     }
+
+    /**
+     * @return string|void
+     */
+    public function getMandatorClientName()
+    {
+        $clientData = $this->printformerSdk->clientFactory()->tenant()->show();
+        return $clientData->name;
+    }
 }
