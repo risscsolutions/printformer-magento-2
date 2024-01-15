@@ -1,9 +1,12 @@
 <?php
+
 namespace Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
 
-use Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
-use Magento\Store\Model\WebsiteRepository;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Backend\Block\Template\Context;
+use Magento\Store\Model\WebsiteRepository;
+use Rissc\Printformer\Block\Adminhtml\System\Config\Form\Button;
 
 class Sync extends Button
 {
@@ -22,11 +25,17 @@ class Sync extends Button
      */
     protected $_websiteRepository;
 
+    /**
+     * @param Context $context
+     * @param WebsiteRepository $websiteRepository
+     * @param array $data
+     */
     public function __construct(
-        Context $context,
+        Context           $context,
         WebsiteRepository $websiteRepository,
-        array $data = []
-    ) {
+        array             $data = []
+    )
+    {
         $this->_websiteRepository = $websiteRepository;
 
         parent::__construct($context, $data);
@@ -34,7 +43,7 @@ class Sync extends Button
 
     /**
      * @return int
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getCurrentStoreId()
     {
@@ -77,17 +86,19 @@ class Sync extends Button
     /**
      * {@inheritdoc}
      */
-    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    protected function _getElementHtml(AbstractElement $element)
     {
         $originalData = $element->getOriginalData();
         $buttonLabel = !empty($originalData['button_label']) ? $originalData['button_label'] : $this->_buttonLabel;
+        $url = $this->_urlBuilder->getUrl('printformer/product/sync',
+            [
+                'store_id' => $this->getCurrentStoreId()
+            ]);
         $this->addData(
             [
                 'button_label' => __($buttonLabel),
-                'html_id'      => $element->getHtmlId(),
-                'ajax_url'     => $this->_urlBuilder->getUrl('printformer/product/sync',
-                    ['store_id' => $this->getCurrentStoreId()]
-                ),
+                'html_id' => $element->getHtmlId(),
+                'ajax_url' => $url . '?store=' . $this->getCurrentStoreId(),
             ]
         );
         return $this->_toHtml();

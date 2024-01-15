@@ -28,6 +28,8 @@ use Rissc\Printformer\Helper\Session as SessionHelper;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 use Magento\Backend\Model\Session as AdminSession;
+use Magento\Framework\App\State;
+use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
@@ -90,6 +92,16 @@ class Api extends AbstractHelper
     protected $_adminSession;
 
     /**
+     * @var State
+     */
+    protected $state;
+
+    /**
+     * @var Http
+     */
+    protected $request;
+
+    /**
      * @var PrintformerProductAttributes
      */
     protected $printformerProductAttributes;
@@ -128,13 +140,33 @@ class Api extends AbstractHelper
      * @var Configuration
      */
     private Configuration $jwtConfig;
+
+    /**
+     * @var DraftResource
+     */
     private DraftResource $draftResource;
+
+    /**
+     * @var Context
+     */
     private Context $context;
+
+    /**
+     * @var Config
+     */
     private Config $configHelper;
 
     /** @var CatalogHelper */
     protected $_catalogHelper;
+
+    /**
+     * @var ClientFactory
+     */
     private ClientFactory $clientFactory;
+
+    /**
+     * @var Printformer
+     */
     private Printformer $printformerSdk;
 
     /**
@@ -154,6 +186,8 @@ class Api extends AbstractHelper
      * @param CustomerFactory $customerFactory
      * @param CustomerResource $customerResource
      * @param AdminSession $adminSession
+     * @param State $state
+     * @param Http $request
      * @param PrintformerProductAttributes $printformerProductAttributes
      * @param Filesystem $filesystem
      * @param UrlInterface $urlBuilder
@@ -178,6 +212,8 @@ class Api extends AbstractHelper
         CustomerFactory $customerFactory,
         CustomerResource $customerResource,
         AdminSession $adminSession,
+        State $state,
+        Http $request,
         PrintformerProductAttributes $printformerProductAttributes,
         Filesystem $filesystem,
         UrlInterface $urlBuilder,
@@ -200,6 +236,8 @@ class Api extends AbstractHelper
         $this->_customerFactory = $customerFactory;
         $this->_customerResource = $customerResource;
         $this->_adminSession = $adminSession;
+        $this->state = $state;
+        $this->request = $request;
         $this->printformerProductAttributes = $printformerProductAttributes;
         $this->filesystem = $filesystem;
         $this->urlBuilder = $urlBuilder;
@@ -221,7 +259,7 @@ class Api extends AbstractHelper
             $this->_logger->critical('Unable to load singleton printformer-sdk instance');
         }
 
-        $this->jwtConfig = $this->getJwtConfig();
+        $this->jwtConfig = $this->getJwtConfig($this->getStoreId(), $this->getWebsiteId());
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -231,23 +269,28 @@ class Api extends AbstractHelper
 
     public function getStoreId(): int | null
     {
-        $storeId = null;
-        if ($this->_storeManager) {
-            if ($this->_storeManager->getStore()) {
-                $storeId = $this->_storeManager->getStore()->getId();
-            }
+        if ($this->state->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML) {
+            // in admin area
+            $storeId = (int) $this->request->getParam('store', 0);
+        } else {
+            // frontend area
+            $storeId = true; // get current store from the store resolver
         }
+
+        $store = $this->_storeManager->getStore($storeId);
         return $storeId;
     }
 
     public function getWebsiteId(): int | null
     {
         $websiteId = null;
-        if ($this->_storeManager) {
-            if ($this->_storeManager->getStore()) {
-                $websiteId = $this->_storeManager->getStore($this->_storeManager->getStore()->getId())->getWebsiteId();
-            }
+        if ($this->state->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML) {
+            // in admin area
+            /** @var \Magento\Framework\App\RequestInterface $request */
+            //$request = $this->_request;
+            $websiteId = (int) $this->request->getParam('website', 0);
         }
+
         return $websiteId;
     }
 
@@ -708,10 +751,6 @@ class Api extends AbstractHelper
 
     public function getEditorSdk($draftHash, $userIdentifier, $params = [])
     {
-//        $editorUrl = $this->getPrintformerBaseUrl() .
-//            self::EXT_EDITOR_PATH;
-
-
         $dataParams = [
             'product_id' => $params['product_id'],
             'draft_process' => $params['data']['draft_process']
@@ -1630,9 +1669,14 @@ class Api extends AbstractHelper
         return $config;
     }
 
-    public function getJwtConfig(): \Lcobucci\JWT\Configuration | null
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return Configuration|null
+     */
+    public function getJwtConfig($storeId, $websiteId): Configuration| null
     {
-        $apiKey = $this->_config->getClientApiKey($this->getStoreId());
+        $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
         if (!empty($apiKey)) {
             return Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
         } else {

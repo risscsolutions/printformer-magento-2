@@ -66,20 +66,9 @@ class Sync extends Action
             if (!$this->config->isEnabled($storeId, $websiteId)) {
                 throw new \Exception(__('Module disabled.'));
             }
-
-            try {
-                $url = $this->apiHelper->apiUrl()->getClientName($storeId, $websiteId);
-                $httpClient = $this->apiHelper->getHttpClient($storeId, $websiteId);
-
-                $response = $httpClient->get($url);
-                $response = json_decode($response->getBody(), true);
-                $name = $response['data']['name'];
-
-                $this->gateway->syncProducts($storeId, $websiteId);
-                $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.').'<br>'.__('Mandator:').$name];
-            } catch (\Exception $e) {
-                $response = ['error' => 'true', 'message' => __('Error setting name client configuration. Empty Response. Url: ' . $url)];
-            }
+            $name = $this->apiHelper->getMandatorClientName();
+            $this->gateway->syncProducts($storeId, $websiteId);
+            $response = ['success' => 'true', 'message' => __('Templates synchronized successfully.').'<br>'.__('Mandator:').$name];
         } catch (\Exception $e){
             $response = ['error' => 'true', 'message' => $e->getMessage()];
         }
