@@ -61,13 +61,9 @@ class Save implements ObserverInterface
             if (empty($websiteId)) {
                 $storeId = 0;
             }
-            $url = $this->_apiHelper->apiUrl()->getClientName($storeId, $websiteId);
-            $httpClient = $this->_apiHelper->getHttpClient($storeId, $websiteId);
-            $response = $httpClient->get($url);
-            $response = json_decode($response->getBody(), true);
-            $resultName = $response['data']['name'];
+            $resultName = $this->_apiHelper->getMandatorClientName();
         } catch (\Exception $exception) {
-            $message = __('Error setting name client configuration. Empty Response. Url: ' . $url);
+            $message = __('Error setting name client configuration. Empty Response. Url: api-ext/name');
             $this->logger->debug($message);
         }
 

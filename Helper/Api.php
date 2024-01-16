@@ -36,6 +36,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Framework\Serialize\SerializerInterface;
+use Rissc\Printformer\Client\Paginator;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Catalog as CatalogHelper;
@@ -46,6 +47,9 @@ use GuzzleHttp\ClientFactory;
 use Rissc\Printformer\Helper\Sdk\PrintformerSdkSingleton;
 use Rissc\Printformer\Printformer;
 
+/**
+ *
+ */
 class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
@@ -57,6 +61,8 @@ class Api extends AbstractHelper
     const ProcessingStateAdminMassResend = 4;
     const DRAFT_USAGE_PAGE_INFO_PREVIEW = 'preview';
     const DRAFT_USAGE_PAGE_INFO_PRINT = 'print';
+    const PAGE = 1;
+    const PER_PAGE = 99999;
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -1691,5 +1697,14 @@ class Api extends AbstractHelper
     {
         $clientData = $this->printformerSdk->clientFactory()->tenant()->show();
         return $clientData->name;
+    }
+
+    /**
+     * @return Paginator
+     */
+    public function getPrintformerTemplatesList()
+    {
+        $masterTemplates = $this->printformerSdk->clientFactory()->masterTemplate();
+        return $masterTemplates->list(self::PAGE, self::PER_PAGE);
     }
 }
