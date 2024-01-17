@@ -234,6 +234,7 @@ class PrintformerProduct
                         'dataScope' => '',
                         'component' => 'Rissc_Printformer/component/addprintformerdlg',
                         //,['store_id' => $this->getCurrentStoreId()]
+                        'store' => $this->locator->getProduct()->getStoreId(),
                         'syncUrl'     => $this->urlBuilder->getUrl('printformer/product/sync', ['store_id' => $this->locator->getProduct()->getStoreId()]),
                         'options' => [
                             'title' => $title,

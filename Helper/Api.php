@@ -47,9 +47,6 @@ use GuzzleHttp\ClientFactory;
 use Rissc\Printformer\Helper\Sdk\PrintformerSdkSingleton;
 use Rissc\Printformer\Printformer;
 
-/**
- *
- */
 class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
@@ -547,6 +544,40 @@ class Api extends AbstractHelper
         }
 
         return $draftHash;
+    }
+
+    public function getDraftDelete($draftHash){
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient->destroy($draftHash);
+        //toDO will check with mgo dependency logic
+        // toDo Delete another draftDelete methods
+//        $createdEntry = $this->_logHelper->createPostEntry($url);
+//        /** @var \Zend_Http_Response $response */
+//        $response = $this->_httpClientFactory
+//            ->create()
+//            ->setUri((string)$url)
+//            ->setConfig(['timeout' => 30])
+//            ->request(\Zend_Http_Client::POST);
+//        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
+//
+//        if (!$response->isSuccessful()) {
+//            throw new Exception(__('Error deleting draft.'));
+//        }
+//        $responseArray = $this->_jsonDecoder->decode($response->getBody());
+//        if (!is_array($responseArray)) {
+//            throw new Exception(__('Error decoding response.'));
+//        }
+//        if (isset($responseArray['success']) && false == $responseArray['success']) {
+//            $errorMsg = 'Request was not successful.';
+//            if (isset($responseArray['error'])) {
+//                $errorMsg = $responseArray['error'];
+//            }
+//            throw new Exception(__($errorMsg));
+//        }
+//
+//        $this->mediaHelper->deleteAllImages($draftId);
+//
+//        return $this;
     }
 
     /**
