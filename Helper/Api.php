@@ -272,15 +272,24 @@ class Api extends AbstractHelper
 
     public function getStoreId(): int | null
     {
+        $storeId = null;
         if ($this->state->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML) {
             // in admin area
             $storeId = (int) $this->request->getParam('store', 0);
+            if ($this->_storeManager && !$storeId) {
+                if ($this->_storeManager->getStore()) {
+                    $storeId = $this->_storeManager->getStore()->getId();
+                }
+            }
         } else {
             // frontend area
-            $storeId = true; // get current store from the store resolver
+            if ($this->_storeManager) {
+                if ($this->_storeManager->getStore()) {
+                    $storeId = $this->_storeManager->getStore()->getId();
+                }
+            }
         }
 
-        $store = $this->_storeManager->getStore($storeId);
         return $storeId;
     }
 
