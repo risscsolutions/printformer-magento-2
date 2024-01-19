@@ -28,17 +28,24 @@ use Rissc\Printformer\Helper\Session as SessionHelper;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 use Magento\Backend\Model\Session as AdminSession;
+use Magento\Framework\App\State;
+use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Framework\Serialize\SerializerInterface;
+use Rissc\Printformer\Client\Paginator;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
+use Rissc\Printformer\Helper\Catalog as CatalogHelper;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Rissc\Printformer\Helper\Api\Url\V2;
 use GuzzleHttp\ClientFactory;
+//todo: integrate sdk everywhere
+use Rissc\Printformer\Helper\Sdk\PrintformerSdkSingleton;
+use Rissc\Printformer\Printformer;
 
 class Api extends AbstractHelper
 {
@@ -51,6 +58,8 @@ class Api extends AbstractHelper
     const ProcessingStateAdminMassResend = 4;
     const DRAFT_USAGE_PAGE_INFO_PREVIEW = 'preview';
     const DRAFT_USAGE_PAGE_INFO_PRINT = 'print';
+    const PAGE = 1;
+    const PER_PAGE = 99999;
 
     /** @var UrlHelper */
     protected $_urlHelper;
@@ -84,6 +93,16 @@ class Api extends AbstractHelper
 
     /** @var AdminSession */
     protected $_adminSession;
+
+    /**
+     * @var State
+     */
+    protected $state;
+
+    /**
+     * @var Http
+     */
+    protected $request;
 
     /**
      * @var PrintformerProductAttributes
@@ -124,16 +143,40 @@ class Api extends AbstractHelper
      * @var Configuration
      */
     private Configuration $jwtConfig;
+
+    /**
+     * @var DraftResource
+     */
     private DraftResource $draftResource;
+
+    /**
+     * @var Context
+     */
     private Context $context;
+
+    /**
+     * @var Config
+     */
     private Config $configHelper;
 
+    /** @var CatalogHelper */
+    protected $_catalogHelper;
+
+    /**
+     * @var ClientFactory
+     */
     private ClientFactory $clientFactory;
+
+    /**
+     * @var Printformer
+     */
+    private Printformer $printformerSdk;
 
     /**
      * @param SerializerInterface $serializer
      */
     protected $serializer;
+
 
     /**
      * @param Context $context
@@ -146,6 +189,8 @@ class Api extends AbstractHelper
      * @param CustomerFactory $customerFactory
      * @param CustomerResource $customerResource
      * @param AdminSession $adminSession
+     * @param State $state
+     * @param Http $request
      * @param PrintformerProductAttributes $printformerProductAttributes
      * @param Filesystem $filesystem
      * @param UrlInterface $urlBuilder
@@ -154,6 +199,7 @@ class Api extends AbstractHelper
      * @param OrderItemRepositoryInterface $orderItemRepository
      * @param Log $_logHelper
      * @param DraftResource $draftResource
+     * @param Catalog $catalogHelper
      * @param Config $configHelper
      * @param SerializerInterface $serializer
      * @param ClientFactory $clientFactory
@@ -169,6 +215,8 @@ class Api extends AbstractHelper
         CustomerFactory $customerFactory,
         CustomerResource $customerResource,
         AdminSession $adminSession,
+        State $state,
+        Http $request,
         PrintformerProductAttributes $printformerProductAttributes,
         Filesystem $filesystem,
         UrlInterface $urlBuilder,
@@ -177,6 +225,7 @@ class Api extends AbstractHelper
         OrderItemRepositoryInterface $orderItemRepository,
         LogHelper $_logHelper,
         DraftResource $draftResource,
+        CatalogHelper $catalogHelper,
         ConfigHelper $configHelper,
         SerializerInterface $serializer,
         ClientFactory $clientFactory
@@ -190,6 +239,8 @@ class Api extends AbstractHelper
         $this->_customerFactory = $customerFactory;
         $this->_customerResource = $customerResource;
         $this->_adminSession = $adminSession;
+        $this->state = $state;
+        $this->request = $request;
         $this->printformerProductAttributes = $printformerProductAttributes;
         $this->filesystem = $filesystem;
         $this->urlBuilder = $urlBuilder;
@@ -199,31 +250,60 @@ class Api extends AbstractHelper
         $this->_logHelper = $_logHelper;
         $this->draftResource = $draftResource;
         $this->context = $context;
+        $this->_catalogHelper = $catalogHelper;
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
         $this->clientFactory = $clientFactory;
 
+        try {
+            $config = $this->getPrintformerConfig($this->getStoreId(), $this->getWebsiteId());
+            $this->printformerSdk = PrintformerSdkSingleton::getInstance($config)->getSdk();
+        } catch (\Exception $e) {
+            $this->_logger->critical('Unable to load singleton printformer-sdk instance');
+        }
+
+        $this->jwtConfig = $this->getJwtConfig($this->getStoreId(), $this->getWebsiteId());
+
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
-
-        try {
-            $storeId = $storeManager->getStore()->getId();
-            $apiKey = $this->_config->getClientApiKey($storeId);
-            if (!empty($apiKey)) {
-                $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
-            }
-        } catch (NoSuchEntityException $e) {
-        }
 
         parent::__construct($context);
     }
 
-    /**
-     * @return int
-     */
-    public function getStoreId()
+    public function getStoreId(): int | null
     {
-        return $this->_storeManager->getStore()->getId();
+        $storeId = null;
+        if ($this->state->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML) {
+            // in admin area
+            $storeId = (int) $this->request->getParam('store', 0);
+            if ($this->_storeManager && !$storeId) {
+                if ($this->_storeManager->getStore()) {
+                    $storeId = $this->_storeManager->getStore()->getId();
+                }
+            }
+        } else {
+            // frontend area
+            if ($this->_storeManager) {
+                if ($this->_storeManager->getStore()) {
+                    $storeId = $this->_storeManager->getStore()->getId();
+                }
+            }
+        }
+
+        return $storeId;
+    }
+
+    public function getWebsiteId(): int | null
+    {
+        $websiteId = null;
+        if ($this->state->getAreaCode() == \Magento\Framework\App\Area::AREA_ADMINHTML) {
+            // in admin area
+            /** @var \Magento\Framework\App\RequestInterface $request */
+            //$request = $this->_request;
+            $websiteId = (int) $this->request->getParam('website', 0);
+        }
+
+        return $websiteId;
     }
 
     /**
@@ -269,45 +349,39 @@ class Api extends AbstractHelper
         return $this->_storeManager;
     }
 
+
     /**
-     * @param $customer Customer
+     * @param $customer
+     * @return void
      */
     public function checkUserData($customer)
     {
-        $transfer = $this->_config->isDataTransferEnabled();
         if ($customer->getPrintformerIdentification() !== null) {
-            $apiUrl = $this->apiUrl()->getUserData($customer->getPrintformerIdentification());
+            $transfer = $this->_config->isDataTransferEnabled();
+            if (!$transfer) {
+                return;
+            }
+            //todo:  $createdEntry = $this->_logHelper->createGetEntry('Show User Data');
+            $userIdentifier = null;
+            try {
+                $pfUser = $this->printformerSdk->clientFactory()->user()->show($customer->getPrintformerIdentification());
+                $userIdentifier = $pfUser->identifier;
+                //todo: $this->_logHelper->updateEntry($createdEntry, ['response_data' => $responseBody]);
+                if ($userIdentifier) {
 
-            $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
-            $response = $this->getHttpClient()->get($apiUrl);
-            $userDataContent = $response->getBody()->getContents();
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
+                    if ($pfUser->firstName == '' || $pfUser->lastName == '') {
+                        $pfUser = $this->printformerSdk->clientFactory()->user()->update($userIdentifier, [
+                            'email' => $customer->getEmail() ? $customer->getEmail() : null,
+                            'firstName' => $customer->getFirstname() ? $customer->getFirstname() : null,
+                            'lastName' => $customer->getLastname() ? $customer->getLastname() : null
+                        ]);
 
-            if ($response->getStatusCode() === 200) {
-                $resultData = json_decode($userDataContent, true);
-                $profileData = $resultData['data']['profile'];
-
-                if (!$transfer) {
-                    return;
+                        //todo: $createdEntry = $this->_logHelper->createPutEntry('Update User', $pfUser);
+                        //todo: $this->_logHelper->updateEntry($createdEntry, ['response_data' => $pfUser]);
+                    }
                 }
-
-                if ($profileData['firstName'] == '' || $profileData['lastName'] == '') {
-                    $url = $this->apiUrl()->getUserData(
-                        $customer->getPrintformerIdentification()
-                    );
-
-                    $requestData = [
-                        'json' => [
-                            'firstName' => $customer->getFirstname(),
-                            'lastName' => $customer->getLastname(),
-                            'email' => $customer->getEmail()
-                        ]
-                    ];
-
-                    $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
-                    $response = $this->getHttpClient()->put($url, $requestData);
-                    $this->_logHelper->updateEntry($createdEntry, ['response_data' => $userDataContent]);
-                }
+            } catch (Exception $e) {
+                $this->_logger->critical($e);
             }
         } else {
             $userIdentifier = $this->createUser($customer);
@@ -409,111 +483,125 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param null $requestData
-     * @return mixed
+     * @param DataObject $customer
+     * @return string|null
      */
-    public function createUser($customer = null)
+    public function createUser(DataObject $customer = new DataObject()): string | null
     {
-        $url = $this->apiUrl()->getUser();
-
+        $userIdentifier = null;
         $transfer = $this->_config->isDataTransferEnabled();
-        $requestData = [];
-
         try {
-            if ($customer && $transfer) {
-                $requestData = [
-                    'json' => [
-                        'firstName' => $customer->getFirstname(),
-                        'lastName' => $customer->getLastname(),
-                        'email' => $customer->getEmail()
-                    ]
-                ];
-            }
+
+            $pfUser = $this->printformerSdk->clientFactory()->user()->create([
+                'email' => $customer->getEmail() ? $customer->getEmail() : null,
+                'firstName' => $customer->getFirstname() ? $customer->getFirstname() : null,
+                'lastName' => $customer->getLastname() ? $customer->getLastname() : null,
+                //todo: 'title' => '',
+                //todo: 'salutation' => '',
+                //todo: 'customAttributes' => '',
+                //todo: 'locale' => '',
+            ]);
+            $userIdentifier = $pfUser->identifier;
+            //todo:  $createdEntry = $this->_logHelper->createPostEntry('create User', $pfUser);
+            //todo:  $this->_logHelper->updateEntry($createdEntry, ['response_data' => $pfUser]);
         } catch (Exception $e) {
-            $this->_logger->error('Can\'t load customer data from $customer variable');
-            $this->_logger->error($e->getMessage());
-            $this->_logger->error($e->getTraceAsString());
+            $this->_logger->critical($e);
         }
 
-        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
-        $response = $this->getHttpClient()->post($url, $requestData);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-        $response = json_decode($response->getBody(), true);
-        return $response['data']['identifier'];
+        return $userIdentifier;
     }
 
     /**
-     * @param int    $identifier
+     * @param int $identifier
      * @param string $userIdentifier
-     * @param array  $params
-     *
+     * @param array $params
      * @return mixed
      */
-    public function createDraftHash($identifier, $userIdentifier, $storeId, $params = [])
+    public function createDraftHash($identifier, $userIdentifier, $params = [])
     {
-        $url = $this->apiUrl()->getDraft();
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient
+            ->create([
+                'templateIdentifier' => $identifier,
+                'user_identifier' => $userIdentifier,
+                'intent' => $params['intent']
+            ]);
+        $draftHash = $draft->draftHash;
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
         $requestData = [
             'json' => [
                 'user_identifier' => $userIdentifier
             ]
         ];
-        if( !empty($identifier) ) {
+        if (!empty($identifier)) {
             $requestData['json']['templateIdentifier'] = $identifier;
         }
         $params = $this->mergeAdditionalParamsForApiCall($params);
-        foreach($params as $key => $value) {
+        foreach ($params as $key => $value) {
             $requestData['json'][$key] = $value;
         }
 
-        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
-        $response = $this->getHttpClient($storeId)->post($url, $requestData);
-        $responseBody = $response->getBody();
-        $responseContent = $responseBody->getContents();
-        $response = json_decode($responseBody, true);
-        $this->_logHelper->updateEntry($createdEntry, [
-            'response_data' => $responseContent, 'draft_id' => $response['data']['draftHash']]);
+        $createdEntry = $this->_logHelper->createPostEntry('Create Draft', $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson, 'draft_id' => $draftHash]);
 
-        if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
-            $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+        if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
         } else {
-            $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
         }
 
-        return $response['data']['draftHash'];
+        return $draftHash;
+    }
+
+    public function getDraftDelete($draftHash){
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient->destroy($draftHash);
+        //toDO will check with mgo dependency logic
+        // toDo Delete another draftDelete methods
+//        $createdEntry = $this->_logHelper->createPostEntry($url);
+//        /** @var \Zend_Http_Response $response */
+//        $response = $this->_httpClientFactory
+//            ->create()
+//            ->setUri((string)$url)
+//            ->setConfig(['timeout' => 30])
+//            ->request(\Zend_Http_Client::POST);
+//        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()]);
+//
+//        if (!$response->isSuccessful()) {
+//            throw new Exception(__('Error deleting draft.'));
+//        }
+//        $responseArray = $this->_jsonDecoder->decode($response->getBody());
+//        if (!is_array($responseArray)) {
+//            throw new Exception(__('Error decoding response.'));
+//        }
+//        if (isset($responseArray['success']) && false == $responseArray['success']) {
+//            $errorMsg = 'Request was not successful.';
+//            if (isset($responseArray['error'])) {
+//                $errorMsg = $responseArray['error'];
+//            }
+//            throw new Exception(__($errorMsg));
+//        }
+//
+//        $this->mediaHelper->deleteAllImages($draftId);
+//
+//        return $this;
     }
 
     /**
-     * @param $userIdentifier
-     * @param $drafts
-     * @param $storeId
-     * @return bool
+     * @param $originUserIdentifier
+     * @param $tempUserIdentifier
+     * @return \Rissc\Printformer\Client\User\User|void
      */
-    public function mergeUsers($originUserIdentifier, $tempUserIdentifier, $storeId = null)
+    public function mergeUsers($originUserIdentifier, $tempUserIdentifier)
     {
-        if (!isset($storeId) || !is_numeric($storeId)) {
-            $storeId = $this->configHelper->searchForStoreId();
-        }
-
-        $url = $this->apiUrl()->getMergeUser($originUserIdentifier);
-
-        $requestData = [
-            'json' => [
-                'source_user_identifier' => $tempUserIdentifier
-            ]
-        ];
-
-        $result = false;
         try {
-            $response = $this->getHttpClient($storeId)->post($url, $requestData);
-            $responseBody = $response->getBody();
-            $response = json_decode($responseBody, true);
-            $result = $response;
-        } catch (GuzzleException $e) {
+            $pfUser = $this->printformerSdk->clientFactory()->user()->merge($originUserIdentifier, $tempUserIdentifier);
+            return $pfUser;
+        } catch (Exception $e) {
+            $this->_logger->critical($e);
         }
-
-        return $result;
     }
 
     /**
@@ -521,54 +609,53 @@ class Api extends AbstractHelper
      * @param $orderId
      * @return mixed
      */
-    public function updateDraftHash($draftHash, $orderId, $storeId = null)
+    public function updateDraftHash($draftHash, $orderId)
     {
-        $url = $this->_urlHelper
-            ->getDraftUpdate($draftHash);
-
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
         $requestData = [
-            'json' => [
-                'customAttributes' => [
-                    $this->_config->getOrderDraftUpdateOrderId() => $orderId
-                ]
+            'customAttributes' => [
+                $this->_config->getOrderDraftUpdateOrderId() => $orderId
             ]
         ];
+        $draft = $draftClient->update($draftHash, $requestData);
 
-        $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
-        $response = $this->getHttpClient($storeId)->put($url, $requestData);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+        $draftHash = $draft->draftHash;
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
-        $response = json_decode($response->getBody(), true);
-        if ($this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
-            $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+        $createdEntry = $this->_logHelper->createPutEntry('Update DraftHash', $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
+
+        if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
         } else {
-            $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
         }
 
-        return $response['data']['draftHash'];
+        return $draftHash;
     }
 
     /**
      * @param $draftHash
      * @param $pageInfo
-     * @param null $storeId
      * @return array|mixed
      */
-    public function getDraftUsagePageInfo($draftHash, $pageInfo, $storeId = null)
+    public function getDraftUsagePageInfo($draftHash, $pageInfo)
     {
         $storedDraftPageInfo = $this->_sessionHelper->getDraftPageInfo($draftHash);
 
         if (!$storedDraftPageInfo) {
-            $apiUrl = $this->_urlHelper
-                ->getDraftUsagePageInfo($draftHash, $pageInfo);
+            $draftClient = $this->printformerSdk->clientFactory()->draft();
+            $draft = $draftClient->pageInfo($draftHash, $pageInfo);
 
-            $createdEntry = $this->_logHelper->createGetEntry($apiUrl);
-            $response = $this->getHttpClient($storeId)->get($apiUrl);
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+            $draftData = json_decode(json_encode($draft), true);
+            $draftDataJson = json_encode($draft);
 
-            $response = json_decode($response->getBody(), true);
-            $this->_sessionHelper->setDraftPageInfo($draftHash, $response['data']);
-            $result =  $response['data'];
+            $createdEntry = $this->_logHelper->createGetEntry('Page Info');
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
+
+            $this->_sessionHelper->setDraftPageInfo($draftHash, $draftData);
+            $result =  $draftData;
         } else {
             $result = $storedDraftPageInfo[$draftHash];
         }
@@ -654,28 +741,29 @@ class Api extends AbstractHelper
         return $this->urlBuilder->getUrl(self::CALLBACK_UPLOAD_ENDPOINT, $params);
     }
 
+
     /**
      * @param string $oldDraftId
      * @return string
      */
-    public function getReplicateDraftId(string $oldDraftId) : string
+    public function getReplicateDraftId(string $oldDraftId): string
     {
         if ($this->_sessionHelper->hasDraftInCache($oldDraftId)) {
             $this->_sessionHelper->removeDraftFromCache($oldDraftId);
         }
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient->replicate($oldDraftId, []);
+        $draftHash = $draft->draftHash;
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
-        $url = $this->apiUrl()->getReplicateDraftId($oldDraftId);
+        $createdEntry = $this->_logHelper->createGetEntry('Replicate Draft');
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
 
-        $createdEntry = $this->_logHelper->createGetEntry($url);
-        $response = $this->getHttpClient()->get($url);
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-        $draftInfo = json_decode($response->getBody(), true);
-        $draftHash = $draftInfo['data']['draftHash'];
         if ($this->_sessionHelper->hasDraftInCache($draftHash)) {
-            $this->_sessionHelper->updateDraftInCache($draftHash, $draftInfo['data']);
+            $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
         } else {
-            $this->_sessionHelper->addDraftToCache($draftHash, $draftInfo['data']);
+            $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
         }
 
         return $draftHash;
@@ -684,27 +772,122 @@ class Api extends AbstractHelper
     /**
      * @param string $draftHash
      * @param bool $forceUpdate
-     *
      * @return array
      */
     public function getPrintformerDraft($draftHash, $forceUpdate = false)
     {
         if (!$this->_sessionHelper->hasDraftInCache($draftHash) || $forceUpdate) {
-            $url = $this->apiUrl()->getDraft($draftHash);
+            $draftClient = $this->printformerSdk->clientFactory()->draft();
+            $draft = $draftClient->show($draftHash);
+            $draftHash = $draft->draftHash;
+            $draftData = json_decode(json_encode($draft), true);
+            $draftDataJson = json_encode($draft);
+            $createdEntry = $this->_logHelper->createGetEntry('Show Draft');
+            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
 
-            $createdEntry = $this->_logHelper->createGetEntry($url);
-            $response = $this->getHttpClient()->get($url);
-            $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-            $response = json_decode($response->getBody(), true);
-            if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($response['data']['draftHash'])) {
-                $this->_sessionHelper->updateDraftInCache($response['data']['draftHash'], $response['data']);
+            if ($forceUpdate && $this->_sessionHelper->hasDraftInCache($draftHash)) {
+                $this->_sessionHelper->updateDraftInCache($draftHash, $draftData);
             } else {
-                $this->_sessionHelper->addDraftToCache($response['data']['draftHash'], $response['data']);
+                $this->_sessionHelper->addDraftToCache($draftHash, $draftData);
             }
         }
 
         return $this->_sessionHelper->getDraftCache($draftHash);
+    }
+
+    public function getEditorSdk($draftHash, $userIdentifier, $params = [])
+    {
+        $dataParams = [
+            'product_id' => $params['product_id'],
+            'draft_process' => $params['data']['draft_process']
+        ];
+
+        if (!empty($params['data']['quote_id'])) {
+            $dataParams['quote_id'] = $params['data']['quote_id'];
+        }
+
+        $customCallbackUrl = null;
+        if (!empty($params['data']['callback_url'])) {
+            $customCallbackUrl = $params['data']['callback_url'];
+        }
+
+        $queryParams = [];
+        $callback = $this->getCallbackSdkUrl(
+            $customCallbackUrl,
+            $this->_storeManager->getStore()->getId(),
+            $dataParams
+        );
+        if ($this->_config->getRedirectProductOnCancel()) {
+            $callbackCancel = $this->getProductCallbackSdkUrl(intval($params['product_id']), $params['data'], $this->_storeManager->getStore()->getId());
+        }
+        $editorUrl = (string)$this->printformerSdk->urlGenerator()->editor()
+            ->draft($draftHash)
+            ->callback($callback)
+            ->callbackCancel($callbackCancel ?? '') // Optional, if omitted the callbackCancel URL is used
+            ->user($userIdentifier);
+        //->step('preview');
+
+        return $editorUrl;
+    }
+
+
+    /**
+     * @param Product | int $product
+     * @param array $params
+     * @param int $storeId
+     *
+     * @return string
+     */
+    protected function getProductCallbackSdkUrl(
+        $product,
+        $params = [],
+        $storeId = 0
+    )
+    {
+        $product = $this->_catalogHelper->prepareProduct($product);
+
+        if (isset($params['quote_id']) && $product->getId()) {
+            $referrerParams['id'] = $params['quote_id'];
+            $referrerParams['product_id'] = $product->getId();
+
+            $baseUrl = $this->_urlBuilder->getUrl('checkout/cart/configure', $referrerParams);
+        } else {
+            $baseUrl = $product->getProductUrl(null);
+        }
+
+        return $baseUrl;
+    }
+
+    /**
+     * @param string $requestReferrer
+     * @param int $storeId
+     * @param array $params
+     *
+     * @return string
+     */
+    protected function getCallbackSdkUrl(
+        $requestReferrer,
+        $storeId = 0,
+        $params = []
+    )
+    {
+        if ($requestReferrer != null) {
+            $referrer = urldecode($requestReferrer);
+        } else {
+            $referrerParams = array_merge($params, [
+                'store_id' => $storeId,
+            ]);
+
+            if (isset($params['quote_id']) && isset($params['product_id'])) {
+                $referrerParams['quote_id'] = $params['quote_id'];
+                $referrerParams['edit_product'] = $params['product_id'];
+                $referrerParams['is_edit'] = 1;
+            }
+
+            $referrer = $this->_urlBuilder->getUrl('printformer/editor/save', $referrerParams);
+        }
+
+        return $referrer;
     }
 
     /**
@@ -729,8 +912,9 @@ class Api extends AbstractHelper
             } catch (NoSuchEntityException $e) {
             }
         }
-        $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
+        $editorOpenUrl = $this->getEditorSdk($draftHash, $userIdentifier, $params);
         $client = $this->_config->getClientIdentifier($storeId);
+
         $identifier = bin2hex(random_bytes(16));
         $issuedAt = new DateTimeImmutable();
         $expirationDate = $this->_config->getExpireDate($storeId);
@@ -829,7 +1013,7 @@ class Api extends AbstractHelper
 
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -937,7 +1121,7 @@ class Api extends AbstractHelper
                 ];
 
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
-                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $storeId, $dataParams);
+                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $dataParams);
 
                 $process->addData([
                     'draft_id' => $draftHash,
@@ -1228,49 +1412,24 @@ class Api extends AbstractHelper
      */
     public function getThumbnail($draftHash, $userIdentifier, $width, $height, $page = 1)
     {
-        $issuedAt = new DateTimeImmutable();
-        $JWTBuilder = $this->jwtConfig->builder()
-            ->issuedAt($issuedAt)
-            ->withClaim('client', $this->_config->getClientIdentifier())
-            ->withClaim('user', $userIdentifier)
-            ->expiresAt($this->_config->getExpireDate());
-        $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
-
-        $postFields = [
-            'jwt' => $JWT,
-            'width' => $width,
-            'height' => $height,
-            'page' => $page
-        ];
-
         try {
-            $thumbnailUrl = $this->apiUrl()->getThumbnail($draftHash, 0);
+            $thumbnailUrl = (string)$this->printformerSdk->urlGenerator()->draftFiles()
+                ->image($draftHash)
+                ->width($width)
+                ->height($height)
+                ->page($page);
 
-            $httpClient = $this->clientFactory->create(
-                [
-                    'config' => [
-                        'base_url' => $this->apiUrl()->getPrintformerBaseUrl(),
-                        'headers' => [
-                            'Accept' => 'application/json'
-                        ],
-                    ],
-                ],
-            );
-            $completeThumbnailUrl = $thumbnailUrl . '?' . http_build_query($postFields);
-
-            $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
-            $response = $httpClient->get($completeThumbnailUrl);
+            $createdEntry = $this->_logHelper->createGetEntry($thumbnailUrl);
             $this->_logHelper->updateEntry($createdEntry, ['response_data' => 'IMAGE']);
         } catch(ServerException $e) {
             throw $e;
         }
 
-        /** @var Psr7Stream $stream */
-        $stream = $response->getBody();
+        $info = getimagesize($thumbnailUrl);
         $responseData = [
-            'content_type' => implode('', $response->getHeader('Content-Type')),
-            'size' => $stream->getSize(),
-            'content' => $stream->getContents()
+            'content_type' =>  $info['mime'],
+            'size' => $info,
+            'content' => file_get_contents($thumbnailUrl)
         ];
 
         return $responseData;
@@ -1301,28 +1460,21 @@ class Api extends AbstractHelper
 
     /**
      * @param string $userIdentifier
-     * @param array  $drafts
-     * @param bool   $dryRun
-     *
+     * @param array $drafts
+     * @param bool $dryRun
      * @return array
      */
     public function migrateDrafts($userIdentifier, array $drafts, $dryRun = false)
     {
-        $url = $this->apiUrl()->getPrintformerBaseUrl().'/api-ext/draft/claim';
+        $draftClient = $this->printformerSdk->clientFactory()->draft();
+        $draft = $draftClient->claim($userIdentifier, $drafts, $dryRun);
+        $draftData = json_decode(json_encode($draft), true);
+        $draftDataJson = json_encode($draft);
 
-        $requestData = [
-            'json' => [
-                'user_identifier' => $userIdentifier,
-                'drafts' => $drafts,
-                'dryRun' => $dryRun
-            ]
-        ];
+        $createdEntry = $this->_logHelper->createPostEntry('Claim Draft', $userIdentifier);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $draftDataJson]);
 
-        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
-        $body = $this->getHttpClient()->post($url, $requestData)->getBody();
-        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $body->getContents()]);
-
-        return json_decode($body, true);
+        return $draftData;
     }
 
     /**
@@ -1539,5 +1691,60 @@ class Api extends AbstractHelper
         $params = $this->printformerProductAttributes->mergeFeedIdentifier($params);
 
         return $params;
+    }
+
+    protected function getPrintformerConfig($storeId, $websiteId): array
+    {
+        //todo>:> instead create user by sdk here
+        //        $config = [
+        //            'base_uri' => 'https://printformer.stage-00.aws.rissc.net',
+        //            'identifier' => 'vD3rU3Qw',
+        //            'api_key' => '04HjIzShfi.............',
+        //        ];
+
+        $baseUri = $this->apiUrl()->getPrintformerBaseUrl($storeId, $websiteId);
+        $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
+        $identifier = $this->_config->getClientIdentifier($storeId, $websiteId);
+
+        $config = [
+            'base_uri' => $baseUri,
+            'identifier' => $identifier,
+            'api_key' => $apiKey,
+        ];
+
+        return $config;
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return Configuration|null
+     */
+    public function getJwtConfig($storeId, $websiteId): Configuration| null
+    {
+        $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
+        if (!empty($apiKey)) {
+            return Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @return string|void
+     */
+    public function getMandatorClientName()
+    {
+        $clientData = $this->printformerSdk->clientFactory()->tenant()->show();
+        return $clientData->name;
+    }
+
+    /**
+     * @return Paginator
+     */
+    public function getPrintformerTemplatesList()
+    {
+        $masterTemplates = $this->printformerSdk->clientFactory()->masterTemplate();
+        return $masterTemplates->list(self::PAGE, self::PER_PAGE);
     }
 }

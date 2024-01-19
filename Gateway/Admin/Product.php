@@ -14,6 +14,7 @@ use Magento\Store\Model\WebsiteRepository;
 use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Rissc\Printformer\Helper\Log;
@@ -73,6 +74,11 @@ class Product
     private ClientFactory $clientFactory;
 
     /**
+     * @var ApiHelper
+     */
+    protected $apiHelper;
+
+    /**
      * Product constructor.
      * @param WebsiteRepository $websiteRepository
      * @param Decoder $jsonDecoder
@@ -80,10 +86,10 @@ class Product
      * @param PrintformerProductFactory $printformerProductFactory
      * @param ProductFactory $productFactory
      * @param Config $configHelper
-     * @throws Zend_Db_Statement_Exception
      * @param Log $logHelper
      * @param ClientFactory $clientFactory
-     * @throws \Zend_Db_Statement_Exception
+     * @param ApiHelper $apiHelper
+     * @throws Zend_Db_Statement_Exception
      */
     public function __construct(
         WebsiteRepository $websiteRepository,
@@ -93,7 +99,8 @@ class Product
         ProductFactory $productFactory,
         Config $configHelper,
         Log $logHelper,
-        ClientFactory $clientFactory
+        ClientFactory $clientFactory,
+        ApiHelper $apiHelper
     ) {
         $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
@@ -103,6 +110,7 @@ class Product
         $this->configHelper = $configHelper;
         $this->logHelper = $logHelper;
         $this->clientFactory = $clientFactory;
+        $this->apiHelper = $apiHelper;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->connection = $printformerProduct->getResource()->getConnection();
@@ -144,50 +152,53 @@ class Product
      */
     public function getProductsFromPrintformerApi($storeId = false, $websiteId = false)
     {
-        $url = $this->urlHelper->getAdminProducts($storeId, $websiteId);
+        //toDO Check and delete $storeId and $websiteId variables
+        //toDO Clean and Refactoring code
+        $responseArray = $this->apiHelper->getPrintformerTemplatesList();
+//        $url = $this->urlHelper->getAdminProducts($storeId, $websiteId);
         $apiKey = $this->configHelper->getClientApiKey($storeId, $websiteId);
 
         if (empty($apiKey)) {
             throw new Exception(__('There are no available credentials for this website. Please check your settings in admin section.'));
         }
 
-        $request = $this->clientFactory->create(
-            [
-                'config' => [
-                    'base_url' => $url,
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => 'Bearer ' . $apiKey
-                    ],
-                ],
-            ],
-        );
+//        $request = $this->clientFactory->create(
+//            [
+//                'config' => [
+//                    'base_url' => $url,
+//                    'headers' => [
+//                        'Accept' => 'application/json',
+//                        'Authorization' => 'Bearer ' . $apiKey
+//                    ],
+//                ],
+//            ],
+//        );
+//
+//        $createdEntry = $this->logHelper->createGetEntry($url);
+//        $response = $request->get($url);
+//        $this->logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+//
+//        if ($response->getStatusCode() !== 200) {
+//            throw new Exception(__('Error fetching products.'));
+//        }
+//
+//        $responseArray = $this->jsonDecoder->decode($response->getBody());
 
-        $createdEntry = $this->logHelper->createGetEntry($url);
-        $response = $request->get($url);
-        $this->logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
-
-        if ($response->getStatusCode() !== 200) {
-            throw new Exception(__('Error fetching products.'));
-        }
-
-        $responseArray = $this->jsonDecoder->decode($response->getBody());
-
-        if (!is_array($responseArray)) {
-            throw new Exception(__('Error decoding products.'));
-        }
-        if (isset($responseArray['success']) && false == $responseArray['success']) {
+//        if (!is_array($responseArray)) {
+//            throw new Exception(__('Error decoding products.'));
+//        }
+        if (isset($responseArray) && false == $responseArray) {
             $errorMsg = 'Request was not successful.';
             if (isset($responseArray['error'])) {
                 $errorMsg = $responseArray['error'];
             }
             throw new Exception(__($errorMsg));
         }
-        if (empty($responseArray['data'])) {
+        if (empty($responseArray->getData())) {
             throw new Exception(__('Empty products data.'));
         }
 
-        return $responseArray;
+        return $responseArray->getData();
     }
 
     /**
@@ -202,10 +213,9 @@ class Product
 
         $errors = [];
         try {
-            $this->_syncProducts($storeId, $responseArray['data']);
+            $this->_syncProducts($storeId, $responseArray);
         } catch (\Exception $e) {
             $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
-                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
         }
 
         return $this;

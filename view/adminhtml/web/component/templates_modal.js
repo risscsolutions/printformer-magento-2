@@ -15,7 +15,8 @@ define([
                 method: 'GET',
                 data: {
                     'isAjax': true,
-                    'form_key': FORM_KEY
+                    'form_key': FORM_KEY,
+                    'store': this.store,
                 },
                 showLoader: true,
             }).done(function(response){
