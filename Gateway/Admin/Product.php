@@ -4,6 +4,8 @@ namespace Rissc\Printformer\Gateway\Admin;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\ClientFactory;
 use Magento\Catalog\Model\ProductFactory;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Json\Decoder;
 use Magento\Framework\Stdlib\DateTime;
 use Magento\Store\Model\Store;
@@ -15,6 +17,7 @@ use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Rissc\Printformer\Helper\Log;
+use Zend_Db_Statement_Exception;
 
 class Product
 {
@@ -44,7 +47,7 @@ class Product
     protected $printformerProductFactory;
 
     /**
-     * @var \Magento\Framework\DB\Adapter\AdapterInterface
+     * @var AdapterInterface
      */
     protected $connection;
 
@@ -77,6 +80,7 @@ class Product
      * @param PrintformerProductFactory $printformerProductFactory
      * @param ProductFactory $productFactory
      * @param Config $configHelper
+     * @throws Zend_Db_Statement_Exception
      * @param Log $logHelper
      * @param ClientFactory $clientFactory
      * @throws \Zend_Db_Statement_Exception
@@ -133,34 +137,13 @@ class Product
     }
 
     /**
-     * @param int $storeId
-     * @return $this
-     * @throws Exception
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * Get Products from Printformer via api-call
+     * @param $storeId
+     * @param $websiteId
+     * @return array
      */
-    public function syncProducts($storeId = false, $websiteId = false)
+    public function getProductsFromPrintformerApi($storeId = false, $websiteId = false)
     {
-        $storeIds = [];
-        if ($storeId == Store::DEFAULT_STORE_ID) {
-            $defaultApiSecret = $this->configHelper->getClientApiKey(1,1);
-            $defaultRemoteHost = $this->urlHelper->getAdminProducts(1,1);
-            /** @var Website $website */
-            foreach ($this->_websiteRepository->getList() as $website) {
-                /** @var Store $store */
-                $store = $website->getDefaultStore();
-                $apiSecret = $this->configHelper->getClientApiKey();
-                $remoteHost = $this->urlHelper->getAdminProducts();
-
-                if ($apiSecret === $defaultApiSecret && $remoteHost == $defaultRemoteHost && isset($apiSecret, $remoteHost)) {
-                    $storeIds[] = $store->getId();
-                }
-            }
-        } else {
-            $storeIds[] = $storeId;
-        }
-        $errors = [];
-
         $url = $this->urlHelper->getAdminProducts($storeId, $websiteId);
         $apiKey = $this->configHelper->getClientApiKey($storeId, $websiteId);
 
@@ -204,13 +187,25 @@ class Product
             throw new Exception(__('Empty products data.'));
         }
 
-        foreach ($storeIds as $storeId) {
-            try {
-                $this->_syncProducts($storeId, $responseArray['data']);
-            } catch (\Exception $e) {
+        return $responseArray;
+    }
+
+    /**
+     * Sync Products with api-call into related pf-tables
+     * @param $storeId
+     * @param $websiteId
+     * @return $this
+     */
+    public function syncProducts($storeId = false, $websiteId = false)
+    {
+        $responseArray = $this->getProductsFromPrintformerApi($storeId, $websiteId);
+
+        $errors = [];
+        try {
+            $this->_syncProducts($storeId, $responseArray['data']);
+        } catch (\Exception $e) {
+            $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
                 $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
-                continue;
-            }
         }
 
         return $this;
@@ -220,40 +215,38 @@ class Product
      * @param $storeId
      * @param $responseArray
      * @return $this
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws AlreadyExistsException
      */
     protected function _syncProducts($storeId, $responseArray)
     {
-
-        $masterIDs = [];
+        $identifiers = [];
         $responseRealigned = [];
         foreach ($responseArray as $responseData) {
-            $masterID = (isset($responseData['id']) ? $responseData['id'] :
-                $responseData['rissc_w2p_master_id']);
-            if (!in_array($masterID, $masterIDs)) {
-                $masterIDs[] = $masterID;
-                $responseRealigned[$masterID] = $responseData;
+            $identifier = $responseData['identifier'] ?? null;
+            if (isset($identifier) && !in_array($identifier, $identifiers)) {
+                $identifiers[] = $identifier;
+                $responseRealigned[$identifier] = $responseData;
             }
         }
 
-        $this->_deleteDeletedPrintformerProductReleations($masterIDs, $storeId);
+        $this->deleteDeletedPrintformerProductRelations($identifiers, $storeId);
 
-        $updateMasterIds = [];
-        foreach ($masterIDs as $masterID) {
-            foreach ($responseRealigned[$masterID]['intents'] as $intent) {
-                $dateUpdate = $this->convertDate($responseRealigned[$masterID]['updatedAt']);
+        $updatIdentifiers = [];
+        foreach ($identifiers as $identifier) {
+            foreach ($responseRealigned[$identifier]['intents'] as $intent) {
+                $dateUpdate = $this->convertDate($responseRealigned[$identifier]['updatedAt']);
                 $resultProduct = $this->connection->fetchRow('
                     SELECT * FROM
                         `' . $this->connection->getTableName('printformer_product') . '`
                     WHERE
                         `store_id` = ' . $storeId . ' AND
-                        `master_id` = ' . $masterID . ' AND
+                        `identifier` = \'' . $identifier . '\' AND
                         `intent` = \'' . $intent . '\';
                 ');
 
                 if (!$resultProduct) {
                     /** @var PrintformerProduct $pfProduct */
-                    $pfProduct = $this->addPrintformerProduct($responseRealigned[$masterID], $intent, $storeId);
+                    $pfProduct = $this->addPrintformerProduct($responseRealigned[$identifier], $intent, $storeId);
                     $pfProduct->getResource()->save($pfProduct);
                 } else {
                     if($resultProduct['updated_at'] < $dateUpdate) {
@@ -261,16 +254,26 @@ class Product
                         $pfProduct = $this->printformerProductFactory->create();
                         $pfProduct->getResource()->load($pfProduct, $resultProduct['id']);
 
-                        $pfProduct = $this->updatePrintformerProduct($pfProduct, $responseRealigned[$masterID], $intent, $storeId);
+                        $pfProduct = $this->updatePrintformerProduct(
+                            $pfProduct,
+                            $responseRealigned[$identifier],
+                            $intent,
+                            $storeId
+                        );
 
                         $pfProduct->getResource()->save($pfProduct);
-                        $updateMasterIds[$pfProduct->getId()] = ['id' => $pfProduct->getMasterId(), 'intent' => $intent];
+                        $updatIdentifiers[$pfProduct->getId()] = [
+                            'id' => $pfProduct->getIdentifier(),
+                            'intent' => $intent
+                        ];
                     }
                 }
             }
         }
 
-        $this->_updateProductRelations($updateMasterIds, (int)$storeId);
+        if (!empty($updatIdentifiers)) {
+            $this->updateProductRelations($updatIdentifiers, (int)$storeId);
+        }
 
         return $this;
     }
@@ -293,61 +296,60 @@ class Product
     }
 
     /**
-     * @param array  $newMasterIds
+     * @param array  $newIdentifiers
      * @param int    $storeId
      */
-    protected function _deleteDeletedPrintformerProductReleations(array $newMasterIds, $storeId)
+    protected function deleteDeletedPrintformerProductRelations(array $newIdentifiers, $storeId)
     {
-        $tableName = $this->connection->getTableName('catalog_product_printformer_product');
-        $sqlQuery = '
-            SELECT * FROM
+            $tableName = $this->connection->getTableName('catalog_product_printformer_product');
+            $sqlQuery = 'SELECT * FROM
                 `' . $tableName . '`
             WHERE
-                `master_id` NOT IN (\'' . implode('\',\'', $newMasterIds) . '\') AND
-                `store_id` = ' . $storeId . ';
-        ';
-        $resultRows = $this->connection->fetchAll($sqlQuery);
+                `identifier` NOT IN (\'' . implode('\',\'', $newIdentifiers) . '\') AND
+                `store_id` = ' . $storeId
+            . ';';
+            $resultRows = $this->connection->fetchAll($sqlQuery);
 
-        if (!empty($resultRows)) {
-            foreach ($resultRows as $row) {
-                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+            if (!empty($resultRows)) {
+                foreach ($resultRows as $row) {
+                    $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+                }
             }
-        }
 
-        $tableName = $this->connection->getTableName('printformer_product');
-        $sqlQuery = '
-            SELECT * FROM
+            $tableName = $this->connection->getTableName('printformer_product');
+            $sqlQuery = 'SELECT * FROM
                 `' . $tableName . '`
             WHERE
-                `master_id` NOT IN (\'' . implode('\',\'', $newMasterIds) . '\') AND
+                `identifier` NOT IN (\'' . implode('\',\'', $newIdentifiers) . '\') AND
                 `store_id` = ' . $storeId . ';
         ';
-        $resultRows = $this->connection->fetchAll($sqlQuery);
-        if (!empty($resultRows)) {
-            foreach ($resultRows as $row) {
-                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+
+            $resultRows = $this->connection->fetchAll($sqlQuery);
+            if (!empty($resultRows)) {
+                foreach ($resultRows as $row) {
+                    $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+                }
             }
-        }
     }
 
     /**
-     * @param array $masterIds
+     * @param array $identifiers
      * @param int   $storeId
      *
      * @return bool
      */
-    protected function _updateProductRelations(array $masterIds, $storeId)
+    protected function updateProductRelations(array $identifiers, $storeId)
     {
-        $rowsToUpdate = count($masterIds);
+        $rowsToUpdate = count($identifiers);
         $tableName = $this->connection->getTableName('catalog_product_printformer_product');
-        foreach ($masterIds as $pfProductId => $masterId) {
+        foreach ($identifiers as $pfProductId => $identifier) {
             $resultRows = $this->connection->fetchAll('
                 SELECT * FROM
                     `' . $tableName . '`
                 WHERE
-                    `master_id` = ' . $masterId['id'] . ' AND
+                    `identifier` = ' . $identifier['id'] . ' AND
                     `store_id` = ' . $storeId . ' AND
-                    `intent` = \'' . $masterId['intent'] . '\';
+                    `intent` = \'' . $identifier['intent'] . '\';
             ');
 
             foreach ($resultRows as $row) {
@@ -382,7 +384,7 @@ class Product
             ->setDescription(null)
             ->setShortDescription(null)
             ->setStatus(1)
-            ->setMasterId($data['id'])
+            ->setIdentifier($data['identifier'])
             ->setMd5(null)
             ->setIntent($intent)
             ->setCreatedAt(time())
@@ -400,7 +402,7 @@ class Product
      *
      * @return PrintformerProduct
      *
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws AlreadyExistsException
      */
     public function updatePrintformerProduct(PrintformerProduct $pfProduct, array $data, string $intent, int $storeId)
     {

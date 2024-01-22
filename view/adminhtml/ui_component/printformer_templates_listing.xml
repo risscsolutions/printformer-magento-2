@@ -106,11 +106,11 @@
                 <label translate="true">Intent</label>
             </settings>
         </column>
-        <column name="master_id" sortOrder="40">
+        <column name="identifier" sortOrder="40">
             <settings>
                 <addField>true</addField>
                 <filter>text</filter>
-                <label translate="true">Master ID</label>
+                <label translate="true">Identifier</label>
             </settings>
         </column>
     </columns>

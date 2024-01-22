@@ -26,7 +26,7 @@
 
 ### COMPATIBILITY
 
-#### Our module is tested currently with magento version 2.4.5 [SYSTEM REQUIREMENTS](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
+#### Our module is tested currently with magento version 2.4.6 [SYSTEM REQUIREMENTS](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html)
 
 **All relevant changes are noted in our [Changelog](CHANGELOG.md)**
 

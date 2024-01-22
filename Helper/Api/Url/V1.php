@@ -98,10 +98,10 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
+    public function getEditorEntry($productId, $identifier, $draftHash, $params = [], $intent = null, $user = null)
     {
         $baseParams = [
-            'master_id' => $masterId,
+            'identifier' => $identifier,
             'product_id' => $productId,
             'intent' => $intent,
             'user' => $user
