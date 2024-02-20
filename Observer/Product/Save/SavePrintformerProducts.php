@@ -7,6 +7,7 @@ use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Rissc\Printformer\Logger\PrintformerLogger;
 
 class SavePrintformerProducts implements ObserverInterface
 {
@@ -21,16 +22,23 @@ class SavePrintformerProducts implements ObserverInterface
     protected $eventManager;
 
     /**
+     * @var PrintformerLogger
+     */
+    protected $printformerLogger;
+
+    /**
      * SavePrintformerProducts constructor.
      * @param ManagerInterface $eventManager
      * @param ResourceConnection $resourceConnection
      */
     public function __construct(
         ManagerInterface $eventManager,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        PrintformerLogger $printformerLogger
     ) {
         $this->eventManager = $eventManager;
         $this->resourceConnection = $resourceConnection;
+        $this->printformerLogger = $printformerLogger;
     }
 
     /**
@@ -64,6 +72,8 @@ class SavePrintformerProducts implements ObserverInterface
                         'store_id' => $product->getStoreId(),
                         'intent' => $record['intent']
                     ];
+                    $this->printformerLogger->info(__('Printformer template with name '. $record['name']. ' assign to product Id: '. $product->getId(). ', product Name: '. $product->getName() .
+                        ', ' . __('StoreId: '). $product->getStoreId()));
                     $data[] = $item;
                 }
             }
