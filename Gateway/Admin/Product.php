@@ -12,6 +12,7 @@ use Magento\Store\Model\WebsiteRepository;
 use Rissc\Printformer\Gateway\Exception;
 use Rissc\Printformer\Helper\Api\Url;
 use Rissc\Printformer\Helper\Config;
+use Rissc\Printformer\Logger\PrintformerLogger;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
 use Rissc\Printformer\Helper\Log;
@@ -70,6 +71,12 @@ class Product
     private ClientFactory $clientFactory;
 
     /**
+     * @var PrintformerLogger
+     */
+    protected $printformerLogger;
+
+
+    /**
      * Product constructor.
      * @param WebsiteRepository $websiteRepository
      * @param Decoder $jsonDecoder
@@ -79,6 +86,7 @@ class Product
      * @param Config $configHelper
      * @param Log $logHelper
      * @param ClientFactory $clientFactory
+     * @param PrintformerLogger $printformerLogger
      * @throws \Zend_Db_Statement_Exception
      */
     public function __construct(
@@ -89,7 +97,8 @@ class Product
         ProductFactory $productFactory,
         Config $configHelper,
         Log $logHelper,
-        ClientFactory $clientFactory
+        ClientFactory $clientFactory,
+        PrintformerLogger $printformerLogger
     ) {
         $this->_websiteRepository = $websiteRepository;
         $this->jsonDecoder = $jsonDecoder;
@@ -99,6 +108,7 @@ class Product
         $this->configHelper = $configHelper;
         $this->logHelper = $logHelper;
         $this->clientFactory = $clientFactory;
+        $this->printformerLogger = $printformerLogger;
 
         $printformerProduct = $this->printformerProductFactory->create();
         $this->connection = $printformerProduct->getResource()->getConnection();
@@ -165,6 +175,8 @@ class Product
         $apiKey = $this->configHelper->getClientApiKey($storeId, $websiteId);
 
         if (empty($apiKey)) {
+            $this->printformerLogger->error(__('There are no available credentials for this website. Please check your settings in admin section. '
+                .' '. __('StoreId:'). $storeId));
             throw new Exception(__('There are no available credentials for this website. Please check your settings in admin section.'));
         }
 
@@ -185,12 +197,14 @@ class Product
         $this->logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
 
         if ($response->getStatusCode() !== 200) {
+            $this->printformerLogger->error(__('Error fetching products.'.' '. __('StoreId:'). $storeId));
             throw new Exception(__('Error fetching products.'));
         }
 
         $responseArray = $this->jsonDecoder->decode($response->getBody());
 
         if (!is_array($responseArray)) {
+            $this->printformerLogger->error(__('Error decoding products.'.' '. __('StoreId:'). $storeId));
             throw new Exception(__('Error decoding products.'));
         }
         if (isset($responseArray['success']) && false == $responseArray['success']) {
@@ -198,9 +212,11 @@ class Product
             if (isset($responseArray['error'])) {
                 $errorMsg = $responseArray['error'];
             }
+            $this->printformerLogger->error(__($errorMsg .' '. __('StoreId:'). $storeId));
             throw new Exception(__($errorMsg));
         }
         if (empty($responseArray['data'])) {
+            $this->printformerLogger->error(__('Empty products data' .' '. __('StoreId:'). $storeId));
             throw new Exception(__('Empty products data.'));
         }
 
@@ -208,6 +224,7 @@ class Product
             try {
                 $this->_syncProducts($storeId, $responseArray['data']);
             } catch (\Exception $e) {
+                $this->printformerLogger->error(__($e->getMessage() .' '. __('Store #:'). $storeId));
                 $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
                 continue;
             }
@@ -388,7 +405,7 @@ class Product
             ->setCreatedAt(time())
             ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null)
             ->setStoreId($storeId);
-
+        $this->printformerLogger->info(__('Created template name: ' . $data['name']) .', '. __('StoreId: '). $storeId);
         return $pfProduct;
     }
 
@@ -411,6 +428,7 @@ class Product
             ->setStatus(1)
             ->setIntent($intent)
             ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
+        $this->printformerLogger->info(__('Updated template name: ' . $data['name']) .', '. __('StoreId: '). $storeId);
 
         return $pfProduct;
     }
