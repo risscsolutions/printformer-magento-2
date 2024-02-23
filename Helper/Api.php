@@ -546,12 +546,15 @@ class Api extends AbstractHelper
     /**
      * @param $draftHash
      * @param $orderId
+     * @param null $storeId
+     * @param null $groupNumber
      * @return mixed
      */
-    public function updateDraftHash($draftHash, $orderId, $storeId = null)
+    public function updateDraftHash($draftHash, $orderId, $storeId = null, $groupNumber = null)
     {
         $url = $this->_urlHelper
             ->getDraftUpdate($draftHash);
+
 
         $requestData = [
             'json' => [
@@ -560,6 +563,10 @@ class Api extends AbstractHelper
                 ]
             ]
         ];
+
+        if (!empty($groupNumber)){
+            $requestData['json']['apiDefaultValues']['bv_gs_nr'] = $groupNumber;
+        }
 
         $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
         $response = $this->getHttpClient($storeId)->put($url, $requestData);
