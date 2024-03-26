@@ -51,6 +51,10 @@ class Observer
         $product = $observer->getData('product');
         if (isset($product)){
             $productItem = $observer->getQuoteItem();
+            if ($productItem->getPrintformerDraftid()) {
+                $draftKey = Session::SESSION_DRAFT_KEY . $productItem->getPrintformerDraftid();
+                $this->_catalogSession->setData($draftKey, null);
+            }
             if ($this->configHelper->useChildProduct($productItem->getProductType())) {
                 $quoteChildren = $productItem->getChildren();
                 if (is_array($quoteChildren) && !empty($quoteChildren) && !empty($quoteChildren[0])){

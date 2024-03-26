@@ -276,6 +276,18 @@ class Open extends Action
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
+        //TODO Check and clean old catalog sessions
+        $sessionData = [
+            'draft_id' => $draftProcess->getDraftId(),
+            'saved_printformer_options' => $this->_sessionHelper->getCatalogSession()->getSavedPrintformerOptions(),
+            'wishlist_url' => $this->_sessionHelper->getCatalogSession()->getWishlistUrl(),
+            'design_url' => $this->_sessionHelper->getCatalogSession()->getDesignUrl(),
+            'printformer_current_intent' => $intent,
+            'printformer_identifier' => $identifier
+        ];
+        $draftKey = SessionHelper::SESSION_DRAFT_KEY.$draftProcess->getDraftId();
+        $this->_sessionHelper->getCatalogSession()->setData($draftKey, $sessionData);
+
         /**
          * Get printformer editor url by draft id
          */

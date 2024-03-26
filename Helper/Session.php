@@ -13,6 +13,7 @@ use Rissc\Printformer\Setup\InstallSchema;
 
 class Session extends AbstractHelper
 {
+    const SESSION_DRAFT_KEY = 'key-';
     const SESSION_KEY_PRINTFORMER_DRAFTID = InstallSchema::COLUMN_NAME_DRAFTID;
     const SESSION_KEY_PRINTFORMER_CURRENT_INTENT = 'printformer_current_intent';
     const SESSION_KEY_WISHLIST_URL = 'wishlist_url';
