@@ -541,20 +541,15 @@ class Api extends AbstractHelper
      */
     public function updateDraftHash($draftHash, $orderId, $storeId = null, $groupNumber = null)
     {
-        $url = $this->_urlHelper
-            ->getDraftUpdate($draftHash);
+        $draftData = $this->getPrintformerDraft($draftHash);
+        $url = $this->_urlHelper->getDraftUpdate($draftHash);
 
-
-        $requestData = [
-            'json' => [
-                'customAttributes' => [
-                    $this->_config->getOrderDraftUpdateOrderId() => $orderId
-                ]
-            ]
-        ];
+        $draftData['customAttributes'][$this->_config->getOrderDraftUpdateOrderId()] = $orderId;
+        $requestData['json']['customAttributes'] =  $draftData['customAttributes'];
 
         if (!empty($groupNumber)){
-            $requestData['json']['apiDefaultValues']['bv_gs_nr'] = $groupNumber;
+            $draftData['apiDefaultValues']['bv_gs_nr'] = $groupNumber;
+            $requestData['json']['apiDefaultValues'] = $draftData['apiDefaultValues'];
         }
 
         $createdEntry = $this->_logHelper->createPutEntry($url, $requestData);
