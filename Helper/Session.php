@@ -629,6 +629,35 @@ class Session extends AbstractHelper
     }
 
     /**
+     * @param $draft
+     * @param $sessionData
+     * @return void
+     */
+    public function setSessionDraftKey($draft, $sessionData)
+    {
+        $draftKey = self::SESSION_DRAFT_KEY.$draft;
+        $this->catalogSession->setData($draftKey, $sessionData);
+    }
+
+    public function unsetSessionDraftKey($draft)
+    {
+        $draftKey = self::SESSION_DRAFT_KEY.$draft;
+        if ($this->catalogSession->getData($draftKey)) {
+            $this->catalogSession->unsetData($draftKey);
+        }
+    }
+
+    public function getSessionDraftKey($draft)
+    {
+        $draftKey = self::SESSION_DRAFT_KEY.$draft;
+        if ($this->catalogSession->getData($draftKey)) {
+            return $this->catalogSession->getData($draftKey);
+        }
+
+        return null;
+    }
+
+    /**
      * @param string $draftId
      * @return array|false
      */

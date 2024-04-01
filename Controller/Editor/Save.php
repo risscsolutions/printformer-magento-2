@@ -299,8 +299,7 @@ class Save extends Action
         }
         $params['form_key'] = $this->_formKey->getFormKey();
 
-        $draftKey = SessionHelper::SESSION_DRAFT_KEY.$params['printformer_draftid'];
-        $preselectData = $this->_catalogSession->getData($draftKey);
+        $preselectData = $this->_sessionHelper->getSessionDraftKey($params['printformer_draftid']);
         $formData = $this->prepareFormData($preselectData['saved_printformer_options']);
         if (!empty($formData)) {
             $params = array_merge($formData, $params);
