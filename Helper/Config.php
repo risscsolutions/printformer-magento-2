@@ -55,6 +55,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_BUTTON_CSS                = 'printformer/general/config_button_css';
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
+    const XML_PATH_CONFIG_DELETE_FEED_IDENTIFIER    =  'printformer/general/delete_feed_identifier';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
@@ -701,6 +702,16 @@ class Config extends AbstractHelper
     public function getDeleteConfirmText($storeId = false, $websiteId = false)
     {
         return $this->getConfigValue(self::XML_PATH_CONFIG_DELETE_CONFIRM_TEXT, false, $storeId, $websiteId);
+    }
+
+    /**
+     * @param $storeId
+     * @param $websiteId
+     * @return bool
+     */
+    public function isEnableFeedIdentifier($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_DELETE_FEED_IDENTIFIER, false, $storeId, $websiteId);
     }
 
     /**
