@@ -1,5 +1,22 @@
 # Changelog
 
+## [101.7.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.1...v101.7.0) (2024-04-04)
+
+
+### Features
+
+* **WEM-2259:** generate api feed name in admin panel for product ([dbf3a56](https://github.com/risscsolutions/printformer-magento-2/commit/dbf3a567f99379c58e90da319636f85c5d249dc3))
+* **WEM-2259:** generate css styles for feed attributes admin panel ([e7d7d21](https://github.com/risscsolutions/printformer-magento-2/commit/e7d7d21bc1ec4934b0ed14028f0430b45a5c6f50))
+* **WEM-2402:** create unique draft session for designs in different tabs ([7b39a01](https://github.com/risscsolutions/printformer-magento-2/commit/7b39a011d96dca441fc83aa48a3bf869434a341e))
+
+
+### Bug Fixes
+
+* **WEM-2259:** change composer version ([7a25a3c](https://github.com/risscsolutions/printformer-magento-2/commit/7a25a3c8a6cf620fcf66b46cfb5a2337aa3bf10f))
+* **WEM-2259:** fix param attribute in setup patch script ([6239694](https://github.com/risscsolutions/printformer-magento-2/commit/6239694965a12ce188ddd55f5ffb4f5727738309))
+* **WEM-2402:** clean session draft after add to cart ([677d10f](https://github.com/risscsolutions/printformer-magento-2/commit/677d10fe4a8a099df0cab7229827ce1b42337a3c))
+* **WEM-2406:** update composer version ([85bf1f7](https://github.com/risscsolutions/printformer-magento-2/commit/85bf1f77e7aa2fc01fc9f869e1d51d7b1694fbef))
+
 ## [101.6.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.0...v101.6.1) (2023-11-29)
 
 
