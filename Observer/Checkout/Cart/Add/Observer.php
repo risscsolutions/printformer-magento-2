@@ -51,12 +51,19 @@ class Observer
         $product = $observer->getData('product');
         if (isset($product)){
             $productItem = $observer->getQuoteItem();
+            if ($productItem->getPrintformerDraftid()) {
+                $this->sessionHelper->unsetSessionDraftKey($productItem->getPrintformerDraftid());
+            }
             if ($this->configHelper->useChildProduct($productItem->getProductType())) {
                 $quoteChildren = $productItem->getChildren();
                 if (is_array($quoteChildren) && !empty($quoteChildren) && !empty($quoteChildren[0])){
                     $firstProduct = $quoteChildren[0]['product'];
+                    $firstDraft = $quoteChildren[0]['printformer_draftid'];
                     if (!empty($firstProduct)) {
                         $productId = $firstProduct->getData('entity_id');
+                    }
+                    if (!empty($firstDraft)) {
+                        $this->sessionHelper->unsetSessionDraftKey($firstDraft);
                     }
                 }
             } else {
