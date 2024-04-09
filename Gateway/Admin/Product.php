@@ -415,7 +415,7 @@ class Product
      *
      * @throws AlreadyExistsException
      */
-    public function updatePrintformerProduct(PrintformerProduct $pfProduct, MasterTemplate $data, string $intent, int $storeId)
+    public function updatePrintformerProduct(PrintformerProduct $pfProduct, MasterTemplate $data, string $intent, int $storeId = 0)
     {
         $pfProduct->setSku(null)
             ->setName($data['name'])
@@ -423,7 +423,8 @@ class Product
             ->setShortDescription(null)
             ->setStatus(1)
             ->setIntent($intent)
-            ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null);
+            ->setUpdatedAt($data['updatedAt'] ? $data['updatedAt'] : null)
+            ->setStoreId($storeId);
 
         return $pfProduct;
     }
