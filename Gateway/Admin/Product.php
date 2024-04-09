@@ -17,6 +17,7 @@ use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Helper\Api as ApiHelper;
 use Rissc\Printformer\Model\Product as PrintformerProduct;
 use Rissc\Printformer\Model\ProductFactory as PrintformerProductFactory;
+use Rissc\Printformer\Client\MasterTemplate\MasterTemplate;
 use Rissc\Printformer\Helper\Log;
 use Zend_Db_Statement_Exception;
 
@@ -311,35 +312,35 @@ class Product
      */
     protected function deleteDeletedPrintformerProductRelations(array $newIdentifiers, $storeId)
     {
-            $tableName = $this->connection->getTableName('catalog_product_printformer_product');
-            $sqlQuery = 'SELECT * FROM
+        $tableName = $this->connection->getTableName('catalog_product_printformer_product');
+        $sqlQuery = 'SELECT * FROM
                 `' . $tableName . '`
             WHERE
                 `identifier` NOT IN (\'' . implode('\',\'', $newIdentifiers) . '\') AND
                 `store_id` = ' . $storeId
             . ';';
-            $resultRows = $this->connection->fetchAll($sqlQuery);
+        $resultRows = $this->connection->fetchAll($sqlQuery);
 
-            if (!empty($resultRows)) {
-                foreach ($resultRows as $row) {
-                    $this->connection->delete($tableName, ['id = ?' => $row['id']]);
-                }
+        if (!empty($resultRows)) {
+            foreach ($resultRows as $row) {
+                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
             }
+        }
 
-            $tableName = $this->connection->getTableName('printformer_product');
-            $sqlQuery = 'SELECT * FROM
+        $tableName = $this->connection->getTableName('printformer_product');
+        $sqlQuery = 'SELECT * FROM
                 `' . $tableName . '`
             WHERE
                 `identifier` NOT IN (\'' . implode('\',\'', $newIdentifiers) . '\') AND
                 `store_id` = ' . $storeId . ';
         ';
 
-            $resultRows = $this->connection->fetchAll($sqlQuery);
-            if (!empty($resultRows)) {
-                foreach ($resultRows as $row) {
-                    $this->connection->delete($tableName, ['id = ?' => $row['id']]);
-                }
+        $resultRows = $this->connection->fetchAll($sqlQuery);
+        if (!empty($resultRows)) {
+            foreach ($resultRows as $row) {
+                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
             }
+        }
     }
 
     /**
@@ -379,13 +380,13 @@ class Product
     }
 
     /**
-     * @param array $data
+     * @param MasterTemplate $data
      * @param string $intent
      * @param int $storeId
      *
      * @return PrintformerProduct
      */
-    public function addPrintformerProduct(array $data, string $intent, int $storeId = 0)
+    public function addPrintformerProduct(MasterTemplate $data, string $intent, int $storeId = 0)
     {
         /** @var PrintformerProduct $pfProduct */
         $pfProduct = $this->printformerProductFactory->create();
@@ -406,7 +407,7 @@ class Product
 
     /**
      * @param PrintformerProduct $pfProduct
-     * @param array $data
+     * @param MasterTemplate $data
      * @param string $intent
      * @param int $storeId
      *
@@ -414,7 +415,7 @@ class Product
      *
      * @throws AlreadyExistsException
      */
-    public function updatePrintformerProduct(PrintformerProduct $pfProduct, array $data, string $intent, int $storeId)
+    public function updatePrintformerProduct(PrintformerProduct $pfProduct, MasterTemplate $data, string $intent, int $storeId)
     {
         $pfProduct->setSku(null)
             ->setName($data['name'])
