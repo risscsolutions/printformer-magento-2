@@ -416,4 +416,34 @@ class Product
 
         return $pfProduct;
     }
+
+    /**
+     * @return void
+     */
+    protected function cleanDuplicatesPrintformerProductTemplates()
+    {
+        $templates = [];
+        $tableName = $this->connection->getTableName('catalog_product_printformer_product');
+        $sqlQuery = 'SELECT * FROM
+             `' . $tableName . '`;';
+        $responseArray = $this->connection->fetchAll($sqlQuery);
+        foreach ($responseArray as $responseData) {
+            $template = $responseData['printformer_product_id'] ?? null;
+            if (isset($template)) {
+                $templates[] = $template;
+            }
+        }
+
+        $tableName = $this->connection->getTableName('printformer_product');
+        $sqlQuery = 'SELECT * FROM
+             `' . $tableName . '`
+         WHERE `id` NOT IN (\'' . implode('\',\'', $templates) . '\');';
+
+        $resultRows = $this->connection->fetchAll($sqlQuery);
+        if (!empty($resultRows)) {
+            foreach ($resultRows as $row) {
+                $this->connection->delete($tableName, ['id = ?' => $row['id']]);
+            }
+        }
+    }
 }
