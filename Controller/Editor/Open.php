@@ -2,12 +2,14 @@
 
 namespace Rissc\Printformer\Controller\Editor;
 
+use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Phrase;
 use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Catalog\Model\Product;
@@ -207,7 +209,7 @@ class Open extends Action
         $params = $this->_getParams();
         $productId = $this->_getParam('product_id');
         $selectedProductId = $this->_getParam('selected_product_id');
-        $masterId = $this->_getParam('master_id');
+        $identifier = $this->_getParam('identifier');
         $intent = $this->_getParam('intent');
         $printformerDraft = $this->_getParam('draft_id');
         $sessionUniqueId = $this->_getParam('session_id');
@@ -234,19 +236,21 @@ class Open extends Action
         }
 
         /**
-         * Show an error if product id was not set
-         */
-        if (!$productId) {
-            $this->_die(__('We could not determine the right Parameters. Please try again.'));
-        }
-
-        /**
          * Open Editor in a frame if the display mode is set to "Shop Frame"
          * and we don't have a parameter set to override the config check
          */
         if (!$overrideFrameConfig && $this->_apiHelper->config()->isFrameEnabled()) {
             return $this->initShopFrame();
         }
+
+        /**
+         * Show an error if product id was not set
+         */
+        if (!$productId) {
+            $this->_die(__('We could not determine the right Parameters. Please try again.'));
+        }
+
+
 
         /**
          * Load product and save intent to session data
@@ -260,7 +264,7 @@ class Open extends Action
          */
         $draftProcess = $this->_apiHelper->draftProcess(
             $printformerDraft,
-            $masterId,
+            $identifier,
             $product->getId(),
             $intent,
             $sessionUniqueId,
@@ -275,11 +279,21 @@ class Open extends Action
             $this->_die(__('We could not determine the right Parameters. Please try again.'));
         }
 
+        //TODO Check and clean old catalog sessions
+        $sessionData = [
+            'draft_id' => $draftProcess->getDraftId(),
+            'saved_printformer_options' => $this->_sessionHelper->getCatalogSession()->getSavedPrintformerOptions(),
+            'printformer_current_intent' => $intent,
+            'printformer_identifier' => $identifier
+        ];
+
+        $this->_sessionHelper->setSessionDraftKey($draftProcess->getDraftId(), $sessionData);
+
         /**
          * Get printformer editor url by draft id
          */
         $editorParams = [
-            'master_id' => $masterId,
+            'identifier' => $identifier,
             'product_id' => $productId,
             'data' => [
                 'draft_process' => $draftProcess->getId(),
@@ -323,7 +337,7 @@ class Open extends Action
 
     /**
      * Add notice to message manager and die()
-     * @param \Magento\Framework\Phrase $notice
+     * @param Phrase $notice
      * @return void
      */
     protected function _die($notice)
@@ -347,7 +361,7 @@ class Open extends Action
      * @param string $sessionUniqueId
      *
      * @return Draft
-     * @throws \Exception
+     * @throws Exception
      */
     protected function _createDraftProcess(
         Product $product,
@@ -363,15 +377,15 @@ class Open extends Action
         /** @var Draft $draftProcess */
         $draftProcess = $this->_draftFactory->create();
         $draftProcess->addData([
-                                   'draft_id' => $draftId,
-                                   'store_id' => $storeId,
-                                   'intent' => $intent,
-                                   'session_unique_id' => $sessionUniqueId,
-                                   'product_id' => $product->getId(),
-                                   'customer_id' => $customerId,
-                                   'user_identifier' => $userIdentifier,
-                                   'created_at' => time()
-                               ]);
+            'draft_id' => $draftId,
+            'store_id' => $storeId,
+            'intent' => $intent,
+            'session_unique_id' => $sessionUniqueId,
+            'product_id' => $product->getId(),
+            'customer_id' => $customerId,
+            'user_identifier' => $userIdentifier,
+            'created_at' => time()
+        ]);
         $draftProcess->getResource()->save($draftProcess);
 
         if (!$draftProcess->getId()) {
@@ -390,7 +404,7 @@ class Open extends Action
      * @param CustomerSession $customerSession
      *
      * @return Draft
-     * @throws \Exception
+     * @throws Exception
      */
     protected function _getDraftProcess(
         $sessionUniqueId,

@@ -267,7 +267,7 @@ define([
                 ButtonText = $t('View upload');
             }
 
-            $(this.editBtn).attr('data-pf-masterid', this.options.masterId);
+            $(this.editBtn).attr('data-pf-identifier', this.options.identifier);
             $(this.editBtn).attr('data-pf-type', draftType);
             $(this.editBtn).attr('data-pf-intent', editDraftIntent);
 
@@ -348,14 +348,9 @@ define([
                     $('.loader-ring-message').hide();
                     $('#printformer-main-frame').show()
                 });
-
-                $(this.form).off();
             }
 
-            if (!this.options.isAddToCartRedirect) {
-                $(this.form).off();
-            }
-
+            $(this.form).off();
             $(this.form).submit();
         },
 
@@ -498,6 +493,24 @@ define([
                         addBtn.prop('disabled', false);
                     }
                 }, addBtn);
+            }
+            this.allDraftsDone(draftIds, this.options.printformerProducts);
+        },
+
+        allDraftsDone: function(draftIds, allDrafts) {
+            switch (this.options.allowSkipConfig) {
+                case 0:
+                    if (draftIds.length < allDrafts.length) {
+                        return this.addBtnDisable();
+                    }
+                    break;
+                case 2:
+                    if (allDrafts.length > 0 && draftIds.length < 1) {
+                        return this.addBtnDisable();
+                    }
+                    break;
+                default:
+                    return this.addBtnEnable();
             }
         },
 

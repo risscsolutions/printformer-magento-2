@@ -2,31 +2,52 @@
 
 namespace Rissc\Printformer\Block\System\Config\Form\Field;
 
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
-use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\Module\Dir\Reader;
 
 class ReleaseVersion extends Field
 {
+    public const MODULE_CODE = 'Rissc_Printformer';
     /**
-     * @var ModuleListInterface
+     * @var Reader
      */
-    private $moduleList;
+    private $moduleReader;
 
     /**
-     * @param Context $context
-     * @param ModuleListInterface $moduleList
-     * @param array $data
+     * @var File
+     */
+    private $filesystem;
+
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+
+
+    /**
+     * @param   Context  $context
+     * @param   Reader  $moduleReader
+     * @param   File  $filesystem
+     * @param   SerializerInterface  $serializer
+     * @param   array  $data
      */
     public function __construct(
         Context $context,
-        ModuleListInterface $moduleList,
+        Reader $moduleReader,
+        File $filesystem,
+        SerializerInterface $serializer,
         array $data = []
     )
     {
         parent::__construct($context, $data);
-        $this->moduleList = $moduleList;
+        $this->moduleReader = $moduleReader;
+        $this->filesystem = $filesystem;
+        $this->serializer = $serializer;
     }
 
 
@@ -41,23 +62,57 @@ class ReleaseVersion extends Field
 
         $html = '<div style="padding-top:7px">';
         $html .= '<div><span> ';
-        $html .= $this->getVersion();
+        $html .= $this->getModuleVersion(self::MODULE_CODE);
         $html .= '</span></div>';
         $html .= '</div>';
 
         return $html;
     }
 
+
     /**
-     * @return string
+     * Read info about extension from composer json file
+     *
+     * @param string $moduleCode
+     *
+     * @return mixed
      */
-    public function getVersion()
+    public function getModuleInfo(string $moduleCode)
     {
-        $result = '?';
-        $module = $this->moduleList->getOne($this->getModuleName());
-        if(isset($module['setup_version'])) {
-            $result = $module['setup_version'];
+        if (!isset($this->moduleDataStorage[$moduleCode])) {
+            $this->moduleDataStorage[$moduleCode] = [];
+
+            try {
+                $dir = $this->moduleReader->getModuleDir('', $moduleCode);
+                $file = $dir . '/composer.json';
+
+                $string = $this->filesystem->fileGetContents($file);
+                $this->moduleDataStorage[$moduleCode] = $this->serializer->unserialize($string);
+            } catch (FileSystemException $e) {
+                $this->moduleDataStorage[$moduleCode] = [];
+            }
         }
-        return $result;
+
+        return $this->moduleDataStorage[$moduleCode];
     }
+
+    /**
+     * Get version from composer json file
+     *
+     * @param   string  $moduleCode
+     *
+     * @return mixed
+     */
+    protected function getModuleVersion(string $moduleCode)
+    {
+        $module = $this->getModuleInfo($moduleCode);
+        if ( ! is_array($module)
+            || ! isset($module['version'])
+        ) {
+            return __('Version not found');
+        }
+
+        return $module['version'];
+    }
+
 }

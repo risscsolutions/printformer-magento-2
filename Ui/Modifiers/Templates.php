@@ -136,7 +136,7 @@ class Templates implements ModifierInterface
             'id' => $template['printformer_product_id'],
             'template_id' => $template['printformer_product_id'],
             'name' => $template['name'],
-            'master_id' => $template['master_id'],
+            'identifier' => $template['identifier'],
             'intent' => $template['intent']
         ];
     }
@@ -398,7 +398,7 @@ class Templates implements ModifierInterface
                             'id' => 'template_id',
                             'template_id' => 'template_id',
                             'name' => 'name',
-                            'master_id' => 'master_id',
+                            'identifier' => 'identifier',
                             'intent' => 'intent'
                         ],
                         'links' => [
@@ -444,7 +444,7 @@ class Templates implements ModifierInterface
         return [
             'template_id' => $this->getTextColumn('template_id', false, __('ID'), 10),
             'name' => $this->getTextColumn('name', false, __('Name'), 20),
-            'master_id' => $this->getTextColumn('master_id', true, __('Master ID'), 30),
+            'identifier' => $this->getTextColumn('identifier', true, __('Identifier'), 30),
             'intent' => $this->getTextColumn('intent', true, __('Intent'), 40),
             'actionDelete' => [
                 'arguments' => [

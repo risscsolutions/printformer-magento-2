@@ -2,6 +2,9 @@
 
 namespace Rissc\Printformer\Observer\Product\Save;
 
+use Magento\Catalog\Controller\Adminhtml\Product\Save;
+use Magento\Catalog\Model\Product;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
@@ -46,13 +49,13 @@ class SavePrintformerProducts implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        /** @var \Magento\Catalog\Model\Product $product */
+        /** @var Product $product */
         $product = $observer->getProduct();
 
-        /** @var \Magento\Catalog\Controller\Adminhtml\Product\Save $controller */
+        /** @var Save $controller */
         $controller = $observer->getController();
 
-        /** @var \Magento\Framework\App\RequestInterface $request */
+        /** @var RequestInterface $request */
         $request = $controller->getRequest();
 
         /** @var array $params */
@@ -68,7 +71,7 @@ class SavePrintformerProducts implements ObserverInterface
                     $item = [
                         'product_id' => $product->getId(),
                         'printformer_product_id' => $record['id'],
-                        'master_id' => $record['master_id'],
+                        'identifier' => $record['identifier'],
                         'store_id' => $product->getStoreId(),
                         'intent' => $record['intent']
                     ];

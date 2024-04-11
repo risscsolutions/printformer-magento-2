@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Helper;
 
 use DateTimeImmutable;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
@@ -32,9 +33,11 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order\ItemFactory;
+use Magento\Framework\Serialize\SerializerInterface;
 use Rissc\Printformer\Helper\Log as LogHelper;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
+use Rissc\Printformer\Helper\Api\Url\V2;
 use GuzzleHttp\ClientFactory;
 
 class Api extends AbstractHelper
@@ -128,6 +131,11 @@ class Api extends AbstractHelper
     private ClientFactory $clientFactory;
 
     /**
+     * @param SerializerInterface $serializer
+     */
+    protected $serializer;
+
+    /**
      * @param Context $context
      * @param CustomerSession $customerSession
      * @param UrlHelper $urlHelper
@@ -147,6 +155,7 @@ class Api extends AbstractHelper
      * @param Log $_logHelper
      * @param DraftResource $draftResource
      * @param Config $configHelper
+     * @param SerializerInterface $serializer
      * @param ClientFactory $clientFactory
      */
     public function __construct(
@@ -169,6 +178,7 @@ class Api extends AbstractHelper
         LogHelper $_logHelper,
         DraftResource $draftResource,
         ConfigHelper $configHelper,
+        SerializerInterface $serializer,
         ClientFactory $clientFactory
     ) {
         $this->_customerSession = $customerSession;
@@ -190,6 +200,7 @@ class Api extends AbstractHelper
         $this->draftResource = $draftResource;
         $this->context = $context;
         $this->configHelper = $configHelper;
+        $this->serializer = $serializer;
         $this->clientFactory = $clientFactory;
 
         $this->apiUrl()->initVersionHelper();
@@ -336,7 +347,7 @@ class Api extends AbstractHelper
      * @param null $admin
      *
      * @return string
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws AlreadyExistsException
      */
     public function getUserIdentifier($customer = null, $admin = null)
     {
@@ -445,7 +456,7 @@ class Api extends AbstractHelper
                     ]
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_logger->error('Can\'t load customer data from $customer variable');
             $this->_logger->error($e->getMessage());
             $this->_logger->error($e->getTraceAsString());
@@ -460,13 +471,13 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param int    $masterId
+     * @param int    $identifier
      * @param string $userIdentifier
      * @param array  $params
      *
      * @return mixed
      */
-    public function createDraftHash($masterId, $userIdentifier, $storeId, $params = [])
+    public function createDraftHash($identifier, $userIdentifier, $storeId, $params = [])
     {
         $url = $this->apiUrl()->getDraft();
 
@@ -475,8 +486,8 @@ class Api extends AbstractHelper
                 'user_identifier' => $userIdentifier
             ]
         ];
-        if(!empty($masterId)){
-            $requestData['json']['master_id'] = $masterId;
+        if( !empty($identifier) ) {
+            $requestData['json']['templateIdentifier'] = $identifier;
         }
         $params = $this->mergeAdditionalParamsForApiCall($params);
         foreach($params as $key => $value) {
@@ -650,7 +661,7 @@ class Api extends AbstractHelper
                         $this->_logger->debug('Upload status code: '.$response->getStatusCode().'for upload with draft id: '.$draftId);
                         return false;
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->_logger->debug('Upload failed for draft with draft-id: '.$draftId.' on file path order-id'.$filePathUrl.' for callback url: '.$callBackUrlWithQueryString);
                     $this->_logger->debug('Upload error message: '.$e->getMessage());
                 }
@@ -735,11 +746,23 @@ class Api extends AbstractHelper
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
+        $storeId = $this->getStoreId();
+        // Check store id for admin pages
+        if (isset($params['store_id'])){
+            $storeId = $params['store_id'];
+            try {
+                $apiKey = $this->_config->getClientApiKey($storeId);
+                if (!empty($apiKey)) {
+                    $this->jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($apiKey));
+                }
+            } catch (NoSuchEntityException $e) {
+            }
+        }
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
-        $client = $this->_config->getClientIdentifier($this->getStoreId());
+        $client = $this->_config->getClientIdentifier($storeId);
         $identifier = bin2hex(random_bytes(16));
         $issuedAt = new DateTimeImmutable();
-        $expirationDate = $this->_config->getExpireDate();
+        $expirationDate = $this->_config->getExpireDate($storeId);
         $JWTBuilder = $this->jwtConfig->builder()
             ->issuedAt($issuedAt)
             ->withClaim('client', $client)
@@ -751,16 +774,16 @@ class Api extends AbstractHelper
         $JWT = $JWTBuilder->getToken($this->jwtConfig->signer(), $this->jwtConfig->signingKey())->toString();
 
         $setIssuedAtTimestamp = time();
-        $expirationDateTimeStamp = $this->_config->getExpireDateTimeStamp();
+        $expirationDateTimeStamp = $this->_config->getExpireDateTimeStamp($storeId);
         $requestData = [
-            'apiKey' => $this->_config->getClientApiKey($this->getStoreId()),
-            'storeId' => $this->getStoreId()
+            'apiKey' => $this->_config->getClientApiKey($storeId),
+            'storeId' => $storeId
         ];
         $data = [
             'draftId' => $draftHash,
             'userIdentifier' => $userIdentifier,
             'params' => $params,
-            'storeId' => $this->getStoreId(),
+            'storeId' => $storeId,
             'client' => $client,
             'id' => $identifier,
             'replicateAsHeader' => true,
@@ -773,7 +796,7 @@ class Api extends AbstractHelper
         ];
         $entry = $this->_logHelper->createRedirectEntry($editorOpenUrl, $data);
 
-        $redirectUrl = $this->apiUrl()->getAuth() . '?' . http_build_query(['jwt' => $JWT]);
+        $redirectUrl = $this->apiUrl()->getPrintformerBaseUrl($storeId) . V2::EXT_AUTH_PATH . '?' . http_build_query(['jwt' => $JWT]);
         $entry->setResponseData(json_encode(["redirectUrl" => $redirectUrl, "jwt" => $JWT]));
         $this->_logHelper->updateEntry($entry);
 
@@ -782,7 +805,7 @@ class Api extends AbstractHelper
 
     /**
      * @param string $draftHash
-     * @param int $masterId
+     * @param int $identifier
      * @param int $productId
      * @param string $intent
      * @param string $sessionUniqueId
@@ -792,11 +815,11 @@ class Api extends AbstractHelper
      * @param string $colorVariation
      * @param array $availableVariants
      * @return DataObject|Draft
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function draftProcess(
         $draftHash = null,
-        $masterId = null,
+        $identifier = null,
         $productId = null,
         $intent = null,
         $sessionUniqueId = null,
@@ -809,12 +832,24 @@ class Api extends AbstractHelper
         $storeId = $this->_storeManager->getStore()->getId();
 
         $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
-        if(!$process->getId() && !$checkOnly) {
+        $catalogSession = $this->_sessionHelper->getCatalogSession();
+        $preselectData = $catalogSession->getSavedPrintformerOptions();
+        $options = null;
+        if (!empty($preselectData['super_attribute'])) {
+            $options = $this->serializer->serialize($preselectData['super_attribute']);
+        }
+
+        if ($process->getId() && $options) {
+            $process->setSuperAttribute($options);
+            $process->getResource()->save($process);
+        }
+
+        if (!$process->getId() && !$checkOnly) {
             $dataParams = [
                 'intent' => $intent
             ];
 
-            if (!empty($availableVariants) && is_array($availableVariants)){
+            if (!empty($availableVariants) && is_array($availableVariants)) {
                 $dataParams['availableVariantVersions'] = $availableVariants;
                 $process->addData([
                     'available_variants' => implode(",", $availableVariants)
@@ -823,7 +858,7 @@ class Api extends AbstractHelper
 
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($masterId, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $storeId, $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -840,7 +875,8 @@ class Api extends AbstractHelper
                     'user_identifier' => $this->getUserIdentifier(),
                     'created_at' => time(),
                     'printformer_product_id' => $printformerProductId,
-                    'color_variation' => $colorVariation
+                    'color_variation' => $colorVariation,
+                    'super_attribute' => $options
                 ]);
                 $process->getResource()->save($process);
             } catch (AlreadyExistsException $e) {
@@ -884,7 +920,7 @@ class Api extends AbstractHelper
 
     /**
      * @param null $draftHash
-     * @param int $masterId
+     * @param int $identifier
      * @param null $productId
      * @param null $sessionUniqueId
      * @param null $customerId
@@ -898,7 +934,7 @@ class Api extends AbstractHelper
      */
     public function uploadDraftProcess(
         $draftHash = null,
-        $masterId = 0,
+        $identifier = 0,
         $productId = null,
         $sessionUniqueId = null,
         $customerId = null,
@@ -930,7 +966,7 @@ class Api extends AbstractHelper
                 ];
 
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
-                $draftHash = $this->createDraftHash($masterId, $printformerUserIdentifier, $storeId, $dataParams);
+                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $storeId, $dataParams);
 
                 $process->addData([
                     'draft_id' => $draftHash,

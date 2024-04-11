@@ -2,6 +2,7 @@
 
 namespace Rissc\Printformer\Block\Catalog\Product\View;
 
+use Exception;
 use Magento\Catalog\Block\Product\Context;
 use Magento\Catalog\Block\Product\View\AbstractView;
 use Magento\Catalog\Model\Product;
@@ -9,7 +10,9 @@ use Magento\Catalog\Model\Session as CatalogSession;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
 use Magento\Checkout\Model\Cart;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\DataObject;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Stdlib\ArrayUtils;
 use Magento\Quote\Model\Quote;
 use Magento\Wishlist\Model\Item;
@@ -61,7 +64,7 @@ class Printformer extends AbstractView
     /**
      * @var int
      */
-    protected $draftMasterId;
+    protected $draftIdentifier;
 
     /**
      * @var PrintformerProductHelper
@@ -137,7 +140,7 @@ class Printformer extends AbstractView
 
         parent::__construct($context, $arrayUtils, $data);
 
-        $this->draftMasterId = $this->_catalogSession->getData('printformer_masterid');
+        $this->draftIdentifier = $this->_catalogSession->getData('printformer_identifier');
     }
 
     /**
@@ -320,7 +323,7 @@ class Printformer extends AbstractView
      * @param Product $product
      *
      * @return string
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getEditorUrl(
         PrintformerProduct $printformerProduct,
@@ -340,7 +343,7 @@ class Printformer extends AbstractView
         }
         return $this->urlHelper->getEditorEntry(
             $product->getId(),
-            $printformerProduct->getMasterId(),
+            $printformerProduct->getIdentifier(),
             $draftId,
             $params,
             $printformerProduct->getIntent()
@@ -699,7 +702,7 @@ class Printformer extends AbstractView
         try {
             $stockItem = $product->getExtensionAttributes()->getStockItem();
             $minSaleQty = $stockItem->getMinSaleQty();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
         }
@@ -721,7 +724,7 @@ class Printformer extends AbstractView
             'qty' => $minSaleQty,
             'ProductId' => $this->getProduct()->getId(),
             'isConfigure' => $this->isOnConfigurePDS(),
-            'draftMasterId' => $this->getDraftMasterId(),
+            'draftIdentifier' => $this->getDraftIdentifier(),
             'currentSessionIntent' => $this->getIntent(),
             Save::PERSONALISATIONS_QUERY_PARAM => 0,
             Save::PERSONALISATIONS_QUERY_PARAM . '_conf' => false,
@@ -756,21 +759,28 @@ class Printformer extends AbstractView
     /**
      * @return string
      */
-    public function getDraftMasterId()
+    public function getDraftIdentifier()
     {
-        if (!$this->draftMasterId && $this->getRequest()->getActionName() == 'configure' && $this->getRequest()->getParam('id') && $this->getRequest()->getParam('product_id')) {
+        $request = $this->getRequest();
+        if (!$this->draftIdentifier
+            && $request
+            && $request->getActionName() == 'configure'
+            && $request->getParam('id')
+            && $request->getParam('product_id')) {
+
             $quoteItem = null;
-            $id = (int)$this->getRequest()->getParam('id');
-            $productId = (int)$this->getRequest()->getParam('product_id');
+            $id = (int)$request->getParam('id');
+            $productId = (int)$request->getParam('product_id');
+
             if ($id) {
                 $quoteItem = $this->cart->getQuote()->getItemById($id);
             }
             if ($quoteItem && $productId == $quoteItem->getProduct()->getId()) {
-                $this->draftMasterId = $quoteItem->getBuyRequest()->getData('printformer_masterid');
+                $this->draftIdentifier = $quoteItem->getBuyRequest()->getData('printformer_identifier');
             }
         }
 
-        return $this->draftMasterId;
+        return $this->draftIdentifier;
     }
 
     /**
@@ -802,7 +812,7 @@ class Printformer extends AbstractView
                         `code` = 'info_buyRequest'
                 ");
                 $objm = ObjectManager::getInstance();
-                /** @var \Magento\Framework\App\ProductMetadataInterface $productMeta */
+                /** @var ProductMetadataInterface $productMeta */
                 $productMeta = $objm->get('Magento\Framework\App\ProductMetadataInterface');
                 if (version_compare($productMeta->getVersion(), '2.2.1', '>=')) {
                     $buyRequest = new DataObject(json_decode($result['value'], true));

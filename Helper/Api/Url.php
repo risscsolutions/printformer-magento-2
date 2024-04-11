@@ -81,9 +81,9 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getEditorEntry($productId, $masterId, $draftHash, $params = [], $intent = null, $user = null)
+    public function getEditorEntry($productId, $identifier, $draftHash, $params = [], $intent = null, $user = null)
     {
-        return $this->getVersionHelper()->getEditorEntry($productId, $masterId, $draftHash, $params, $intent, $user);
+        return $this->getVersionHelper()->getEditorEntry($productId, $identifier, $draftHash, $params, $intent, $user);
     }
 
     /**
@@ -373,6 +373,11 @@ class Url extends AbstractHelper implements VersionInterface
     public function getProductFeedUrl()
     {
         return $this->getVersionHelper()->getProductFeedUrl();
+    }
+
+    public function getProductFeedName($feedIdentifier)
+    {
+        return $this->getVersionHelper()->getProductFeedName($feedIdentifier);
     }
 
     public function getClientName($storeId = false, $websiteId = false)

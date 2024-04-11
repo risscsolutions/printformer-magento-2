@@ -1,5 +1,71 @@
 # Changelog
 
+## [101.7.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.1...v101.7.0) (2024-04-04)
+
+
+### Features
+
+* **WEM-2259:** generate api feed name in admin panel for product ([dbf3a56](https://github.com/risscsolutions/printformer-magento-2/commit/dbf3a567f99379c58e90da319636f85c5d249dc3))
+* **WEM-2259:** generate css styles for feed attributes admin panel ([e7d7d21](https://github.com/risscsolutions/printformer-magento-2/commit/e7d7d21bc1ec4934b0ed14028f0430b45a5c6f50))
+* **WEM-2402:** create unique draft session for designs in different tabs ([7b39a01](https://github.com/risscsolutions/printformer-magento-2/commit/7b39a011d96dca441fc83aa48a3bf869434a341e))
+
+
+### Bug Fixes
+
+* **WEM-2259:** change composer version ([7a25a3c](https://github.com/risscsolutions/printformer-magento-2/commit/7a25a3c8a6cf620fcf66b46cfb5a2337aa3bf10f))
+* **WEM-2259:** fix param attribute in setup patch script ([6239694](https://github.com/risscsolutions/printformer-magento-2/commit/6239694965a12ce188ddd55f5ffb4f5727738309))
+* **WEM-2402:** clean session draft after add to cart ([677d10f](https://github.com/risscsolutions/printformer-magento-2/commit/677d10fe4a8a099df0cab7229827ce1b42337a3c))
+* **WEM-2406:** update composer version ([85bf1f7](https://github.com/risscsolutions/printformer-magento-2/commit/85bf1f77e7aa2fc01fc9f869e1d51d7b1694fbef))
+
+## [101.6.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.0...v101.6.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* **WEM-2280:** update version ([3803573](https://github.com/risscsolutions/printformer-magento-2/commit/3803573c828f0867366ee3e62c299d29960820dd))
+
+## [101.6.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.3...v101.6.0) (2023-11-29)
+
+
+### Features
+
+* **WEM-2349:** added MIT license file ([5dff841](https://github.com/risscsolutions/printformer-magento-2/commit/5dff8416ea7c6fcf51bb497a2233908bb4d3f71e))
+
+## [101.5.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.2...v101.5.3) (2023-11-03)
+
+
+### Bug Fixes
+
+* **WEM-1880:** update composer version ([fd00952](https://github.com/risscsolutions/printformer-magento-2/commit/fd0095225ba91d0bbe3b8b89903d9f2be717f0a5))
+
+## [101.5.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.1...v101.5.2) (2023-11-03)
+
+
+### Bug Fixes
+
+* **WEM-1816:** fixed draft product grid filtration by product name ([2719b7f](https://github.com/risscsolutions/printformer-magento-2/commit/2719b7fb19bc51105a2c246dd58be01496819ab2))
+
+## [101.5.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.5.0...v101.5.1) (2023-09-01)
+
+
+### Bug Fixes
+
+* **WEM-2238:** fixed error undefined variable count for products without images ([8b59cd7](https://github.com/risscsolutions/printformer-magento-2/commit/8b59cd752fecccc4b1be26b2391c167692613b36))
+
+## [101.5.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.4.0...v101.5.0) (2023-09-01)
+
+
+### Features
+
+* additional logic to load over setup-command ([2855f47](https://github.com/risscsolutions/printformer-magento-2/commit/2855f47085d19503634abcf718132ea59647b197))
+* **wem-1845:** change complete extension logic from master-id to identifier ([ed3e284](https://github.com/risscsolutions/printformer-magento-2/commit/ed3e284fa7864fcc606694427fdc471e65291ce6))
+
+
+### Bug Fixes
+
+* avoid indexer creations in branch ([cf95825](https://github.com/risscsolutions/printformer-magento-2/commit/cf95825b05b0c280824fc0768320b1c4e2b26c58))
+* **WEM-1816:** added identifier column printformer product grid instead of master id ([4aa3291](https://github.com/risscsolutions/printformer-magento-2/commit/4aa329117220faab714398c4e76d1939eb2afccc))
+
 ## [101.4.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.3.2...v101.4.0) (2023-06-16)
 
 

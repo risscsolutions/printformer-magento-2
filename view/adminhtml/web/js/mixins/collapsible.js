@@ -41,7 +41,7 @@ define(['jquery'], function($) {
                                         selectProductFieldId = $(children).attr('for');
                                         //listen to change events of the product select field
                                         $("#" + selectProductFieldId).change(function () {
-                                            //this.value is the master id of the printformer product
+                                            //this.value is the identifier of the printformer product
                                             if (selectCapabilitiesFieldId !== null) {
                                                 //empty the select fiel
                                                 $(selectCapabilitiesFieldId).empty()

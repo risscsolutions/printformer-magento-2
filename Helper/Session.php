@@ -13,6 +13,7 @@ use Rissc\Printformer\Setup\InstallSchema;
 
 class Session extends AbstractHelper
 {
+    const SESSION_DRAFT_KEY = 'key-';
     const SESSION_KEY_PRINTFORMER_DRAFTID = InstallSchema::COLUMN_NAME_DRAFTID;
     const SESSION_KEY_PRINTFORMER_CURRENT_INTENT = 'printformer_current_intent';
     const SESSION_KEY_WISHLIST_URL = 'wishlist_url';
@@ -625,6 +626,35 @@ class Session extends AbstractHelper
         $drafts = $this->catalogSession->getPrintformerDraftCache();
         unset($drafts[$draftId]);
         $this->catalogSession->setPrintformerDraftCache($drafts);
+    }
+
+    /**
+     * @param $draft
+     * @param $sessionData
+     * @return void
+     */
+    public function setSessionDraftKey($draft, $sessionData)
+    {
+        $draftKey = self::SESSION_DRAFT_KEY.$draft;
+        $this->catalogSession->setData($draftKey, $sessionData);
+    }
+
+    public function unsetSessionDraftKey($draft)
+    {
+        $draftKey = self::SESSION_DRAFT_KEY.$draft;
+        if ($this->catalogSession->getData($draftKey)) {
+            $this->catalogSession->unsetData($draftKey);
+        }
+    }
+
+    public function getSessionDraftKey($draft)
+    {
+        $draftKey = self::SESSION_DRAFT_KEY.$draft;
+        if ($this->catalogSession->getData($draftKey)) {
+            return $this->catalogSession->getData($draftKey);
+        }
+
+        return null;
     }
 
     /**
