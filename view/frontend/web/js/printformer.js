@@ -70,18 +70,23 @@ define([
                                         $.each(this.options.preselection.options, function (index, val) {
                                             let dataSelector = '[data-selector="options\\[' + index + '\\]"]';
                                             $(dataSelector).val(val.value);
-                                            window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
-
-            								if (val.value != undefined) {
-            								   let dataSelector = '[id="options_'+ index +'_date"]';
-            								   $(dataSelector).val(val.value);
-            								   window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
-            								}
+                                            if (window.DynamicProductOptions) {
+                                                window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
+                                            }
+                                            if (val.value != undefined) {
+                                                let dataSelector = '[id="options_' + index + '_date"]';
+                                                $(dataSelector).val(val.value);
+                                                if (window.DynamicProductOptions) {
+                                                    window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
+                                                }
+                                            }
                                             if (val.value.date != undefined) {
-            								   let dataSelector = '[id="options_'+ index +'_date"]';
-            								   $(dataSelector).val(val.value.date);
-            								   window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
-            								}
+                                                let dataSelector = '[id="options_' + index + '_date"]';
+                                                $(dataSelector).val(val.value.date);
+                                                if (window.DynamicProductOptions) {
+                                                    window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
+                                                }
+                                            }
                                         });
                                     }
                                 }
