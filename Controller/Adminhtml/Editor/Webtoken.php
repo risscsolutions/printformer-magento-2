@@ -4,9 +4,11 @@ namespace Rissc\Printformer\Controller\Adminhtml\Editor;
 use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\ObjectManager;
 use Psr\Log\LoggerInterface;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Rissc\Printformer\Helper\Api as ApiHelper;
+use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order\ItemFactory;
 use Rissc\Printformer\Model\Draft;
 
@@ -24,31 +26,32 @@ class Webtoken extends Action
     private $logger;
 
     /**
-     * @var ApiHelper
+     * @var null
      */
-    private $apiHelper;
+    protected $_objectManager = null;
 
     /**
      * @var ItemFactory
      */
     private $itemFactory;
 
+
     /**
      * @param Context $context
      * @param LoggerInterface $logger
-     * @param ApiHelper $apiHelper
+     * @param ObjectManagerInterface $objManager
      * @param ItemFactory $itemFactory
      */
     public function __construct(
         Context $context,
         LoggerInterface $logger,
-        ApiHelper $apiHelper,
+        ObjectManagerInterface $objManager,
         ItemFactory $itemFactory
     )
     {
         parent::__construct($context);
         $this->logger = $logger;
-        $this->apiHelper = $apiHelper;
+        $this->_objectManager = $objManager;
         $this->itemFactory = $itemFactory;
     }
 
@@ -64,7 +67,7 @@ class Webtoken extends Action
         $referrerUrl = null;
 
         if($orderItemId = $rowOrderItemId) {
-        /** @var OrderItem $orderItem */
+            /** @var OrderItem $orderItem */
             $orderItem = $this->itemFactory->create();
             $orderItem->getResource()->load($orderItem, $orderItemId);
 
@@ -72,8 +75,8 @@ class Webtoken extends Action
                 $referrerUrl = $this->_url->getUrl('sales/order/view', ['order_id' => $orderItem->getOrderId()]);
             }
         }
-
-        $draftProcess = $this->apiHelper->draftProcess($rowDraftHash);
+        $apiHelper = $this->_objectManager->get(ApiHelper::class);
+        $draftProcess = $apiHelper->draftProcess($rowDraftHash);
 
         $editorParams = [
             'product_id' => $draftProcess->getProductId(),
@@ -84,7 +87,7 @@ class Webtoken extends Action
             ]
         ];
 
-        $url = $this->apiHelper->getEditorWebtokenUrl($rowDraftHash, $draftProcess->getUserIdentifier(), $editorParams);
+        $url = $apiHelper->getEditorWebtokenUrl($rowDraftHash, $draftProcess->getUserIdentifier(), $editorParams);
 
         $resultRedirect = $this->resultRedirectFactory->create();
         $resultRedirect->setUrl($url);

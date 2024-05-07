@@ -63,7 +63,7 @@ class DraftEditor extends AbstractRenderer
             [
                 'draft_id' => $row->getDraftId(),
                 'order_item_Id' => $row->getOrderItemId(),
-                'store_id' => $row->getStoreId()
+                'store' => $row->getStoreId()
             ]
         );
 
