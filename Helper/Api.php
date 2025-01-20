@@ -1529,6 +1529,21 @@ class Api extends AbstractHelper
     }
 
     /**
+     * Creates a user group in printformer and returns the identifier
+     *
+     * @return string
+     */
+    public function createUserGroup()
+    {   
+        $url = $this->_urlHelper->createUserGroupUrl();
+        $httpClient = $this->getHttpClient();
+
+        $response = $httpClient->post($url);
+        $response = json_decode($response->getBody(), true);
+        return $response['data']['identifier'];
+    }
+
+    /**
      * Merge function-params, options and additional draft-fields for the api-call
      *
      * @param $params
