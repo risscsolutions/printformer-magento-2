@@ -476,7 +476,7 @@ class UpgradeData implements UpgradeDataInterface
         }
 
         if(version_compare($context->getVersion(), '100.9.9', '<')) {
-            $this->createPrintformerUserGroups($setup, $connection);
+            $this->createPrintformerUserGroups();
         }
 
         $setup->endSetup();
@@ -544,19 +544,12 @@ class UpgradeData implements UpgradeDataInterface
         );
     }
 
-    protected function createPrintformerUserGroups(ModuleDataSetupInterface $setup, AdapterInterface $connection): void
+    protected function createPrintformerUserGroups(): void
     {
-        $printformerUserGroupTable = $setup->getTable('printformer_user_group');
         $groupIds = $this->groupCollection->addFieldToSelect('customer_group_id')->getAllIds();
 
         foreach ($groupIds as $magentoGroupId) {
-            $printformerGroupId = $this->printformerApi->createUserGroup();
-            $this->logger->error($printformerGroupId);
-
-            $connection->insert($printformerUserGroupTable, [
-                'magento_user_group_id' => $magentoGroupId,
-                'printformer_user_group_id' => $printformerGroupId
-            ]);
+            $this->printformerApi->createUserGroup($magentoGroupId);
         }
     }
 

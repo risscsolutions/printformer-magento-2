@@ -39,6 +39,7 @@ use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Rissc\Printformer\Helper\Api\Url\V2;
 use GuzzleHttp\ClientFactory;
+use Rissc\Printformer\Model\PrintformerUserGroupFactory;
 
 class Api extends AbstractHelper
 {
@@ -136,6 +137,11 @@ class Api extends AbstractHelper
     protected $serializer;
 
     /**
+     * @var PrintformerUserGroupFactory
+     */
+    protected $printformerUserGroupFactory;
+
+    /**
      * @param Context $context
      * @param CustomerSession $customerSession
      * @param UrlHelper $urlHelper
@@ -157,6 +163,7 @@ class Api extends AbstractHelper
      * @param Config $configHelper
      * @param SerializerInterface $serializer
      * @param ClientFactory $clientFactory
+     * @param PrintformerUserGroup $printformerUserGroupFactory
      */
     public function __construct(
         Context $context,
@@ -179,7 +186,8 @@ class Api extends AbstractHelper
         DraftResource $draftResource,
         ConfigHelper $configHelper,
         SerializerInterface $serializer,
-        ClientFactory $clientFactory
+        ClientFactory $clientFactory,
+        PrintformerUserGroupFactory $printformerUserGroupFactory
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -202,6 +210,7 @@ class Api extends AbstractHelper
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
         $this->clientFactory = $clientFactory;
+        $this->printformerUserGroupFactory = $printformerUserGroupFactory;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -1529,18 +1538,23 @@ class Api extends AbstractHelper
     }
 
     /**
-     * Creates a user group in printformer and returns the identifier
-     *
-     * @return string
+     * Creates a user group in printformer and save the group ID with the magento group ID to the db
      */
-    public function createUserGroup()
+    public function createUserGroup(int $magentoGroupId): void
     {   
         $url = $this->_urlHelper->createUserGroupUrl();
         $httpClient = $this->getHttpClient();
 
         $response = $httpClient->post($url);
         $response = json_decode($response->getBody(), true);
-        return $response['data']['identifier'];
+        
+        $printformerUserGroup = $this->printformerUserGroupFactory->create();
+        $printformerUserGroup->setData([
+            'magento_user_group_id' => $magentoGroupId,
+            'printformer_user_group_id' => $response['data']['identifier']
+        ]);
+
+        $printformerUserGroup->save();
     }
 
     /**

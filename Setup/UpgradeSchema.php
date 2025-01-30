@@ -684,6 +684,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $this->createPrintformerUserGroups($setup, $connection);
         }
 
+        if(version_compare($context->getVersion(), '100.9.10', '<')) {
+            $connection->addColumn(
+                $connection->getTableName('printformer_draft'),
+                'user_group_identifier',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 50,
+                    'nullable' => true,
+                    'comment' => 'User Group Identifier'
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 

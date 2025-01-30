@@ -15,6 +15,7 @@ class Draft extends AbstractModel implements IdentityInterface
     const KEY_PRODUCT_ID = 'product_id';
     const KEY_PROCESSING_ID = 'processing_id';
     const KEY_PROCESSING_STATUS = 'processing_status';
+    const KEY_USER_GROUP_IDENTIFIER = 'user_group_identifier';
 
     protected function _construct()
     {
