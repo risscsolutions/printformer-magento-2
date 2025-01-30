@@ -1,5 +1,4 @@
 require(['jquery', 'prototype',
-    'jquery/ui',
     'domReady!'], function ($, prototype) {
     'use strict';
 

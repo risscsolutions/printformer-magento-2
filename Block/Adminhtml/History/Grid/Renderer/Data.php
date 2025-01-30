@@ -26,7 +26,7 @@ class Data extends AbstractRenderer
         $html .= '</div>';
 
         $js = '<script type="text/javascript">';
-        $js .= 'require([\'jquery\', \'jquery/ui\'], function($){ 
+        $js .= 'require([\'jquery\'], function($){
             $(window).load(function(){
                 var trigger = \'#trigger_' . $row->getId() . '_' . $column->getIndex() . '\';
                 var content = \'#content_' . $row->getId() . '_' . $column->getIndex() . '\';

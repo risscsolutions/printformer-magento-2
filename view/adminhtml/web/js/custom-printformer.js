@@ -1,10 +1,9 @@
 define([
     'jquery',
-    'jquery/ui',
     'jquery/jquery.parsequery',
     'Magento_Ui/js/modal/modal',
     'mage/translate'
-], function ($, $ui, $pq, $modal, $t) {
+], function ($, $pq, $modal, $t) {
     'use strict';
 
     $.widget('mage.customPrintformer', {
