@@ -39,7 +39,7 @@ use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Rissc\Printformer\Helper\Api\Url\V2;
 use GuzzleHttp\ClientFactory;
-use Rissc\Printformer\Model\PrintformerUserGroupFactory;
+use Rissc\Printformer\Helper\Customer\Group\PrintformerUserGroup as PrintformerUserGroupHelper;
 
 class Api extends AbstractHelper
 {
@@ -137,9 +137,9 @@ class Api extends AbstractHelper
     protected $serializer;
 
     /**
-     * @var PrintformerUserGroupFactory
+     * @var PrintformerUserGroupHelper
      */
-    protected $printformerUserGroupFactory;
+    protected $printformerUserGroupHelper;
 
     /**
      * @param Context $context
@@ -163,7 +163,7 @@ class Api extends AbstractHelper
      * @param Config $configHelper
      * @param SerializerInterface $serializer
      * @param ClientFactory $clientFactory
-     * @param PrintformerUserGroup $printformerUserGroupFactory
+     * @param PrintformerUserGroupHelper $printformerUserGroupHelper
      */
     public function __construct(
         Context $context,
@@ -187,7 +187,7 @@ class Api extends AbstractHelper
         ConfigHelper $configHelper,
         SerializerInterface $serializer,
         ClientFactory $clientFactory,
-        PrintformerUserGroupFactory $printformerUserGroupFactory
+        PrintformerUserGroupHelper $printformerUserGroupHelper
     ) {
         $this->_customerSession = $customerSession;
         $this->_urlHelper = $urlHelper;
@@ -210,7 +210,7 @@ class Api extends AbstractHelper
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
         $this->clientFactory = $clientFactory;
-        $this->printformerUserGroupFactory = $printformerUserGroupFactory;
+        $this->printformerUserGroupHelper = $printformerUserGroupHelper;
 
         $this->apiUrl()->initVersionHelper();
         $this->apiUrl()->setStoreManager($storeManager);
@@ -455,11 +455,12 @@ class Api extends AbstractHelper
     /**
      * @param int    $identifier
      * @param string $userIdentifier
+     * @param string $userGroupIdentifier
      * @param array  $params
      *
      * @return mixed
      */
-    public function createDraftHash($identifier, $userIdentifier, $storeId, $params = [])
+    public function createDraftHash($identifier, $userIdentifier, $userGroupIdentifier, $storeId, $params = [])
     {
         $url = $this->apiUrl()->getDraft();
 
@@ -468,6 +469,10 @@ class Api extends AbstractHelper
                 'user_identifier' => $userIdentifier
             ]
         ];
+
+        if (!empty($userGroupIdentifier)) {
+            $requestData['json'][Draft::KEY_USER_GROUP_IDENTIFIER] = $userGroupIdentifier;
+        }
         if( !empty($identifier) ) {
             $requestData['json']['templateIdentifier'] = $identifier;
         }
@@ -836,9 +841,10 @@ class Api extends AbstractHelper
                 ]);
             }
 
+            $userGroupIdentifier = $this->getUserGroupIdentifier();
             if (!$draftHash) {
                 try {
-                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $storeId, $dataParams);
+                    $draftHash = $this->createDraftHash($identifier, $this->getUserIdentifier(), $userGroupIdentifier, $storeId, $dataParams);
                 } catch (AlreadyExistsException $e) {
                     $this->_logger->critical('Failed to create draft');
                 }
@@ -858,6 +864,11 @@ class Api extends AbstractHelper
                     'color_variation' => $colorVariation,
                     'super_attribute' => $options
                 ]);
+
+                if (!empty($userGroupIdentifier)) {
+                    $process->addData([Draft::KEY_USER_GROUP_IDENTIFIER => $userGroupIdentifier]);
+                }
+
                 $process->getResource()->save($process);
             } catch (AlreadyExistsException $e) {
                 $this->_logger->critical('Failed to save draft');
@@ -946,7 +957,8 @@ class Api extends AbstractHelper
                 ];
 
                 $dataParams = array_merge($dataParams, $additionalUploadDataParams);
-                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $storeId, $dataParams);
+                $userGroupIdentifier = $this->getUserGroupIdentifier();
+                $draftHash = $this->createDraftHash($identifier, $printformerUserIdentifier, $userGroupIdentifier, $storeId, $dataParams);
 
                 $process->addData([
                     'draft_id' => $draftHash,
@@ -960,6 +972,11 @@ class Api extends AbstractHelper
                     'printformer_product_id' => $printformerProductId,
                     'order_item_id' => $orderItemId
                 ]);
+
+                if (!empty($userGroupIdentifier)) {
+                    $process->addData([Draft::KEY_USER_GROUP_IDENTIFIER => $userGroupIdentifier]);
+                }
+
                 $process->getResource()->save($process);
             }
         }
@@ -1539,8 +1556,9 @@ class Api extends AbstractHelper
 
     /**
      * Creates a user group in printformer and save the group ID with the magento group ID to the db
+     * @return string
      */
-    public function createUserGroup(int $magentoGroupId): void
+    public function createUserGroup(int $magentoGroupId): string
     {   
         $url = $this->_urlHelper->createUserGroupUrl();
         $httpClient = $this->getHttpClient();
@@ -1548,13 +1566,26 @@ class Api extends AbstractHelper
         $response = $httpClient->post($url);
         $response = json_decode($response->getBody(), true);
         
-        $printformerUserGroup = $this->printformerUserGroupFactory->create();
-        $printformerUserGroup->setData([
-            'magento_user_group_id' => $magentoGroupId,
-            'printformer_user_group_id' => $response['data']['identifier']
-        ]);
+        $this->printformerUserGroupHelper->createUserGroup($magentoGroupId, $response['data']['identifier']);
 
-        $printformerUserGroup->save();
+        return $response['data']['identifier'];
+    }
+
+    /**
+     * Get the printformer user group identifier
+     * @return ?string
+     */
+    public function getUserGroupIdentifier(): ?string
+    {
+        if ($this->_customerSession->isLoggedIn()) {
+            $customer = $this->_customerSession->getCustomer();
+            $magentoGroupId = $customer->getGroupId();
+            $userGroupIdentifier = $this->printformerUserGroupHelper->getUserGroupIdentifier($magentoGroupId);
+
+            return $userGroupIdentifier;
+        }
+
+        return null;
     }
 
     /**

@@ -684,9 +684,9 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $this->createPrintformerUserGroups($setup, $connection);
         }
 
-        if(version_compare($context->getVersion(), '100.9.10', '<')) {
+        if(version_compare($context->getVersion(), '100.9.9', '<')) {
             $connection->addColumn(
-                $connection->getTableName('printformer_draft'),
+                $connection->getTableName(self::TABLE_NAME_DRAFT),
                 'user_group_identifier',
                 [
                     'type' => Table::TYPE_TEXT,
@@ -694,7 +694,13 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     'nullable' => true,
                     'comment' => 'User Group Identifier'
                 ]
-            );
+            )->addForeignKey(
+                $setup->getFkName(self::TABLE_NAME_DRAFT, 'user_group_identifier', self::TABLE_NAME_USER_GROUP, 'printformer_user_group_id'),
+                'user_group_identifier',
+                $setup->getTable(self::TABLE_NAME_USER_GROUP),
+                'printformer_user_group_id',
+                DdlTable::ACTION_SET_NULL
+            );;
         }
 
         $setup->endSetup();
@@ -704,17 +710,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
     {
         $table = $connection->newTable(
             $setup->getTable(self::TABLE_NAME_USER_GROUP)
-        )->addColumn(
-            'id',
-            DdlTable::TYPE_INTEGER,
-            null,
-            array (
-                'identity' => true,
-                'nullable' => false,
-                'primary' => true,
-                'unsigned' => true
-            ),
-            'Draft ID'
         )->addColumn(
             'magento_user_group_id',
             DdlTable::TYPE_INTEGER,
@@ -732,6 +727,10 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'nullable' => false
             ],
             'Printformer User Group ID'
+        )->addIndex(
+            $setup->getIdxName(self::TABLE_NAME_USER_GROUP, ['magento_user_group_id', 'printformer_user_group_id']),
+            ['magento_user_group_id', 'printformer_user_group_id'],
+            ['type' => 'unique']
         )->addForeignKey(
             $setup->getFkName(self::TABLE_NAME_USER_GROUP, 'magento_user_group_id', 'customer_group', 'customer_group_id'),
             'magento_user_group_id',

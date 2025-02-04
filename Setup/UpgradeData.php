@@ -475,7 +475,7 @@ class UpgradeData implements UpgradeDataInterface
             }
         }
 
-        if(version_compare($context->getVersion(), '100.9.9', '<')) {
+        if(version_compare($context->getVersion(), '100.9.10', '<')) {
             $this->createPrintformerUserGroups();
         }
 

@@ -18,11 +18,12 @@ use Rissc\Printformer\Helper\Log as LogHelper;
 use Magento\Framework\UrlInterface;
 use GuzzleHttp\Client;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Rissc\Printformer\Helper\Api\Url;
+use Rissc\Printformer\Helper\Api;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Rissc\Printformer\Helper\Media;
 use Rissc\Printformer\Helper\Config;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Rissc\Printformer\Model\Draft as DraftModel;
 use Zend_Http_Client;
 use Zend_Http_Response;
 
@@ -91,6 +92,11 @@ class Draft
     protected $mediaHelper;
 
     /**
+     * @var Api
+     */
+    protected $apiHelper;
+
+    /**
      * @var Config $_config
      */
     private $_config;
@@ -121,6 +127,7 @@ class Draft
      * @param Config $config
      * @param EncryptorInterface $encryptor
      * @param ClientFactory $clientFactory
+     * @param Api $apiHelper
      * @throws NoSuchEntityException
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -137,7 +144,8 @@ class Draft
         Media $mediaHelper,
         Config $config,
         EncryptorInterface $encryptor,
-        ClientFactory $clientFactory
+        ClientFactory $clientFactory,
+        Api $apiHelper
     ) {
         $this->_logger = $logger;
         $this->_httpClientFactory = $httpClientFactory;
@@ -156,6 +164,7 @@ class Draft
         $websiteId = $storeManager->getWebsite()->getId();
         $this->clientFactory = $clientFactory;
         $this->_httpClient = $this->getGuzzleClient($storeId, $websiteId);
+        $this->apiHelper = $apiHelper;
 
         try {
             $apiKey = $this->_config->getClientApiKey($storeId, $websiteId);
@@ -358,6 +367,11 @@ class Draft
         ];
 
         $requestData['json']['user_identifier'] = $this->getUserIdentifier();
+        $userGroupIdentifier = $this->apiHelper->getUserGroupIdentifier();
+        if (!empty($userGroupIdentifier)) {
+            $requestData['json'][DraftModel::KEY_USER_GROUP_IDENTIFIER] = $userGroupIdentifier;
+        }
+
 
         if ($intent !== null) {
             $requestData['intent'] = $this->getIntent($intent);
