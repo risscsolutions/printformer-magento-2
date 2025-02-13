@@ -1,5 +1,13 @@
 # Changelog
 
+## [101.7.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.0...v101.7.1) (2025-02-13)
+
+
+### Bug Fixes
+
+* **WEM-2479:** deleted jquery/ui ([4b4167d](https://github.com/risscsolutions/printformer-magento-2/commit/4b4167d5b959c56942d37bb46163548fa0c46008))
+* **WEM-2478:** Ensured callback state processed is not overwritten. ([ca52f57](https://github.com/risscsolutions/printformer-magento-2/commit/ca52f57db69a4d6827fee3290e1450ae265a66ef))
+
 ## [101.7.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.6.1...v101.7.0) (2024-04-04)
 
 
