@@ -55,8 +55,8 @@ class Plugin
         QuoteResource $quoteResource,
         DraftResource $draftResource,
         ApiHelper $apiHelper,
-        StoreManager $storeManager,
-        Config $printformerConfig
+        Config $printformerConfig,
+        StoreManager $storeManager
     ) {
         $this->_customerSession = $customerSession;
         $this->_quoteFactory = $quoteFactory;
