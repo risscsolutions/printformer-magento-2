@@ -102,7 +102,7 @@ class OrderedCallback
                     if ($status == 1) {
                         $_successedDraftId++;
                     }
-                    if ($_draft->getProcessingStatus() != 1) {
+                    if ($_draft->getProcessingStatus() > 1) {
                         $_draft->setProcessingStatus($status);
                     }
                     $_draft->getResource()->save($_draft);
