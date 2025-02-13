@@ -694,13 +694,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     'nullable' => true,
                     'comment' => 'User Group Identifier'
                 ]
-            )->addForeignKey(
-                $setup->getFkName(self::TABLE_NAME_DRAFT, 'user_group_identifier', self::TABLE_NAME_USER_GROUP, 'printformer_user_group_id'),
-                'user_group_identifier',
-                $setup->getTable(self::TABLE_NAME_USER_GROUP),
-                'printformer_user_group_id',
-                DdlTable::ACTION_SET_NULL
-            );;
+            );
         }
 
         $setup->endSetup();
