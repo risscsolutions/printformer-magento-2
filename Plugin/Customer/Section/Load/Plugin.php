@@ -7,8 +7,9 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
+use Magento\Store\Model\StoreManager;
 use Rissc\Printformer\Helper\Api as ApiHelper;
-use Rissc\Printformer\Helper\Session as SessionHelper;
+use Rissc\Printformer\Helper\Config;
 use Rissc\Printformer\Model\Draft;
 use Rissc\Printformer\Model\ResourceModel\Draft as DraftResource;
 
@@ -32,7 +33,12 @@ class Plugin
 
     /** @var DraftResource */
     protected $_draftResource;
-    private SessionHelper $sessionHelper;
+
+    /** @var Config */
+    private Config $printformerConfig;
+
+    /** @var StoreManager */
+    private StoreManager $storeManager;
 
     /**
      * Plugin constructor.
@@ -49,14 +55,16 @@ class Plugin
         QuoteResource $quoteResource,
         DraftResource $draftResource,
         ApiHelper $apiHelper,
-        SessionHelper $sessionHelper
+        Config $printformerConfig,
+        StoreManager $storeManager
     ) {
         $this->_customerSession = $customerSession;
         $this->_quoteFactory = $quoteFactory;
         $this->_quoteResource = $quoteResource;
         $this->_draftResource = $draftResource;
         $this->_apiHelper = $apiHelper;
-        $this->sessionHelper = $sessionHelper;
+        $this->printformerConfig = $printformerConfig;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -70,8 +78,8 @@ class Plugin
         \Closure $oExecute
     ) {
         $returnValue = $oExecute();
-
-        if ($this->_customerSession->isLoggedIn()) {
+        $storeId = $this->storeManager->getStore()->getId();
+        if ($this->printformerConfig->isEnabled($storeId) && $this->_customerSession->isLoggedIn()) {
             /** @var Customer $customer */
             $customer = $this->_customerSession->getCustomer();
 
