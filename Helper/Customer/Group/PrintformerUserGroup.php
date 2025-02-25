@@ -38,7 +38,7 @@ class PrintformerUserGroup extends AbstractHelper
     }
 
 
-    public function getUserGroupIdentifier(int $magentoGroupId): string
+    public function getUserGroupIdentifier(int $magentoGroupId): ?string
     {
         $userGroupCollection = $this->userGroupCollectionFactory->create();
         $group = $userGroupCollection->addFilter('magento_user_group_id', $magentoGroupId)
@@ -56,5 +56,14 @@ class PrintformerUserGroup extends AbstractHelper
         ]);
 
         $this->printformerUserGroupResource->save($printformerUserGroup);
+    }
+
+    public function deleteUserGroup(int $magentoGroupId): void
+    {
+        $userGroupCollection = $this->userGroupCollectionFactory->create();
+        $group = $userGroupCollection->addFilter('magento_user_group_id', $magentoGroupId)
+            ->getFirstItem();
+
+        $this->printformerUserGroupResource->delete($group);
     }
 }

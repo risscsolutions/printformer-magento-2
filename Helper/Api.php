@@ -1572,6 +1572,25 @@ class Api extends AbstractHelper
     }
 
     /**
+     * Get a user group in printformer
+     * @return ?string
+     */
+    public function getUserGroup(string $userGroupIdentifier): ?string
+    {   
+        $url = $this->_urlHelper->getUserGroupUrl($userGroupIdentifier);
+        $httpClient = $this->getHttpClient();
+
+        try {
+            $response = $httpClient->get($url);
+            $response = json_decode($response->getBody(), true);
+
+            return $response['data']['identifier'];
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
      * Get the printformer user group identifier
      * @return ?string
      */

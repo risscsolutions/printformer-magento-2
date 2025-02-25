@@ -51,6 +51,7 @@ class V2 extends AbstractHelper implements VersionInterface
 
     const API_CREATE_USER_GROUP = '/api-ext/user-group';
 
+    const API_GET_USER_GROUP = '/api-ext/user-group/{userGroup}';
 
     /** Pageplanning START */
     const API_DRAFT_SETUP = '/api-ext/draft-setup';
@@ -722,5 +723,14 @@ class V2 extends AbstractHelper implements VersionInterface
     public function createUserGroupUrl(): string
     {
         return $this->getPrintformerBaseUrl() . self::API_CREATE_USER_GROUP;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserGroupUrl(string $userGroupIdentifier): string
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{userGroup}', $userGroupIdentifier, self::API_GET_USER_GROUP);
     }
 }

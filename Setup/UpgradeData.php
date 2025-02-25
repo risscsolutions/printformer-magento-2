@@ -4,7 +4,6 @@ namespace Rissc\Printformer\Setup;
 
 use Magento\Catalog\Setup\CategorySetupFactory;
 use Magento\Customer\Model\Customer;
-use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
@@ -17,9 +16,7 @@ use Rissc\Printformer\Helper\UpgradeData as UpgradeDataHelper;
 use Zend_Db_Statement_Exception;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\DB\Adapter\AdapterInterface;
 use Psr\Log\LoggerInterface;
-use Rissc\Printformer\Helper\Api;
 
 class UpgradeData implements UpgradeDataInterface
 {
@@ -51,15 +48,6 @@ class UpgradeData implements UpgradeDataInterface
     private ScopeConfigInterface $scopeConfig;
     private LoggerInterface $logger;
 
-    /**
-     * @var GroupCollection
-     */
-    private $groupCollection;
-
-    /**
-     * @var Api
-     */
-    private $printformerApi;
 
     /**
      * @param EavSetupFactory $eavSetupFactory
@@ -79,8 +67,6 @@ class UpgradeData implements UpgradeDataInterface
         ProductHelper $productHelper,
         StoreManagerInterface $storeManager,
         ScopeConfigInterface $scopeConfig,
-        GroupCollection $groupCollection,
-        Api $printformerApi,
         LoggerInterface $logger
     ) {
         $this->eavSetupFactory = $eavSetupFactory;
@@ -90,8 +76,6 @@ class UpgradeData implements UpgradeDataInterface
         $this->productHelper = $productHelper;
         $this->storeManager = $storeManager;
         $this->scopeConfig = $scopeConfig;
-        $this->groupCollection = $groupCollection;
-        $this->printformerApi = $printformerApi;
         $this->logger = $logger;
     }
 
@@ -475,10 +459,6 @@ class UpgradeData implements UpgradeDataInterface
             }
         }
 
-        if(version_compare($context->getVersion(), '100.9.10', '<')) {
-            $this->createPrintformerUserGroups();
-        }
-
         $setup->endSetup();
     }
 
@@ -542,15 +522,6 @@ class UpgradeData implements UpgradeDataInterface
                 'apply_to' => ''
             ]
         );
-    }
-
-    protected function createPrintformerUserGroups(): void
-    {
-        $groupIds = $this->groupCollection->addFieldToSelect('customer_group_id')->getAllIds();
-
-        foreach ($groupIds as $magentoGroupId) {
-            $this->printformerApi->createUserGroup($magentoGroupId);
-        }
     }
 
     /**
