@@ -60,10 +60,13 @@ class PrintformerUserGroup extends AbstractHelper
 
     public function deleteUserGroup(int $magentoGroupId): void
     {
-        $userGroupCollection = $this->userGroupCollectionFactory->create();
-        $group = $userGroupCollection->addFilter('magento_user_group_id', $magentoGroupId)
-            ->getFirstItem();
+        $connection = $this->printformerUserGroupResource->getConnection();
+        $userGroupTableName = $this->printformerUserGroupResource->getMainTable();
 
-        $this->printformerUserGroupResource->delete($group);
+        $where = [
+            'magento_user_group_id = ?' => $magentoGroupId
+        ];
+
+        $connection->delete($userGroupTableName, $where);
     }
 }

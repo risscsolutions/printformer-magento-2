@@ -107,15 +107,24 @@ class Save implements ObserverInterface
         $this->configWriter->save(ConfigHelper::XML_PATH_V2_NAME, $resultName, $scope, $scopeId);
         $this->cacheTypeList->cleanType('config');
 
+        if (!empty($resultName)) {
+            $this->handleUserGroups();
+        }
+    }
+
+    private function handleUserGroups(): void
+    {
         $userGroupIds = $this->groupCollection->addFieldToSelect('customer_group_id')->getAllIds();
         $userGroupsExistIds = $this->getPrintformerUserGroups($userGroupIds);
 
         $userGroupToCreate = array_values(array_diff($userGroupIds, $userGroupsExistIds));
-        $this->deletePrintformerUserGroups($userGroupToCreate);
-        $this->createPrintformerUserGroups($userGroupToCreate);
+        foreach ($userGroupToCreate as $magentoGroupId) {
+            $this->printformerUserGroup->deleteUserGroup($magentoGroupId);
+            $this->printformerApi->createUserGroup($magentoGroupId);
+        }
     }
 
-    protected function getPrintformerUserGroups(array $groupIds): array
+    private function getPrintformerUserGroups(array $groupIds): array
     {
         $userGroupsExist = [];
         foreach ($groupIds as $magentoGroupId) {
@@ -131,19 +140,5 @@ class Save implements ObserverInterface
         }
 
         return $userGroupsExist;
-    }
-
-    protected function deletePrintformerUserGroups(array $groupIds): void
-    {
-        foreach ($groupIds as $magentoGroupId) {
-            $this->printformerUserGroup->deleteUserGroup($magentoGroupId);
-        }
-    }
-
-    protected function createPrintformerUserGroups(array $groupIds): void
-    {
-        foreach ($groupIds as $magentoGroupId) {
-            $this->printformerApi->createUserGroup($magentoGroupId);
-        }
     }
 }
