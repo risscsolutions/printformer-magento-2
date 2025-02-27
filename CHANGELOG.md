@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.7.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.1...v101.7.2) (2025-02-27)
+
+
+### Features
+
+* **WEM-2460:** added Printformer user groups ([dbf3a56](https://github.com/risscsolutions/printformer-magento-2/commit/04417f71852599d61712d967e62efb8f4910744b))
+
 ## [101.7.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.0...v101.7.1) (2025-02-13)
 
 
