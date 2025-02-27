@@ -1,11 +1,18 @@
 # Changelog
 
+## [101.7.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.2...v101.7.3) (2025-02-27)
+
+
+### Bug Fixes
+
+* **WEM-2472:** deactivating the module now also deactivates the plugin. ([87cc373](https://github.com/risscsolutions/printformer-magento-2/commit/87cc373d040c7b0c407aea92963ae50ed6439cd2))
+
 ## [101.7.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.1...v101.7.2) (2025-02-27)
 
 
 ### Features
 
-* **WEM-2460:** added Printformer user groups ([dbf3a56](https://github.com/risscsolutions/printformer-magento-2/commit/04417f71852599d61712d967e62efb8f4910744b))
+* **WEM-2460:** added Printformer user groups ([04417f7](https://github.com/risscsolutions/printformer-magento-2/commit/04417f71852599d61712d967e62efb8f4910744b))
 
 ## [101.7.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.0...v101.7.1) (2025-02-13)
 
