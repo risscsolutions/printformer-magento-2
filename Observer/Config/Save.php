@@ -53,7 +53,6 @@ class Save implements ObserverInterface
      */
     private $printformerUserGroup;
 
-
     public function __construct(
         LoggerInterface $logger,
         ApiHelper $_apiHelper,

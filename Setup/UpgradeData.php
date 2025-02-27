@@ -48,7 +48,6 @@ class UpgradeData implements UpgradeDataInterface
     private ScopeConfigInterface $scopeConfig;
     private LoggerInterface $logger;
 
-
     /**
      * @param EavSetupFactory $eavSetupFactory
      * @param CategorySetupFactory $categorySetupFactory
@@ -56,7 +55,6 @@ class UpgradeData implements UpgradeDataInterface
      * @param ProductHelper $productHelper
      * @param StoreManagerInterface $storeManager
      * @param ScopeConfigInterface $scopeConfig
-     * @param GroupCollection
      * @param LoggerInterface $logger
      */
     public function __construct(

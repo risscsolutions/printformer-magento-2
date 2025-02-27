@@ -47,7 +47,7 @@ class PrintformerUserGroup extends AbstractHelper
         return $group->getPrintformerUserGroupId();
     }
 
-    public function createUserGroup($magentoGroupId, $printformerGroupId)
+    public function createUserGroup(int $magentoGroupId, string $printformerGroupId): void
     {
         $printformerUserGroup = $this->printformerUserGroupFactory->create();
         $printformerUserGroup->setData([
