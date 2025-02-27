@@ -119,4 +119,7 @@
     <type name="Magento\Checkout\Model\DefaultConfigProvider">
         <plugin name="csrf_validator_skip" type="Rissc\Printformer\Plugin\Checkout\Model\DefaultConfigProvider" />
     </type>
+    <type name="Magento\Customer\Api\GroupRepositoryInterface">
+        <plugin name="rissc_printformer_create_user_group" type="Rissc\Printformer\Plugin\Customer\CreateUserGroup" />
+    </type>
 </config>

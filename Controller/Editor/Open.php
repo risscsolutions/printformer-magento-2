@@ -383,6 +383,12 @@ class Open extends Action
             'user_identifier' => $userIdentifier,
             'created_at' => time()
         ]);
+
+        $userGroupIdentifier = $this->_apiHelper->getUserGroupIdentifier();
+        if ($userGroupIdentifier != null) {
+            $draftProcess->addData([Draft::KEY_USER_GROUP_IDENTIFIER => $userGroupIdentifier]);
+        }
+
         $draftProcess->getResource()->save($draftProcess);
 
         if (!$draftProcess->getId()) {

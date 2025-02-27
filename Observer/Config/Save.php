@@ -12,6 +12,9 @@ use Rissc\Printformer\Helper\Config as ConfigHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
+use Rissc\Printformer\Helper\Api;
+use Rissc\Printformer\Helper\Customer\Group\PrintformerUserGroup;
 
 class Save implements ObserverInterface
 {
@@ -35,16 +38,37 @@ class Save implements ObserverInterface
      */
     protected $cacheTypeList;
 
+    /**
+     * @var GroupCollection
+     */
+    private $groupCollection;
+
+    /**
+     * @var Api
+     */
+    private $printformerApi;
+
+    /**
+     * @var PrintformerUserGroup
+     */
+    private $printformerUserGroup;
+
     public function __construct(
         LoggerInterface $logger,
         ApiHelper $_apiHelper,
         WriterInterface $configWriter,
-        TypeListInterface $cacheTypeList
+        TypeListInterface $cacheTypeList,
+        GroupCollection $groupCollection,
+        Api $printformerApi,
+        PrintformerUserGroup $printformerUserGroup
     ) {
         $this->logger = $logger;
         $this->_apiHelper = $_apiHelper;
         $this->configWriter = $configWriter;
         $this->cacheTypeList = $cacheTypeList;
+        $this->groupCollection = $groupCollection;
+        $this->printformerApi = $printformerApi;
+        $this->printformerUserGroup = $printformerUserGroup;
     }
 
     /**
@@ -81,6 +105,39 @@ class Save implements ObserverInterface
         }
         $this->configWriter->save(ConfigHelper::XML_PATH_V2_NAME, $resultName, $scope, $scopeId);
         $this->cacheTypeList->cleanType('config');
+
+        if (!empty($resultName)) {
+            $this->handleUserGroups();
+        }
     }
 
+    private function handleUserGroups(): void
+    {
+        $userGroupIds = $this->groupCollection->addFieldToSelect('customer_group_id')->getAllIds();
+        $userGroupsExistIds = $this->getPrintformerUserGroups($userGroupIds);
+
+        $userGroupToCreate = array_values(array_diff($userGroupIds, $userGroupsExistIds));
+        foreach ($userGroupToCreate as $magentoGroupId) {
+            $this->printformerUserGroup->deleteUserGroup($magentoGroupId);
+            $this->printformerApi->createUserGroup($magentoGroupId);
+        }
+    }
+
+    private function getPrintformerUserGroups(array $groupIds): array
+    {
+        $userGroupsExist = [];
+        foreach ($groupIds as $magentoGroupId) {
+            $userGroupIdentifier = $this->printformerUserGroup->getUserGroupIdentifier($magentoGroupId);
+            if (empty($userGroupIdentifier)) {
+                continue;
+            }
+
+            $userGroup = $this->printformerApi->getUserGroup($userGroupIdentifier);
+            if (!empty($userGroup)) {
+                $userGroupsExist[] = $magentoGroupId;
+            }
+        }
+
+        return $userGroupsExist;
+    }
 }

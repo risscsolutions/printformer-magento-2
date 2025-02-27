@@ -18,6 +18,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
     const TABLE_NAME_CUSTOMER_GROUP_RIGHT = 'printformer_customer_group_right';
     const TABLE_NAME_SALES_ORDER_ITEM     = 'sales_order_item';
     const TABLE_NAME_CATALOG_PRODUCT_PRINTFORMER_PRODUCT = 'catalog_product_printformer_product';
+    const TABLE_NAME_USER_GROUP                          = 'printformer_user_group';
     const COLUMN_NAME_UPLOAD_PROCESSING_COUNT            = 'printformer_upload_processing_count';
     const COLUMN_NAME_PROCESSING_COUNT_STATE             = 'printformer_count_state';
     const COLUMN_NAME_PROCESSING_COUNT_DATE              = 'printformer_count_date';
@@ -679,6 +680,59 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if(version_compare($context->getVersion(), '100.9.8', '<')) {
+            $this->createPrintformerUserGroups($setup, $connection);
+        }
+
+        if(version_compare($context->getVersion(), '100.9.9', '<')) {
+            $connection->addColumn(
+                $connection->getTableName(self::TABLE_NAME_DRAFT),
+                'user_group_identifier',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 50,
+                    'nullable' => true,
+                    'comment' => 'User Group Identifier'
+                ]
+            );
+        }
+
         $setup->endSetup();
+    }
+
+    protected function createPrintformerUserGroups(SchemaSetupInterface $setup, AdapterInterface $connection): void
+    {
+        $table = $connection->newTable(
+            $setup->getTable(self::TABLE_NAME_USER_GROUP)
+        )->addColumn(
+            'magento_user_group_id',
+            DdlTable::TYPE_INTEGER,
+            null,
+            [
+                'unsigned' => true,
+                'nullable' => false
+            ],
+            'Magento User Group ID'
+        )->addColumn(
+            'printformer_user_group_id',
+            DdlTable::TYPE_TEXT,
+            50,
+            [
+                'nullable' => false
+            ],
+            'Printformer User Group ID'
+        )->addIndex(
+            $setup->getIdxName(self::TABLE_NAME_USER_GROUP, ['magento_user_group_id', 'printformer_user_group_id']),
+            ['magento_user_group_id', 'printformer_user_group_id'],
+            ['type' => 'unique']
+        )->addForeignKey(
+            $setup->getFkName(self::TABLE_NAME_USER_GROUP, 'magento_user_group_id', 'customer_group', 'customer_group_id'),
+            'magento_user_group_id',
+            $setup->getTable('customer_group'),
+            'customer_group_id',
+            DdlTable::ACTION_CASCADE
+        );
+
+        $connection->createTable($table);
     }
 }

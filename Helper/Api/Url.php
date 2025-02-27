@@ -384,4 +384,14 @@ class Url extends AbstractHelper implements VersionInterface
     {
         return $this->getVersionHelper()->getClientName($storeId, $websiteId);
     }
+
+    public function createUserGroupUrl(): string
+    {
+        return $this->getVersionHelper()->createUserGroupUrl();
+    }
+
+    public function getUserGroupUrl(string $userGroupIdentifier): string
+    {
+        return $this->getVersionHelper()->getUserGroupUrl($userGroupIdentifier);
+    }
 }
