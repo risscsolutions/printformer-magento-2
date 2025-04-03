@@ -228,7 +228,13 @@ class Save extends Action
                 }
             }
         } catch (Exception $e) {
-            $this->_logger->critical($e);
+            if ($productId) {
+                $errorMessage = sprintf('%s by product ID %s.', $e->getMessage(), $productId);
+            } else {
+                $errorMessage = sprintf('%s and product ID is missing.', $e->getMessage());
+            }
+
+            $this->_logger->critical($errorMessage);
             //@todo show some message to customer?
         }
 
