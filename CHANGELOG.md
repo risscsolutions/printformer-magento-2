@@ -1,5 +1,12 @@
 # Changelog
 
+## [101.7.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.1...v101.7.2) (2025-05-05)
+
+
+### Bug Fixes
+
+* **WEM-2482:** improved logging ([7c152bc](https://github.com/risscsolutions/printformer-magento-2/commit/7c152bcb191abbc17fc32cc5a0ccc8fab780d8c6))
+
 ## [101.7.1](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.0...v101.7.1) (2025-02-13)
 
 
