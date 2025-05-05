@@ -5,7 +5,7 @@
 
 ### Bug Fixes
 
-* **WEM-2482:** Plugin deactivates when module is disabled. ([b858399](https://github.com/risscsolutions/printformer-magento-2/commit/b858399007b855ffe5c76836e58a15292c73a0f9))
+* **WEM-2472:** Plugin deactivates when module is disabled. ([b858399](https://github.com/risscsolutions/printformer-magento-2/commit/b858399007b855ffe5c76836e58a15292c73a0f9))
 
 ## [101.7.2](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.1...v101.7.2) (2025-05-05)
 
