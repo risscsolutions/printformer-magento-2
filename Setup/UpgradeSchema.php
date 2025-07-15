@@ -682,9 +682,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
         if(version_compare($context->getVersion(), '100.9.8', '<')) {
             $this->createPrintformerUserGroups($setup, $connection);
-        }
 
-        if(version_compare($context->getVersion(), '100.9.9', '<')) {
             $connection->addColumn(
                 $connection->getTableName(self::TABLE_NAME_DRAFT),
                 'user_group_identifier',

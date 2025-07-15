@@ -1565,7 +1565,7 @@ class Api extends AbstractHelper
 
         $response = $httpClient->post($url);
         $response = json_decode($response->getBody(), true);
-        
+
         $this->printformerUserGroupHelper->createUserGroup($magentoGroupId, $response['data']['identifier']);
 
         return $response['data']['identifier'];
