@@ -105,6 +105,14 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
+    public function getUserGroup()
+    {
+        return $this->getVersionHelper()->getUserGroup();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getDraft($draftHash = null, $quoteId = null)
     {
         return $this->getVersionHelper()->getDraft($draftHash, $quoteId);

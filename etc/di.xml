@@ -138,4 +138,8 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Customer\Model\ResourceModel\GroupRepository">
+        <plugin name="add_identifier_after_group_save"
+                type="Rissc\Printformer\Plugin\CustomerGroup\AddIdentifierPlugin" />
+    </type>
 </config>

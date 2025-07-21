@@ -14,6 +14,7 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Api\OrderItemRepositoryInterface;
@@ -26,6 +27,7 @@ use GuzzleHttp\Psr7\Stream as Psr7Stream;
 use Rissc\Printformer\Helper\Session as SessionHelper;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
+use Magento\Customer\Model\ResourceModel\GroupRepository;
 use Magento\Backend\Model\Session as AdminSession;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
@@ -72,6 +74,9 @@ class Api extends AbstractHelper
 
     /** @var CustomerResource */
     protected $_customerResource;
+
+    /** @var GroupRepository */
+    protected $groupRepository;
 
     /** @var Client[] */
     protected $_httpClients = [];
@@ -128,26 +133,32 @@ class Api extends AbstractHelper
     private ClientFactory $clientFactory;
 
     /**
-     * @param Context $context
-     * @param CustomerSession $customerSession
-     * @param UrlHelper $urlHelper
-     * @param StoreManagerInterface $storeManager
-     * @param DraftFactory $draftFactory
-     * @param Session $sessionHelper
-     * @param Config $config
-     * @param CustomerFactory $customerFactory
-     * @param CustomerResource $customerResource
-     * @param AdminSession $adminSession
+     * @param SerializerInterface $serializer
+     */
+    protected $serializer;
+
+    /**
+     * @param Context                      $context
+     * @param CustomerSession              $customerSession
+     * @param UrlHelper                    $urlHelper
+     * @param StoreManagerInterface        $storeManager
+     * @param DraftFactory                 $draftFactory
+     * @param Session                      $sessionHelper
+     * @param Config                       $config
+     * @param CustomerFactory              $customerFactory
+     * @param CustomerResource             $customerResource
+     * @param GroupRepository              $groupRepository
+     * @param AdminSession                 $adminSession
      * @param PrintformerProductAttributes $printformerProductAttributes
-     * @param Filesystem $filesystem
-     * @param UrlInterface $urlBuilder
-     * @param ItemFactory $itemFactory
-     * @param TimezoneInterface $timezone
+     * @param Filesystem                   $filesystem
+     * @param UrlInterface                 $urlBuilder
+     * @param ItemFactory                  $itemFactory
+     * @param TimezoneInterface            $timezone
      * @param OrderItemRepositoryInterface $orderItemRepository
-     * @param Log $_logHelper
-     * @param DraftResource $draftResource
-     * @param Config $configHelper
-     * @param ClientFactory $clientFactory
+     * @param Log                          $_logHelper
+     * @param DraftResource                $draftResource
+     * @param Config                       $configHelper
+     * @param ClientFactory                $clientFactory
      */
     public function __construct(
         Context $context,
@@ -159,6 +170,7 @@ class Api extends AbstractHelper
         Config $config,
         CustomerFactory $customerFactory,
         CustomerResource $customerResource,
+        GroupRepository $groupRepository,
         AdminSession $adminSession,
         PrintformerProductAttributes $printformerProductAttributes,
         Filesystem $filesystem,
@@ -179,6 +191,7 @@ class Api extends AbstractHelper
         $this->_config = $config;
         $this->_customerFactory = $customerFactory;
         $this->_customerResource = $customerResource;
+        $this->groupRepository = $groupRepository;
         $this->_adminSession = $adminSession;
         $this->printformerProductAttributes = $printformerProductAttributes;
         $this->filesystem = $filesystem;
@@ -417,6 +430,18 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @return string|null
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     */
+    public function getUserGroupIdentifier()
+    {
+        $customerGroupId = $this->_customerSession->getCustomerGroupId();
+        $customerGroup = $this->groupRepository->getById($customerGroupId);
+        return $customerGroup->getExtensionAttributes()->getIdentifier() ?? null;
+    }
+
+    /**
      * @return UrlHelper
      */
     public function apiUrl()
@@ -460,7 +485,24 @@ class Api extends AbstractHelper
     }
 
     /**
+     * @return mixed
+     * @throws GuzzleException
+     */
+    public function createUserGroup()
+    {
+        $url = $this->apiUrl()->getUserGroup();
+        $requestData = [];
+        $createdEntry = $this->_logHelper->createPostEntry($url, $requestData);
+        $response = $this->getHttpClient()->post($url, $requestData);
+        $this->_logHelper->updateEntry($createdEntry, ['response_data' => $response->getBody()->getContents()]);
+
+        $response = json_decode($response->getBody(), true);
+        return $response['data']['identifier'];
+    }
+
+    /**
      * @param int    $masterId
+
      * @param string $userIdentifier
      * @param array  $params
      *
@@ -475,9 +517,22 @@ class Api extends AbstractHelper
                 'user_identifier' => $userIdentifier
             ]
         ];
-        if(!empty($masterId)){
+
+        if(!empty($masterId)) {
             $requestData['json']['master_id'] = $masterId;
         }
+
+        if (!empty($identifier)) {
+            $requestData['json']['templateIdentifier'] = $identifier;
+
+        }
+
+        $userGroupIdentifier = $this->getUserGroupIdentifier();
+
+        if (!empty($userGroupIdentifier)) {
+            $requestData['json']['userGroupIdentifier'] = $userGroupIdentifier;
+        }
+
         $params = $this->mergeAdditionalParamsForApiCall($params);
         foreach($params as $key => $value) {
             $requestData['json'][$key] = $value;
@@ -869,7 +924,7 @@ class Api extends AbstractHelper
         $process = null;
         try {
             $process = $this->getDraftProcess($draftHash, $productId, $intent, $sessionUniqueId);
-            if($process->getId()) {
+            if ($process->getId()) {
                 $process->addData([
                     'color_variation' => $colorVariation
                 ]);
@@ -912,7 +967,7 @@ class Api extends AbstractHelper
         $orderIncrementId = null
     ) {
         $process = $this->getDraftProcess($draftHash, $productId, self::API_UPLOAD_INTENT, $sessionUniqueId);
-        if(!$process->getId() && !$checkOnly) {
+        if (!$process->getId() && !$checkOnly) {
             if (!$draftHash) {
                 $dataParams = [
                     'intent' => self::API_UPLOAD_INTENT
@@ -972,16 +1027,16 @@ class Api extends AbstractHelper
         $process = $this->_draftFactory->create();
 
         $draftCollection = $process->getCollection();
-        if($draftHash !== null) {
+        if ($draftHash !== null) {
             $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftHash]);
         } else {
-            if($intent !== null) {
+            if ($intent !== null) {
                 $draftCollection->addFieldToFilter('intent', ['eq' => $intent]);
             }
             $draftCollection->addFieldToFilter('session_unique_id', ['eq' => $sessionUniqueId]);
             $draftCollection->addFieldToFilter('product_id', ['eq' => $productId]);
         }
-        if($printformerProductId !== null) {
+        if ($printformerProductId !== null) {
             $draftCollection->addFieldToFilter('printformer_product_id', ['eq' => $printformerProductId]);
         }
         if ($draftCollection->count() == 1) {
@@ -1050,10 +1105,10 @@ class Api extends AbstractHelper
             $this->_logger->debug('Process for draft ids failed. Error-message: '.$e->getMessage());
         }
 
-        if(!empty($response)) {
+        if (!empty($response)) {
             $responseArray = json_decode($response->getBody(), true);
             $processingHash = !empty($responseArray['processingId']) ? $responseArray['processingId'] : null;
-            if(!empty($processingHash)) {
+            if (!empty($processingHash)) {
                 $draftIdsToProcessSuccess = [];
                 $draftIdsToProcessFailed = [];
 
@@ -1091,14 +1146,14 @@ class Api extends AbstractHelper
         $process = $this->_draftFactory->create();
 
         $draftCollection = $process->getCollection();
-        if($draftHash !== null) {
+        if ($draftHash !== null) {
             $draftCollection->addFieldToFilter('draft_id', ['eq' => $draftHash]);
             $process = $draftCollection->getFirstItem();
 
             if ($process->getId()) {
                 $process = $draftCollection->getLastItem();
                 $orderItemId = $process->getOrderItemId();
-                if(!empty($orderItemId)){
+                if (!empty($orderItemId)) {
                     $orderItem = $this->orderItemRepository->get($orderItemId);
                 }
             }
@@ -1115,7 +1170,7 @@ class Api extends AbstractHelper
         /** @var OrderItemInterface $orderItem */
         $orderItem = $this->getOrderItemByDraftId($draftId);
         $item = $this->_itemFactory->create();
-        if (isset($orderItem) && $orderItem->getItemId() !== null){
+        if (isset($orderItem) && $orderItem->getItemId() !== null) {
             $item->getResource()->load($item, $orderItem->getItemId());
             $item->setPrintformerCountState($printformerCountState);
             $item->setPrintformerCountDate($this->timezone->date()->format('Y-m-d H:i:s'));
@@ -1195,7 +1250,7 @@ class Api extends AbstractHelper
      */
     public function getMappedProcessingStatus($stringStatus)
     {
-        switch($stringStatus) {
+        switch ($stringStatus) {
             case 'processed':
                 return 1;
                 break;
@@ -1254,7 +1309,7 @@ class Api extends AbstractHelper
             $createdEntry = $this->_logHelper->createGetEntry($completeThumbnailUrl);
             $response = $httpClient->get($completeThumbnailUrl);
             $this->_logHelper->updateEntry($createdEntry, ['response_data' => 'IMAGE']);
-        } catch(ServerException $e) {
+        } catch (ServerException $e) {
             throw $e;
         }
 
