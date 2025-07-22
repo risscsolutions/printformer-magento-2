@@ -21,6 +21,7 @@ use Rissc\Printformer\Helper\Config;
 class V2 extends AbstractHelper implements VersionInterface
 {
     const API_CREATE_USER = '/api-ext/user';
+    const API_CREATE_USER_GROUP = '/api-ext/user-group';
     const API_CREATE_DRAFT = '/api-ext/draft';
     const API_DELETE_DRAFT = '/api-ext/draft/{draftId}';
     const API_UPDATE_DRAFT = '/api-ext/draft/{draftId}';
@@ -42,6 +43,7 @@ class V2 extends AbstractHelper implements VersionInterface
     const EXT_AUTH_PATH = '/auth';
 
     const API_GET_USER = '/api-ext/user/{userId}';
+    const API_GET_USER_GROUP = '/api-ext/user-group/{userGroup}';
 
     const API_CLIENT_NAME = '/api-ext/client';
 
@@ -180,6 +182,15 @@ class V2 extends AbstractHelper implements VersionInterface
     {
         return $this->getPrintformerBaseUrl() .
             self::API_CREATE_USER;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUserGroup()
+    {
+        return $this->getPrintformerBaseUrl() .
+            self::API_CREATE_USER_GROUP;
     }
 
     /**
@@ -682,6 +693,12 @@ class V2 extends AbstractHelper implements VersionInterface
     {
         return $this->getPrintformerBaseUrl() .
             str_replace('{userId}', $identifier, self::API_GET_USER);
+    }
+
+    public function getUserGroupData($identifier)
+    {
+        return $this->getPrintformerBaseUrl() .
+            str_replace('{userGroup}', $identifier, self::API_GET_USER_GROUP);
     }
 
     /**
