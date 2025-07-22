@@ -16,9 +16,7 @@ use Rissc\Printformer\Helper\Log as LogHelper;
  * Class OrderedCallback
  * @package Rissc\Printformer\Model\Api\Webservice\Service
  */
-class OrderedCallback
-    extends AbstractService
-    implements OrderedCallbackInterface
+class OrderedCallback extends AbstractService implements OrderedCallbackInterface
 {
     /** @var DraftFactory */
     protected $_draftFactory;
@@ -29,6 +27,12 @@ class OrderedCallback
     /** @var LogHelper */
     protected $_logHelper;
 
+    /**
+     * @param Request          $_request
+     * @param DraftFactory     $_draftFactory
+     * @param ManagerInterface $_eventManager
+     * @param LogHelper        $logHelper
+     */
     public function __construct(
         Request $_request,
         DraftFactory $_draftFactory,
@@ -39,7 +43,6 @@ class OrderedCallback
         $this->_draftFactory = $_draftFactory;
         $this->_eventManager = $_eventManager;
         $this->_logHelper = $logHelper;
-
         parent::__construct($_request);
     }
 
@@ -59,9 +62,9 @@ class OrderedCallback
         $existingLogEntry = null;
         $_apiResponseObject = new DataObject();
         if (
-            isset($postParams['processingId']) &&
-            isset($postParams['draftStates']) &&
-            is_array($postParams['draftStates'])
+            isset($postParams['processingId'])
+            && isset($postParams['draftStates'])
+            && is_array($postParams['draftStates'])
         ) {
             $_draftIdArray = [];
             $_draftStatus = [];
@@ -102,7 +105,7 @@ class OrderedCallback
                     if ($status == 1) {
                         $_successedDraftId++;
                     }
-                    if ($_draft->getProcessingStatus() > 1) {
+                    if ($_draft->getProcessingStatus() != 1 && $_draft->getProcessingStatus() != 0) {
                         $_draft->setProcessingStatus($status);
                     }
                     $_draft->getResource()->save($_draft);

@@ -844,6 +844,7 @@ class Api extends AbstractHelper
                     'product_id' => $productId,
                     'customer_id' => $customerId,
                     'user_identifier' => $this->getUserIdentifier(),
+                    'processing_status' => 2,
                     'created_at' => time(),
                     'printformer_product_id' => $printformerProductId,
                     'color_variation' => $colorVariation,
@@ -946,6 +947,7 @@ class Api extends AbstractHelper
                     'session_unique_id' => $sessionUniqueId,
                     'product_id' => $productId,
                     'customer_id' => $customerId,
+                    'processing_status' => 2,
                     'user_identifier' => $printformerUserIdentifier,
                     'created_at' => time(),
                     'printformer_product_id' => $printformerProductId,
@@ -1070,7 +1072,11 @@ class Api extends AbstractHelper
                         $process = $this->getDraftProcess($draftHash);
                         if ($process->getId()) {
                             $process->setProcessingId($processingHash);
-                            $process->setProcessingStatus(2);
+
+                            if ($process->getProcessingStatus() != 1 && $process->getProcessingStatus() != 0) {
+                                $process->setProcessingStatus(2);
+                            }
+
                             $process->getResource()->save($process);
                         }
                         array_push($draftIdsToProcessSuccess, $draftHash);
