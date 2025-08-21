@@ -58,35 +58,76 @@ define([
             $(document).trigger('printformer:loaded');
             this.runCallbacks('printformer:loaded:after');
             if (draftsExist) {
-                            if(this.isDefined(this.options.preselection) && this.options.preselection !== null) {
-                                this.runCallbacks('printformer:preselection:before');
-                                if (this.options.preselection.product === this.options.ProductId) {
-                                    let preselectionFormatted = [];
-                                    if (this.isDefined(this.options.preselection.super_attribute)) {
-                                        $.each(this.options.preselection.super_attribute, function (index, val) {
-                                            preselectionFormatted[index] = val.value;
-                                        });
-                                        this.preselectOptions(preselectionFormatted);
-                                        $.each(this.options.preselection.options, function (index, val) {
-                                            let dataSelector = '[data-selector="options\\[' + index + '\\]"]';
-                                            $(dataSelector).val(val.value);
-                                            if (val.value != undefined) {
-                                                let dataSelector = '[id="options_' + index + '_date"]';
-                                                $(dataSelector).val(val.value);
-                                            }
-                                            if (val.value.date != undefined) {
-                                                let dataSelector = '[id="options_' + index + '_date"]';
-                                                $(dataSelector).val(val.value.date);
-                                            }
-                                            if (window.DynamicProductOptions) {
-                                                window.DynamicProductOptions.checkVisibilityConditions($(dataSelector));
-                                            }
-                                        });
+                if(this.isDefined(this.options.preselection) && this.options.preselection !== null) {
+                    this.runCallbacks('printformer:preselection:before');
+                    if (this.options.preselection.product === this.options.ProductId) {
+                        let preselectionFormatted = [];
+                        if (this.isDefined(this.options.preselection.super_attribute)) {
+                            $.each(this.options.preselection.super_attribute, function (index, val) {
+                                preselectionFormatted[index] = val.value;
+                            });
+                            this.preselectOptions(preselectionFormatted);
+                            $.each(this.options.preselection.options, function (index, val) {
+                                let selector = '[data-selector="options\\[' + index + '\\]"], [data-selector^="options\\[' + index + '\\]"]';
+                                let $field = $(selector);
+
+                                //Handle Date and Datetime
+                                if (val.value.date !== undefined) {
+                                    let dateSelector = '#options_' + index + '_date';
+                                    $(dateSelector).val(val.value.date).trigger('change');
+                                    $('#options_' + index + '_hour').val(val.value.hour).trigger('change');
+                                    $('#options_' + index + '_minute').val(val.value.minute).trigger('change');
+                                    $('#options_' + index + '_day_part').val(val.value.day_part).trigger('change');
+                                    return;
+                                }
+
+                                if (!$field.length) {
+                                    return;
+                                }
+
+                                // Handle SELECT (single or multiple)
+                                if ($field.is('select')) {
+                                    if ($field.prop('multiple')) {
+                                        // Multiple select
+                                        $field.val(val.value).trigger('change');
+                                    } else {
+                                        // Single select
+                                        $field.val(val.value).trigger('change');
                                     }
                                 }
-                                this.runCallbacks('printformer:preselection:after');
-                            }
+
+                                // Handle RADIO
+                                else if ($field.is(':radio')) {
+                                    $field.filter('[value="' + val.value + '"]')
+                                        .prop('checked', true)
+                                        .trigger('change');
+                                }
+
+                                // Handle CHECKBOX (single or multiple)
+                                else if ($field.is(':checkbox')) {
+                                    if (Array.isArray(val.value)) {
+                                        val.value.forEach(function (checkboxVal) {
+                                            $field.filter('[value="' + checkboxVal + '"]')
+                                                .prop('checked', true)
+                                                .trigger('change');
+                                        });
+                                    } else {
+                                        $field.filter('[value="' + val.value + '"]')
+                                            .prop('checked', true)
+                                            .trigger('change');
+                                    }
+                                }
+
+                                // Handle TEXT / TEXTAREA fallback
+                                if ($field.is('input[type="text"], textarea')) {
+                                    $field.val(val.value).trigger('change');
+                                }
+                            });
                         }
+                    }
+                    this.runCallbacks('printformer:preselection:after');
+                }
+            }
         },
 
         isDefined: function(value) {
