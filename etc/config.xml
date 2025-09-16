@@ -19,6 +19,7 @@
                 <order_status>pending</order_status>
                 <redirect_on_cancel>1</redirect_on_cancel>
                 <transfer_user_data>0</transfer_user_data>
+                <use_customer_user_group>0</use_customer_user_group>
                 <filter_for_configurable_product>1</filter_for_configurable_product>
                 <use_draft_in_wishlist>0</use_draft_in_wishlist>
             </general>

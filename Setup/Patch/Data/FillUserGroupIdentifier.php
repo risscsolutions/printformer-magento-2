@@ -3,6 +3,7 @@
 namespace Rissc\Printformer\Setup\Patch\Data;
 
 use Rissc\Printformer\Helper\Api;
+use Rissc\Printformer\Helper\Config;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Customer\Model\ResourceModel\Group\CollectionFactory;
@@ -25,6 +26,11 @@ class FillUserGroupIdentifier implements DataPatchInterface
     private $groupCollectionFactory;
 
     /**
+     * @var Config
+     */
+    private  $config;
+
+    /**
      * @param ModuleDataSetupInterface $moduleDataSetup
      * @param Api                      $api
      * @param CollectionFactory        $groupCollectionFactory
@@ -32,12 +38,14 @@ class FillUserGroupIdentifier implements DataPatchInterface
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
         Api $api,
-        CollectionFactory $groupCollectionFactory
+        CollectionFactory $groupCollectionFactory,
+        Config $config
 
     ) {
         $this->moduleDataSetup = $moduleDataSetup;
         $this->api = $api;
         $this->groupCollectionFactory = $groupCollectionFactory;
+        $this->config = $config;
     }
 
     /**
@@ -45,6 +53,10 @@ class FillUserGroupIdentifier implements DataPatchInterface
      */
     public function apply()
     {
+        if (!$this->config->isEnabled() || !$this->config->isUserCustomerGroupEnabled()) {
+            return $this;
+        }
+
         $this->moduleDataSetup->getConnection()->startSetup();
 
         $groupCollection = $this->groupCollectionFactory->create();

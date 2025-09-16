@@ -2,6 +2,7 @@
 namespace Rissc\Printformer\Plugin\CustomerGroup;
 
 use Rissc\Printformer\Helper\Api;
+use Rissc\Printformer\Helper\Config;
 use Magento\Customer\Model\GroupFactory;
 use Magento\Customer\Api\Data\GroupInterface;
 use Magento\Customer\Model\ResourceModel\GroupRepository;
@@ -20,15 +21,23 @@ class AddIdentifierPlugin
     private $groupFactory;
 
     /**
+     * @var Config
+     */
+    private  $config;
+
+    /**
      * @param Api          $api
      * @param GroupFactory $groupFactory
+     * @param Config       $config
      */
     public function __construct(
         Api $api,
-        GroupFactory $groupFactory
+        GroupFactory $groupFactory,
+        Config $config
     ) {
         $this->api = $api;
         $this->groupFactory = $groupFactory;
+        $this->config = $config;
     }
 
     /**
@@ -39,6 +48,10 @@ class AddIdentifierPlugin
      */
     public function afterGetById(GroupRepository $subject, GroupInterface $result): GroupInterface
     {
+        if (!$this->config->isEnabled() || !$this->config->isUserCustomerGroupEnabled()) {
+            return $result;
+        }
+
         $groupId = $result->getId();
         $groupModel = $this->groupFactory->create()->load($groupId);
         $identifier = $groupModel->getData('identifier');
@@ -64,6 +77,11 @@ class AddIdentifierPlugin
      */
     public function afterSave(GroupRepository $subject, GroupInterface $result): GroupInterface
     {
+
+        if (!$this->config->isEnabled() || !$this->config->isUserCustomerGroupEnabled()) {
+            return $result;
+        }
+
         $groupId = $result->getId();
         $groupModel = $this->groupFactory->create()->load($groupId);
         $identifier = $groupModel->getData('identifier');

@@ -56,6 +56,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_SHOW_DELETE_BUTTON        = 'printformer/general/delete_draft_button';
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
+    const XML_PATH_CONFIG_USE_CUSTOMER_USER_GROUP   = 'printformer/general/use_customer_user_group';
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
     const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
@@ -128,7 +129,7 @@ class Config extends AbstractHelper
 
     /**
      * @return int
-      */
+     */
     public function getWebsiteIdFromRequest()
     {
         return $this->_request->getParam('website_id');
@@ -155,7 +156,7 @@ class Config extends AbstractHelper
     {
         $result = false;
         try {
-             $result = $this->storeManager->getWebsite()->getId();
+            $result = $this->storeManager->getWebsite()->getId();
         } catch (LocalizedException $e) {
         }
         return $result;
@@ -757,6 +758,14 @@ class Config extends AbstractHelper
     public function isDataTransferEnabled($storeId = false, $websiteId = false)
     {
         return $this->getConfigValue(self::XML_PATH_CONFIG_TRANSFER_USER_DATA, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUserCustomerGroupEnabled($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_USE_CUSTOMER_USER_GROUP, true, $storeId, $websiteId);
     }
 
     /**
