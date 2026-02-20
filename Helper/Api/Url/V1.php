@@ -293,7 +293,7 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getAdminEditor($draftHash, array $params = null, $referrer = null)
+    public function getAdminEditor($draftHash, ?array $params = null, $referrer = null)
     {
         $this->authRole = self::ROLE_ADMIN;
         $url = $this->getEditor($draftHash, null, $params);
@@ -336,7 +336,7 @@ class V1 extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
+    public function getRedirect(?ProductInterface $product = null, ?array $redirectParams = null)
     {
         return '';
     }

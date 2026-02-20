@@ -326,7 +326,7 @@ class Log extends AbstractHelper
      */
     public function createPostEntry(
         string $url,
-        array $requestData = null
+        ?array $requestData = null
     )
     {
         $this->setApiUrl($url);
@@ -346,7 +346,7 @@ class Log extends AbstractHelper
      */
     public function createRedirectEntry(
         string $url,
-        array $requestData = null
+        ?array $requestData = null
     )
     {
         $this->setApiUrl($url);

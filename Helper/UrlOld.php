@@ -125,7 +125,7 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function getAdminEditorUrl($draftId, array $params = null, $referrer = null)
+    public function getAdminEditorUrl($draftId, ?array $params = null, $referrer = null)
     {
         //@todo use ZF URL builder? Implement generic method for building printformer URLs?
         $urlParts = array(
@@ -350,7 +350,7 @@ class UrlOld extends \Magento\Framework\App\Helper\AbstractHelper
      * @param array $redirectParams
      * @return string
      */
-    public function getRedirectUrl(ProductInterface $product = null, array $redirectParams = null)
+    public function getRedirectUrl(?ProductInterface $product = null, ?array $redirectParams = null)
     {
         if (!$redirectParams){
             switch ($this->config->getConfigRedirect()) {
