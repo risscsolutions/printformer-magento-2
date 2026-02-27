@@ -119,7 +119,7 @@ interface VersionInterface
      *
      * @return string
      */
-    public function getAdminEditor($draftHash, array $params = null, $referrer = null);
+    public function getAdminEditor($draftHash, ?array $params = null, $referrer = null);
 
     /**
      * @param string $draftHash
@@ -142,7 +142,7 @@ interface VersionInterface
      *
      * @return string
      */
-    public function getRedirect(ProductInterface $product = null, array $redirectParams = null);
+    public function getRedirect(?ProductInterface $product = null, ?array $redirectParams = null);
 
     /**
      * @param string $oldDraftId

@@ -211,7 +211,7 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getAdminEditor($draftHash, array $params = null, $referrer = null)
+    public function getAdminEditor($draftHash, ?array $params = null, $referrer = null)
     {
         return $this->getVersionHelper()->getAdminEditor($draftHash, $params, $referrer);
     }
@@ -251,7 +251,7 @@ class Url extends AbstractHelper implements VersionInterface
     /**
      * {@inheritdoc}
      */
-    public function getRedirect(ProductInterface $product = null, array $redirectParams = null)
+    public function getRedirect(?ProductInterface $product = null, ?array $redirectParams = null)
     {
         if (!$redirectParams) {
             switch ($this->config->getConfigRedirect()) {

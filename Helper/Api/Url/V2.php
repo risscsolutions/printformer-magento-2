@@ -455,7 +455,7 @@ class V2 extends AbstractHelper implements VersionInterface
      */
     public function getAdminEditor(
         $draftHash,
-        array $params = null,
+        ?array $params = null,
         $referrer = null
     )
     {
@@ -615,8 +615,8 @@ class V2 extends AbstractHelper implements VersionInterface
     }
 
     public function getRedirect(
-        ProductInterface $product = null,
-        array $redirectParams = null
+        ?ProductInterface $product = null,
+        ?array $redirectParams = null
     )
     {
         return '';
