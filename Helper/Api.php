@@ -717,6 +717,7 @@ class Api extends AbstractHelper
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
+        $userIdentifier = $this->getUserIdentifier();
         $storeId = $this->getStoreId();
         // Check store id for admin pages
         if (isset($params['store_id'])){
