@@ -188,7 +188,8 @@ class Open extends Action
         if (strpos($refererUrl ?? '', "wishlist")) {
             $this->_sessionHelper->setWishlistUrl($refererUrl);
         }
-        if (strpos($refererUrl ?? '', "design")) {
+
+        if (strpos($refererUrl ?? '', "/design/")) {
             $this->_sessionHelper->setDesignUrl($refererUrl);
         }
 
