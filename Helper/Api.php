@@ -790,6 +790,7 @@ class Api extends AbstractHelper
      */
     public function getEditorWebtokenUrl($draftHash, $userIdentifier, $params = [])
     {
+        $userIdentifier = $this->getUserIdentifier();
         $editorOpenUrl = $this->apiUrl()->getEditor($draftHash, null, $params);
         $client = $this->_config->getClientIdentifier($this->getStoreId());
         $identifier = bin2hex(random_bytes(16));
