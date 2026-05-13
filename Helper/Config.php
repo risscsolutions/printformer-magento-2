@@ -57,6 +57,7 @@ class Config extends AbstractHelper
     const XML_PATH_CONFIG_DELETE_CONFIRM_TEXT       = 'printformer/general/delete_confirm_text';
     const XML_PATH_CONFIG_TRANSFER_USER_DATA        = 'printformer/general/transfer_user_data';
     const XML_PATH_CONFIG_USE_CUSTOMER_USER_GROUP   = 'printformer/general/use_customer_user_group';
+    const XML_PATH_CONFIG_ENABLE_REMOTE_ACL         = 'printformer/general/remote_acl';
     const XML_PATH_CONFIG_UPLOAD_TEMPLATE_ID        = 'printformer/general/printformer_upload_template_id';
 
     const XML_PATH_CONFIG_FILTER_FOR_CONFIGURABLE_PRODUCT = 'printformer/general/filter_for_configurable_product';
@@ -766,6 +767,14 @@ class Config extends AbstractHelper
     public function isUserCustomerGroupEnabled($storeId = false, $websiteId = false)
     {
         return $this->getConfigValue(self::XML_PATH_CONFIG_USE_CUSTOMER_USER_GROUP, true, $storeId, $websiteId);
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isRemoteAclEnabled($storeId = false, $websiteId = false)
+    {
+        return $this->getConfigValue(self::XML_PATH_CONFIG_ENABLE_REMOTE_ACL, true, $storeId, $websiteId);
     }
 
     /**

@@ -527,6 +527,8 @@ class Api extends AbstractHelper
 
         }
 
+        $requestData['json']['remoteAcl'] = $this->_config->isRemoteAclEnabled();
+
         $userGroupIdentifier = $this->getUserGroupIdentifier();
 
         if (!empty($userGroupIdentifier)) {
