@@ -462,6 +462,7 @@ class Api extends AbstractHelper
         if( !empty($identifier) ) {
             $requestData['json']['templateIdentifier'] = $identifier;
         }
+        $requestData['json']['remoteAcl'] = $this->_config->isRemoteAclEnabled();
         $params = $this->mergeAdditionalParamsForApiCall($params);
         foreach($params as $key => $value) {
             $requestData['json'][$key] = $value;
