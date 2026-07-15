@@ -777,30 +777,30 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param string $draftHash
-     * @param int $identifier
-     * @param int $productId
-     * @param string $intent
-     * @param string $sessionUniqueId
-     * @param int $customerId
-     * @param int $printformerProductId
-     * @param false $checkOnly
-     * @param string $colorVariation
+     * @param string|null $draftHash
+     * @param string|null $identifier
+     * @param int|null $productId
+     * @param string|null $intent
+     * @param string|null $sessionUniqueId
+     * @param int|null $customerId
+     * @param int|null $printformerProductId
+     * @param bool $checkOnly
+     * @param string|null $colorVariation
      * @param array $availableVariants
      * @return DataObject|Draft
      * @throws NoSuchEntityException
      */
     public function draftProcess(
-        $draftHash = null,
-        $identifier = null,
-        $productId = null,
-        $intent = null,
-        $sessionUniqueId = null,
-        $customerId = null,
-        $printformerProductId = null,
-        $checkOnly = false,
-        $colorVariation = null,
-        $availableVariants = []
+        ?string $draftHash = null,
+        ?string $identifier = null,
+        ?int $productId = null,
+        ?string $intent = null,
+        ?string $sessionUniqueId = null,
+        ?int $customerId = null,
+        ?int $printformerProductId = null,
+        bool $checkOnly = false,
+        ?string $colorVariation = null,
+        array $availableVariants = []
     ) {
         $storeId = $this->_storeManager->getStore()->getId();
 
@@ -892,33 +892,35 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param null $draftHash
-     * @param int $identifier
-     * @param null $productId
-     * @param null $sessionUniqueId
-     * @param null $customerId
-     * @param null $printformerProductId
+     * @param string|null $draftHash
+     * @param string|null $identifier
+     * @param int|null $productId
+     * @param string|null $sessionUniqueId
+     * @param int|null $customerId
+     * @param int|null $printformerProductId
      * @param bool $checkOnly
-     * @param null $printformerUserIdentifier
-     * @param null $templateIdentifier
-     * @param null $orderId
-     * @param null $storeId
+     * @param string|null $printformerUserIdentifier
+     * @param string|null $templateIdentifier
+     * @param int|null $orderId
+     * @param int|null $storeId
+     * @param int|null $orderItemId
+     * @param string|null $orderIncrementId
      * @return DataObject|Draft
      */
     public function uploadDraftProcess(
-        $draftHash = null,
-        $identifier = 0,
-        $productId = null,
-        $sessionUniqueId = null,
-        $customerId = null,
-        $printformerProductId = null,
-        $checkOnly = false,
-        $printformerUserIdentifier = null,
-        $templateIdentifier = null,
-        $orderId = null,
-        $storeId = null,
-        $orderItemId = null,
-        $orderIncrementId = null
+        ?string $draftHash = null,
+        ?string $identifier = null,
+        ?int $productId = null,
+        ?string $sessionUniqueId = null,
+        ?int $customerId = null,
+        ?int $printformerProductId = null,
+        bool $checkOnly = false,
+        ?string $printformerUserIdentifier = null,
+        ?string $templateIdentifier = null,
+        ?int $orderId = null,
+        ?int $storeId = null,
+        ?int $orderItemId = null,
+        ?string $orderIncrementId = null
     ) {
         $process = $this->getDraftProcess($draftHash, $productId, self::API_UPLOAD_INTENT, $sessionUniqueId);
         if(!$process->getId() && !$checkOnly) {
