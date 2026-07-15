@@ -444,7 +444,7 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param int    $identifier
+     * @param string $identifier
      * @param string $userIdentifier
      * @param array  $params
      *
