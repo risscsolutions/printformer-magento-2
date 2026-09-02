@@ -23,4 +23,8 @@
         <!-- Save printformer products -->
         <observer name="Product_SaveAfter_PrintformerProducts" instance="Rissc\Printformer\Observer\Product\Save\SavePrintformerProducts" />
     </event>
+    <event name="printformer_acl_process">
+        <observer name="rissc_printformer_acl_processor_customer"
+                  instance="Rissc\Printformer\Observer\Acl\Processor\Customer"/>
+    </event>
 </config>

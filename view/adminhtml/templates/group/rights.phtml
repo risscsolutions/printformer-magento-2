@@ -19,9 +19,6 @@
             <th class="data-grid-th"><?php echo __('Group') ?></th>
             <th class="data-grid-th">draft/editorView</th>
             <th class="data-grid-th">draft/editorUpdate</th>
-            <th class="data-grid-th">review/view</th>
-            <th class="data-grid-th">review/finish</th>
-            <th class="data-grid-th">review/end</th>
         </tr>
         <?php foreach($this->getGroups() as $_group): ?>
             <?php $_right = $this->getRight($_group) ?>
@@ -29,9 +26,6 @@
                 <td><?php echo $_group->getCustomerGroupCode() ?></td>
                 <td><input type="checkbox" name="draft_editor_view[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getDraftEditorView()): ?> checked<?php endif; ?>></td>
                 <td><input type="checkbox" name="draft_editor_update[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getDraftEditorUpdate()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="review_view[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewView()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="review_finish[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewFinish()): ?> checked<?php endif; ?>></td>
-                <td><input type="checkbox" name="review_end[]" value="<?php echo $_group->getId() ?>"<?php if($_right->getReviewEnd()): ?> checked<?php endif; ?>></td>
             </tr>
         <?php endforeach; ?>
     </table>

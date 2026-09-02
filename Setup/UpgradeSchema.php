@@ -679,6 +679,16 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '100.9.8', '<')) {
+            $tableName = $connection->getTableName(self::TABLE_NAME_CUSTOMER_GROUP_RIGHT);
+
+            foreach (['review_view', 'review_finish', 'review_end'] as $columnName) {
+                if ($connection->tableColumnExists($tableName, $columnName)) {
+                    $connection->dropColumn($tableName, $columnName);
+                }
+            }
+        }
+
         $setup->endSetup();
     }
 }

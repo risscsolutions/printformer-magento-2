@@ -776,7 +776,7 @@ class Api extends AbstractHelper
         return $redirectUrl;
     }
 
-    /**
+     /**
      * @param string|null $draftHash
      * @param string|null $identifier
      * @param int|null $productId
@@ -891,7 +891,7 @@ class Api extends AbstractHelper
         return $process;
     }
 
-    /**
+     /**
      * @param string|null $draftHash
      * @param string|null $identifier
      * @param int|null $productId
