@@ -32,9 +32,6 @@ class Save extends Action
     protected $rights = [
         RightInterface::DRAFT_EDITOR_VIEW,
         RightInterface::DRAFT_EDITOR_UPDATE,
-        RightInterface::REVIEW_VIEW,
-        RightInterface::REVIEW_END,
-        RightInterface::REVIEW_FINISH
     ];
 
     /**

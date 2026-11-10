@@ -49,30 +49,6 @@ class Right extends AbstractModel implements RightInterface
     /**
      * {@inheritdoc}
      */
-    public function getReviewView()
-    {
-        return parent::getData(self::REVIEW_VIEW);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getReviewFinish()
-    {
-        return parent::getData(self::REVIEW_FINISH);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getReviewEnd()
-    {
-        return parent::getData(self::REVIEW_END);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function setId($id)
     {
         return $this->setData(self::ID, $id);
@@ -105,30 +81,6 @@ class Right extends AbstractModel implements RightInterface
     /**
      * {@inheritdoc}
      */
-    public function setReviewView($reviewView)
-    {
-        return $this->setData(self::REVIEW_VIEW, $reviewView);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setReviewFinish($reviewFinish)
-    {
-        return $this->setData(self::REVIEW_FINISH, $reviewFinish);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setReviewEnd($reviewEnd)
-    {
-        return $this->setData(self::REVIEW_END, $reviewEnd);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function setRightValue($key, $value)
     {
         return $this->setData($key, $value);
@@ -141,9 +93,6 @@ class Right extends AbstractModel implements RightInterface
     {
         $this->setDraftEditorView(false);
         $this->setDraftEditorUpdate(false);
-        $this->setReviewEnd(false);
-        $this->setReviewFinish(false);
-        $this->setReviewView(false);
         return $this;
     }
 

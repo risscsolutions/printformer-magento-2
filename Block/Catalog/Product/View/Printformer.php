@@ -249,7 +249,7 @@ class Printformer extends AbstractView
      * @param Product|null $product
      * @return array
      */
-    public function getPrintformerProductsFrontendConfigurationSource(Product $product = null)
+    public function getPrintformerProductsFrontendConfigurationSource(?Product $product = null)
     {
         if (!$product) {
             $product = $this->getProduct();
@@ -327,7 +327,7 @@ class Printformer extends AbstractView
      */
     public function getEditorUrl(
         PrintformerProduct $printformerProduct,
-        Product $product = null,
+        Product $product,
         $draftId
     )
     {

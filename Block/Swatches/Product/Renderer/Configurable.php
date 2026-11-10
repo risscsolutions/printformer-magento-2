@@ -54,8 +54,8 @@ class Configurable extends parentConfigurable
         CartHelper $cartHelper,
         Config $configHelper,
         array $data = [],
-        SwatchAttributesProvider $swatchAttributesProvider = null,
-        UrlBuilder $imageUrlBuilder = null
+        ?SwatchAttributesProvider $swatchAttributesProvider = null,
+        ?UrlBuilder $imageUrlBuilder = null
     )
     {
 

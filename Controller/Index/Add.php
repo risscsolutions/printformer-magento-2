@@ -98,8 +98,8 @@ class Add extends AbstractIndex implements HttpPostActionInterface
         CheckoutCart $checkoutCart,
         WishlistHelper $wishlistHelper,
         CartHelper $cartHelper,
-        RedirectInterface $redirect = null,
-        UrlInterface $urlBuilder = null
+        ?RedirectInterface $redirect = null,
+        ?UrlInterface $urlBuilder = null
     ) {
         $this->_customerSession = $customerSession;
         $this->wishlistProvider = $wishlistProvider;
