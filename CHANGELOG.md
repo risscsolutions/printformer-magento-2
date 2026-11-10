@@ -1,5 +1,23 @@
 # Changelog
 
+## [101.8.0](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.1...v101.8.0) (2026-11-10)
+
+
+### Features
+
+* **WEM-26051:** solve problem Entering Editor with two users ([8b0b187](https://github.com/risscsolutions/printformer-magento-2/commit/8b0b187624bfe241a70be500f60bc8d69636c224))
+* **WEM-2681:** added new configuration RemoteAcl ([af5c22d](https://github.com/risscsolutions/printformer-magento-2/commit/af5c22d06d2ed949ea5834711d097dda66732427))
+
+
+### Bug Fixes
+
+* **WEM-2600:** solve issue with some add to cart requests ([21dd4ff](https://github.com/risscsolutions/printformer-magento-2/commit/21dd4ff42e48d375bb3a03a018eb419d4dc6b4fc))
+* **WEM-2601:** update code to php 8.4 main version ([852e70c](https://github.com/risscsolutions/printformer-magento-2/commit/852e70cbe2dee9ddf1ea3603aeea865a91708b3f))
+* **WEM-2687:** correct ACL logic for customer group rights ([e259a0b](https://github.com/risscsolutions/printformer-magento-2/commit/e259a0b9e506a867e00a0f6b9441c1ebda603141))
+* **WEM-2715:** changed type $identifier to string ([5a96602](https://github.com/risscsolutions/printformer-magento-2/commit/5a966023684a1b13194594bffa171a4dc9da7085))
+* **WEM-2715:** fixed type params for other function ([41dfd96](https://github.com/risscsolutions/printformer-magento-2/commit/41dfd96636271e2dc0887d3bd82953b92163a07a))
+* **WEM-2739:** add unique key on printformer_product.id for mysql 8.4 ([989366b](https://github.com/risscsolutions/printformer-magento-2/commit/989366bf2314047bb19c269e00f3893b558ef6e8))
+
 ## [101.7.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.2...v101.7.3) (2025-05-05)
 
 
