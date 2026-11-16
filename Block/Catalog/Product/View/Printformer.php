@@ -808,7 +808,7 @@ class Printformer extends AbstractView
                     SELECT * FROM `" . $connection->getTableName('quote_item_option') . "`
                     WHERE
                         `item_id` = " . $quoteItem->getId() . " AND
-                        `product_id` = " . $request->getParam('product_id') . " AND
+                        `product_id` = " . (int)$request->getParam('product_id') . " AND
                         `code` = 'info_buyRequest'
                 ");
                 $objm = ObjectManager::getInstance();
