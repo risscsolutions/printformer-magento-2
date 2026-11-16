@@ -54,10 +54,10 @@ class Draft
             $sessionHelper = $objm->get(Session::class);
 
             if (!empty($draftId)) {
-                $connection->query("
-                DELETE FROM " . $connection->getTableName('printformer_draft') . "
-                WHERE `draft_id` = '" . $draftId . "';
-            ");
+                $connection->delete(
+                    $connection->getTableName('printformer_draft'),
+                    ['draft_id = ?' => (string)$draftId]
+                );
 
                 $sessionHelper->unsetCurrentIntent();
 

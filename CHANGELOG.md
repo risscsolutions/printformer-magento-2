@@ -1,5 +1,13 @@
 # Changelog
 
+## [101.7.5](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.3...v101.7.5) (2026-11-16)
+
+
+### Bug Fixes
+
+* **security:** fix SQL injection in cart configure preselection (product_id)
+* **security:** fix SQL injection in draft deletion (selected_product_draft_id)
+
 ## [101.7.3](https://github.com/risscsolutions/printformer-magento-2/compare/v101.7.2...v101.7.3) (2025-02-27)
 
 
