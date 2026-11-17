@@ -26,6 +26,8 @@ class Product
     const PF_ATTRIBUTE_UPLOAD_ENABLED = 'printformer_upload_enabled';
     const PF_ATTRIBUTE_UPLOAD_PRODUCT = 'printformer_upload_product';
 
+    const IDENTIFIER_PATTERN = '/^[A-Za-z0-9_\-.]{1,64}$/';
+
     /**
      * @var WebsiteRepository
      */
@@ -205,7 +207,7 @@ class Product
             $this->_syncProducts($storeId, $responseArray['data']);
         } catch (\Exception $e) {
             $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
-                $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
+            $errors[] = 'Store #' . $storeId . ': ' . $e->getMessage();
         }
 
         return $this;
@@ -222,12 +224,21 @@ class Product
         $identifiers = [];
         $responseRealigned = [];
         foreach ($responseArray as $responseData) {
-            $identifier = $responseData['identifier'] ?? null;
-            if (isset($identifier) && !in_array($identifier, $identifiers)) {
+            if (!$this->isValidProductData($responseData)) {
+                $this->logger->warning('Skipping malformed printformer product in API response.');
+                continue;
+            }
+            $identifier = $responseData['identifier'];
+            if (!in_array($identifier, $identifiers, true)) {
                 $identifiers[] = $identifier;
                 $responseRealigned[$identifier] = $responseData;
             }
         }
+
+        if (empty($identifiers)) {
+            throw new Exception(__('No valid products found in API response.'));
+        }
+        $storeId = (int)$storeId;
 
         $this->deleteDeletedPrintformerProductRelations($identifiers, $storeId);
 
@@ -235,14 +246,17 @@ class Product
         foreach ($identifiers as $identifier) {
             foreach ($responseRealigned[$identifier]['intents'] as $intent) {
                 $dateUpdate = $this->convertDate($responseRealigned[$identifier]['updatedAt']);
-                $resultProduct = $this->connection->fetchRow('
-                    SELECT * FROM
-                        `' . $this->connection->getTableName('printformer_product') . '`
-                    WHERE
-                        `store_id` = ' . $storeId . ' AND
-                        `identifier` = \'' . $identifier . '\' AND
-                        `intent` = \'' . $intent . '\';
-                ');
+                $resultProduct = $this->connection->fetchRow(
+                    'SELECT * FROM `' . $this->connection->getTableName('printformer_product') . '`
+                    WHERE `store_id` = :store_id
+                        AND `identifier` = :identifier
+                        AND `intent` = :intent',
+                    [
+                        ':store_id' => (int)$storeId,
+                        ':identifier' => (string)$identifier,
+                        ':intent' => (string)$intent,
+                    ]
+                );
 
                 if (!$resultProduct) {
                     /** @var PrintformerProduct $pfProduct */
@@ -301,35 +315,42 @@ class Product
      */
     protected function deleteDeletedPrintformerProductRelations(array $newIdentifiers, $storeId)
     {
-            $tableName = $this->connection->getTableName('catalog_product_printformer_product');
-            $sqlQuery = 'SELECT * FROM
-                `' . $tableName . '`
-            WHERE
-                `identifier` NOT IN (\'' . implode('\',\'', $newIdentifiers) . '\') AND
-                `store_id` = ' . $storeId
-            . ';';
-            $resultRows = $this->connection->fetchAll($sqlQuery);
+        if (empty($newIdentifiers)) {
+            // Never build an empty NOT IN () and never wipe all relations on an empty list.
+            return;
+        }
 
-            if (!empty($resultRows)) {
-                foreach ($resultRows as $row) {
-                    $this->connection->delete($tableName, ['id = ?' => $row['id']]);
-                }
-            }
+        $newIdentifiers = array_map('strval', array_values($newIdentifiers));
 
-            $tableName = $this->connection->getTableName('printformer_product');
-            $sqlQuery = 'SELECT * FROM
-                `' . $tableName . '`
-            WHERE
-                `identifier` NOT IN (\'' . implode('\',\'', $newIdentifiers) . '\') AND
-                `store_id` = ' . $storeId . ';
-        ';
+        foreach (['catalog_product_printformer_product', 'printformer_product'] as $table) {
+            $tableName = $this->connection->getTableName($table);
+            $this->connection->delete(
+                $tableName,
+                [
+                    'identifier NOT IN (?)' => $newIdentifiers,
+                    'store_id = ?' => (int)$storeId,
+                ]
+            );
+        }
+    }
 
-            $resultRows = $this->connection->fetchAll($sqlQuery);
-            if (!empty($resultRows)) {
-                foreach ($resultRows as $row) {
-                    $this->connection->delete($tableName, ['id = ?' => $row['id']]);
-                }
-            }
+    /**
+     * Validate a single product entry of the API response.
+     *
+     * @param mixed $data
+     * @return bool
+     */
+    protected function isValidProductData($data): bool
+    {
+        if (!is_array($data)) {
+            return false;
+        }
+        if (!isset($data['identifier']) || !is_string($data['identifier'])
+            || !preg_match(self::IDENTIFIER_PATTERN, $data['identifier'])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
