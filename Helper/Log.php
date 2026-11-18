@@ -331,9 +331,6 @@ class Log extends AbstractHelper
     {
         $this->setApiUrl($url);
         $this->setRequestType('post');
-        if (isset($requestData)){
-            $this->setRequestData(json_encode($requestData));
-        }
         $result = $this->createEntry();
 
         return $result;
@@ -351,9 +348,6 @@ class Log extends AbstractHelper
     {
         $this->setApiUrl($url);
         $this->setRequestType('redirect');
-        if (isset($requestData)){
-            $this->setRequestData(json_encode($requestData));
-        }
         $result = $this->createEntry();
 
         return $result;
@@ -371,7 +365,6 @@ class Log extends AbstractHelper
     {
         $this->setApiUrl($url);
         $this->setRequestType('put');
-        $this->setRequestData(json_encode($requestData));
         return $this->createEntry();
     }
 }

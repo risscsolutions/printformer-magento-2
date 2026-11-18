@@ -782,7 +782,6 @@ class Api extends AbstractHelper
         $entry = $this->_logHelper->createRedirectEntry($editorOpenUrl, $data);
 
         $redirectUrl = $this->apiUrl()->getPrintformerBaseUrl($storeId) . V2::EXT_AUTH_PATH . '?' . http_build_query(['jwt' => $JWT]);
-        $entry->setResponseData(json_encode(["redirectUrl" => $redirectUrl, "jwt" => $JWT]));
         $this->_logHelper->updateEntry($entry);
 
         return $redirectUrl;

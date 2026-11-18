@@ -53,30 +53,13 @@ class Url extends AbstractRenderer
      */
     public function render(DataObject $row)
     {
-        /** @var \Rissc\Printformer\Model\History\Log $row */
-
         $url = $row->getApiUrl();
         $parsedUrl = parse_url($url);
 
-        if(!empty($parsedUrl['query'])) {
+        if (!empty($parsedUrl['query'])) {
             unset($parsedUrl['query']);
         }
 
-        $dataHtml = '<div class="api_data" style="display: none;">
-            <div>
-                <label for="api_request_data_' . $row->getId() . '"><strong>' . __('Request Data') . ':</strong></label>
-                <div class="control">
-                    <pre style="background-color:#ECECEC; padding: 10px;" class="api_request_data" data-row-id="' . $row->getId() . '" id="api_request_data_' . $row->getId() . '">' . $this->prepareJsonData($row->getData('request_data')) . '</pre>
-                </div>
-            </div><br />
-            <div>
-                <label for="api_response_data_' . $row->getId() . '"><strong>' . __('Response Data') . ':</strong></label>
-                <div class="control">
-                    <pre style="background-color:#ECECEC; padding: 10px;" class="api_response_data" data-row-id="' . $row->getId() . '" id="api_response_data_' . $row->getId() . '">' . $this->prepareJsonData($row->getData('response_data')) . '</pre>
-                </div>
-            </div>
-        </div>';
-
-        return $this->unparseUrl($parsedUrl) . $dataHtml;
+        return $this->escapeHtml($this->unparseUrl($parsedUrl));
     }
 }

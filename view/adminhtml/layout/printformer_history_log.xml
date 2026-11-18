@@ -39,7 +39,6 @@
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
                             <argument name="width" xsi:type="string">100px</argument>
-                            <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Direction</argument>
                         </arguments>
                     </block>
                     <block class="Magento\Backend\Block\Widget\Grid\Column" as="status">
@@ -70,24 +69,6 @@
                             <argument name="column_css_class" xsi:type="string">col-id</argument>
                             <argument name="header_css_class" xsi:type="string">col-id</argument>
                             <argument name="renderer" xsi:type="string">Rissc\Printformer\Block\Adminhtml\History\Grid\Renderer\Url</argument>
-                        </arguments>
-                    </block>
-                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="request_data">
-                        <arguments>
-                            <argument name="header" xsi:type="string" translate="true">Data</argument>
-                            <argument name="index" xsi:type="string">request_data</argument>
-                            <argument name="type" xsi:type="string">text</argument>
-                            <argument name="column_css_class" xsi:type="string">col-id</argument>
-                            <argument name="header_css_class" xsi:type="string">col-id</argument>
-                        </arguments>
-                    </block>
-                    <block class="Magento\Backend\Block\Widget\Grid\Column" as="response_data">
-                        <arguments>
-                            <argument name="header" xsi:type="string" translate="true">Response</argument>
-                            <argument name="index" xsi:type="string">response_data</argument>
-                            <argument name="type" xsi:type="string">text</argument>
-                            <argument name="column_css_class" xsi:type="string">col-id</argument>
-                            <argument name="header_css_class" xsi:type="string">col-id</argument>
                         </arguments>
                     </block>
                 </block>
