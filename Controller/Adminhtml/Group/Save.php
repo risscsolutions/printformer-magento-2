@@ -12,6 +12,13 @@ use Rissc\Printformer\Helper\Customer\Group\Right as RightHelper;
 class Save extends Action
 {
     /**
+     * Authorization level of a basic admin session
+     *
+     * @see _isAllowed()
+     */
+    const ADMIN_RESOURCE = 'Rissc_Printformer::group';
+
+    /**
      * @var GroupCollection
      */
     protected $groupCollection;

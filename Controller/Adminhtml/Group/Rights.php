@@ -8,6 +8,14 @@ use Magento\Framework\View\Result\PageFactory;
 
 class Rights extends Action
 {
+
+    /**
+     * Authorization level of a basic admin session
+     *
+     * @see _isAllowed()
+     */
+    const ADMIN_RESOURCE = 'Rissc_Printformer::group';
+
     /**
      * @var PageFactory
      */
