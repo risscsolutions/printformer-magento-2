@@ -362,25 +362,41 @@ class Product
     protected function updateProductRelations(array $identifiers, $storeId)
     {
         $rowsToUpdate = count($identifiers);
-        $tableName = $this->connection->getTableName('catalog_product_printformer_product');
+        $tableName = $this->connection->getTableName(
+            'catalog_product_printformer_product'
+        );
+
         foreach ($identifiers as $pfProductId => $identifier) {
-            $resultRows = $this->connection->fetchAll('
-                SELECT * FROM
-                    `' . $tableName . '`
-                WHERE
-                    `identifier` = ' . $identifier['id'] . ' AND
-                    `store_id` = ' . $storeId . ' AND
-                    `intent` = \'' . $identifier['intent'] . '\';
-            ');
+            if (
+                !isset($identifier['id'], $identifier['intent'])
+                || !is_string($identifier['id'])
+                || !preg_match(self::IDENTIFIER_PATTERN, $identifier['id'])
+            ) {
+                continue;
+            }
+
+            $resultRows = $this->connection->fetchAll(
+                'SELECT `id` FROM `' . $tableName . '`
+                WHERE `identifier` = :identifier
+                AND `store_id` = :store_id
+                AND `intent` = :intent',
+                [
+                    'identifier' => $identifier['id'],
+                    'store_id' => (int)$storeId,
+                    'intent' => $identifier['intent'],
+                ]
+            );
 
             foreach ($resultRows as $row) {
-                $this->connection->query('
-                    UPDATE `' . $tableName . '`
-                    SET
-                        `printformer_product_id` = ' . $pfProductId . '
-                    WHERE
-                        `id` = ' . $row['id'] . ';
-                ');
+                $this->connection->query(
+                    'UPDATE `' . $tableName . '`
+                 SET `printformer_product_id` = :product_id
+                 WHERE `id` = :relation_id',
+                    [
+                        'product_id' => (int)$pfProductId,
+                        'relation_id' => (int)$row['id'],
+                    ]
+                );
             }
 
             $rowsToUpdate--;
