@@ -557,9 +557,19 @@ define([
                         'text': $t('Yes'),
                         'class': 'ok-btn',
                         'click': function () {
-                            window.location.href = printformerProduct.delete_url;
-                            confirmModal.modal('closeModal');
+                            var url = new URL(printformerProduct.delete_url);
+                            var $f = $('<form/>', {method: 'post', action: url.origin + url.pathname});
 
+                            url.searchParams.forEach(function (v, k) {
+                                $f.append($('<input type="hidden"/>').attr('name', k).val(v));
+                            });
+                            $f.append($('<input type="hidden" name="form_key"/>').val(
+                                $.mage.cookies.get('form_key') || $('[name="form_key"]').first().val()
+                            ));
+
+                            $('body').append($f);
+                            $f.submit();
+                            confirmModal.modal('closeModal');
                             return true;
                         }
                     }, {
