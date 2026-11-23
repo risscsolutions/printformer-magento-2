@@ -9,6 +9,7 @@
                     <resource id="Rissc_Printformer::history_log" title="Printformer History Log" sortOrder="30" />
                     <resource id="Rissc_Printformer::view_highres_pdf" title="Show High-Res PDF on Order" sortOrder="40" />
                     <resource id="Rissc_Printformer::group" title="Printformer Customer Group Rights" translate="title" sortOrder="50"/>
+                    <resource id="Rissc_Printformer::callback" title="Printformer Callbacks (Web API)" translate="title" sortOrder="60" />
                 </resource>
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">

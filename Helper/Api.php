@@ -45,7 +45,7 @@ class Api extends AbstractHelper
 {
     const API_URL_CALLBACKORDEREDSTATUS = 'callbackOrderedStatus';
     const API_UPLOAD_INTENT = 'upload';
-    const CALLBACK_UPLOAD_ENDPOINT = 'printformer/process/draft';
+    const CALLBACK_UPLOAD_ENDPOINT = 'rest/V1/printformer/process/draft';
     const ProcessingStateAfterOrder = 9;
     const ProcessingStateAfterCron = 2;
     const ProcessingStateAfterUploadCallback = 3;
@@ -627,11 +627,12 @@ class Api extends AbstractHelper
                         'fileURL' => $filePathUrl
                     ]
                 ];
+                $callBackUrl = '';
                 if (!$social) {
-                    $callBackUrl = $this->getUploadCallbackUrl($draftId);
-                    $callBackUrlWithQueryString = $callBackUrl.'?filepath='.$downloadableTempLinkFilePath;
-                    $this->_logger->notice('Used callbackUrl='.$callBackUrlWithQueryString);
-                    $requestData['json']['callbackURL'] = $callBackUrlWithQueryString;
+                    // Web API route: draft id and file name are part of the URL path
+                    $callBackUrl = $this->getUploadCallbackUrl($draftId, basename($downloadableTempLinkFilePath));
+                    $this->_logger->notice('Used callbackUrl='.$callBackUrl);
+                    $requestData['json']['callbackURL'] = $callBackUrl;
                 }
 
                 try {
@@ -647,7 +648,7 @@ class Api extends AbstractHelper
                         return false;
                     }
                 } catch (Exception $e) {
-                    $this->_logger->debug('Upload failed for draft with draft-id: '.$draftId.' on file path order-id'.$filePathUrl.' for callback url: '.$callBackUrlWithQueryString);
+                    $this->_logger->debug('Upload failed for draft with draft-id: '.$draftId.' on file path order-id'.$filePathUrl.' for callback url: '.$callBackUrl);
                     $this->_logger->debug('Upload error message: '.$e->getMessage());
                 }
             } else {
@@ -659,13 +660,19 @@ class Api extends AbstractHelper
     }
 
     /**
-     * @param $draftId
+     * Web API URL: <base>/rest/V1/printformer/process/draft/<draftId>[/<filename>]
+     *
+     * @param string $draftId
+     * @param string|null $filename basename of the temporary upload file
      * @return string
      */
-    public function getUploadCallbackUrl($draftId)
+    public function getUploadCallbackUrl($draftId, $filename = null)
     {
-        $params['draft_id'] = $draftId;
-        return $this->urlBuilder->getUrl(self::CALLBACK_UPLOAD_ENDPOINT, $params);
+        $path = self::CALLBACK_UPLOAD_ENDPOINT . '/' . rawurlencode((string)$draftId);
+        if ($filename !== null && $filename !== '') {
+            $path .= '/' . rawurlencode((string)$filename);
+        }
+        return $this->urlBuilder->getUrl('', ['_direct' => $path]);
     }
 
     /**
@@ -1558,13 +1565,13 @@ class Api extends AbstractHelper
      * @return string
      */
     public function createUserGroup(int $magentoGroupId): string
-    {   
+    {
         $url = $this->_urlHelper->createUserGroupUrl();
         $httpClient = $this->getHttpClient();
 
         $response = $httpClient->post($url);
         $response = json_decode($response->getBody(), true);
-        
+
         $this->printformerUserGroupHelper->createUserGroup($magentoGroupId, $response['data']['identifier']);
 
         return $response['data']['identifier'];
@@ -1575,7 +1582,7 @@ class Api extends AbstractHelper
      * @return ?string
      */
     public function getUserGroup(string $userGroupIdentifier): ?string
-    {   
+    {
         $url = $this->_urlHelper->getUserGroupUrl($userGroupIdentifier);
         $httpClient = $this->getHttpClient();
 

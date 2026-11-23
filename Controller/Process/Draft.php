@@ -67,6 +67,14 @@ class Draft extends Action
     {
         $result = $this->jsonFactory->create();
 
+        $this->logger->warning('draft-process legacy callback is disabled (test mode)');
+        $result->setHttpResponseCode(410);
+        $result->setData([
+            'success' => false,
+            'message' => 'Disabled. Use /rest/V1/printformer/process/draft'
+        ]);
+        return $result;
+
         try {
             $this->logger->debug('draft-process callback started');
             $draftHash = $this->getRequest()->getParam('draft_id');
